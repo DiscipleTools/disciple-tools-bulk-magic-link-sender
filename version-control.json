@@ -1,0 +1,30 @@
+{
+
+  "name": "Disciple Tools - Plugin Starter Template",
+  "version": "0.1",
+  "last_updated": "2021-03",
+  "author": "Disciple Tools",
+  "author_homepage": "https://disciple.tools",
+  "git_owner": "DiscipleTools",
+  "git_repo": "disciple-tools-plugin-starter-template",
+  "download_url": "https://github.com/DiscipleTools/disciple-tools-plugin-starter-template/releases/latest/download/disciple-tools-plugin-starter-template.zip",
+  "homepage": "https://github.com/DiscipleTools/disciple-tools-plugin-starter-template",
+  "issues_url": "https://github.com/DiscipleTools/disciple-tools-plugin-starter-template/issues",
+  "projects_url": "https://github.com/DiscipleTools/disciple-tools-plugin-starter-template/projects/1",
+  "discussions_url": "https://github.com/DiscipleTools/disciple-tools-plugin-starter-template/discussions",
+  "wiki_url": "https://github.com/DiscipleTools/disciple-tools-plugin-starter-template/wiki",
+  "license_url": "https://raw.githubusercontent.com/DiscipleTools/disciple-tools-plugin-starter-template/master/LICENSE",
+  "readme_url": "https://raw.githubusercontent.com/DiscipleTools/disciple-tools-plugin-starter-template/master/README.md",
+  "requires": "4.7",
+  "tested": "5.7",
+  "upgrade_notice": "Upgrade to get the latest features.",
+  "banners": {
+    "low": "https://raw.githubusercontent.com/DiscipleTools/disciple-tools-plugin-starter-template/master/documentation/banner.png",
+    "high": "https://raw.githubusercontent.com/DiscipleTools/disciple-tools-plugin-starter-template/master/documentation/banner.png"
+  },
+  "sections": {
+    "description": "Kick start your Disciple.Tools plugin project with this template! This plugin is a collection of our best practices and code bases for creating Disciple.Tools plugins. ",
+    "installation": "(Required) You must have Disciple.Tools Theme installed before using this plugin. Once Disciple.Tools is installed, you can use the normal Plugin system to install the plugin.",
+    "changelog": ""
+  }
+}
