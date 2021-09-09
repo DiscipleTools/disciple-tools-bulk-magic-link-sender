@@ -3,16 +3,16 @@ if ( !defined( 'ABSPATH' ) ) { exit; } // Exit if accessed directly.
 
 
 /**
- * Class Disciple_Tools_Plugin_Starter_Template_Magic_Link
+ * Class Disciple_Tools_Magic_Links_Magic_Link
  */
-class Disciple_Tools_Plugin_Starter_Template_Magic_Link extends DT_Magic_Url_Base {
+class Disciple_Tools_Magic_Links_Magic_Link extends DT_Magic_Url_Base {
 
     public $magic = false;
     public $parts = false;
     public $page_title = 'Magic';
     public $root = "magic_app"; // @todo define the root of the url {yoursite}/root/type/key/action
     public $type = 'magic_type'; // @todo define the type
-    public $post_type = 'starter_post_type'; // @todo set the post type this magic link connects with.
+    public $post_type = 'magic_links'; // @todo set the post type this magic link connects with.
     private $meta_key = '';
 
     private static $_instance = null;
@@ -72,7 +72,7 @@ class Disciple_Tools_Plugin_Starter_Template_Magic_Link extends DT_Magic_Url_Bas
     public function dt_details_additional_tiles( $tiles, $post_type = "" ) {
         if ( $post_type === $this->post_type ){
             $tiles["dt_starters_magic_url"] = [
-                "label" => __( "Magic Url", 'disciple-tools-plugin-starter-template' ),
+                "label" => __( "Magic Url", 'disciple-tools-magic-links' ),
                 "description" => "The Magic URL sets up a page accessible without authentication, only the link is needed. Useful for small applications liked to this record, like quick surveys or updates."
             ];
         }
@@ -146,7 +146,7 @@ class Disciple_Tools_Plugin_Starter_Template_Magic_Link extends DT_Magic_Url_Bas
                 'nonce' => wp_create_nonce( 'wp_rest' ),
                 'parts' => $this->parts,
                 'translations' => [
-                    'add' => __( 'Add Magic', 'disciple-tools-plugin-starter-template' ),
+                    'add' => __( 'Add Magic', 'disciple-tools-magic-links' ),
                 ],
             ]) ?>][0]
 
@@ -350,4 +350,4 @@ class Disciple_Tools_Plugin_Starter_Template_Magic_Link extends DT_Magic_Url_Bas
         return $data;
     }
 }
-Disciple_Tools_Plugin_Starter_Template_Magic_Link::instance();
+Disciple_Tools_Magic_Links_Magic_Link::instance();

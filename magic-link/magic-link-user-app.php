@@ -3,15 +3,15 @@ if ( !defined( 'ABSPATH' ) ) { exit; } // Exit if accessed directly.
 
 
 /**
- * Class Disciple_Tools_Plugin_Starter_Template_Magic_User_App
+ * Class Disciple_Tools_Magic_Links_Magic_User_App
  */
-class Disciple_Tools_Plugin_Starter_Template_Magic_User_App extends DT_Magic_Url_Base {
+class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
 
     public $page_title = 'Magic User App';
     public $page_description = 'A micro user app page that can be added to home screen.';
     public $root = "magic_app"; // @todo define the root of the url {yoursite}/root/type/key/action
     public $type = 'user_app'; // @todo define the type
-    public $post_type = 'user';
+    public $post_type = 'contacts';
     private $meta_key = '';
 
     private static $_instance = null;
@@ -121,7 +121,7 @@ class Disciple_Tools_Plugin_Starter_Template_Magic_User_App extends DT_Magic_Url
                 'nonce' => wp_create_nonce( 'wp_rest' ),
                 'parts' => $this->parts,
                 'translations' => [
-                    'add' => __( 'Add Magic', 'disciple-tools-plugin-starter-template' ),
+                    'add' => __( 'Add Magic', 'disciple-tools-magic-links' ),
                 ],
             ]) ?>][0]
 
@@ -310,4 +310,4 @@ class Disciple_Tools_Plugin_Starter_Template_Magic_User_App extends DT_Magic_Url
         return $data;
     }
 }
-Disciple_Tools_Plugin_Starter_Template_Magic_User_App::instance();
+Disciple_Tools_Magic_Links_Magic_User_App::instance();

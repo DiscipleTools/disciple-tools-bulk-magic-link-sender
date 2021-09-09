@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
-"Project-Id-Version: Disciple Tools - Plugin Starter Template\n"
+"Project-Id-Version: Disciple Tools - Magic Links\n"
 "POT-Creation-Date: 2021-08-03 12:04-0400\n"
 "PO-Revision-Date: 2018-01-29 05:53-0700\n"
 "Last-Translator: \n"
@@ -13,7 +13,7 @@ msgstr ""
 "X-Generator: Poedit 3.0\n"
 "X-Poedit-Basepath: ..\n"
 "X-Poedit-Flags-xgettext: --add-comments=translators:\n"
-"X-Poedit-WPHeader: disciple-tools-plugin-starter-template.php\n"
+"X-Poedit-WPHeader: disciple-tools-magic-links.php\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 "X-Poedit-KeywordsList: __;_e;_n:1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;esc_attr__;"
 "esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c;_n_noop:1,2;"
@@ -193,7 +193,7 @@ msgid "All"
 msgstr ""
 
 #: site-link/custom-site-to-site-links.php:36 tile/custom-tile.php:32
-msgid "Plugin Starter Template"
+msgid "Magic Links"
 msgstr ""
 
 #: tile/custom-tile.php:62
@@ -312,16 +312,16 @@ msgid "Add your own help information into this modal."
 msgstr ""
 
 #. Plugin Name of the plugin/theme
-msgid "Disciple Tools - Plugin Starter Template"
+msgid "Disciple Tools - Magic Links"
 msgstr ""
 
 #. Plugin URI of the plugin/theme
-msgid "https://github.com/DiscipleTools/disciple-tools-plugin-starter-template"
+msgid "https://github.com/DiscipleTools/disciple-tools-magic-links"
 msgstr ""
 
 #. Description of the plugin/theme
 msgid ""
-"Disciple Tools - Plugin Starter Template is intended to help developers and "
+"Disciple Tools - Magic Links is intended to help developers and "
 "integrator jumpstart their extension of the Disciple Tools system."
 msgstr ""
 
