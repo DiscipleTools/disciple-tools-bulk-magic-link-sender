@@ -83,8 +83,6 @@ class Disciple_Tools_Magic_Links_Menu {
             <h2 class="nav-tab-wrapper">
                 <a href="<?php echo esc_attr( $link ) . 'general' ?>"
                    class="nav-tab <?php echo esc_html( ( $tab == 'general' || ! isset( $tab ) ) ? 'nav-tab-active' : '' ); ?>">General</a>
-                <a href="<?php echo esc_attr( $link ) . 'scheduler' ?>"
-                   class="nav-tab <?php echo esc_html( ( $tab == 'scheduler' || ! isset( $tab ) ) ? 'nav-tab-active' : '' ); ?>">Scheduler</a>
                 <a href="<?php echo esc_attr( $link ) . 'links' ?>"
                    class="nav-tab <?php echo esc_html( ( $tab == 'links' || ! isset( $tab ) ) ? 'nav-tab-active' : '' ); ?>">Links</a>
                 <a href="<?php echo esc_attr( $link ) . 'logging' ?>"
@@ -98,11 +96,6 @@ class Disciple_Tools_Magic_Links_Menu {
                 case "general":
                     require( 'general-tab.php' );
                     $object = new Disciple_Tools_Magic_Links_Tab_General();
-                    $object->content();
-                    break;
-                case "scheduler":
-                    require( 'scheduler-tab.php' );
-                    $object = new Disciple_Tools_Magic_Links_Tab_Scheduler();
                     $object->content();
                     break;
                 case "links":

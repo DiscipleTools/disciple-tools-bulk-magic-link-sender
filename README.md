@@ -1,30 +1,25 @@
 [![Build Status](https://travis-ci.com/DiscipleTools/disciple-tools-magic-links.svg?branch=master)](https://travis-ci.com/DiscipleTools/disciple-tools-magic-links)
 
-# Disciple Tools - Name
+# Disciple Tools - Magic links
 
-Description Description Description Description Description Description Description
-Description Description Description Description Description Description Description
+Disciple Tools - Magic links user and teams assignment + schedule management for magic links dispatching over configured sending channels.
 
 ## Purpose
 
-Purpose purpose purpose purpose purpose purpose purpose purpose purpose purpose purpose
-Purpose purpose purpose purpose purpose purpose purpose purpose purpose purpose purpose
+Provide the ability to create link objects; which enable the assignment of individual D.T. users and team members; who are notified via sending channels such as Twilio, of the latest magic links.
 
-Purpose purpose purpose purpose purpose purpose purpose purpose purpose purpose purpose
-Purpose purpose purpose purpose purpose purpose purpose purpose purpose purpose purpose
+Both link object and user magic links can also be made to expire within a specified timeframe.
 
 ## Usage
 
 #### Will Do
 
-- Item
-- Item
-- Item
+- Ability to enable/disable scheduling and channel sending at a global level.
+- Providing a summary of recent scheduling activity.
+- Create/Update link objects.
+- Provide logging information for troubleshooting purposes.
+- Present a report of updated contact records since last successful message dispatch.
 
-#### Will Not Do
-
-- Item
-- Item
 
 ## Requirements
 
@@ -43,8 +38,3 @@ in the [Discussions](https://github.com/DiscipleTools/disciple-tools-magic-links
 code contributions are welcome using the [Pull Request](https://github.com/DiscipleTools/disciple-tools-magic-links/pulls)
 system for git. For a more details on contribution see the
 [contribution guidelines](https://github.com/DiscipleTools/disciple-tools-magic-links/blob/master/CONTRIBUTING.md).
-
-
-## Screenshots
-
-![screenshot](documentation/community/starter-banners/banner-blue-green.png)

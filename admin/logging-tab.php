@@ -22,7 +22,7 @@ class Disciple_Tools_Magic_Links_Tab_Logging {
                     <div id="postbox-container-1" class="postbox-container">
                         <!-- Right Column -->
 
-                        <?php $this->right_column() ?>
+                        <?php /*$this->right_column()*/ ?>
 
                         <!-- End Right Column -->
                     </div><!-- postbox-container 1 -->
@@ -40,13 +40,13 @@ class Disciple_Tools_Magic_Links_Tab_Logging {
         <table class="widefat striped">
             <thead>
             <tr>
-                <th>Header</th>
+                <th>Logging</th>
             </tr>
             </thead>
             <tbody>
             <tr>
                 <td>
-                    Content
+                    <?php $this->main_column_display_logging(); ?>
                 </td>
             </tr>
             </tbody>
@@ -75,6 +75,36 @@ class Disciple_Tools_Magic_Links_Tab_Logging {
         </table>
         <br>
         <!-- End Box -->
+        <?php
+    }
+
+    public function main_column_display_logging() {
+        ?>
+        <table class="widefat striped">
+            <thead>
+            <tr>
+                <th style="vertical-align: middle; text-align: left; min-width: 150px;">Timestamp</th>
+                <th style="vertical-align: middle; text-align: left;">Log</th>
+            </tr>
+            </thead>
+            <?php
+            $logging = Disciple_Tools_Magic_Links_API::fetch_option( Disciple_Tools_Magic_Links_API::$option_dt_magic_links_logging );
+            $logs    = ! empty( $logging ) ? json_decode( $logging ) : [];
+            if ( ! empty( $logs ) ) {
+                $counter = 0;
+                $limit   = 500;
+                for ( $x = count( $logs ) - 1; $x > 0; $x -- ) {
+                    if ( ++ $counter <= $limit ) {
+                        echo '<tr>';
+                        echo '<td style="vertical-align: middle; text-align: left; min-width: 150px;">' . esc_attr( dt_format_date( $logs[ $x ]->timestamp, 'long' ) ) . '</td>';
+                        echo '<td style="vertical-align: middle; text-align: left;">' . esc_attr( $logs[ $x ]->log ) . '</td>';
+                        echo '</td>';
+                        echo '</tr>';
+                    }
+                }
+            }
+            ?>
+        </table>
         <?php
     }
 }
