@@ -288,26 +288,33 @@ class Disciple_Tools_Magic_Links_API {
             $sending_channel = self::fetch_sending_channel( $link_obj->schedule->sending_channel );
             if ( ! empty( $sending_channel ) ) {
 
-                // Dispatch message using specified sending channel
-                $send_result = call_user_func( $sending_channel['send'], [
-                    'user_id' => $user->dt_id,
-                    'message' => self::build_send_msg( $link_obj, $user->dt_id, $magic_link_type['url_base'] )
-                ] );
+                // Ensure a valid message can be constructed
+                $message = self::build_send_msg( $link_obj, $user->dt_id, $magic_link_type['url_base'] );
+                if ( $message !== '' ) {
 
-                // A successful outcome....?
-                if ( ! is_wp_error( $send_result ) && $send_result ) {
+                    // Dispatch message using specified sending channel
+                    $send_result = call_user_func( $sending_channel['send'], [
+                        'user_id' => $user->dt_id,
+                        'message' => $message
+                    ] );
 
-                    // Update last successful send timestamp
-                    self::update_schedule_settings( $link_obj->id, self::$schedule_last_success_send, time() );
-                    $logs[] = self::logging_create( 'Last successful send timestamp updated.' );
+                    // A successful outcome....?
+                    if ( ! is_wp_error( $send_result ) && $send_result ) {
 
-                } else {
-                    $logs[] = self::logging_create( 'Unable to successfully send using sending channel id: ' . $link_obj->schedule->sending_channel );
+                        // Update last successful send timestamp
+                        self::update_schedule_settings( $link_obj->id, self::$schedule_last_success_send, time() );
+                        $logs[] = self::logging_create( 'Last successful send timestamp updated.' );
 
-                    // If WP Error, then extract exception information
-                    if ( is_wp_error( $send_result ) ) {
-                        $logs[] = self::logging_create( 'Exception: ' . $send_result->get_error_message() );
+                    } else {
+                        $logs[] = self::logging_create( 'Unable to successfully send using sending channel id: ' . $link_obj->schedule->sending_channel );
+
+                        // If WP Error, then extract exception information
+                        if ( is_wp_error( $send_result ) ) {
+                            $logs[] = self::logging_create( 'Exception: ' . $send_result->get_error_message() );
+                        }
                     }
+                } else {
+                    $logs[] = self::logging_create( 'Unable to construct magic link message! Has the link expired?' );
                 }
             } else {
                 $logs[] = self::logging_create( 'Unable to fetch sending channel details for id: ' . $link_obj->schedule->sending_channel );

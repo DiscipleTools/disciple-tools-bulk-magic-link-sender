@@ -235,13 +235,15 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                             action: 'get',
                             parts: jsObject.parts,
                             id: post_id,
-                            comment_count: comment_count
+                            comment_count: comment_count,
+                            ts: moment().unix() // Alter url shape, so as to force cache refresh!
                         },
                         contentType: "application/json; charset=utf-8",
                         dataType: "json",
                         url: jsObject.root + jsObject.parts.root + '/v1/' + jsObject.parts.type + '/post',
                         beforeSend: function (xhr) {
-                            xhr.setRequestHeader('X-WP-Nonce', jsObject.nonce)
+                            xhr.setRequestHeader('X-WP-Nonce', jsObject.nonce);
+                            xhr.setRequestHeader('Cache-Control', 'no-store');
                         }
 
                     }).done(function (data) {
@@ -555,7 +557,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
 
         // Fetch corresponding contacts post record
         $response = [];
-        $post     = DT_Posts::get_post( 'contacts', $params['id'] );
+        $post     = DT_Posts::get_post( 'contacts', $params['id'], false );
         if ( ! empty( $post ) && ! is_wp_error( $post ) ) {
             $response['success']  = true;
             $response['post']     = $post;

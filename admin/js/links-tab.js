@@ -539,6 +539,7 @@ jQuery(function ($) {
 
       },
       error: function (data) {
+        console.log(data);
         $('#ml_main_col_schedules_send_now_but').prop('disabled', false);
         $('#ml_main_col_update_msg').html('Server error, please see logging tab for more details.').fadeIn('fast');
 

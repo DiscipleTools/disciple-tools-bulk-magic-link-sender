@@ -54,6 +54,13 @@ function execute_scheduled_link_objects() {
         $link_objs = Disciple_Tools_Magic_Links_API::fetch_option_link_objs();
         foreach ( $link_objs ?? (object) [] as $id => $link_obj ) {
 
+            // Irrespective of link object state, always ensure to remove expired links!
+            if ( Disciple_Tools_Magic_Links_API::has_links_expired( $link_obj->schedule->links_never_expires, $link_obj->schedule->links_expire_within_base_ts, $link_obj->schedule->links_expire_within_amount, $link_obj->schedule->links_expire_within_time_unit ) ) {
+                // Nuke all assigned user links!
+                Disciple_Tools_Magic_Links_API::update_user_app_magic_links( $link_obj->type, $link_obj->assigned, true );
+            }
+
+            // If enabled, proceed with processing
             if ( isset( $link_obj->enabled ) && $link_obj->enabled ) {
 
                 $logs[] = Disciple_Tools_Magic_Links_API::logging_create( 'Processing Link Object: ' . $link_obj->name );

@@ -49,7 +49,7 @@ jQuery(function ($) {
 
       },
       error: function (data) {
-        console.log(data['responseText']);
+        console.log(data);
       }
     });
   }
