@@ -20,7 +20,7 @@ add_filter( 'dt_post_type_modules', function( $modules ){
      */
     $modules["magic_links_base"] = [
         "name" => "Magic Links",
-        "enabled" => true,
+        "enabled" => false,
         "locked" => true,
         "prerequisites" => [ "contacts_base" ],
         "post_type" => "magic_links",
