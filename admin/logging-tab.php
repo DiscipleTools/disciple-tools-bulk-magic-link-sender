@@ -96,7 +96,7 @@ class Disciple_Tools_Magic_Links_Tab_Logging {
                 for ( $x = count( $logs ) - 1; $x > 0; $x -- ) {
                     if ( ++ $counter <= $limit ) {
                         echo '<tr>';
-                        echo '<td style="vertical-align: middle; text-align: left; min-width: 150px;">' . esc_attr( dt_format_date( $logs[ $x ]->timestamp, 'long' ) ) . '</td>';
+                        echo '<td style="vertical-align: middle; text-align: left; min-width: 150px;">' . esc_attr( Disciple_Tools_Magic_Links_API::format_timestamp_in_local_time_zone( $logs[ $x ]->timestamp ) ) . '</td>';
                         echo '<td style="vertical-align: middle; text-align: left;">' . esc_attr( $logs[ $x ]->log ) . '</td>';
                         echo '</td>';
                         echo '</tr>';
