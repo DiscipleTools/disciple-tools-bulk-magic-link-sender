@@ -42,6 +42,11 @@ class Disciple_Tools_Magic_Links_Tab_General {
                 $all_channels_enabled = filter_var( wp_unslash( $_POST['ml_general_main_col_general_form_all_channels_enabled'] ), FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_FLAG_NO_ENCODE_QUOTES );
                 Disciple_Tools_Magic_Links_API::update_option( Disciple_Tools_Magic_Links_API::$option_dt_magic_links_all_channels_enabled, $all_channels_enabled );
             }
+
+            if ( isset( $_POST['ml_general_main_col_general_form_default_time_zone'] ) ) {
+                $default_time_zone = filter_var( wp_unslash( $_POST['ml_general_main_col_general_form_default_time_zone'] ), FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_FLAG_NO_ENCODE_QUOTES );
+                Disciple_Tools_Magic_Links_API::update_option( Disciple_Tools_Magic_Links_API::$option_dt_magic_links_local_time_zone, $default_time_zone );
+            }
         }
     }
 
@@ -158,6 +163,24 @@ class Disciple_Tools_Magic_Links_Tab_General {
                            id="ml_general_main_col_general_all_channels_enabled" <?php echo esc_attr( boolval( Disciple_Tools_Magic_Links_API::fetch_option( Disciple_Tools_Magic_Links_API::$option_dt_magic_links_all_channels_enabled ) ) ? 'checked' : '' ); ?>/>
                 </td>
             </tr>
+            <tr>
+                <td style="vertical-align: middle;">Default Time Zone</td>
+                <td>
+                    <select id="ml_general_main_col_general_default_time_zone">
+                        <?php
+                        $option            = Disciple_Tools_Magic_Links_API::fetch_option( Disciple_Tools_Magic_Links_API::$option_dt_magic_links_local_time_zone );
+                        $default_time_zone = ! empty( $option ) ? $option : 'UTC';
+                        foreach ( Disciple_Tools_Magic_Links_API::list_available_time_zones() as $time_zone ) {
+                            $selected = ( $default_time_zone === $time_zone ) ? 'selected' : '';
+                            ?>
+                            <option <?php echo esc_attr( $selected ) ?>
+                                value="<?php echo esc_attr( $time_zone ) ?>"><?php echo esc_attr( $time_zone ) ?></option>
+                            <?php
+                        }
+                        ?>
+                    </select>
+                </td>
+            </tr>
         </table>
 
         <!-- [Submission Form] -->
@@ -171,6 +194,9 @@ class Disciple_Tools_Magic_Links_Tab_General {
 
             <input type="hidden" id="ml_general_main_col_general_form_all_channels_enabled"
                    name="ml_general_main_col_general_form_all_channels_enabled" value=""/>
+
+            <input type="hidden" id="ml_general_main_col_general_form_default_time_zone"
+                   name="ml_general_main_col_general_form_default_time_zone" value=""/>
         </form>
 
         <br>
@@ -200,13 +226,13 @@ class Disciple_Tools_Magic_Links_Tab_General {
                 foreach ( $link_objs as $id => $link_obj ) {
                     if ( $link_obj->enabled ) {
 
-                        $last_cron_run      = dt_format_date( Disciple_Tools_Magic_Links_API::fetch_option( Disciple_Tools_Magic_Links_API::$option_dt_magic_links_last_cron_run ), 'long' );
-                        $last_scheduled_run = ! empty( $link_obj->schedule->last_schedule_run ) ? dt_format_date( $link_obj->schedule->last_schedule_run, 'long' ) : '---';
-                        $last_success_send  = ! empty( $link_obj->schedule->last_success_send ) ? dt_format_date( $link_obj->schedule->last_success_send, 'long' ) : '---';
+                        $last_cron_run      = Disciple_Tools_Magic_Links_API::format_timestamp_in_local_time_zone( Disciple_Tools_Magic_Links_API::fetch_option( Disciple_Tools_Magic_Links_API::$option_dt_magic_links_last_cron_run ) );
+                        $last_scheduled_run = ! empty( $link_obj->schedule->last_schedule_run ) ? Disciple_Tools_Magic_Links_API::format_timestamp_in_local_time_zone( $link_obj->schedule->last_schedule_run ) : '---';
+                        $last_success_send  = ! empty( $link_obj->schedule->last_success_send ) ? Disciple_Tools_Magic_Links_API::format_timestamp_in_local_time_zone( $link_obj->schedule->last_success_send ) : '---';
                         $next_scheduled_run = '---';
                         if ( ! empty( $link_obj->schedule->freq_amount ) && ! empty( $link_obj->schedule->freq_time_unit ) && ! empty( $link_obj->schedule->last_schedule_run ) ) {
                             $next_run           = strtotime( '+' . $link_obj->schedule->freq_amount . ' ' . $link_obj->schedule->freq_time_unit, $link_obj->schedule->last_schedule_run );
-                            $next_scheduled_run = dt_format_date( $next_run, 'long' );
+                            $next_scheduled_run = Disciple_Tools_Magic_Links_API::format_timestamp_in_local_time_zone( $next_run );
                         }
 
                         ?>

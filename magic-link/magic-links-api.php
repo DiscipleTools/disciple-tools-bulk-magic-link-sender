@@ -13,6 +13,7 @@ class Disciple_Tools_Magic_Links_API {
     public static $option_dt_magic_links_all_channels_enabled = 'dt_magic_links_all_channels_enabled';
     public static $option_dt_magic_links_logging = 'dt_magic_links_logging';
     public static $option_dt_magic_links_last_cron_run = 'dt_magic_links_last_cron_run';
+    public static $option_dt_magic_links_local_time_zone = 'dt_magic_links_local_time_zone';
 
     public static $schedule_last_schedule_run = 'last_schedule_run';
     public static $schedule_last_success_send = 'last_success_send';
@@ -375,7 +376,23 @@ class Disciple_Tools_Magic_Links_API {
 
         $expiry_point = strtotime( '+' . $amt . ' ' . $time_unit, $base_ts );
 
-        return dt_format_date( $expiry_point, 'long' );
+        return self::format_timestamp_in_local_time_zone( $expiry_point );
+    }
+
+    public static function format_timestamp_in_local_time_zone( $timestamp ): string {
+        $option            = self::fetch_option( self::$option_dt_magic_links_local_time_zone );
+        $default_time_zone = ! empty( $option ) ? $option : 'UTC';
+
+        try {
+            $dt = new DateTime();
+            $dt->setTimezone( new DateTimeZone( $default_time_zone ) );
+            $dt->setTimestamp( $timestamp );
+
+            return $dt->format( 'F j, Y h:i:s A T' );
+
+        } catch ( Exception $e ) {
+            return dt_format_date( $timestamp, 'long' );
+        }
     }
 
     public static function fetch_endpoint_send_now_url(): string {
@@ -411,7 +428,7 @@ class Disciple_Tools_Magic_Links_API {
                 $report[] = [
                     'id'                     => $link_obj->id,
                     'name'                   => $link_obj->name,
-                    'last_success_send'      => $link_obj->schedule->last_success_send,
+                    'last_success_send'      => self::format_timestamp_in_local_time_zone( $link_obj->schedule->last_success_send ),
                     'total_contacts'         => $totals['total_contacts'],
                     'total_updated_contacts' => $totals['total_updated_contacts']
                 ];
@@ -434,7 +451,7 @@ class Disciple_Tools_Magic_Links_API {
                 wp_set_current_user( $user->dt_id );
 
                 // Fetch associated contacts list
-                $posts = DT_Posts::list_posts( 'contacts', [ 'limit' => 1000 ], false );
+                $posts = DT_Posts::list_posts( 'contacts', [ 'limit' => 1000 ] );
 
                 // Iterate and return valid posts
                 if ( ! empty( $posts ) && isset( $posts['posts'], $posts['total'] ) ) {
@@ -468,6 +485,262 @@ class Disciple_Tools_Magic_Links_API {
             'total_contacts'         => count( $contacts ),
             'total_updated_contacts' => $updated_count
         ];
+    }
+
+    public static function list_available_time_zones(): array {
+        $time_zones = [
+            'UTC',
+            'Africa/Abidjan',
+            'Africa/Accra',
+            'Africa/Addis_Ababa',
+            'Africa/Algiers',
+            'Africa/Asmara',
+            'Africa/Bamako',
+            'Africa/Bangui',
+            'Africa/Banjul',
+            'Africa/Bissau',
+            'Africa/Blantyre',
+            'Africa/Brazzaville',
+            'Africa/Bujumbura',
+            'Africa/Cairo',
+            'Africa/Casablanca',
+            'Africa/Ceuta',
+            'Africa/Conakry',
+            'Africa/Dakar',
+            'Africa/Dar_es_Salaam',
+            'Africa/Djibouti',
+            'Africa/Douala',
+            'Africa/El_Aaiun',
+            'Africa/Freetown',
+            'Africa/Gaborone',
+            'Africa/Harare',
+            'Africa/Johannesburg',
+            'Africa/Juba',
+            'Africa/Kampala',
+            'Africa/Khartoum',
+            'Africa/Kigali',
+            'Africa/Kinshasa',
+            'Africa/Lagos',
+            'Africa/Libreville',
+            'Africa/Lome',
+            'Africa/Luanda',
+            'Africa/Lubumbashi',
+            'Africa/Lusaka',
+            'Africa/Malabo',
+            'Africa/Maputo',
+            'Africa/Maseru',
+            'Africa/Mbabane',
+            'Africa/Mogadishu',
+            'Africa/Monrovia',
+            'Africa/Nairobi',
+            'Africa/Ndjamena',
+            'Africa/Niamey',
+            'Africa/Nouakchott',
+            'Africa/Ouagadougou',
+            'Africa/Porto-Novo',
+            'Africa/Sao_Tome',
+            'Africa/Tripoli',
+            'Africa/Tunis',
+            'Africa/Windhoek',
+            'America/New_York',
+            'America/Chicago',
+            'America/Denver',
+            'America/Phoenix',
+            'America/Los_Angeles',
+            'America/Anchorage',
+            'America/Adak',
+            'America/St_Johns',
+            'America/Halifax',
+            'America/Blanc-Sablon',
+            'America/Toronto',
+            'America/Atikokan',
+            'America/Winnipeg',
+            'America/Regina',
+            'America/Edmonton',
+            'America/Creston',
+            'America/Vancouver',
+            'America/Tijuana',
+            'America/Mazatlan',
+            'America/Chihuahua',
+            'America/Mexico_City',
+            'America/Matamoros',
+            'America/Monterrey',
+            'America/Merida',
+            'America/Cancun',
+            'America/Rio_branco',
+            'America/Belem',
+            'America/Bahia',
+            'America/Sao_Paulo',
+            'America/Cuiaba',
+            'America/Fortaleza',
+            'America/Recife',
+            'America/Boa_Vista',
+            'America/Maceio',
+            'America/Araguaia',
+            'America/Manaus',
+            'America/Campo_Grande',
+            'America/Porto_Velho',
+            'Asia/Aden',
+            'Asia/Almaty',
+            'Asia/Amman',
+            'Asia/Anadyr',
+            'Asia/Aqtau',
+            'Asia/Aqtobe',
+            'Asia/Ashgabat',
+            'Asia/Atyrau',
+            'Asia/Baghdad',
+            'Asia/Bahrain',
+            'Asia/Baku',
+            'Asia/Bangkok',
+            'Asia/Barnaul',
+            'Asia/Beirut',
+            'Asia/Bishkek',
+            'Asia/Brunei',
+            'Asia/Chita',
+            'Asia/Choibalsan',
+            'Asia/Colombo',
+            'Asia/Damascus',
+            'Asia/Dhaka',
+            'Asia/Dili',
+            'Asia/Dubai',
+            'Asia/Dushanbe',
+            'Asia/Famagusta',
+            'Asia/Gaza',
+            'Asia/Hebron',
+            'Asia/Ho_Chi_Minh',
+            'Asia/Hong_Kong',
+            'Asia/Hovd',
+            'Asia/Irkutsk',
+            'Asia/Jakarta',
+            'Asia/Jayapura',
+            'Asia/Jerusalem',
+            'Asia/Kabul',
+            'Asia/Kamchatka',
+            'Asia/Karachi',
+            'Asia/Kathmandu',
+            'Asia/Khandyga',
+            'Asia/Kolkata',
+            'Asia/Krasnoyarsk',
+            'Asia/Kuala_Lumpur',
+            'Asia/Kuching',
+            'Asia/Kuwait',
+            'Asia/Macau',
+            'Asia/Magadan',
+            'Asia/Makassar',
+            'Asia/Manila',
+            'Asia/Muscat',
+            'Asia/Nicosia',
+            'Asia/Novokuznetsk',
+            'Asia/Novosibirsk',
+            'Asia/Omsk',
+            'Asia/Oral',
+            'Asia/Phnom_Penh',
+            'Asia/Pontianak',
+            'Asia/Pyongyang',
+            'Asia/Qatar',
+            'Asia/Qostanay',
+            'Asia/Qyzylorda',
+            'Asia/Riyadh',
+            'Asia/Sakhalin',
+            'Asia/Samarkand',
+            'Asia/Seoul',
+            'Asia/Shanghai',
+            'Asia/Singapore',
+            'Asia/Srednekolymsk',
+            'Asia/Taipei',
+            'Asia/Tashkent',
+            'Asia/Tbilisi',
+            'Asia/Tehran',
+            'Asia/Thimphu',
+            'Asia/Tokyo',
+            'Asia/Tomsk',
+            'Asia/Ulaanbaatar',
+            'Asia/Urumqi',
+            'Asia/Ust-Nera',
+            'Asia/Vientiane',
+            'Asia/Vladivostok',
+            'Asia/Yakutsk',
+            'Asia/Yangon',
+            'Asia/Yekaterinburg',
+            'Asia/Yerevan',
+            'Atlantic/Azores',
+            'Atlantic/Bermuda',
+            'Atlantic/Canary',
+            'Atlantic/Cape_Verde',
+            'Atlantic/Faroe',
+            'Atlantic/Madeira',
+            'Atlantic/Reykjavik',
+            'Atlantic/South_Georgia',
+            'Atlantic/St_Helena',
+            'Atlantic/Stanley',
+            'Australia/Adelaide',
+            'Australia/Brisbane',
+            'Australia/Broken_Hill',
+            'Australia/Darwin',
+            'Australia/Eucla',
+            'Australia/Hobart',
+            'Australia/Lindeman',
+            'Australia/Lord_Howe',
+            'Australia/Melbourne',
+            'Australia/Perth',
+            'Australia/Sydney',
+            'Europe/Amsterdam',
+            'Europe/Athens',
+            'Europe/Belgrade',
+            'Europe/Berlin',
+            'Europe/Bratislava',
+            'Europe/Brussels',
+            'Europe/Bucharest',
+            'Europe/Budapest',
+            'Europe/Copenhagen',
+            'Europe/Dublin',
+            'Europe/Gibraltar',
+            'Europe/Guernsey',
+            'Europe/Helsinki',
+            'Europe/Isle_of_Man',
+            'Europe/Istanbul',
+            'Europe/Jersey',
+            'Europe/Kaliningrad',
+            'Europe/Kiev',
+            'Europe/Lisbon',
+            'Europe/London',
+            'Europe/Luxembourg',
+            'Europe/Madrid',
+            'Europe/Malta',
+            'Europe/Monaco',
+            'Europe/Moscow',
+            'Europe/Oslo',
+            'Europe/Paris',
+            'Europe/Prague',
+            'Europe/Rome',
+            'Europe/Samara',
+            'Europe/Stockholm',
+            'Europe/Vatican',
+            'Europe/Vienna',
+            'Europe/Warsaw',
+            'Indian/Antananarivo',
+            'Indian/Chagos',
+            'Indian/Christmas',
+            'Indian/Cocos',
+            'Indian/Comoro',
+            'Indian/Kerguelen',
+            'Indian/Mahe',
+            'Indian/Maldives',
+            'Indian/Mauritius',
+            'Indian/Mayotte',
+            'Indian/Reunion',
+            'Pacific/Pago_Pago',
+            'Pacific/Chuuk',
+            'Pacific/Guam',
+            'Pacific/Honolulu',
+            'Pacific/Majuro',
+            'Pacific/Saipan',
+            'Pacific/Palau'
+        ];
+
+        asort( $time_zones, SORT_STRING );
+
+        return $time_zones;
     }
 
 }

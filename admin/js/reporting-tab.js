@@ -170,7 +170,7 @@ jQuery(function ($) {
           <tr>
             <td>${window.lodash.escape(data['name'])}</td>
             <td>${window.lodash.escape(data['total_contacts'])}</td>
-            <td>${window.lodash.escape(moment.unix(data['last_success_send']).utc().format('MMMM Do YYYY, h:mm:ss a'))}</td>
+            <td>${window.lodash.escape(data['last_success_send'])}</td>
           </tr>`;
       });
 

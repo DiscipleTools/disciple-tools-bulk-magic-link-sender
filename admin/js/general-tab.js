@@ -14,10 +14,12 @@ jQuery(function ($) {
     // Fetch values to be saved
     let all_scheduling_enabled = $('#ml_general_main_col_general_all_scheduling_enabled').prop('checked');
     let all_channels_enabled = $('#ml_general_main_col_general_all_channels_enabled').prop('checked');
+    let default_time_zone = $('#ml_general_main_col_general_default_time_zone').val();
 
     // Update hidden form values
     $('#ml_general_main_col_general_form_all_scheduling_enabled').val(all_scheduling_enabled ? '1' : '0');
     $('#ml_general_main_col_general_form_all_channels_enabled').val(all_channels_enabled ? '1' : '0');
+    $('#ml_general_main_col_general_form_default_time_zone').val(default_time_zone);
 
     // Submit form
     $('#ml_general_main_col_general_form').submit();
