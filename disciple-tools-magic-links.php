@@ -133,6 +133,7 @@ class Disciple_Tools_Magic_Links {
         require_once( 'magic-link/magic-link-user-app.php' );
         require_once( 'magic-link/magic-links-api.php' );
         require_once( 'magic-link/magic-links-cron.php' );
+        require_once( 'magic-link/magic-links-default-filters.php' );
 
         /**
          * @todo Decide if you want to add a custom admin page in the admin area

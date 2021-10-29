@@ -292,7 +292,7 @@ jQuery(function ($) {
   }
 
   function is_email_format_valid(email) {
-    return new RegExp('^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,4}$').test(window.lodash.escape(email));
+    return new RegExp('^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$').test(window.lodash.escape(email));
   }
 
   function build_row_html(id, dt_id, type, name, phone, email) {

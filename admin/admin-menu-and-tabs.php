@@ -85,6 +85,8 @@ class Disciple_Tools_Magic_Links_Menu {
                    class="nav-tab <?php echo esc_html( ( $tab == 'general' || ! isset( $tab ) ) ? 'nav-tab-active' : '' ); ?>">General</a>
                 <a href="<?php echo esc_attr( $link ) . 'links' ?>"
                    class="nav-tab <?php echo esc_html( ( $tab == 'links' || ! isset( $tab ) ) ? 'nav-tab-active' : '' ); ?>">Links</a>
+                <a href="<?php echo esc_attr( $link ) . 'email' ?>"
+                   class="nav-tab <?php echo esc_html( ( $tab == 'email' || ! isset( $tab ) ) ? 'nav-tab-active' : '' ); ?>">Email</a>
                 <a href="<?php echo esc_attr( $link ) . 'logging' ?>"
                    class="nav-tab <?php echo esc_html( ( $tab == 'logging' || ! isset( $tab ) ) ? 'nav-tab-active' : '' ); ?>">Logging</a>
                 <a href="<?php echo esc_attr( $link ) . 'reporting' ?>"
@@ -101,6 +103,11 @@ class Disciple_Tools_Magic_Links_Menu {
                 case "links":
                     require( 'links-tab.php' );
                     $object = new Disciple_Tools_Magic_Links_Tab_Links();
+                    $object->content();
+                    break;
+                case "email":
+                    require( 'email-tab.php' );
+                    $object = new Disciple_Tools_Magic_Links_Tab_Email();
                     $object->content();
                     break;
                 case "logging":

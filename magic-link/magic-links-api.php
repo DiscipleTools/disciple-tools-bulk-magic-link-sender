@@ -14,10 +14,14 @@ class Disciple_Tools_Magic_Links_API {
     public static $option_dt_magic_links_logging = 'dt_magic_links_logging';
     public static $option_dt_magic_links_last_cron_run = 'dt_magic_links_last_cron_run';
     public static $option_dt_magic_links_local_time_zone = 'dt_magic_links_local_time_zone';
+    public static $option_dt_magic_links_defaults_email = 'dt_magic_links_defaults_email';
 
     public static $schedule_last_schedule_run = 'last_schedule_run';
     public static $schedule_last_success_send = 'last_success_send';
     public static $schedule_links_expire_base_ts = 'links_expire_within_base_ts';
+
+    public static $channel_email_id = 'dt_channel_email';
+    public static $channel_email_name = 'Email Sending Channel';
 
     public static function fetch_magic_link_types(): array {
         $filtered_types = apply_filters( 'dt_settings_apps_list', [] );
@@ -289,8 +293,17 @@ class Disciple_Tools_Magic_Links_API {
             $sending_channel = self::fetch_sending_channel( $link_obj->schedule->sending_channel );
             if ( ! empty( $sending_channel ) ) {
 
-                // Ensure a valid message can be constructed
-                $message = self::build_send_msg( $link_obj, $user->dt_id, $magic_link_type['url_base'] );
+                // Ensure a valid message can be constructed -> Either via sending channel or adopt default shape!
+                if ( isset( $sending_channel['has_own_message'] ) && $sending_channel['has_own_message'] ) {
+                    $message = call_user_func( $sending_channel['build_own_message'], [
+                        'user_id'   => $user->dt_id,
+                        'link_url'  => self::build_magic_link_url( $link_obj, $user->dt_id, $magic_link_type['url_base'] ),
+                        'expiry_ts' => self::fetch_links_expired_formatted_date( $link_obj->schedule->links_never_expires, $link_obj->schedule->links_expire_within_base_ts, $link_obj->schedule->links_expire_within_amount, $link_obj->schedule->links_expire_within_time_unit )
+                    ] );
+
+                } else {
+                    $message = self::build_send_msg( $link_obj, $user->dt_id, $magic_link_type['url_base'] );
+                }
                 if ( $message !== '' ) {
 
                     // Dispatch message using specified sending channel
@@ -326,20 +339,27 @@ class Disciple_Tools_Magic_Links_API {
     }
 
     private static function build_send_msg( $link_obj, $user_id, $magic_link_url_base ): string {
-        // First, locate current magic link hash
-        $msg  = '';
-        $hash = get_user_option( $link_obj->type, $user_id );
-        if ( ! empty( $hash ) ) {
+        $msg = '';
 
-            // Construct current user's magic link url
-            $url = trailingslashit( trailingslashit( site_url() ) . $magic_link_url_base ) . $hash;
+        // First, build magic link url
+        $link_url = self::build_magic_link_url( $link_obj, $user_id, $magic_link_url_base );
+        if ( ! empty( $link_url ) && $link_url !== '' ) {
 
             // Construct message body to be sent!
             $expire_on = self::fetch_links_expired_formatted_date( $link_obj->schedule->links_never_expires, $link_obj->schedule->links_expire_within_base_ts, $link_obj->schedule->links_expire_within_amount, $link_obj->schedule->links_expire_within_time_unit );
-            $msg       = 'Hi, Please update records -> ' . $url . ' -> Link will expire on ' . $expire_on;
+            $msg       = 'Hi, Please update records -> ' . $link_url . ' -> Link will expire on ' . $expire_on;
         }
 
         return $msg;
+    }
+
+    private static function build_magic_link_url( $link_obj, $user_id, $magic_link_url_base ): string {
+        $hash = get_user_option( $link_obj->type, $user_id );
+        if ( ! empty( $hash ) ) {
+            return trailingslashit( trailingslashit( site_url() ) . $magic_link_url_base ) . $hash;
+        }
+
+        return '';
     }
 
     public static function update_schedule_settings( $link_obj_id, $setting, $value ) {
@@ -741,6 +761,36 @@ class Disciple_Tools_Magic_Links_API {
         asort( $time_zones, SORT_STRING );
 
         return $time_zones;
+    }
+
+    public static function get_contact_id_by_user_id( $user_id ) {
+        $contact_id = get_user_option( "corresponds_to_contact", $user_id );
+
+        if ( ! empty( $contact_id ) && get_post( $contact_id ) ) {
+            return (int) $contact_id;
+        }
+        $args     = [
+            'post_type'  => 'contacts',
+            'relation'   => 'AND',
+            'meta_query' => [
+                [
+                    'key'   => "corresponds_to_user",
+                    "value" => $user_id
+                ],
+                [
+                    'key'   => "type",
+                    "value" => "user"
+                ],
+            ],
+        ];
+        $contacts = new WP_Query( $args );
+        if ( isset( $contacts->post->ID ) ) {
+            update_user_option( $user_id, "corresponds_to_contact", $contacts->post->ID );
+
+            return $contacts->post->ID;
+        } else {
+            return null;
+        }
     }
 
 }
