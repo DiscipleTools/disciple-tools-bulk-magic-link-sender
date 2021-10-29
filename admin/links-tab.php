@@ -19,7 +19,7 @@ class Disciple_Tools_Magic_Links_Tab_Links {
     }
 
     private function process_scripts() {
-        wp_register_style( 'daterangepicker-css', 'https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.css' );
+        wp_register_style( 'daterangepicker-css', 'https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.css', [], '3.1.0' );
         wp_enqueue_style( 'daterangepicker-css' );
         wp_enqueue_script( 'daterangepicker-js', 'https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.js', [ 'moment' ], '3.1.0', true );
 
