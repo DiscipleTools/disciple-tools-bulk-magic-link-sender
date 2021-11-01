@@ -130,6 +130,7 @@ function dt_email_sending_channel_send_smtp_email( $phpmailer ) {
     // Configure accordingly based on default mail server usage state
     $email_obj = dt_email_sending_channel_get_config();
     if ( ! empty( $email_obj ) && isset( $email_obj['use_default_server'] ) && ! $email_obj['use_default_server'] ) {
+        // phpcs:disable
         $phpmailer->Host       = $email_obj['server_addr'];
         $phpmailer->Port       = $email_obj['server_port'];
         $phpmailer->SMTPSecure = $email_obj['encrypt_type'];
@@ -139,6 +140,7 @@ function dt_email_sending_channel_send_smtp_email( $phpmailer ) {
         $phpmailer->From       = $email_obj['from_email'];
         $phpmailer->FromName   = $email_obj['from_name'];
         $phpmailer->isSMTP();
+        // phpcs:enable
     }
 }
 
