@@ -10,14 +10,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 add_filter( 'dt_sending_channels', 'dt_email_sending_channels', 10, 1 );
 function dt_email_sending_channels( $channels ) {
     $channels[] = [
-        'id'                => Disciple_Tools_Magic_Links_API::$channel_email_id,
-        'name'              => Disciple_Tools_Magic_Links_API::$channel_email_name,
-        'enabled'           => dt_email_sending_channel_enabled(),
-        'has_own_message'   => true,
-        'build_own_message' => function ( $params = [] ) {
-            return dt_email_sending_channel_build_msg( $params );
-        },
-        'send'              => function ( $params = [] ) {
+        'id'      => Disciple_Tools_Magic_Links_API::$channel_email_id,
+        'name'    => Disciple_Tools_Magic_Links_API::$channel_email_name,
+        'enabled' => dt_email_sending_channel_enabled(),
+        'send'    => function ( $params = [] ) {
             return dt_email_sending_channel_send( $params );
         }
     ];
@@ -40,85 +36,74 @@ function dt_email_sending_channel_enabled(): bool {
     return false;
 }
 
-function dt_email_sending_channel_build_msg( $params ): string {
-    if ( isset( $params['user_id'], $params['link_url'], $params['expiry_ts'] ) ) {
-        $email_obj = dt_email_sending_channel_get_config();
-        if ( ! empty( $email_obj ) ) {
+function dt_email_sending_channel_field( $user ): array {
+    $field = [];
+    switch ( Disciple_Tools_Magic_Links_API::determine_assigned_user_type( $user ) ) {
+        case Disciple_Tools_Magic_Links_API::$assigned_user_type_id_users:
 
-            // Determine post type, based on selected email field; which should have the format: [post_type]+[field_id]
-            $post_type = explode( '+', $email_obj['email_field'] )[0];
-
-            // Fetch corresponding contacts post record
-            $user_contact = DT_Posts::get_post( $post_type, Disciple_Tools_Magic_Links_API::get_contact_id_by_user_id( $params['user_id'] ), true, false );
-            if ( ! empty( $user_contact ) && ! is_wp_error( $user_contact ) ) {
-                $name = $user_contact['title'] ?? '';
-
-            } else {
-                $name = '';
+            $user_info = get_userdata( $user->dt_id );
+            if ( ! empty( $user_info ) && ! is_wp_error( $user_info ) && isset( $user_info->data->user_email ) ) {
+                $field[] = $user_info->data->user_email;
             }
+            break;
 
-            // Return message, having replaced placeholders
-            return str_replace(
-                [
-                    '{{name}}',
-                    '{{link}}',
-                    '{{time}}'
-                ],
-                [
-                    $name,
-                    $params['link_url'],
-                    $params['expiry_ts']
-                ],
-                $email_obj['message']
-            );
-        }
+        case Disciple_Tools_Magic_Links_API::$assigned_user_type_id_contacts:
+
+            $user_contact = DT_Posts::get_post( 'contacts', Disciple_Tools_Magic_Links_API::get_contact_id_by_user_id( $user->dt_id ), true, false );
+            if ( ! empty( $user_contact ) && ! is_wp_error( $user_contact ) && isset( $user_contact['contact_email'] ) ) {
+                foreach ( $user_contact['contact_email'] as $email ) {
+                    if ( ! empty( $email['value'] ) ) {
+                        $field[] = $email['value'];
+                    }
+                }
+            }
+            break;
+
+        case Disciple_Tools_Magic_Links_API::$assigned_user_type_id_groups:
+            // TODO
+            break;
     }
 
-    return '';
+    return $field;
 }
 
 function dt_email_sending_channel_send( $params ) {
     // Ensure required params and enabled state is present and correct
-    if ( ! dt_email_sending_channel_enabled() || empty( $params['user_id'] ) || empty( $params['message'] ) ) {
+    if ( ! dt_email_sending_channel_enabled() || empty( $params['user'] ) || empty( $params['message'] ) ) {
         return false;
     }
 
     // Fetch email config settings
     $email_obj = dt_email_sending_channel_get_config();
 
-    // Fetch and split contact email field option; which should have the following format: [post_type]+[field_id]
-    $post_type = explode( '+', $email_obj['email_field'] )[0];
-    $field_id  = explode( '+', $email_obj['email_field'] )[1];
+    // Fetch email addresses to be used during dispatch
+    $emails = dt_email_sending_channel_field( $params['user'] );
 
-    // Fetch corresponding contacts post record
-    $user_contact = DT_Posts::get_post( $post_type, Disciple_Tools_Magic_Links_API::get_contact_id_by_user_id( $params['user_id'] ), true, false );
-    if ( ! empty( $email_obj ) && ! empty( $user_contact ) && ! is_wp_error( $user_contact ) ) {
+    // A quick sanity check prior to iteration!
+    if ( ! empty( $emails ) ) {
 
-        // As field is expected to be of type communication_channel; then structure to be an array of email addresses!
-        if ( is_array( $user_contact[ $field_id ] ) ) {
+        // Iterate over email addresses
+        foreach ( $emails as $email ) {
+            if ( ! empty( $email ) ) {
 
-            // Iterate over email addresses
-            foreach ( $user_contact[ $field_id ] as $email ) {
-                if ( ! empty( $email['value'] ) ) {
+                try {
 
-                    try {
+                    // Build and dispatch notification email!
+                    $email_to        = $email;
+                    $email_subject   = $email_obj['subject'];
+                    $email_body      = $params['message'];
+                    $email_headers[] = 'Content-Type: text/plain; charset=UTF-8';
+                    $email_headers[] = 'From: ' . $email_obj['from_name'] . ' <' . $email_obj['from_email'] . '>';
+                    wp_mail( $email_to, $email_subject, $email_body, $email_headers );
 
-                        // Build and dispatch notification email!
-                        $email_to      = $email['value'];
-                        $email_subject = $email_obj['subject'];
-                        $email_body    = $params['message']; // Ensure to select the updated, placeholder replaced message!
-                        $email_headers = [ 'Content-Type: text/plain; charset=UTF-8' ];
-                        wp_mail( $email_to, $email_subject, $email_body, $email_headers );
-
-                    } catch ( Exception $e ) {
-                        return new WP_Error( __FUNCTION__, $e->getMessage(), [ 'status' => $e->getCode() ] );
-                    }
+                } catch ( Exception $e ) {
+                    return new WP_Error( __FUNCTION__, $e->getMessage(), [ 'status' => $e->getCode() ] );
                 }
             }
-
-            // Return true if this point has been reached
-            return true;
         }
+
+        // Return true if this point has been reached
+        return true;
     }
 
     return false;

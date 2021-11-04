@@ -62,8 +62,14 @@ jQuery(function ($) {
       reset_section_assign_users_teams([]);
     });
 
+    reset_section(display, $('#ml_main_col_message'), function () {
+      let default_msg = window.dt_magic_links.dt_default_message;
+      reset_section_message(default_msg);
+    });
+
     reset_section(display, $('#ml_main_col_schedules'), function () {
-      reset_section_schedules(false, '1', 'hours', '', '3', 'days', false, moment().unix(), true, '', '', false);
+      let default_send_channel_id = window.dt_magic_links.dt_default_send_channel_id;
+      reset_section_schedules(false, '1', 'hours', default_send_channel_id, '3', 'days', false, moment().unix(), true, '', '', false);
     });
 
     $('#ml_main_col_update_msg').html('').fadeOut('fast');
@@ -114,6 +120,10 @@ jQuery(function ($) {
         handle_add_users_teams_request(element['id'], false);
       });
     }
+  }
+
+  function reset_section_message(message) {
+    $('#ml_main_col_msg_textarea').val(message);
   }
 
   function reset_section_schedules(enabled, freq_amount, freq_time_unit, sending_channel, links_amount, links_time_unit, links_never_expires, links_base_ts, links_auto_refresh, last_schedule_run, last_success_send, send_now) {
@@ -386,6 +396,8 @@ jQuery(function ($) {
 
     let assigned_users_teams = fetch_assigned_users_teams();
 
+    let message = $('#ml_main_col_msg_textarea').val().trim();
+
     let scheduling_enabled = $('#ml_main_col_schedules_enabled').prop('checked');
     let freq_amount = $('#ml_main_col_schedules_frequency_amount').val();
     let freq_time_unit = $('#ml_main_col_schedules_frequency_time_unit').val();
@@ -411,6 +423,8 @@ jQuery(function ($) {
       update_msg = 'Please specify a valid object expiration date.';
     } else if (!type) {
       update_msg = 'Please specify a valid magic link type.';
+    } else if (!message) {
+      update_msg = 'Please specify a valid message, with optional {{}} placeholders.';
     } else if (scheduling_enabled && (!freq_amount || !freq_time_unit)) {
       update_msg = 'Please specify a valid scheduling frequency.';
     } else if (scheduling_enabled && !sending_channel) {
@@ -440,6 +454,8 @@ jQuery(function ($) {
 
         'assigned': assigned_users_teams,
 
+        'message': message,
+
         'schedule': {
           'enabled': scheduling_enabled,
           'freq_amount': freq_amount,
@@ -458,7 +474,6 @@ jQuery(function ($) {
 
       // Submit link object package for saving
       $('#ml_main_col_update_form').submit();
-
     }
   }
 
@@ -496,6 +511,10 @@ jQuery(function ($) {
 
       reset_section(true, $('#ml_main_col_assign_users_teams'), function () {
         reset_section_assign_users_teams(link_obj['assigned']);
+      });
+
+      reset_section(true, $('#ml_main_col_message'), function () {
+        reset_section_message(link_obj['message']);
       });
 
       reset_section(true, $('#ml_main_col_schedules'), function () {

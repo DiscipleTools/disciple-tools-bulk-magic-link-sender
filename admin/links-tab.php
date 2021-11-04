@@ -32,11 +32,13 @@ class Disciple_Tools_Magic_Links_Tab_Links {
 
         wp_localize_script(
             "dt_magic_links_script", "dt_magic_links", array(
-                'dt_magic_link_types'   => Disciple_Tools_Magic_Links_API::fetch_magic_link_types(),
-                'dt_users'              => Disciple_Tools_Magic_Links_API::fetch_dt_users(),
-                'dt_teams'              => Disciple_Tools_Magic_Links_API::fetch_dt_teams(),
-                'dt_magic_link_objects' => Disciple_Tools_Magic_Links_API::fetch_option_link_objs(),
-                'dt_endpoint_send_now'  => Disciple_Tools_Magic_Links_API::fetch_endpoint_send_now_url()
+                'dt_magic_link_types'        => Disciple_Tools_Magic_Links_API::fetch_magic_link_types(),
+                'dt_users'                   => Disciple_Tools_Magic_Links_API::fetch_dt_users(),
+                'dt_teams'                   => Disciple_Tools_Magic_Links_API::fetch_dt_teams(),
+                'dt_magic_link_objects'      => Disciple_Tools_Magic_Links_API::fetch_option_link_objs(),
+                'dt_endpoint_send_now'       => Disciple_Tools_Magic_Links_API::fetch_endpoint_send_now_url(),
+                'dt_default_message'         => Disciple_Tools_Magic_Links_API::fetch_default_send_msg(),
+                'dt_default_send_channel_id' => Disciple_Tools_Magic_Links_API::$channel_email_id
             )
         );
     }
@@ -180,6 +182,27 @@ class Disciple_Tools_Magic_Links_Tab_Links {
         <!-- End Box -->
 
         <!-- Box -->
+        <table style="display: none;" class="widefat striped" id="ml_main_col_message">
+            <thead>
+            <tr>
+                <th>Message [<a href="#" class="ml-links-docs"
+                                data-title="ml_links_right_docs_message_title"
+                                data-content="ml_links_right_docs_message_content">&#63;</a>]
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>
+                    <?php $this->main_column_message(); ?>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <br>
+        <!-- End Box -->
+
+        <!-- Box -->
         <table style="display: none;" class="widefat striped" id="ml_main_col_schedules">
             <thead>
             <tr>
@@ -206,7 +229,7 @@ class Disciple_Tools_Magic_Links_Tab_Links {
                    name="ml_main_col_update_form_link_obj" value=""/>
         </form>
 
-        <span style="float:left; display: none;" id="ml_main_col_update_msg"></span>
+        <span style="float:left; display: none; font-weight: bold;" id="ml_main_col_update_msg"></span>
 
         <span style="float:right;">
             <button style="display: none;" type="submit" id="ml_main_col_update_but"
@@ -383,6 +406,12 @@ class Disciple_Tools_Magic_Links_Tab_Links {
             </tbody>
         </table>
 
+        <?php
+    }
+
+    private function main_column_message() {
+        ?>
+        <textarea style="min-width: 100%;" id="ml_main_col_msg_textarea" rows="10"></textarea>
         <?php
     }
 

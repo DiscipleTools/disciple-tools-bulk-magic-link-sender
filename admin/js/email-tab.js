@@ -3,9 +3,7 @@ jQuery(function ($) {
   // Event Listeners
   $(document).ready(function () {
     let email_obj = window.dt_magic_links.dt_magic_link_default_email_obj;
-    if (email_obj) {
-      handle_field_updates(JSON.parse(email_obj));
-    }
+    handle_field_updates(email_obj ? JSON.parse(email_obj) : null);
   });
 
   $(document).on('click', '.ml-email-docs', function (evt) {
@@ -32,6 +30,9 @@ jQuery(function ($) {
   function handle_field_updates(email_obj) {
     if (email_obj) {
       $('#ml_email_main_col_config_enabled').prop('checked', email_obj['enabled']);
+      $('#ml_email_main_col_config_from_email').val(email_obj['from_email']);
+      $('#ml_email_main_col_config_from_name').val(email_obj['from_name']);
+      $('#ml_email_main_col_config_email_subject').val(email_obj['subject']);
       $('#ml_email_main_col_config_use_default_server').prop('checked', email_obj['use_default_server']);
       $('#ml_email_main_col_config_server_addr').val(email_obj['server_addr']);
       $('#ml_email_main_col_config_server_port').val(email_obj['server_port']);
@@ -39,11 +40,10 @@ jQuery(function ($) {
       $('#ml_email_main_col_config_auth_enabled').prop('checked', email_obj['auth_enabled']);
       $('#ml_email_main_col_config_server_usr').val(email_obj['username']);
       $('#ml_email_main_col_config_server_pwd').val(email_obj['password']);
-      $('#ml_email_main_col_config_from_email').val(email_obj['from_email']);
-      $('#ml_email_main_col_config_from_name').val(email_obj['from_name']);
-      $('#ml_email_main_col_config_email_field').val(email_obj['email_field']);
-      $('#ml_email_main_col_msg_subject').val(email_obj['subject']);
-      $('#ml_email_main_col_msg_textarea').val(email_obj['message']);
+    } else {
+      // Set default states
+      $('#ml_email_main_col_config_enabled').prop('checked', true);
+      $('#ml_email_main_col_config_use_default_server').prop('checked', true);
     }
 
     // Adjust element states accordingly
@@ -70,8 +70,6 @@ jQuery(function ($) {
     $('#ml_email_main_col_config_server_usr_show').prop('disabled', using_default_server);
     $('#ml_email_main_col_config_server_pwd').prop('disabled', using_default_server);
     $('#ml_email_main_col_config_server_pwd_show').prop('disabled', using_default_server);
-    $('#ml_email_main_col_config_from_email').prop('disabled', using_default_server);
-    $('#ml_email_main_col_config_from_name').prop('disabled', using_default_server);
   }
 
   function show_secrets(input_ele, show_ele) {
@@ -82,6 +80,9 @@ jQuery(function ($) {
 
     // Fetch values to be saved
     let enabled = $('#ml_email_main_col_config_enabled').prop('checked');
+    let from_email = $('#ml_email_main_col_config_from_email').val().trim();
+    let from_name = $('#ml_email_main_col_config_from_name').val().trim();
+    let subject = $('#ml_email_main_col_config_email_subject').val().trim();
     let use_default_server = $('#ml_email_main_col_config_use_default_server').prop('checked');
     let server_addr = $('#ml_email_main_col_config_server_addr').val().trim();
     let server_port = $('#ml_email_main_col_config_server_port').val();
@@ -89,11 +90,6 @@ jQuery(function ($) {
     let auth_enabled = $('#ml_email_main_col_config_auth_enabled').prop('checked');
     let usr = $('#ml_email_main_col_config_server_usr').val().trim();
     let pwd = $('#ml_email_main_col_config_server_pwd').val().trim();
-    let from_email = $('#ml_email_main_col_config_from_email').val().trim();
-    let from_name = $('#ml_email_main_col_config_from_name').val().trim();
-    let email_field = $('#ml_email_main_col_config_email_field').val();
-    let subject = $('#ml_email_main_col_msg_subject').val().trim();
-    let message = $('#ml_email_main_col_msg_textarea').val().trim();
 
     // Validate submitted values
     let update_msg = null;
@@ -102,7 +98,16 @@ jQuery(function ($) {
 
     if (enabled) {
 
-      // Sanity check based on use_default_server flag!
+      // General sanity checks
+      if (!is_email_format_valid(from_email)) {
+        update_msg = 'Please specify a valid from email.';
+      } else if (!from_name) {
+        update_msg = 'Please specify a valid from name.';
+      } else if (!subject) {
+        update_msg = 'Please specify a valid email message subject.';
+      }
+
+      // Advanced sanity check based on use_default_server flag!
       if (!use_default_server) {
         if (!server_addr) {
           update_msg = 'Please specify a valid server address.';
@@ -110,19 +115,7 @@ jQuery(function ($) {
           update_msg = 'Please specify a valid username.';
         } else if (auth_enabled && !pwd) {
           update_msg = 'Please specify a valid password.';
-        } else if (!is_email_format_valid(from_email)) {
-          update_msg = 'Please specify a valid from email.';
-        } else if (!from_name) {
-          update_msg = 'Please specify a valid from name.';
         }
-      }
-
-      if (!email_field) {
-        update_msg = 'Please specify a valid email field.';
-      } else if (!subject) {
-        update_msg = 'Please specify a valid email message subject.';
-      } else if (!message) {
-        update_msg = 'Please specify a valid email message body, with optional {{}} placeholders.';
       }
     }
 
@@ -139,18 +132,16 @@ jQuery(function ($) {
       // Proceed with packaging values into json structure, ready for saving
       let email_obj = {
         'enabled': enabled,
+        'from_email': from_email,
+        'from_name': from_name,
+        'subject': subject,
         'use_default_server': use_default_server,
         'server_addr': server_addr,
         'server_port': server_port,
         'encrypt_type': encrypt,
         'auth_enabled': auth_enabled,
         'username': usr,
-        'password': pwd,
-        'from_email': from_email,
-        'from_name': from_name,
-        'email_field': email_field,
-        'subject': subject,
-        'message': message
+        'password': pwd
       };
       $('#ml_email_main_col_config_form_email_obj').val(JSON.stringify(email_obj));
 

@@ -23,6 +23,10 @@ class Disciple_Tools_Magic_Links_API {
     public static $channel_email_id = 'dt_channel_email';
     public static $channel_email_name = 'Email Sending Channel';
 
+    public static $assigned_user_type_id_users = 'users';
+    public static $assigned_user_type_id_contacts = 'contacts';
+    public static $assigned_user_type_id_groups = 'groups';
+
     public static function fetch_magic_link_types(): array {
         $filtered_types = apply_filters( 'dt_settings_apps_list', [] );
 
@@ -293,22 +297,13 @@ class Disciple_Tools_Magic_Links_API {
             $sending_channel = self::fetch_sending_channel( $link_obj->schedule->sending_channel );
             if ( ! empty( $sending_channel ) ) {
 
-                // Ensure a valid message can be constructed -> Either via sending channel or adopt default shape!
-                if ( isset( $sending_channel['has_own_message'] ) && $sending_channel['has_own_message'] ) {
-                    $message = call_user_func( $sending_channel['build_own_message'], [
-                        'user_id'   => $user->dt_id,
-                        'link_url'  => self::build_magic_link_url( $link_obj, $user->dt_id, $magic_link_type['url_base'] ),
-                        'expiry_ts' => self::fetch_links_expired_formatted_date( $link_obj->schedule->links_never_expires, $link_obj->schedule->links_expire_within_base_ts, $link_obj->schedule->links_expire_within_amount, $link_obj->schedule->links_expire_within_time_unit )
-                    ] );
-
-                } else {
-                    $message = self::build_send_msg( $link_obj, $user->dt_id, $magic_link_type['url_base'] );
-                }
+                // Construct message to be sent
+                $message = self::build_send_msg( $link_obj, $user, $magic_link_type['url_base'] );
                 if ( $message !== '' ) {
 
                     // Dispatch message using specified sending channel
                     $send_result = call_user_func( $sending_channel['send'], [
-                        'user_id' => $user->dt_id,
+                        'user'    => $user,
                         'message' => $message
                     ] );
 
@@ -338,19 +333,89 @@ class Disciple_Tools_Magic_Links_API {
         }
     }
 
-    private static function build_send_msg( $link_obj, $user_id, $magic_link_url_base ): string {
+    public static function determine_assigned_user_type( $user ): string {
+        if ( in_array( strtolower( trim( $user->type ) ), [
+            'user',
+            'member'
+        ] ) ) { // TODO: Determine if member is of type user or contact!
+            return self::$assigned_user_type_id_users;
+
+        } else if ( strtolower( trim( $user->type ) ) == 'contact' ) {
+            return self::$assigned_user_type_id_contacts;
+
+        } else if ( strtolower( trim( $user->type ) ) == 'group' ) {
+            return self::$assigned_user_type_id_groups;
+        }
+
+        return '';
+    }
+
+    public static function determine_assigned_user_name( $user ) {
+        $name = '';
+        switch ( self::determine_assigned_user_type( $user ) ) {
+            case self::$assigned_user_type_id_users:
+
+                $user_info = get_userdata( $user->dt_id );
+                if ( ! empty( $user_info ) && ! is_wp_error( $user_info ) && isset( $user_info->data->display_name ) ) {
+                    $name = $user_info->data->display_name;
+                }
+                break;
+
+            case self::$assigned_user_type_id_contacts:
+
+                $user_contact = DT_Posts::get_post( 'contacts', self::get_contact_id_by_user_id( $user->dt_id ), true, false );
+                if ( ! empty( $user_contact ) && ! is_wp_error( $user_contact ) ) {
+                    $name = $user_contact['title'] ?? '';
+                }
+                break;
+
+            case self::$assigned_user_type_id_groups:
+                // TODO
+                break;
+        }
+
+        return $name;
+    }
+
+    private static function build_send_msg( $link_obj, $user, $magic_link_url_base ): string {
         $msg = '';
 
         // First, build magic link url
-        $link_url = self::build_magic_link_url( $link_obj, $user_id, $magic_link_url_base );
-        if ( ! empty( $link_url ) && $link_url !== '' ) {
+        $link_url = self::build_magic_link_url( $link_obj, $user->dt_id, $magic_link_url_base );
+        if ( ! empty( $link_obj->message ) && ! empty( $link_url ) && $link_url !== '' ) {
 
-            // Construct message body to be sent!
+            // Format expired date
             $expire_on = self::fetch_links_expired_formatted_date( $link_obj->schedule->links_never_expires, $link_obj->schedule->links_expire_within_base_ts, $link_obj->schedule->links_expire_within_amount, $link_obj->schedule->links_expire_within_time_unit );
-            $msg       = 'Hi, Please update records -> ' . $link_url . ' -> Link will expire on ' . $expire_on;
+
+            // Construct message, having replaced placeholders
+            $msg = str_replace(
+                [
+                    '{{name}}',
+                    '{{link}}',
+                    '{{time}}'
+                ],
+                [
+                    self::determine_assigned_user_name( $user ),
+                    $link_url,
+                    $expire_on
+                ],
+                $link_obj->message
+            );
         }
 
         return $msg;
+    }
+
+    public static function fetch_default_send_msg(): string {
+        return 'Hello {{name}},
+
+Please follow the link below and update records!
+
+{{link}}
+
+As a reminder, the above link will expire on {{time}}
+
+Thanks!';
     }
 
     private static function build_magic_link_url( $link_obj, $user_id, $magic_link_url_base ): string {

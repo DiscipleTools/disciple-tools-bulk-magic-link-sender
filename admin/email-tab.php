@@ -99,27 +99,6 @@ class Disciple_Tools_Magic_Links_Tab_Email {
         <br>
         <!-- End Box -->
 
-        <!-- Box -->
-        <table class="widefat striped" id="ml_email_main_col_msg">
-            <thead>
-            <tr>
-                <th>Message [<a href="#" class="ml-email-docs"
-                                data-title="ml_email_right_docs_title_message"
-                                data-content="ml_email_right_docs_content_message">&#63;</a>]
-                </th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-                <td>
-                    <?php $this->main_column_msg(); ?>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-        <br>
-        <!-- End Box -->
-
         <br>
         <span id="ml_email_main_col_update_msg" style="font-weight: bold; color: red;"></span>
         <span style="float:right;">
@@ -162,12 +141,47 @@ class Disciple_Tools_Magic_Links_Tab_Email {
                 </td>
             </tr>
             <tr>
+                <td style="vertical-align: middle;">From Email [<a href="#" class="ml-email-docs"
+                                                                   data-title="ml_email_right_docs_title_from_email"
+                                                                   data-content="ml_email_right_docs_content_from_email">&#63;</a>]
+                </td>
+                <td>
+                    <input style="min-width: 100%;" type="text" id="ml_email_main_col_config_from_email"/>
+                </td>
+            </tr>
+            <tr>
+                <td style="vertical-align: middle;">From Name [<a href="#" class="ml-email-docs"
+                                                                  data-title="ml_email_right_docs_title_from_name"
+                                                                  data-content="ml_email_right_docs_content_from_name">&#63;</a>]
+                </td>
+                <td>
+                    <input style="min-width: 100%;" type="text" id="ml_email_main_col_config_from_name"/>
+                </td>
+            </tr>
+            <tr>
+                <td style="vertical-align: middle;">Email Subject [<a href="#" class="ml-email-docs"
+                                                                      data-title="ml_email_right_docs_title_email_subject"
+                                                                      data-content="ml_email_right_docs_content_email_subject">&#63;</a>]
+                </td>
+                <td>
+                    <input style="min-width: 100%;" type="text" id="ml_email_main_col_config_email_subject"
+                           placeholder="Email Subject..."/>
+                </td>
+            </tr>
+            <tr>
                 <td style="vertical-align: middle;">Use Default Mail Server [<a href="#" class="ml-email-docs"
                                                                                 data-title="ml_email_right_docs_title_use_default_server"
                                                                                 data-content="ml_email_right_docs_content_use_default_server">&#63;</a>]
                 </td>
                 <td>
                     <input type="checkbox" id="ml_email_main_col_config_use_default_server"/>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <br>
+                    <b>Custom Mail Server [Advanced Settings]</b>
+                    <hr>
                 </td>
             </tr>
             <tr>
@@ -237,50 +251,7 @@ class Disciple_Tools_Magic_Links_Tab_Email {
                 </td>
             </tr>
             <tr>
-                <td style="vertical-align: middle;">From Email [<a href="#" class="ml-email-docs"
-                                                                   data-title="ml_email_right_docs_title_from_email"
-                                                                   data-content="ml_email_right_docs_content_from_email">&#63;</a>]
-                </td>
-                <td>
-                    <input style="min-width: 100%;" type="text" id="ml_email_main_col_config_from_email"/>
-                </td>
-            </tr>
-            <tr>
-                <td style="vertical-align: middle;">From Name [<a href="#" class="ml-email-docs"
-                                                                  data-title="ml_email_right_docs_title_from_name"
-                                                                  data-content="ml_email_right_docs_content_from_name">&#63;</a>]
-                </td>
-                <td>
-                    <input style="min-width: 100%;" type="text" id="ml_email_main_col_config_from_name"/>
-                </td>
-            </tr>
-            <tr>
-                <td style="vertical-align: middle;">Email Field [<a href="#" class="ml-email-docs"
-                                                                    data-title="ml_email_right_docs_title_email_field"
-                                                                    data-content="ml_email_right_docs_content_email_field">&#63;</a>]
-                </td>
-                <td>
-                    <select style="min-width: 100%;" id="ml_email_main_col_config_email_field">
-                        <option disabled selected value>-- select field containing email information --</option>
-
-                        <?php
-                        $filtered_fields = $this->fetch_filtered_email_fields();
-                        foreach ( $filtered_fields ?? [] as $filtered ) {
-                            if ( isset( $filtered['fields'] ) && ! empty( $filtered['fields'] ) ) {
-                                echo '<option disabled value>-- ' . esc_attr( $filtered['name'] ) . ' --</option>';
-
-                                // Display filtered fields
-                                foreach ( $filtered['fields'] as $field ) {
-                                    $value    = esc_attr( $filtered['post_type'] ) . '+' . esc_attr( $field['id'] );
-                                    $selected = ! empty( $contact_field ) && $contact_field === $value ? 'selected' : '';
-                                    echo '<option ' . esc_attr( $selected ) . ' value="' . esc_attr( $value ) . '">' . esc_attr( $field['name'] ) . '</option>';
-                                }
-                            }
-                        }
-                        ?>
-
-                    </select>
-                </td>
+                <td colspan="2"></td>
             </tr>
         </table>
 
@@ -294,52 +265,5 @@ class Disciple_Tools_Magic_Links_Tab_Email {
                    name="ml_email_main_col_config_form_email_obj" value=""/>
         </form>
         <?php
-    }
-
-    private function main_column_msg() {
-        ?>
-        <input style="min-width: 100%;" type="text" id="ml_email_main_col_msg_subject" placeholder="Email Subject..."/>
-        <textarea style="min-width: 100%;" id="ml_email_main_col_msg_textarea" rows="10"></textarea>
-        <?php
-    }
-
-    private function fetch_filtered_email_fields(): array {
-        $filtered_fields = [];
-        $supported_types = [
-            'communication_channel'
-        ];
-
-        $post_types = DT_Posts::get_post_types();
-        if ( ! empty( $post_types ) ) {
-            foreach ( $post_types as $post_type ) {
-
-                $fields             = [];
-                $post_type_settings = DT_Posts::get_post_settings( $post_type );
-
-                // Iterate over fields in search of comms fields
-                foreach ( $post_type_settings['fields'] as $key => $field ) {
-                    if ( isset( $field['type'] ) && in_array( $field['type'], $supported_types ) ) {
-
-                        // Capture filtered field
-                        $fields[] = [
-                            'id'   => $key,
-                            'name' => $field['name'],
-                            'type' => $field['type']
-                        ];
-                    }
-                }
-
-                // If filtered fields detected, package and return...
-                if ( ! empty( $fields ) ) {
-                    $filtered_fields[ $post_type ] = [
-                        'post_type' => $post_type,
-                        'name'      => $post_type_settings['label_plural'],
-                        'fields'    => $fields
-                    ];
-                }
-            }
-        }
-
-        return $filtered_fields;
     }
 }

@@ -5,7 +5,7 @@
  * Description: Disciple Tools - Magic links user and teams assignment + schedule management for magic links dispatching over configured sending channels.
  * Text Domain: disciple-tools-magic-links
  * Domain Path: /languages
- * Version:  1.2
+ * Version:  1.3
  * Author URI: https://github.com/DiscipleTools
  * GitHub Plugin URI: https://github.com/DiscipleTools/disciple-tools-magic-links
  * Requires at least: 4.7.0

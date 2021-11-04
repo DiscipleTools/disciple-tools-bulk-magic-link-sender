@@ -1,3 +1,30 @@
+<!-- Email Subject -->
+<div id="ml_email_right_docs_title_email_subject" style="display: none;">
+    Email Subject
+</div>
+<div id="ml_email_right_docs_content_email_subject" style="display: none;">
+    Email subject to be used when sending messages.
+</div>
+<!-- Email Subject -->
+
+<!-- From Email -->
+<div id="ml_email_right_docs_title_from_email" style="display: none;">
+    From Email
+</div>
+<div id="ml_email_right_docs_content_from_email" style="display: none;">
+    From email address to be used when sending messages.
+</div>
+<!-- From Email -->
+
+<!-- From Name -->
+<div id="ml_email_right_docs_title_from_name" style="display: none;">
+    From Name
+</div>
+<div id="ml_email_right_docs_content_from_name" style="display: none;">
+    From name to be used when sending messages.
+</div>
+<!-- From Name -->
+
 <!-- Use Default Mail Server -->
 <div id="ml_email_right_docs_title_use_default_server" style="display: none;">
     Use Default Mail Server
@@ -72,47 +99,4 @@
     Password to be used during mail server authentication.
 </div>
 <!-- Password -->
-
-<!-- From Email -->
-<div id="ml_email_right_docs_title_from_email" style="display: none;">
-    From Email
-</div>
-<div id="ml_email_right_docs_content_from_email" style="display: none;">
-    From email address to be used when sending messages.
-</div>
-<!-- From Email -->
-
-<!-- From Name -->
-<div id="ml_email_right_docs_title_from_name" style="display: none;">
-    From Name
-</div>
-<div id="ml_email_right_docs_content_from_name" style="display: none;">
-    From name to be used when sending messages.
-</div>
-<!-- From Name -->
-
-<!-- Email Field -->
-<div id="ml_email_right_docs_title_email_field" style="display: none;">
-    Email Field
-</div>
-<div id="ml_email_right_docs_content_email_field" style="display: none;">
-    D.T. post record field containing assigned user email addresses to be used when sending messages.
-</div>
-<!-- Email Field -->
-
-<!-- Message -->
-<div id="ml_email_right_docs_title_message" style="display: none;">
-    Message
-</div>
-<div id="ml_email_right_docs_content_message" style="display: none;">
-    Specify subject and content to be used when sending messages. <br><br>
-    The message content can support free-form plain text, with the use of placeholders; which will be replaced during
-    message dispatch. <br><br>The following placeholders are currently supported:<br>
-    <hr>
-
-    <b>{{name}}</b><br>Will be replaced with D.T. post record title.<br><br>
-    <b>{{link}}</b><br>Will be replaced with Magic Link.<br><br>
-    <b>{{time}}</b><br>Will be replaced with expiry time of magic link.
-</div>
-<!-- Message -->
 

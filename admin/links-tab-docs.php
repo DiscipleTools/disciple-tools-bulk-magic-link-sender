@@ -37,6 +37,22 @@
 </div>
 <!-- Assigned Users & Teams -->
 
+<!-- Message -->
+<div id="ml_links_right_docs_message_title" style="display: none;">
+    Message
+</div>
+<div id="ml_links_right_docs_message_content" style="display: none;">
+    Specify text to be used when sending messages. <br><br>
+    The message content can support free-form plain text, with the use of placeholders; which will be replaced during
+    message dispatch. <br><br>The following placeholders are currently supported:<br>
+    <hr>
+
+    <b>{{name}}</b><br>Will be replaced with either user's display name, or D.T. post record title.<br><br>
+    <b>{{link}}</b><br>Will be replaced with magic link.<br><br>
+    <b>{{time}}</b><br>Will be replaced with expiry time of magic link.
+</div>
+<!-- Message -->
+
 <!-- Frequency -->
 <div id="ml_links_right_docs_frequency_title" style="display: none;">
     Frequency
