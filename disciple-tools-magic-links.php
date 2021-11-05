@@ -5,7 +5,7 @@
  * Description: Disciple Tools - Magic links user and teams assignment + schedule management for magic links dispatching over configured sending channels.
  * Text Domain: disciple-tools-magic-links
  * Domain Path: /languages
- * Version:  1.2
+ * Version:  1.3
  * Author URI: https://github.com/DiscipleTools
  * GitHub Plugin URI: https://github.com/DiscipleTools/disciple-tools-magic-links
  * Requires at least: 4.7.0
@@ -97,42 +97,13 @@ class Disciple_Tools_Magic_Links {
         }
 
         /**
-         * @todo Decide if you want to create a new post type
-         * To remove: delete the line below and remove the folder named /post-type
-         */
-        require_once( 'post-type/loader.php' ); // add starter post type extension to Disciple Tools system
-
-        /**
-         * @todo Decide if you want to create a custom site-to-site link
-         * To remove: delete the line below and remove the folder named /site-link
-         */
-        require_once( 'site-link/custom-site-to-site-links.php' ); // add site to site link class and capabilities
-
-        /**
-         * @todo Decide if you want to add new charts to the metrics section
-         * To remove: delete the line below and remove the folder named /charts
-         *
-         * if ( strpos( dt_get_url_path(), 'metrics' ) !== false || ( $is_rest && strpos( dt_get_url_path(), 'disciple-tools-magic-links-metrics' ) !== false ) ){
-         * require_once( 'charts/charts-loader.php' );  // add custom charts to the metrics area
-         * }*/
-
-        /**
-         * @todo Decide if you want to add a custom tile or settings page tile
-         * To remove: delete the lines below and remove the folder named /tile
-         *
-        require_once( 'tile/custom-tile.php' ); // add custom tile
-        if ( 'settings' === dt_get_url_path() && ! $is_rest ) {
-            require_once( 'tile/settings-tile.php' ); // add custom settings page tile
-        }
-
-        /**
          * @todo Decide if you want to create a magic link
          * To remove: delete the line below and remove the folder named /magic-link
          */
-        // require_once( 'magic-link/magic-link-post-type.php' );
         require_once( 'magic-link/magic-link-user-app.php' );
         require_once( 'magic-link/magic-links-api.php' );
         require_once( 'magic-link/magic-links-cron.php' );
+        require_once( 'magic-link/magic-links-default-filters.php' );
 
         /**
          * @todo Decide if you want to add a custom admin page in the admin area
@@ -141,12 +112,6 @@ class Disciple_Tools_Magic_Links {
         if ( is_admin() ) {
             require_once( 'admin/admin-menu-and-tabs.php' ); // adds starter admin page and section for plugin
         }
-
-        /**
-         * @todo Decide if you want to support localization of your plugin
-         * To remove: delete the line below and remove the folder named /languages
-         */
-        $this->i18n();
 
         /**
          * @todo Decide if you want to customize links for your plugin in the plugin admin area
