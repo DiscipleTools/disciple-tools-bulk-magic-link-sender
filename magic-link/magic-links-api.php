@@ -74,7 +74,7 @@ class Disciple_Tools_Magic_Links_API {
                         'contact_id' => $contact_id,
                         'name'       => $user['display_name'],
                         'phone'      => self::fetch_dt_contacts_comms_info( $contact_id, 'contact_phone' ),
-                        'email'      => self::fetch_dt_contacts_comms_info( $contact_id, 'contact_email' )
+                        'email'      => self::fetch_wp_users_comms_info( $user['ID'], 'email' )
                     ];
                 }
             }
@@ -130,7 +130,7 @@ class Disciple_Tools_Magic_Links_API {
                 if ( ! empty( $corresponds_to_user_id ) ) {
                     $team['members'][ $key ]['user_id'] = $corresponds_to_user_id;
                     $team['members'][ $key ]['phone']   = self::fetch_dt_contacts_comms_info( $member['ID'], 'contact_phone' );
-                    $team['members'][ $key ]['email']   = self::fetch_dt_contacts_comms_info( $member['ID'], 'contact_email' );
+                    $team['members'][ $key ]['email']   = self::fetch_wp_users_comms_info( $corresponds_to_user_id, 'email' );
                 }
             }
         }
@@ -145,6 +145,23 @@ class Disciple_Tools_Magic_Links_API {
         if ( ! empty( $contact ) && ! is_wp_error( $contact ) ) {
             foreach ( $contact[ $field_id ] ?? [] as $comm ) {
                 $comms[] = $comm['value'];
+            }
+        }
+
+        return $comms;
+    }
+
+    private static function fetch_wp_users_comms_info( $user_id, $field_id ): array {
+        $user_info = get_userdata( $user_id );
+
+        $comms = [];
+        if ( ! empty( $user_info ) && ! is_wp_error( $user_info ) ) {
+            switch ( $field_id ) {
+                case 'email':
+                    if ( isset( $user_info->data->user_email ) ) {
+                        $comms[] = $user_info->data->user_email;
+                    }
+                    break;
             }
         }
 
@@ -416,6 +433,10 @@ Please follow the link below and update records!
 As a reminder, the above link will expire on {{time}}
 
 Thanks!';
+    }
+
+    public static function fetch_default_email_subject(): string {
+        return __( 'Smart Link', 'disciple_tools' );
     }
 
     private static function build_magic_link_url( $link_obj, $user_id, $magic_link_url_base ): string {

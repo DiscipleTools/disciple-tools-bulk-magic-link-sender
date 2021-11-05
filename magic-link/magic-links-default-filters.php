@@ -33,7 +33,8 @@ function dt_email_sending_channel_enabled(): bool {
         return isset( $email_obj['enabled'] ) && $email_obj['enabled'];
     }
 
-    return false;
+    // Enabled, by default!
+    return true;
 }
 
 function dt_email_sending_channel_field( $user ): array {
@@ -90,10 +91,14 @@ function dt_email_sending_channel_send( $params ) {
 
                     // Build and dispatch notification email!
                     $email_to        = $email;
-                    $email_subject   = $email_obj['subject'];
+                    $email_subject   = $email_obj['subject'] ?? Disciple_Tools_Magic_Links_API::fetch_default_email_subject();
                     $email_body      = $params['message'];
                     $email_headers[] = 'Content-Type: text/plain; charset=UTF-8';
-                    $email_headers[] = 'From: ' . $email_obj['from_name'] . ' <' . $email_obj['from_email'] . '>';
+                    if ( ! empty( $email_obj['from_name'] ) && ! empty( $email_obj['from_email'] ) ) {
+                        $email_headers[] = 'From: ' . $email_obj['from_name'] . ' <' . $email_obj['from_email'] . '>';
+                    }
+
+                    // Dispatch email notification
                     wp_mail( $email_to, $email_subject, $email_body, $email_headers );
 
                 } catch ( Exception $e ) {
@@ -122,8 +127,12 @@ function dt_email_sending_channel_send_smtp_email( $phpmailer ) {
         $phpmailer->SMTPAuth   = $email_obj['auth_enabled'];
         $phpmailer->Username   = $email_obj['username'];
         $phpmailer->Password   = $email_obj['password'];
-        $phpmailer->From       = $email_obj['from_email'];
-        $phpmailer->FromName   = $email_obj['from_name'];
+
+        if ( ! empty( $email_obj['from_name'] ) && ! empty( $email_obj['from_email'] ) ) {
+            $phpmailer->From     = $email_obj['from_email'];
+            $phpmailer->FromName = $email_obj['from_name'];
+        }
+
         $phpmailer->isSMTP();
         // phpcs:enable
     }

@@ -26,7 +26,8 @@ class Disciple_Tools_Magic_Links_Tab_Email {
 
         wp_localize_script(
             "dt_magic_links_email_script", "dt_magic_links", array(
-                'dt_magic_link_default_email_obj' => Disciple_Tools_Magic_Links_API::fetch_option( Disciple_Tools_Magic_Links_API::$option_dt_magic_links_defaults_email )
+                'dt_magic_link_default_email_obj' => Disciple_Tools_Magic_Links_API::fetch_option( Disciple_Tools_Magic_Links_API::$option_dt_magic_links_defaults_email ),
+                'dt_default_email_subject'        => Disciple_Tools_Magic_Links_API::fetch_default_email_subject()
             )
         );
     }

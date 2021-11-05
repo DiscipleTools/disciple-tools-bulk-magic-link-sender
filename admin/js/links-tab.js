@@ -130,7 +130,15 @@ jQuery(function ($) {
     $('#ml_main_col_schedules_enabled').prop('checked', enabled);
     $('#ml_main_col_schedules_frequency_amount').val(freq_amount);
     $('#ml_main_col_schedules_frequency_time_unit').val(freq_time_unit);
-    $('#ml_main_col_schedules_sending_channels').val(sending_channel);
+
+    let sending_channel_option_present = false;
+    $('#ml_main_col_schedules_sending_channels option')
+      .filter(function (idx, element) {
+        if ($(element).val() === sending_channel) {
+          sending_channel_option_present = true;
+        }
+      });
+    $('#ml_main_col_schedules_sending_channels').val(sending_channel_option_present ? sending_channel : '');
 
     $('#ml_main_col_schedules_links_expire_amount').val(links_amount);
     $('#ml_main_col_schedules_links_expire_time_unit').val(links_time_unit);

@@ -44,6 +44,7 @@ jQuery(function ($) {
       // Set default states
       $('#ml_email_main_col_config_enabled').prop('checked', true);
       $('#ml_email_main_col_config_use_default_server').prop('checked', true);
+      $('#ml_email_main_col_config_email_subject').val(window.lodash.escape(window.dt_magic_links.dt_default_email_subject));
     }
 
     // Adjust element states accordingly
@@ -99,9 +100,9 @@ jQuery(function ($) {
     if (enabled) {
 
       // General sanity checks
-      if (!is_email_format_valid(from_email)) {
+      if (from_email && !is_email_format_valid(from_email)) {
         update_msg = 'Please specify a valid from email.';
-      } else if (!from_name) {
+      } else if (from_email && !from_name) {
         update_msg = 'Please specify a valid from name.';
       } else if (!subject) {
         update_msg = 'Please specify a valid email message subject.';
