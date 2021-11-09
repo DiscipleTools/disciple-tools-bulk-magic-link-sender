@@ -5,27 +5,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 } // Exit if accessed directly
 
 /**
- * Extend schedule options.
- */
-
-add_filter( 'cron_schedules', 'cron_schedules_dt_magic_links', 10, 1 );
-function cron_schedules_dt_magic_links( $schedules ): array {
-    $arr = array();
-
-    $arr['minute'] = array(
-        'interval' => 1 * MINUTE_IN_SECONDS,
-        'display'  => __( 'Every Minute' )
-    );
-
-    return $arr;
-}
-
-/**
  * Register cron module.
  */
 
 if ( ! wp_next_scheduled( 'dt_magic_links_cron' ) ) {
-    wp_schedule_event( time(), 'minute', 'dt_magic_links_cron' );
+    wp_schedule_event( time(), '15min', 'dt_magic_links_cron' );
 }
 
 /**
