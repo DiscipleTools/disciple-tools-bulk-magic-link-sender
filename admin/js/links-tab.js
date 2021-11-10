@@ -51,7 +51,7 @@ jQuery(function ($) {
     reset_section_available_link_objs();
 
     reset_section(display, $('#ml_main_col_link_objs_manage'), function () {
-      reset_section_link_objs_manage(moment().unix(), true, '', moment().unix(), false, '');
+      reset_section_link_objs_manage(moment().unix(), true, '', moment().unix(), true, '');
     });
 
     reset_section(display, $('#ml_main_col_ml_type_fields'), function () {
