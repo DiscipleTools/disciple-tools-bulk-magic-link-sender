@@ -518,10 +518,9 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
         $data = [];
         if ( ! empty( $user_id ) ) {
 
-            // Update logged-in user state if required
-            if ( ! is_user_logged_in() ) {
-                wp_set_current_user( $user_id );
-            }
+            // Update logged-in user state as required
+            $original_user = wp_get_current_user();
+            wp_set_current_user( $user_id );
 
             // Fetch all assigned posts
             $posts = DT_Posts::list_posts( 'contacts', [
@@ -539,6 +538,11 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                     ]
                 ]
             ] );
+
+            // Revert to original user
+            if ( ! empty( $original_user ) && isset( $original_user->ID ) ) {
+                wp_set_current_user( $original_user->ID );
+            }
 
             // Iterate and return valid posts
             if ( ! empty( $posts ) && isset( $posts['posts'], $posts['total'] ) ) {

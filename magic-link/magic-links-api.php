@@ -53,6 +53,17 @@ class Disciple_Tools_Magic_Links_API {
         return null;
     }
 
+    public static function fetch_user_magic_link( $user_id ): string {
+        foreach ( self::fetch_magic_link_types() as $app ) {
+            $hash = get_user_option( $app['key'], $user_id );
+            if ( ! empty( $hash ) ) {
+                return trailingslashit( trailingslashit( site_url() ) . $app['url_base'] ) . $hash;
+            }
+        }
+
+        return '';
+    }
+
     public static function fetch_dt_users(): array {
         global $wpdb;
 
@@ -74,7 +85,8 @@ class Disciple_Tools_Magic_Links_API {
                         'contact_id' => $contact_id,
                         'name'       => $user['display_name'],
                         'phone'      => self::fetch_dt_contacts_comms_info( $contact_id, 'contact_phone' ),
-                        'email'      => self::fetch_wp_users_comms_info( $user['ID'], 'email' )
+                        'email'      => self::fetch_wp_users_comms_info( $user['ID'], 'email' ),
+                        'link'       => self::fetch_user_magic_link( $user['ID'] )
                     ];
                 }
             }
@@ -131,6 +143,7 @@ class Disciple_Tools_Magic_Links_API {
                     $team['members'][ $key ]['user_id'] = $corresponds_to_user_id;
                     $team['members'][ $key ]['phone']   = self::fetch_dt_contacts_comms_info( $member['ID'], 'contact_phone' );
                     $team['members'][ $key ]['email']   = self::fetch_wp_users_comms_info( $corresponds_to_user_id, 'email' );
+                    $team['members'][ $key ]['link']    = self::fetch_user_magic_link( $corresponds_to_user_id );
                 }
             }
         }
@@ -557,7 +570,21 @@ Thanks!';
                 wp_set_current_user( $user->dt_id );
 
                 // Fetch associated contacts list
-                $posts = DT_Posts::list_posts( 'contacts', [ 'limit' => 1000 ] );
+                $posts = DT_Posts::list_posts( 'contacts', [
+                    'limit'  => 1000,
+                    'fields' => [
+                        [
+                            'assigned_to' => [ 'me' ],
+                            "subassigned" => [ 'me' ]
+                        ],
+                        "overall_status" => [
+                            "new",
+                            "unassigned",
+                            "assigned",
+                            "active"
+                        ]
+                    ]
+                ] );
 
                 // Iterate and return valid posts
                 if ( ! empty( $posts ) && isset( $posts['posts'], $posts['total'] ) ) {

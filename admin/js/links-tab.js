@@ -244,7 +244,7 @@ jQuery(function ($) {
   function build_user_row_html(id) {
     let record = fetch_users_teams_record(id);
     if (record) {
-      return build_row_html(id, id.split('+')[1], 'User', record['name'], build_comms_html(record, 'phone'), build_comms_html(record, 'email'));
+      return build_row_html(id, id.split('+')[1], 'User', record['name'], build_comms_html(record, 'phone'), build_comms_html(record, 'email'), build_link_html(record['link']));
     }
     return null;
   }
@@ -259,19 +259,19 @@ jQuery(function ($) {
       if (is_team) {
 
         let dt_id = tokens[1];
-        html = build_row_html(id, dt_id, 'Team', record['name'], '---', '---');
+        html = build_row_html(id, dt_id, 'Team', record['name'], '---', '---', '---');
 
         // Capture team members accordingly, based on flags!
         if (inc_default_team_members && record['members'] && record['members'].length > 0) {
           record['members'].forEach(function (member, idx) {
-            html += build_row_html(id + "+" + member['user_id'], member['user_id'], 'Member', member['post_title'], build_comms_html(member, 'phone'), build_comms_html(member, 'email'));
+            html += build_row_html(id + "+" + member['user_id'], member['user_id'], 'Member', member['post_title'], build_comms_html(member, 'phone'), build_comms_html(member, 'email'), build_link_html(member['link']));
           });
         }
 
       } else { // Single member addition only! Usually resulting from a link object load!
 
         let member = fetch_team_member_record(record['members'], tokens[2]);
-        html = build_row_html(id, member['user_id'], 'Member', member['post_title'], build_comms_html(member, 'phone'), build_comms_html(member, 'email'));
+        html = build_row_html(id, member['user_id'], 'Member', member['post_title'], build_comms_html(member, 'phone'), build_comms_html(member, 'email'), build_link_html(member['link']));
 
       }
     }
@@ -313,7 +313,15 @@ jQuery(function ($) {
     return new RegExp('^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$').test(window.lodash.escape(email));
   }
 
-  function build_row_html(id, dt_id, type, name, phone, email) {
+  function build_link_html(link) {
+    if (link && $.trim(link).length > 0) {
+      return `<a class="button" href="${link}" target="_blank">View</a>`;
+    }
+
+    return '---';
+  }
+
+  function build_row_html(id, dt_id, type, name, phone, email, link) {
     if (id && dt_id && type && name && phone && email) {
       return `<tr>
                   <td style="vertical-align: middle;">
@@ -326,6 +334,7 @@ jQuery(function ($) {
                   <td style="vertical-align: middle;">${window.lodash.escape(name)}</td>
                   <td style="vertical-align: middle;">${phone}</td>
                   <td style="vertical-align: middle;">${email}</td>
+                  <td style="vertical-align: middle;">${link}</td>
                   <td style="vertical-align: middle;">
                     <span style="float:right;">
                         <button type="submit" class="button float-right ml-main-col-assign-users-teams-table-row-remove-but">Remove</button>

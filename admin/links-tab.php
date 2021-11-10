@@ -398,6 +398,7 @@ class Disciple_Tools_Magic_Links_Tab_Links {
                 <th>Name</th>
                 <th>Phone</th>
                 <th>Email</th>
+                <th>Link</th>
                 <th></th>
             </tr>
             </thead>
