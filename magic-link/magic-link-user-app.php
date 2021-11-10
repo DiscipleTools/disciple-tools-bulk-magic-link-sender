@@ -422,7 +422,8 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                 <br>
                 <br>
 
-                <h3><?php esc_html_e( "CONTACT DETAILS", 'disciple_tools' ) ?> [ <span id="contact_name">---</span> ]</h3>
+                <h3><?php esc_html_e( "CONTACT DETAILS", 'disciple_tools' ) ?> [ <span id="contact_name">---</span> ]
+                </h3>
                 <hr>
                 <div class="grid-x" id="form-content">
                     <?php $field_settings = DT_Posts::get_post_field_settings( 'contacts' ); ?>
@@ -523,7 +524,21 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
             }
 
             // Fetch all assigned posts
-            $posts = DT_Posts::list_posts( 'contacts', [ 'limit' => 1000 ] );
+            $posts = DT_Posts::list_posts( 'contacts', [
+                'limit'  => 1000,
+                'fields' => [
+                    [
+                        'assigned_to' => [ 'me' ],
+                        "subassigned" => [ 'me' ]
+                    ],
+                    "overall_status" => [
+                        "new",
+                        "unassigned",
+                        "assigned",
+                        "active"
+                    ]
+                ]
+            ] );
 
             // Iterate and return valid posts
             if ( ! empty( $posts ) && isset( $posts['posts'], $posts['total'] ) ) {
