@@ -455,7 +455,7 @@ Thanks!';
     private static function build_magic_link_url( $link_obj, $user_id, $magic_link_url_base ): string {
         $hash = get_user_option( $link_obj->type, $user_id );
         if ( ! empty( $hash ) ) {
-            return trailingslashit( trailingslashit( site_url() ) . $magic_link_url_base ) . $hash;
+            return trailingslashit( trailingslashit( site_url() ) . $magic_link_url_base ) . $hash . '?id=' . $link_obj->id;
         }
 
         return '';

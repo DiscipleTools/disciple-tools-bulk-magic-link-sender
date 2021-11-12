@@ -200,7 +200,11 @@ jQuery(function ($) {
             if (type['key'] === type_key) {
               type['meta']['fields'].forEach(function (field, field_idx) {
                 if (field['id'] && field['label']) {
-                  let html = `<tr><td>${window.lodash.escape(field['label'])}</td></tr>`;
+                  let html = `<tr>
+                                <input id="ml_main_col_ml_type_fields_table_row_field_id" type="hidden" value="${field['id']}">
+                                <td>${window.lodash.escape(field['label'])}</td>
+                                <td><input id="ml_main_col_ml_type_fields_table_row_field_enabled" type="checkbox" ${is_magic_link_type_field_enabled(type_key, field['id'], fetch_link_obj($('#ml_main_col_available_link_objs_select').val())) ? 'checked' : ''}></td>
+                              </tr>`;
                   fields_table.find('tbody:last').append(html);
                 }
               });
@@ -212,6 +216,33 @@ jQuery(function ($) {
         fields_table.fadeIn('fast');
       });
     }
+  }
+
+  function is_magic_link_type_field_enabled(type, field_id, link_obj) {
+
+    // Enabled by default
+    let enabled = true;
+
+    // Ensure we have a valid link object
+    if (link_obj) {
+
+      // Ensure there is a magic link type match
+      if (link_obj['type'] && String(link_obj['type']) === String(type)) {
+
+        // Ensure there are stored type field settings
+        if (link_obj['type_fields']) {
+          link_obj['type_fields'].forEach(function (field, field_idx) {
+
+            // Assuming we have a match, determine field's current enabled state
+            if (field['id'] && String(field['id']) === String(field_id)) {
+              enabled = field['enabled'];
+            }
+          });
+        }
+      }
+    }
+
+    return enabled;
   }
 
   function handle_add_users_teams_request(selected_users_teams_id, inc_default_team_members) {
@@ -315,10 +346,19 @@ jQuery(function ($) {
 
   function build_link_html(link) {
     if (link && $.trim(link).length > 0) {
-      return `<a class="button" href="${link}" target="_blank">View</a>`;
+      return `<a class="button" href="${append_magic_link_params(link)}" target="_blank">View</a>`;
     }
 
     return '---';
+  }
+
+  function append_magic_link_params(link) {
+    let link_obj = fetch_link_obj($('#ml_main_col_available_link_objs_select').val());
+    if (link_obj) {
+      link += '?id=' + link_obj['id'];
+    }
+
+    return link;
   }
 
   function build_row_html(id, dt_id, type, name, phone, email, link) {
@@ -411,6 +451,8 @@ jQuery(function ($) {
     let never_expires = $('#ml_main_col_link_objs_manage_expires_never').prop('checked');
     let type = $('#ml_main_col_link_objs_manage_type').val();
 
+    let type_fields = fetch_magic_link_type_field_updates();
+
     let assigned_users_teams = fetch_assigned_users_teams();
 
     let message = $('#ml_main_col_msg_textarea').val().trim();
@@ -469,6 +511,8 @@ jQuery(function ($) {
         'never_expires': never_expires,
         'type': type,
 
+        'type_fields': type_fields,
+
         'assigned': assigned_users_teams,
 
         'message': message,
@@ -492,6 +536,21 @@ jQuery(function ($) {
       // Submit link object package for saving
       $('#ml_main_col_update_form').submit();
     }
+  }
+
+  function fetch_magic_link_type_field_updates() {
+    let type_fields = [];
+    $('#ml_main_col_ml_type_fields_table').find('tbody > tr').each(function (idx, tr) {
+      let id = $(tr).find('#ml_main_col_ml_type_fields_table_row_field_id').val();
+      let enabled = $(tr).find('#ml_main_col_ml_type_fields_table_row_field_enabled').prop('checked');
+
+      type_fields.push({
+        'id': id,
+        'enabled': enabled
+      });
+    });
+
+    return type_fields;
   }
 
   function fetch_assigned_users_teams() {

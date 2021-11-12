@@ -342,6 +342,7 @@ class Disciple_Tools_Magic_Links_Tab_Links {
             <thead>
             <tr>
                 <th>Name</th>
+                <th>Enabled</th>
             </tr>
             </thead>
             <tbody>
