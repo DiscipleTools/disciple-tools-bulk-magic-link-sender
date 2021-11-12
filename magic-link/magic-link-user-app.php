@@ -165,7 +165,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
      */
     public function fetch_incoming_link_param( $param ) {
         if ( isset( $_SERVER['REQUEST_URI'] ) ) {
-            parse_str( parse_url( $_SERVER['REQUEST_URI'], PHP_URL_QUERY ), $link_params );
+            parse_str( parse_url( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ), PHP_URL_QUERY ), $link_params );
 
             return $link_params[ $param ] ?? '';
         }
