@@ -184,7 +184,26 @@ class Disciple_Tools_Magic_Links_API {
     public static function fetch_option_link_objs() {
         $option = get_option( self::$option_dt_magic_links_objects );
 
-        return ( ! empty( $option ) ) ? json_decode( $option ) : (object) [];
+        // Ensure predicted expiration dates are kept accurate!
+        if ( ! empty( $option ) ) {
+
+            $link_objs = [];
+            foreach ( json_decode( $option ) as $id => $link_obj ) {
+                $amt           = $link_obj->schedule->links_expire_within_amount;
+                $time_unit     = $link_obj->schedule->links_expire_within_time_unit;
+                $base_ts       = $link_obj->schedule->links_expire_within_base_ts;
+                $never_expires = $link_obj->schedule->links_never_expires;
+
+                $link_obj->schedule->links_expire_on_ts           = self::determine_links_expiry_point( $amt, $time_unit, $base_ts );
+                $link_obj->schedule->links_expire_on_ts_formatted = self::fetch_links_expired_formatted_date( $never_expires, $base_ts, $amt, $time_unit );
+
+                $link_objs[ $link_obj->id ] = $link_obj;
+            }
+
+            return (object) $link_objs;
+        }
+
+        return (object) [];
     }
 
     public static function fetch_option_link_obj( $link_obj_id ) {
@@ -228,6 +247,16 @@ class Disciple_Tools_Magic_Links_API {
                 }
             }
         }
+    }
+
+    public static function extract_assigned_user_deltas( $assigned_a, $assigned_b ) {
+        if ( ! empty( $assigned_a ) && ! empty( $assigned_b ) ) {
+            return array_udiff( $assigned_a, $assigned_b, function ( $user_a, $user_b ) {
+                return $user_a->dt_id - $user_b->dt_id;
+            } );
+        }
+
+        return [];
     }
 
     public static function fetch_sending_channels(): array {
@@ -478,22 +507,26 @@ Thanks!';
         return $expiry_point < time(); // In the past!
     }
 
+    public static function determine_links_expiry_point( $amt, $time_unit, $base_ts ) {
+        return strtotime( '+' . $amt . ' ' . $time_unit, $base_ts );
+    }
+
     public static function has_links_expired( $never_expires, $base_ts, $amt, $time_unit ): bool {
         if ( $never_expires === true ) {
             return false;
         }
 
-        $expiry_point = strtotime( '+' . $amt . ' ' . $time_unit, $base_ts );
+        $expiry_point = self::determine_links_expiry_point( $amt, $time_unit, $base_ts );
 
         return $expiry_point < time(); // In the past!
     }
 
     public static function fetch_links_expired_formatted_date( $never_expires, $base_ts, $amt, $time_unit ): string {
         if ( $never_expires === true ) {
-            return 'Never';
+            return __( 'Never', 'disciple_tools' );
         }
 
-        $expiry_point = strtotime( '+' . $amt . ' ' . $time_unit, $base_ts );
+        $expiry_point = self::determine_links_expiry_point( $amt, $time_unit, $base_ts );
 
         return self::format_timestamp_in_local_time_zone( $expiry_point );
     }

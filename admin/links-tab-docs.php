@@ -82,6 +82,15 @@
 </div>
 <!-- Links Expire Within -->
 
+<!-- Links Expire On -->
+<div id="ml_links_right_docs_links_expire_on_title" style="display: none;">
+    Links Expire On
+</div>
+<div id="ml_links_right_docs_links_expire_on_content" style="display: none;">
+    Anticipated date when current DT user magic links will expire and will no longer be accessible.
+</div>
+<!-- Links Expire On -->
+
 <!-- Links Expiry Auto-Refresh Enabled -->
 <div id="ml_links_right_docs_auto_refresh_title" style="display: none;">
     Links Expiry Auto-Refresh Enabled

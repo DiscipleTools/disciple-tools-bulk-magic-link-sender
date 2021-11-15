@@ -69,7 +69,7 @@ jQuery(function ($) {
 
     reset_section(display, $('#ml_main_col_schedules'), function () {
       let default_send_channel_id = window.dt_magic_links.dt_default_send_channel_id;
-      reset_section_schedules(false, '1', 'hours', default_send_channel_id, '3', 'days', false, moment().unix(), true, '', '', false);
+      reset_section_schedules(false, '1', 'hours', default_send_channel_id, '3', 'days', false, moment().unix(), '', '', true, '', '', false);
     });
 
     $('#ml_main_col_update_msg').html('').fadeOut('fast');
@@ -126,7 +126,7 @@ jQuery(function ($) {
     $('#ml_main_col_msg_textarea').val(message);
   }
 
-  function reset_section_schedules(enabled, freq_amount, freq_time_unit, sending_channel, links_amount, links_time_unit, links_never_expires, links_base_ts, links_auto_refresh, last_schedule_run, last_success_send, send_now) {
+  function reset_section_schedules(enabled, freq_amount, freq_time_unit, sending_channel, links_amount, links_time_unit, links_never_expires, links_base_ts, links_expire_on_ts, links_expire_on_ts_formatted, links_auto_refresh, last_schedule_run, last_success_send, send_now) {
     $('#ml_main_col_schedules_enabled').prop('checked', enabled);
     $('#ml_main_col_schedules_frequency_amount').val(freq_amount);
     $('#ml_main_col_schedules_frequency_time_unit').val(freq_time_unit);
@@ -144,6 +144,8 @@ jQuery(function ($) {
     $('#ml_main_col_schedules_links_expire_time_unit').val(links_time_unit);
     $('#ml_main_col_schedules_links_expire_never').prop('checked', links_never_expires);
     $('#ml_main_col_schedules_links_expire_base_ts').val(links_base_ts);
+    $('#ml_main_col_schedules_links_expire_on_ts').val(links_expire_on_ts);
+    $('#ml_main_col_schedules_links_expire_on_ts_formatted').val(links_expire_on_ts_formatted);
     $('#ml_main_col_schedules_links_expire_auto_refresh_enabled').prop('checked', links_auto_refresh);
 
     toggle_never_expires_element_states(false);
@@ -463,8 +465,10 @@ jQuery(function ($) {
     let sending_channel = $('#ml_main_col_schedules_sending_channels').val();
     let links_expire_within_amount = $('#ml_main_col_schedules_links_expire_amount').val();
     let links_expire_within_time_unit = $('#ml_main_col_schedules_links_expire_time_unit').val();
-    let links_never_expires = $('#ml_main_col_schedules_links_expire_never').prop('checked');
     let links_expire_within_base_ts = $('#ml_main_col_schedules_links_expire_base_ts').val();
+    let links_expire_on_ts = $('#ml_main_col_schedules_links_expire_on_ts').val();
+    let links_expire_on_ts_formatted = $('#ml_main_col_schedules_links_expire_on_ts_formatted').val();
+    let links_never_expires = $('#ml_main_col_schedules_links_expire_never').prop('checked');
     let links_expire_auto_refresh_enabled = $('#ml_main_col_schedules_links_expire_auto_refresh_enabled').prop('checked');
     let last_schedule_run = $('#ml_main_col_schedules_last_schedule_run').val();
     let last_success_send = $('#ml_main_col_schedules_last_success_send').val();
@@ -524,7 +528,9 @@ jQuery(function ($) {
           'sending_channel': sending_channel,
           'links_expire_within_amount': links_expire_within_amount,
           'links_expire_within_time_unit': links_expire_within_time_unit,
-          'links_expire_within_base_ts': moment().unix(), // Always reset, so as to provide a sliding-forward starting point for elapsed time calculations
+          'links_expire_within_base_ts': links_expire_within_base_ts,
+          'links_expire_on_ts': links_expire_on_ts,
+          'links_expire_on_ts_formatted': links_expire_on_ts_formatted,
           'links_never_expires': links_never_expires,
           'links_expire_auto_refresh_enabled': links_expire_auto_refresh_enabled,
           'last_schedule_run': last_schedule_run,
@@ -594,7 +600,7 @@ jQuery(function ($) {
       });
 
       reset_section(true, $('#ml_main_col_schedules'), function () {
-        reset_section_schedules(link_obj['schedule']['enabled'], link_obj['schedule']['freq_amount'], link_obj['schedule']['freq_time_unit'], link_obj['schedule']['sending_channel'], link_obj['schedule']['links_expire_within_amount'], link_obj['schedule']['links_expire_within_time_unit'], link_obj['schedule']['links_never_expires'], link_obj['schedule']['links_expire_within_base_ts'], link_obj['schedule']['links_expire_auto_refresh_enabled'], link_obj['schedule']['last_schedule_run'], link_obj['schedule']['last_success_send'], true);
+        reset_section_schedules(link_obj['schedule']['enabled'], link_obj['schedule']['freq_amount'], link_obj['schedule']['freq_time_unit'], link_obj['schedule']['sending_channel'], link_obj['schedule']['links_expire_within_amount'], link_obj['schedule']['links_expire_within_time_unit'], link_obj['schedule']['links_never_expires'], link_obj['schedule']['links_expire_within_base_ts'], link_obj['schedule']['links_expire_on_ts'], link_obj['schedule']['links_expire_on_ts_formatted'], link_obj['schedule']['links_expire_auto_refresh_enabled'], link_obj['schedule']['last_schedule_run'], link_obj['schedule']['last_success_send'], true);
       });
 
       $('#ml_main_col_update_msg').html('').fadeOut('fast');

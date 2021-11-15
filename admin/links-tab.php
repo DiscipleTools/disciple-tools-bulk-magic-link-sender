@@ -62,13 +62,15 @@ class Disciple_Tools_Magic_Links_Tab_Links {
                     // Attempt to locate an existing object with same id
                     $current_link_obj = Disciple_Tools_Magic_Links_API::fetch_option_link_obj( $updating_link_obj->id );
 
-                    // Nuke any existing user app magic link urls
-                    if ( ! empty( $current_link_obj ) && ! empty( $current_link_obj->type ) && ! empty( $current_link_obj->assigned ) ) {
-                        Disciple_Tools_Magic_Links_API::update_user_app_magic_links( $current_link_obj->type, $current_link_obj->assigned, true );
-                    }
+                    // In an attempt to be more surgical, identify and only focus
+                    // on the deltas between previously saved and recently updated..!
+                    $stale_users = Disciple_Tools_Magic_Links_API::extract_assigned_user_deltas( $current_link_obj->assigned ?? [], $updating_link_obj->assigned ?? [] );
+                    $new_users   = Disciple_Tools_Magic_Links_API::extract_assigned_user_deltas( $updating_link_obj->assigned ?? [], $current_link_obj->assigned ?? [] );
 
-                    // Create new app magic link urls for each assigned user
-                    Disciple_Tools_Magic_Links_API::update_user_app_magic_links( $updating_link_obj->type, $updating_link_obj->assigned, false );
+                    // Refresh user magic links accordingly; stale users to have links removed,
+                    // whilst new users are to have links created and assigned.
+                    Disciple_Tools_Magic_Links_API::update_user_app_magic_links( $current_link_obj->type ?? null, $stale_users, true );
+                    Disciple_Tools_Magic_Links_API::update_user_app_magic_links( $updating_link_obj->type, $new_users, false );
 
                     // Save latest updates
                     Disciple_Tools_Magic_Links_API::update_option_link_obj( $updating_link_obj );
@@ -493,7 +495,18 @@ class Disciple_Tools_Magic_Links_Tab_Links {
 
                     &nbsp;&nbsp;&nbsp;
                     <input type="checkbox" id="ml_main_col_schedules_links_expire_never" value=""/> Never Expires
+                </td>
+            </tr>
+            <tr>
+                <td style="vertical-align: middle;">Links Expire On [<a href="#" class="ml-links-docs"
+                                                                        data-title="ml_links_right_docs_links_expire_on_title"
+                                                                        data-content="ml_links_right_docs_links_expire_on_content">&#63;</a>]
+                </td>
+                <td style="vertical-align: middle;">
                     <input type="hidden" id="ml_main_col_schedules_links_expire_base_ts" value=""/>
+                    <input type="hidden" id="ml_main_col_schedules_links_expire_on_ts" value=""/>
+                    <input style="min-width: 100%;" type="text" id="ml_main_col_schedules_links_expire_on_ts_formatted"
+                           readonly/>
                 </td>
             </tr>
             <tr>
