@@ -32,13 +32,14 @@ class Disciple_Tools_Magic_Links_Tab_Links {
 
         wp_localize_script(
             "dt_magic_links_script", "dt_magic_links", array(
-                'dt_magic_link_types'        => Disciple_Tools_Magic_Links_API::fetch_magic_link_types(),
-                'dt_users'                   => Disciple_Tools_Magic_Links_API::fetch_dt_users(),
-                'dt_teams'                   => Disciple_Tools_Magic_Links_API::fetch_dt_teams(),
-                'dt_magic_link_objects'      => Disciple_Tools_Magic_Links_API::fetch_option_link_objs(),
-                'dt_endpoint_send_now'       => Disciple_Tools_Magic_Links_API::fetch_endpoint_send_now_url(),
-                'dt_default_message'         => Disciple_Tools_Magic_Links_API::fetch_default_send_msg(),
-                'dt_default_send_channel_id' => Disciple_Tools_Magic_Links_API::$channel_email_id
+                'dt_magic_link_types'           => Disciple_Tools_Magic_Links_API::fetch_magic_link_types(),
+                'dt_users'                      => Disciple_Tools_Magic_Links_API::fetch_dt_users(),
+                'dt_teams'                      => Disciple_Tools_Magic_Links_API::fetch_dt_teams(),
+                'dt_magic_link_objects'         => Disciple_Tools_Magic_Links_API::fetch_option_link_objs(),
+                'dt_endpoint_send_now'          => Disciple_Tools_Magic_Links_API::fetch_endpoint_send_now_url(),
+                'dt_endpoint_user_links_manage' => Disciple_Tools_Magic_Links_API::fetch_endpoint_user_links_manage_url(),
+                'dt_default_message'            => Disciple_Tools_Magic_Links_API::fetch_default_send_msg(),
+                'dt_default_send_channel_id'    => Disciple_Tools_Magic_Links_API::$channel_email_id
             )
         );
     }
@@ -170,15 +171,30 @@ class Disciple_Tools_Magic_Links_Tab_Links {
                                                data-title="ml_links_right_docs_assign_users_teams_title"
                                                data-content="ml_links_right_docs_assign_users_teams_content">&#63;</a>]
                 </th>
+                <th></th>
             </tr>
             </thead>
             <tbody>
             <tr>
-                <td>
+                <td colspan="2">
                     <?php $this->main_column_assign_users_teams(); ?>
                 </td>
             </tr>
             </tbody>
+            <tfoot>
+            <tr>
+                <td>
+                    <button disabled style="max-width: 100%;" type="submit"
+                            id="ml_main_col_assign_users_teams_links_but_refresh"
+                            class="button float-right"><?php esc_html_e( "Refresh All Links", 'disciple_tools' ) ?></button>
+
+                    <button disabled style="max-width: 100%;" type="submit"
+                            id="ml_main_col_assign_users_teams_links_but_delete"
+                            class="button float-right"><?php esc_html_e( "Delete All Links", 'disciple_tools' ) ?></button>
+                </td>
+                <td></td>
+            </tr>
+            </tfoot>
         </table>
         <br>
         <!-- End Box -->
@@ -356,7 +372,7 @@ class Disciple_Tools_Magic_Links_Tab_Links {
 
     private function main_column_assign_users_teams() {
         ?>
-        <select style="min-width: 80%;" id="ml_main_col_assign_users_teams_select">
+        <select style="min-width: 90%;" id="ml_main_col_assign_users_teams_select">
             <option disabled selected value>-- select users & teams to receive links --</option>
 
             <?php

@@ -23,6 +23,13 @@ class Disciple_Tools_Magic_Links_Endpoints {
         $namespace = 'disciple_tools_magic_links/v1';
 
         register_rest_route(
+            $namespace, '/user_links_manage', [
+                'methods'             => WP_REST_Server::CREATABLE,
+                'callback'            => [ $this, 'user_links_manage' ],
+                'permission_callback' => '__return_true',
+            ]
+        );
+        register_rest_route(
             $namespace, '/send_now', [
                 'methods'             => WP_REST_Server::CREATABLE,
                 'callback'            => [ $this, 'send_now' ],
@@ -38,7 +45,66 @@ class Disciple_Tools_Magic_Links_Endpoints {
         );
     }
 
-    public function send_now( WP_REST_Request $request ): array {
+    public function user_links_manage( WP_REST_Request $request ): array {
+
+        // Prepare response payload
+        $response = [];
+
+        $params = $request->get_params();
+        if ( isset( $params['action'], $params['assigned'], $params['link_obj_id'], $params['magic_link_type'] ) ) {
+
+            // Adjust assigned array shape, to ensure it is processed accordingly further downstream
+            $assigned = json_decode( json_encode( $params['assigned'] ) );
+
+            // Execute accordingly, based on specified action
+            switch ( $params['action'] ) {
+                case 'refresh':
+                    Disciple_Tools_Magic_Links_API::update_user_app_magic_links( $params['magic_link_type'], $assigned, false );
+
+                    // Also update base timestamp and future expiration points
+                    if ( isset( $params['links_expire_within_amount'], $params['links_expire_within_time_unit'], $params['links_never_expires'] ) ) {
+
+                        $base_ts       = time();
+                        $amt           = $params['links_expire_within_amount'];
+                        $time_unit     = $params['links_expire_within_time_unit'];
+                        $never_expires = $params['links_never_expires'];
+
+                        $response['links_expire_within_base_ts']  = $base_ts;
+                        $response['links_expire_on_ts']           = Disciple_Tools_Magic_Links_API::determine_links_expiry_point( $amt, $time_unit, $base_ts );
+                        $response['links_expire_on_ts_formatted'] = Disciple_Tools_Magic_Links_API::fetch_links_expired_formatted_date( $never_expires, $base_ts, $amt, $time_unit );
+                    }
+                    break;
+
+                case 'delete':
+                    Disciple_Tools_Magic_Links_API::update_user_app_magic_links( $params['magic_link_type'], $assigned, true );
+                    break;
+            }
+
+            // Ensure current user has sufficient capabilities/roles for the tasks ahead!
+            $current_user = wp_get_current_user();
+            if ( ! empty( $current_user ) && ! is_wp_error( $current_user ) && ! current_user_can( "access_contacts" ) ) {
+                $current_user->add_role( 'access_contacts' );
+            }
+
+            // Return original assigned array + updated users & teams
+            $response['success']  = true;
+            $response['message']  = 'User links management action[' . $params['action'] . '] successfully executed.';
+            $response['assigned'] = $assigned;
+            $response['dt_users'] = Disciple_Tools_Magic_Links_API::fetch_dt_users();
+            $response['dt_teams'] = Disciple_Tools_Magic_Links_API::fetch_dt_teams();
+
+        } else {
+            $response['success'] = false;
+            $response['message'] = 'Unable to execute action, due to missing parameters.';
+        }
+
+        return $response;
+    }
+
+    public
+    function send_now(
+        WP_REST_Request $request
+    ): array {
 
         // Prepare response payload
         $response = [];
@@ -89,7 +155,10 @@ class Disciple_Tools_Magic_Links_Endpoints {
         return $response;
     }
 
-    public function get_report( WP_REST_Request $request ): array {
+    public
+    function get_report(
+        WP_REST_Request $request
+    ): array {
 
         // Prepare response payload
         $response = [];
@@ -112,9 +181,11 @@ class Disciple_Tools_Magic_Links_Endpoints {
         return $response;
     }
 
-    private static $_instance = null;
+    private
+    static $_instance = null;
 
-    public static function instance() {
+    public
+    static function instance() {
         if ( is_null( self::$_instance ) ) {
             self::$_instance = new self();
         }
@@ -122,11 +193,13 @@ class Disciple_Tools_Magic_Links_Endpoints {
         return self::$_instance;
     } // End instance()
 
-    public function __construct() {
+    public
+    function __construct() {
         add_action( 'rest_api_init', [ $this, 'add_api_routes' ] );
     }
 
-    public function has_permission() {
+    public
+    function has_permission() {
         $pass = false;
         foreach ( $this->permissions as $permission ) {
             if ( current_user_can( $permission ) ) {

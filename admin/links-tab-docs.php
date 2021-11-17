@@ -79,6 +79,13 @@
     Specify when actual DT user magic links will expire and are no longer accessible.
     <br><br>
     Alternatively, select the Never Expires options if DT user magic links are to be kept alive indefinitely.
+    <br><br>
+    This setting is relative to a base timestamp; which is updated during any of the following events:
+    <ul>
+        <li>1. When a link object is newly created.</li>
+        <li>2. When auto refresh is enabled and executed during a scheduled run.</li>
+        <li>3. When a manual refresh is triggered for all assigned user links.</li>
+    </ul>
 </div>
 <!-- Links Expire Within -->
 

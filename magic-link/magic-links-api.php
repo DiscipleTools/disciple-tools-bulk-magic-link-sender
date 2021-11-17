@@ -551,6 +551,10 @@ Thanks!';
         return trailingslashit( site_url() ) . 'wp-json/disciple_tools_magic_links/v1/send_now';
     }
 
+    public static function fetch_endpoint_user_links_manage_url(): string {
+        return trailingslashit( site_url() ) . 'wp-json/disciple_tools_magic_links/v1/user_links_manage';
+    }
+
     public static function fetch_endpoint_report_url(): string {
         return trailingslashit( site_url() ) . 'wp-json/disciple_tools_magic_links/v1/report';
     }
