@@ -324,8 +324,7 @@ add_action( 'plugins_loaded', function () {
  * This defines the required and suggested plugins.
  */
 add_action( 'tgmpa_register', function () {
-
-    /*
+    /**
      * Array of plugin arrays. Required keys are name and slug.
      * If the source is NOT from the .org repo, then source is also required.
      */
@@ -338,8 +337,7 @@ add_action( 'tgmpa_register', function () {
             'version'  => '1.1'
         ]
     ];
-
-    /*
+    /**
      * Array of configuration settings. Amend each line as needed.
      *
      * Only uncomment the strings in the config array if you want to customize the strings.

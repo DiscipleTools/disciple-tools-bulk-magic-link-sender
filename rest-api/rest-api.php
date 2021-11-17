@@ -101,10 +101,7 @@ class Disciple_Tools_Magic_Links_Endpoints {
         return $response;
     }
 
-    public
-    function send_now(
-        WP_REST_Request $request
-    ): array {
+    public function send_now( WP_REST_Request $request ): array {
 
         // Prepare response payload
         $response = [];
@@ -155,10 +152,7 @@ class Disciple_Tools_Magic_Links_Endpoints {
         return $response;
     }
 
-    public
-    function get_report(
-        WP_REST_Request $request
-    ): array {
+    public function get_report( WP_REST_Request $request ): array {
 
         // Prepare response payload
         $response = [];
@@ -181,11 +175,9 @@ class Disciple_Tools_Magic_Links_Endpoints {
         return $response;
     }
 
-    private
-    static $_instance = null;
+    private static $_instance = null;
 
-    public
-    static function instance() {
+    public static function instance() {
         if ( is_null( self::$_instance ) ) {
             self::$_instance = new self();
         }
@@ -193,13 +185,11 @@ class Disciple_Tools_Magic_Links_Endpoints {
         return self::$_instance;
     } // End instance()
 
-    public
-    function __construct() {
+    public function __construct() {
         add_action( 'rest_api_init', [ $this, 'add_api_routes' ] );
     }
 
-    public
-    function has_permission() {
+    public function has_permission() {
         $pass = false;
         foreach ( $this->permissions as $permission ) {
             if ( current_user_can( $permission ) ) {
