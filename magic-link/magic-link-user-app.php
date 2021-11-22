@@ -27,6 +27,16 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
     } // End instance()
 
     public function __construct() {
+        /**
+         * As incoming requests could be for either valid wp users of contact
+         * post records, ensure to adjust the $post_type accordingly; so as to
+         * fall in line with extended class functionality!
+         */
+        $this->adjust_global_values_by_incoming_sys_type( $this->fetch_incoming_link_param( 'type' ) );
+
+        /**
+         * Once adjustments have been made, proceed with parent instantiation!
+         */
         $this->meta_key = $this->root . '_' . $this->type . '_magic_key';
         parent::__construct();
 
@@ -55,6 +65,19 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
         add_filter( 'dt_magic_url_base_allowed_css', [ $this, 'dt_magic_url_base_allowed_css' ], 10, 1 );
         add_filter( 'dt_magic_url_base_allowed_js', [ $this, 'dt_magic_url_base_allowed_js' ], 10, 1 );
 
+    }
+
+    public function adjust_global_values_by_incoming_sys_type( $type ) {
+        if ( ! empty( $type ) ) {
+            switch ( $type ) {
+                case 'wp_user':
+                    $this->post_type = 'user';
+                    break;
+                case 'post':
+                    $this->post_type = 'contacts';
+                    break;
+            }
+        }
     }
 
     public function dt_magic_url_base_allowed_js( $allowed_js ) {
@@ -189,12 +212,15 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                 'overall_status' => DT_Posts::get_post_field_settings( 'contacts' )['overall_status']['default'],
                 'faith_status'   => DT_Posts::get_post_field_settings( 'contacts' )['faith_status']['default'],
                 'link_obj_id'    => Disciple_Tools_Magic_Links_API::fetch_option_link_obj( $this->fetch_incoming_link_param( 'id' ) ),
+                'sys_type'       => $this->fetch_incoming_link_param( 'type' ),
                 'translations'   => [
                     'add' => __( 'Add Magic', 'disciple-tools-magic-links' ),
-                ],
+                ]
             ] ) ?>][0]
 
-            // Fetch assigned contacts
+            /**
+             * Fetch assigned contacts
+             */
             window.get_magic = () => {
                 jQuery.ajax({
                     type: "GET",
@@ -218,7 +244,9 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                     })
             };
 
-            // Display returned list of assigned contacts
+            /**
+             * Display returned list of assigned contacts
+             */
             window.load_magic = (data) => {
                 let content = jQuery('#api-content');
                 let table = jQuery('.api-content-table');
@@ -245,10 +273,9 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                 }
             };
 
-            // Fetch assigned contacts
-            window.get_magic();
-
-            // Fetch requested contact details
+            /**
+             * Fetch requested contact details
+             */
             window.get_contact = (post_id) => {
                 let comment_count = 2;
 
@@ -260,6 +287,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                         data: {
                             action: 'get',
                             parts: jsObject.parts,
+                            sys_type: jsObject.sys_type,
                             id: post_id,
                             comment_count: comment_count,
                             ts: moment().unix() // Alter url shape, so as to force cache refresh!
@@ -284,9 +312,11 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                             jQuery('#post_id').val(data['post']['ID']);
 
                             // NAME
+                            let post_name = window.lodash.escape(data['post']['name']);
+                            jQuery('#contact_name').html(post_name);
                             if (window.is_field_enabled('name')) {
                                 jQuery('#form_content_name_td').html(`
-                                <input id="post_name" type="text" value="${window.lodash.escape(data['post']['name'])}" />
+                                <input id="post_name" type="text" value="${post_name}" />
                                 `);
                             } else {
                                 jQuery('#form_content_name_tr').hide();
@@ -416,7 +446,9 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                 });
             };
 
-            // Determine if field has been enabled
+            /**
+             * Determine if field has been enabled
+             */
             window.is_field_enabled = (field_id) => {
 
                 // Enabled by default
@@ -436,7 +468,9 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                 return enabled;
             }
 
-            // Handle fetch request for contact details
+            /**
+             * Handle fetch request for contact details
+             */
             window.get_assigned_contact_details = (post_id, post_name) => {
                 let contact_name = jQuery('#contact_name');
 
@@ -447,7 +481,26 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                 window.get_contact(post_id);
             };
 
-            // Submit contact details
+            /**
+             * Adjust visuals, based on incoming sys_type
+             */
+            let assigned_contacts_div = jQuery('#assigned_contacts_div');
+            switch (jsObject.sys_type) {
+                case 'wp_user':
+                    // Fetch assigned contacts for incoming user
+                    assigned_contacts_div.fadeIn('fast');
+                    window.get_magic();
+                    break;
+                case 'post':
+                    // Bypass contacts list and directly fetch requested contact details
+                    assigned_contacts_div.fadeOut('fast');
+                    window.get_contact(jsObject.parts.post_id);
+                    break;
+            }
+
+            /**
+             * Submit contact details
+             */
             jQuery('#content_submit_but').on("click", function () {
                 let id = jQuery('#post_id').val();
 
@@ -465,6 +518,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                     let payload = {
                         action: 'get',
                         parts: jsObject.parts,
+                        sys_type: jsObject.sys_type,
                         id: id
                     }
                     if (window.is_field_enabled('name')) {
@@ -541,15 +595,17 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
             </div>
             <hr>
             <div id="content">
-                <h3><?php esc_html_e( "ASSIGNED CONTACTS", 'disciple_tools' ) ?> [ <span id="total">0</span> ]</h3>
-                <hr>
-                <div class="grid-x api-content-div-style" id="api-content">
-                    <table class="api-content-table">
-                        <tbody>
-                        </tbody>
-                    </table>
+                <div id="assigned_contacts_div" style="display: none;">
+                    <h3><?php esc_html_e( "ASSIGNED CONTACTS", 'disciple_tools' ) ?> [ <span id="total">0</span> ]</h3>
+                    <hr>
+                    <div class="grid-x api-content-div-style" id="api-content">
+                        <table class="api-content-table">
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                    <br>
                 </div>
-                <br>
 
                 <!-- ERROR MESSAGES -->
                 <span id="error" style="color: red;"></span>
@@ -590,7 +646,9 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                             <td id="form_content_contact_phone_td"></td>
                         </tr>
                         <tr id="form_content_comments_tr">
-                            <td style="vertical-align: top;"><b>Comments</b></td>
+                            <td style="vertical-align: top;">
+                                <b><?php esc_html_e( "Comments", 'disciple_tools' ) ?></b>
+                            </td>
                             <td id="form_content_comments_td"></td>
                         </tr>
                         </tbody>
@@ -634,6 +692,12 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                     'permission_callback' => function ( WP_REST_Request $request ) {
                         $magic = new DT_Magic_URL( $this->root );
 
+                        /**
+                         * Adjust global values accordingly, so as to accommodate both wp_user
+                         * and post requests.
+                         */
+                        $this->adjust_global_values_by_incoming_sys_type( $request->get_params()['sys_type'] );
+
                         return $magic->verify_rest_endpoint_permissions_on_post( $request );
                     },
                 ],
@@ -646,6 +710,12 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                     'callback'            => [ $this, 'update_record' ],
                     'permission_callback' => function ( WP_REST_Request $request ) {
                         $magic = new DT_Magic_URL( $this->root );
+
+                        /**
+                         * Adjust global values accordingly, so as to accommodate both wp_user
+                         * and post requests.
+                         */
+                        $this->adjust_global_values_by_incoming_sys_type( $request->get_params()['sys_type'] );
 
                         return $magic->verify_rest_endpoint_permissions_on_post( $request );
                     },
@@ -711,17 +781,16 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
 
     public function get_post( WP_REST_Request $request ) {
         $params = $request->get_params();
-        if ( ! isset( $params['id'], $params['parts'], $params['action'], $params['comment_count'] ) ) {
+        if ( ! isset( $params['id'], $params['parts'], $params['action'], $params['comment_count'], $params['sys_type'] ) ) {
             return new WP_Error( __METHOD__, "Missing parameters", [ 'status' => 400 ] );
         }
 
-        // Sanitize and fetch user id
-        $params  = dt_recursive_sanitize_array( $params );
-        $user_id = $params["parts"]["post_id"];
+        // Sanitize and fetch user/post id
+        $params = dt_recursive_sanitize_array( $params );
 
-        // Update logged-in user state if required
+        // Update logged-in user state if required accordingly, based on their sys_type
         if ( ! is_user_logged_in() ) {
-            wp_set_current_user( $user_id );
+            $this->update_user_logged_in_state( $params['sys_type'], $params["parts"]["post_id"] );
         }
 
         // Fetch corresponding contacts post record
@@ -740,17 +809,16 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
 
     public function update_record( WP_REST_Request $request ) {
         $params = $request->get_params();
-        if ( ! isset( $params['id'], $params['parts'], $params['action'] ) ) {
+        if ( ! isset( $params['id'], $params['parts'], $params['action'], $params['sys_type'] ) ) {
             return new WP_Error( __METHOD__, "Missing core parameters", [ 'status' => 400 ] );
         }
 
         // Sanitize and fetch user id
-        $params  = dt_recursive_sanitize_array( $params );
-        $user_id = $params["parts"]["post_id"];
+        $params = dt_recursive_sanitize_array( $params );
 
-        // Update logged-in user state if required
+        // Update logged-in user state if required accordingly, based on their sys_type
         if ( ! is_user_logged_in() ) {
-            wp_set_current_user( $user_id );
+            $this->update_user_logged_in_state( $params['sys_type'], $params["parts"]["post_id"] );
         }
 
         // Capture name, if present
@@ -812,6 +880,20 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
             'success' => true,
             'message' => ''
         ];
+    }
+
+    public function update_user_logged_in_state( $sys_type, $user_id ) {
+        switch ( strtolower( trim( $sys_type ) ) ) {
+            case 'wp_user':
+                wp_set_current_user( $user_id );
+                break;
+            case 'post':
+                wp_set_current_user( 0 );
+                $current_user = wp_get_current_user();
+                $current_user->add_cap( "magic_link" );
+                $current_user->display_name = __( 'Smart Link Submission', 'disciple_tools' );
+                break;
+        }
     }
 }
 

@@ -35,6 +35,7 @@ class Disciple_Tools_Magic_Links_Tab_Links {
                 'dt_magic_link_types'           => Disciple_Tools_Magic_Links_API::fetch_magic_link_types(),
                 'dt_users'                      => Disciple_Tools_Magic_Links_API::fetch_dt_users(),
                 'dt_teams'                      => Disciple_Tools_Magic_Links_API::fetch_dt_teams(),
+                'dt_groups'                     => Disciple_Tools_Magic_Links_API::fetch_dt_groups(),
                 'dt_magic_link_objects'         => Disciple_Tools_Magic_Links_API::fetch_option_link_objs(),
                 'dt_endpoint_send_now'          => Disciple_Tools_Magic_Links_API::fetch_endpoint_send_now_url(),
                 'dt_endpoint_user_links_manage' => Disciple_Tools_Magic_Links_API::fetch_endpoint_user_links_manage_url(),
@@ -70,8 +71,8 @@ class Disciple_Tools_Magic_Links_Tab_Links {
 
                     // Refresh user magic links accordingly; stale users to have links removed,
                     // whilst new users are to have links created and assigned.
-                    Disciple_Tools_Magic_Links_API::update_user_app_magic_links( $current_link_obj->type ?? null, $stale_users, true );
-                    Disciple_Tools_Magic_Links_API::update_user_app_magic_links( $updating_link_obj->type, $new_users, false );
+                    Disciple_Tools_Magic_Links_API::update_magic_links( $current_link_obj->type ?? null, $stale_users, true );
+                    Disciple_Tools_Magic_Links_API::update_magic_links( $updating_link_obj->type, $new_users, false );
 
                     // Save latest updates
                     Disciple_Tools_Magic_Links_API::update_option_link_obj( $updating_link_obj );
@@ -399,6 +400,18 @@ class Disciple_Tools_Magic_Links_Tab_Links {
             }
             ?>
 
+            <?php
+            // Source available dt groups
+            $dt_groups = Disciple_Tools_Magic_Links_API::fetch_dt_groups();
+            if ( ! empty( $dt_groups ) ) {
+                echo '<option disabled>-- groups --</option>';
+                foreach ( $dt_groups as $group ) {
+                    $value = 'groups+' . $group['id'];
+                    echo '<option value="' . esc_attr( $value ) . '">' . esc_attr( $group['name'] ) . '</option>';
+                }
+            }
+            ?>
+
         </select>
 
         <span style="float:right;">
@@ -407,7 +420,7 @@ class Disciple_Tools_Magic_Links_Tab_Links {
         </span>
         <br><br>
 
-        Currently Assigned Users & Teams
+        Currently Assigned Users, Teams & Groups
         <hr>
 
         <table class="widefat striped" id="ml_main_col_assign_users_teams_table">

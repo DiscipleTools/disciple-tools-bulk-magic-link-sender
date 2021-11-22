@@ -41,7 +41,7 @@ function execute_scheduled_link_objects() {
             // Irrespective of link object state, always ensure to remove expired links!
             if ( Disciple_Tools_Magic_Links_API::has_links_expired( $link_obj->schedule->links_never_expires, $link_obj->schedule->links_expire_within_base_ts, $link_obj->schedule->links_expire_within_amount, $link_obj->schedule->links_expire_within_time_unit ) ) {
                 // Nuke all assigned user links!
-                Disciple_Tools_Magic_Links_API::update_user_app_magic_links( $link_obj->type, $link_obj->assigned, true );
+                Disciple_Tools_Magic_Links_API::update_magic_links( $link_obj->type, $link_obj->assigned, true );
             }
 
             // If enabled, proceed with processing
@@ -80,21 +80,21 @@ function execute_scheduled_link_objects() {
                                 // Recreate links if auto-refresh has been enabled, else terminate everything!
                                 if ( $link_obj->schedule->links_expire_auto_refresh_enabled ) {
                                     $logs[] = Disciple_Tools_Magic_Links_API::logging_create( 'Auto-refreshing all assigned user magic links.' );
-                                    Disciple_Tools_Magic_Links_API::update_user_app_magic_links( $link_obj->type, $link_obj->assigned, false );
+                                    Disciple_Tools_Magic_Links_API::update_magic_links( $link_obj->type, $link_obj->assigned, false );
 
                                     // Update links expire base timestamp, in order to ensure next checks are relative to recent updates
                                     Disciple_Tools_Magic_Links_API::update_schedule_settings( $id, Disciple_Tools_Magic_Links_API::$schedule_links_expire_base_ts, time() );
 
                                 } else {
                                     $logs[] = Disciple_Tools_Magic_Links_API::logging_create( 'Terminating all assigned user magic links!' );
-                                    Disciple_Tools_Magic_Links_API::update_user_app_magic_links( $link_obj->type, $link_obj->assigned, true );
+                                    Disciple_Tools_Magic_Links_API::update_magic_links( $link_obj->type, $link_obj->assigned, true );
                                 }
                             }
                         } else {
                             $logs[] = Disciple_Tools_Magic_Links_API::logging_create( 'Link object has now expired, terminating all assigned user magic links!' );
 
                             // Nuke all assigned user links!
-                            Disciple_Tools_Magic_Links_API::update_user_app_magic_links( $link_obj->type, $link_obj->assigned, true );
+                            Disciple_Tools_Magic_Links_API::update_magic_links( $link_obj->type, $link_obj->assigned, true );
                         }
 
                         // Update last schedule run timestamp

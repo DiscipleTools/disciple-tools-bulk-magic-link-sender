@@ -59,7 +59,7 @@ class Disciple_Tools_Magic_Links_Endpoints {
             // Execute accordingly, based on specified action
             switch ( $params['action'] ) {
                 case 'refresh':
-                    Disciple_Tools_Magic_Links_API::update_user_app_magic_links( $params['magic_link_type'], $assigned, false );
+                    Disciple_Tools_Magic_Links_API::update_magic_links( $params['magic_link_type'], $assigned, false );
 
                     // Also update base timestamp and future expiration points
                     if ( isset( $params['links_expire_within_amount'], $params['links_expire_within_time_unit'], $params['links_never_expires'] ) ) {
@@ -76,7 +76,7 @@ class Disciple_Tools_Magic_Links_Endpoints {
                     break;
 
                 case 'delete':
-                    Disciple_Tools_Magic_Links_API::update_user_app_magic_links( $params['magic_link_type'], $assigned, true );
+                    Disciple_Tools_Magic_Links_API::update_magic_links( $params['magic_link_type'], $assigned, true );
                     break;
             }
 
@@ -86,12 +86,13 @@ class Disciple_Tools_Magic_Links_Endpoints {
                 $current_user->add_role( 'access_contacts' );
             }
 
-            // Return original assigned array + updated users & teams
-            $response['success']  = true;
-            $response['message']  = 'User links management action[' . $params['action'] . '] successfully executed.';
-            $response['assigned'] = $assigned;
-            $response['dt_users'] = Disciple_Tools_Magic_Links_API::fetch_dt_users();
-            $response['dt_teams'] = Disciple_Tools_Magic_Links_API::fetch_dt_teams();
+            // Return original assigned array + updated users, teams & groups
+            $response['success']   = true;
+            $response['message']   = 'User links management action[' . $params['action'] . '] successfully executed.';
+            $response['assigned']  = $assigned;
+            $response['dt_users']  = Disciple_Tools_Magic_Links_API::fetch_dt_users();
+            $response['dt_teams']  = Disciple_Tools_Magic_Links_API::fetch_dt_teams();
+            $response['dt_groups'] = Disciple_Tools_Magic_Links_API::fetch_dt_groups();
 
         } else {
             $response['success'] = false;

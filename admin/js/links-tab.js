@@ -264,16 +264,18 @@ jQuery(function ($) {
     return enabled;
   }
 
-  function handle_add_users_teams_request(selected_users_teams_id, inc_default_team_members) {
+  function handle_add_users_teams_request(selected_id, inc_default_members) {
     // Ensure selection is valid and table does not already contain selection...
-    if (selected_users_teams_id && !already_has_users_teams(selected_users_teams_id)) {
+    if (selected_id && !already_has_users_teams(selected_id)) {
 
       // Add new row accordingly, based on selection type
       let html = null;
-      if (selected_users_teams_id.startsWith('users+')) {
-        html = build_user_row_html(selected_users_teams_id);
-      } else if (selected_users_teams_id.startsWith('teams+')) {
-        html = build_team_row_html(selected_users_teams_id, inc_default_team_members);
+      if (selected_id.startsWith('users+')) {
+        html = build_user_row_html(selected_id);
+      } else if (selected_id.startsWith('teams+')) {
+        html = build_team_group_row_html(selected_id, inc_default_members, 'Team');
+      } else if (selected_id.startsWith('groups+')) {
+        html = build_team_group_row_html(selected_id, inc_default_members, 'Group');
       }
 
       // If we have a valid html structure, then append to table listing
@@ -297,45 +299,46 @@ jQuery(function ($) {
   function build_user_row_html(id) {
     let record = fetch_users_teams_record(id);
     if (record) {
-      return build_row_html(id, id.split('+')[1], 'User', record['name'], build_comms_html(record, 'phone'), build_comms_html(record, 'email'), build_link_html(record['link']));
+      let sys_type = 'wp_user';
+      return build_row_html(id, id.split('+')[1], 'User', record['name'], sys_type, 'user', build_comms_html(record, 'phone'), build_comms_html(record, 'email'), build_link_html(record['link'], sys_type));
     }
     return null;
   }
 
-  function build_team_row_html(id, inc_default_team_members) {
+  function build_team_group_row_html(id, inc_default_members, type) {
     let record = fetch_users_teams_record(id);
     let html = null;
     if (record) {
       let tokens = id.split('+');
-      let is_team = tokens.length === 2;
+      let is_parent = tokens.length === 2;
 
-      if (is_team) {
+      if (is_parent) {
 
         let dt_id = tokens[1];
-        html = build_row_html(id, dt_id, 'Team', record['name'], '---', '---', '---');
+        html = build_row_html(id, dt_id, type, record['name'], 'post', 'groups', '---', '---', '---');
 
         // Capture team members accordingly, based on flags!
-        if (inc_default_team_members && record['members'] && record['members'].length > 0) {
+        if (inc_default_members && record['members'] && record['members'].length > 0) {
           record['members'].forEach(function (member, idx) {
-            html += build_row_html(id + "+" + member['user_id'], member['user_id'], 'Member', member['post_title'], build_comms_html(member, 'phone'), build_comms_html(member, 'email'), build_link_html(member['link']));
+            html += build_row_html(id + "+" + member['type_id'], member['type_id'], 'Member', member['post_title'], member['type'], member['post_type'], build_comms_html(member, 'phone'), build_comms_html(member, 'email'), build_link_html(member['link'], member['type']));
           });
         }
 
       } else { // Single member addition only! Usually resulting from a link object load!
 
-        let member = fetch_team_member_record(record['members'], tokens[2]);
-        html = build_row_html(id, member['user_id'], 'Member', member['post_title'], build_comms_html(member, 'phone'), build_comms_html(member, 'email'), build_link_html(member['link']));
+        let member = fetch_member_record(record['members'], tokens[2]);
+        html = build_row_html(id, member['type_id'], 'Member', member['post_title'], member['type'], member['post_type'], build_comms_html(member, 'phone'), build_comms_html(member, 'email'), build_link_html(member['link'], member['type']));
 
       }
     }
     return html;
   }
 
-  function fetch_team_member_record(members, id) {
+  function fetch_member_record(members, id) {
     let record = null;
     if (members) {
       members.forEach(function (member, idx) {
-        if (String(member['user_id']) === String(id)) {
+        if (String(member['type_id']) === String(id)) {
           record = member;
         }
       });
@@ -366,24 +369,24 @@ jQuery(function ($) {
     return new RegExp('^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$').test(window.lodash.escape(email));
   }
 
-  function build_link_html(link) {
+  function build_link_html(link, sys_type) {
     if (link && $.trim(link).length > 0) {
-      return `<a class="button" href="${append_magic_link_params(link)}" target="_blank">View</a>`;
+      return `<a class="button" href="${append_magic_link_params(link, sys_type)}" target="_blank">View</a>`;
     }
 
     return '---';
   }
 
-  function append_magic_link_params(link) {
+  function append_magic_link_params(link, sys_type) {
     let link_obj = fetch_link_obj($('#ml_main_col_available_link_objs_select').val());
     if (link_obj) {
-      link += '?id=' + link_obj['id'];
+      link += '?id=' + link_obj['id'] + '&type=' + sys_type;
     }
 
     return link;
   }
 
-  function build_row_html(id, dt_id, type, name, phone, email, link) {
+  function build_row_html(id, dt_id, type, name, sys_type, post_type, phone, email, link) {
     if (id && dt_id && type && name && phone && email) {
       return `<tr>
                   <td style="vertical-align: middle;">
@@ -391,6 +394,8 @@ jQuery(function ($) {
                   <input id="ml_main_col_assign_users_teams_table_row_dt_id" type="hidden" value="${window.lodash.escape(dt_id)}"/>
                   <input id="ml_main_col_assign_users_teams_table_row_type" type="hidden" value="${window.lodash.escape(String(type).trim().toLowerCase())}"/>
                   <input id="ml_main_col_assign_users_teams_table_row_name" type="hidden" value="${window.lodash.escape(name)}"/>
+                  <input id="ml_main_col_assign_users_teams_table_row_sys_type" type="hidden" value="${window.lodash.escape(sys_type)}"/>
+                  <input id="ml_main_col_assign_users_teams_table_row_post_type" type="hidden" value="${window.lodash.escape(post_type)}"/>
                   ${window.lodash.escape(type)}
                   </td>
                   <td style="vertical-align: middle;">${window.lodash.escape(name)}</td>
@@ -409,12 +414,16 @@ jQuery(function ($) {
 
   function fetch_users_teams_record(id) {
     let is_user = id.startsWith('users+');
+    let is_team = id.startsWith('teams+');
+    let is_group = id.startsWith('groups+');
     let dt_id = id.split('+')[1]; // dt_id always 2nd element...!
 
     if (is_user) {
       return fetch_record(dt_id, window.dt_magic_links.dt_users, 'user_id');
-    } else {
+    } else if (is_team) {
       return fetch_record(dt_id, window.dt_magic_links.dt_teams, 'id');
+    } else if (is_group) {
+      return fetch_record(dt_id, window.dt_magic_links.dt_groups, 'id');
     }
   }
 
@@ -442,7 +451,7 @@ jQuery(function ($) {
 
     } else {
 
-      // Team level removal - also delete associated members; which should start with the same id as team parent
+      // Team/Group level removal - also delete associated members; which should start with the same id as parent
       let id = $(row).find('#ml_main_col_assign_users_teams_table_row_id').val();
       let hits = $('#ml_main_col_assign_users_teams_table').find('tbody > tr').filter(function (idx) {
         return $(this).find('#ml_main_col_assign_users_teams_table_row_id').val().startsWith(id);
@@ -588,12 +597,16 @@ jQuery(function ($) {
       let dt_id = $(tr).find('#ml_main_col_assign_users_teams_table_row_dt_id').val();
       let type = $(tr).find('#ml_main_col_assign_users_teams_table_row_type').val();
       let name = $(tr).find('#ml_main_col_assign_users_teams_table_row_name').val();
+      let sys_type = $(tr).find('#ml_main_col_assign_users_teams_table_row_sys_type').val();
+      let post_type = $(tr).find('#ml_main_col_assign_users_teams_table_row_post_type').val();
 
       assigned.push({
         'id': id,
         'dt_id': dt_id,
         'type': type,
-        'name': name
+        'name': name,
+        'sys_type': sys_type,
+        'post_type': post_type
       });
     });
 
@@ -709,12 +722,15 @@ jQuery(function ($) {
       success: function (data) {
         if (data && data['success']) {
 
-          // Update global variable accordingly
+          // Update global variables accordingly
           if (data['dt_users'] && data['dt_users'].length > 0) {
             window.dt_magic_links.dt_users = data['dt_users'];
           }
           if (data['dt_teams'] && data['dt_teams'].length > 0) {
             window.dt_magic_links.dt_teams = data['dt_teams'];
+          }
+          if (data['dt_groups'] && data['dt_groups'].length > 0) {
+            window.dt_magic_links.dt_groups = data['dt_groups'];
           }
 
           // Refresh assigned table so as to display updated user link states!
