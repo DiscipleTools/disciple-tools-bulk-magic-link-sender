@@ -85,6 +85,7 @@
         <li>1. When a link object is newly created.</li>
         <li>2. When auto refresh is enabled and executed during a scheduled run.</li>
         <li>3. When a manual refresh is triggered for all assigned user links.</li>
+        <li>4. When a Send Now request is triggered.</li>
     </ul>
 </div>
 <!-- Links Expire Within -->

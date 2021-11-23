@@ -276,6 +276,13 @@ class Disciple_Tools_Magic_Links_API {
         update_option( $option, $value );
     }
 
+    public static function option_exists( $option ): bool {
+        global $wpdb;
+        $row = $wpdb->get_row( $wpdb->prepare( "SELECT option_value FROM $wpdb->options WHERE option_name = %s LIMIT 1", $option ) );
+
+        return is_object( $row );
+    }
+
     public static function update_magic_links( $magic_key, $assigned, $delete ) {
         if ( ! empty( $magic_key ) && ! empty( $assigned ) ) {
             foreach ( $assigned ?? [] as $user ) {

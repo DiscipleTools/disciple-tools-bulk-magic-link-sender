@@ -21,6 +21,10 @@ jQuery(function ($) {
     handle_update_request();
   });
 
+  $(document).on('click', '#ml_main_col_assign_users_teams_update_but', function () {
+    handle_update_request();
+  });
+
   $(document).on('change', '#ml_main_col_available_link_objs_select', function () {
     handle_load_link_obj_request();
   });
@@ -41,10 +45,12 @@ jQuery(function ($) {
     handle_docs_request($(evt.currentTarget).data('title'), $(evt.currentTarget).data('content'));
   });
   $(document).on('click', '#ml_main_col_assign_users_teams_links_but_refresh', function () {
-    handle_assigned_user_links_management('refresh');
+    handle_assigned_user_links_management('refresh', function () {
+    });
   });
   $(document).on('click', '#ml_main_col_assign_users_teams_links_but_delete', function () {
-    handle_assigned_user_links_management('delete');
+    handle_assigned_user_links_management('delete', function () {
+    });
   });
 
 
@@ -661,25 +667,37 @@ jQuery(function ($) {
     $('#ml_main_col_schedules_send_now_but').prop('disabled', true);
     $('#ml_main_col_update_msg').html('').fadeOut('fast');
 
-    // Dispatch send now request.
-    $.ajax({
-      url: window.dt_magic_links.dt_endpoint_send_now,
-      method: 'POST',
-      data: {
-        link_obj_id: $('#ml_main_col_link_objs_manage_id').val()
-      },
-      success: function (data) {
-        // Enable send now button, on response and display payload message
-        $('#ml_main_col_schedules_send_now_but').prop('disabled', false);
-        $('#ml_main_col_update_msg').html(data['message']).fadeIn('fast');
+    // Refresh assigned user links, so as to capture any new assignments
+    handle_assigned_user_links_management('refresh', function () {
 
-      },
-      error: function (data) {
-        console.log(data);
-        $('#ml_main_col_schedules_send_now_but').prop('disabled', false);
-        $('#ml_main_col_update_msg').html('Server error, please see logging tab for more details.').fadeIn('fast');
+      let payload = {
+        assigned: fetch_assigned_users_teams(),
+        link_obj_id: $('#ml_main_col_link_objs_manage_id').val(),
+        links_expire_within_base_ts: $('#ml_main_col_schedules_links_expire_base_ts').val(),
+        links_expire_within_amount: $('#ml_main_col_schedules_links_expire_amount').val(),
+        links_expire_within_time_unit: $('#ml_main_col_schedules_links_expire_time_unit').val(),
+        links_never_expires: $('#ml_main_col_schedules_links_expire_never').prop('checked')
+      };
 
-      }
+      // Dispatch send now request.
+      $.ajax({
+        url: window.dt_magic_links.dt_endpoint_send_now,
+        method: 'POST',
+        data: payload,
+        success: function (data) {
+          // Enable send now button, on response and display payload message
+          $('#ml_main_col_schedules_send_now_but').prop('disabled', false);
+          $('#ml_main_col_update_msg').html(data['message']).fadeIn('fast');
+
+        },
+        error: function (data) {
+          console.log(data);
+          $('#ml_main_col_schedules_send_now_but').prop('disabled', false);
+          $('#ml_main_col_update_msg').html('Server error, please see logging tab for more details.').fadeIn('fast');
+
+        }
+      });
+
     });
   }
 
@@ -692,7 +710,7 @@ jQuery(function ($) {
     });
   }
 
-  function handle_assigned_user_links_management(action) {
+  function handle_assigned_user_links_management(action, callback) {
 
     /**
      * Base following logic on the current state of things; which may not
@@ -753,6 +771,8 @@ jQuery(function ($) {
           $('#ml_main_col_update_msg').html('Server error, please see browser console for more details.').fadeIn('fast');
         }
 
+        // Execute callback()
+        callback();
       },
       error: function (data) {
         console.log(data);

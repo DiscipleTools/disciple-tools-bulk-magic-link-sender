@@ -107,23 +107,35 @@ class Disciple_Tools_Magic_Links_Endpoints {
         // Prepare response payload
         $response = [];
 
-        // Ensure link object id has been specified
-        $link_obj_id = $request->get_param( 'link_obj_id' );
-        if ( ! empty( $link_obj_id ) ) {
+        // Ensure required parameters have been specified
+        $params = $request->get_params();
+        if ( isset( $params['assigned'], $params['link_obj_id'], $params['links_expire_within_base_ts'], $params['links_expire_within_amount'], $params['links_expire_within_time_unit'], $params['links_never_expires'] ) ) {
 
             // Load logs
             $logs   = Disciple_Tools_Magic_Links_API::logging_load();
             $logs[] = Disciple_Tools_Magic_Links_API::logging_create( '[SEND NOW REQUEST]' );
 
             // Attempt to load link object based on submitted id
-            $link_obj = Disciple_Tools_Magic_Links_API::fetch_option_link_obj( $link_obj_id );
+            $link_obj = Disciple_Tools_Magic_Links_API::fetch_option_link_obj( $params['link_obj_id'] );
             if ( ! empty( $link_obj ) ) {
 
                 $logs[] = Disciple_Tools_Magic_Links_API::logging_create( 'Processing Link Object: ' . $link_obj->name );
 
-                // Loop over assigned users and members
-                foreach ( $link_obj->assigned ?? [] as $assigned ) {
+                /**
+                 * Update link object with most recent key settings!
+                 */
+                $link_obj->schedule->links_expire_within_base_ts   = $params['links_expire_within_base_ts'];
+                $link_obj->schedule->links_expire_within_amount    = $params['links_expire_within_amount'];
+                $link_obj->schedule->links_expire_within_time_unit = $params['links_expire_within_time_unit'];
+                $link_obj->schedule->links_never_expires           = $params['links_never_expires'];
 
+                /**
+                 * Loop over assigned users and members; which have been submitted and not loaded;
+                 * as submitted params provide the most recent snapshot of link object shapes!
+                 */
+                foreach ( $params['assigned'] ?? [] as $assigned ) {
+
+                    $assigned = (object) $assigned;
                     if ( in_array( strtolower( trim( $assigned->type ) ), [ 'user', 'member' ] ) ) {
 
                         // Process send request to assigned user, using available contact info
@@ -135,7 +147,7 @@ class Disciple_Tools_Magic_Links_Endpoints {
                 $response['message'] = 'Send request completed - See logging tab for further details.';
 
             } else {
-                $msg    = 'Unable to locate corresponding link object for id: ' . $link_obj_id;
+                $msg    = 'Unable to locate corresponding link object for id: ' . $params['link_obj_id'];
                 $logs[] = Disciple_Tools_Magic_Links_API::logging_create( $msg );
 
                 $response['success'] = false;
@@ -147,7 +159,7 @@ class Disciple_Tools_Magic_Links_Endpoints {
 
         } else {
             $response['success'] = false;
-            $response['message'] = 'Unable to send any messages, due to unrecognizable link object id: ' . $link_obj_id;
+            $response['message'] = 'Unable to send any messages, due to unrecognizable parameters.';
         }
 
         return $response;

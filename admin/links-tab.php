@@ -69,6 +69,12 @@ class Disciple_Tools_Magic_Links_Tab_Links {
                     $stale_users = Disciple_Tools_Magic_Links_API::extract_assigned_user_deltas( $current_link_obj->assigned ?? [], $updating_link_obj->assigned ?? [] );
                     $new_users   = Disciple_Tools_Magic_Links_API::extract_assigned_user_deltas( $updating_link_obj->assigned ?? [], $current_link_obj->assigned ?? [] );
 
+                    // If this is the very first update, ensure all new users are identified
+                    // and processed accordingly!
+                    if ( ! isset( $current_link_obj->id ) && empty( $new_users ) && ! empty( $updating_link_obj->assigned ) ) {
+                        $new_users = $updating_link_obj->assigned;
+                    }
+
                     // Refresh user magic links accordingly; stale users to have links removed,
                     // whilst new users are to have links created and assigned.
                     Disciple_Tools_Magic_Links_API::update_magic_links( $current_link_obj->type ?? null, $stale_users, true );
@@ -193,7 +199,12 @@ class Disciple_Tools_Magic_Links_Tab_Links {
                             id="ml_main_col_assign_users_teams_links_but_delete"
                             class="button float-right"><?php esc_html_e( "Delete All Links", 'disciple_tools' ) ?></button>
                 </td>
-                <td></td>
+                <td>
+                    <span style="float:right;">
+                        <button type="submit" id="ml_main_col_assign_users_teams_update_but"
+                                class="button float-right"><?php esc_html_e( "Update", 'disciple_tools' ) ?></button>
+                    </span>
+                </td>
             </tr>
             </tfoot>
         </table>

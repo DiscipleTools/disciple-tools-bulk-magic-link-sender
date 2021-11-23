@@ -149,8 +149,17 @@ class Disciple_Tools_Magic_Links_Tab_General {
                                                                                data-content="ml_general_right_docs_all_scheduling_enabled_content">&#63;</a>]
                 </td>
                 <td>
+                    <?php
+                    $all_scheduling_checked_html = 'checked';
+                    if ( ! Disciple_Tools_Magic_Links_API::option_exists( Disciple_Tools_Magic_Links_API::$option_dt_magic_links_all_scheduling_enabled ) ) {
+                        // Ensure initial setup setting, is enabled by default
+                        Disciple_Tools_Magic_Links_API::update_option( Disciple_Tools_Magic_Links_API::$option_dt_magic_links_all_scheduling_enabled, '1' );
+                    } else {
+                        $all_scheduling_checked_html = boolval( Disciple_Tools_Magic_Links_API::fetch_option( Disciple_Tools_Magic_Links_API::$option_dt_magic_links_all_scheduling_enabled ) ) ? 'checked' : '';
+                    }
+                    ?>
                     <input type="checkbox"
-                           id="ml_general_main_col_general_all_scheduling_enabled" <?php echo esc_attr( boolval( Disciple_Tools_Magic_Links_API::fetch_option( Disciple_Tools_Magic_Links_API::$option_dt_magic_links_all_scheduling_enabled ) ) ? 'checked' : '' ); ?>/>
+                           id="ml_general_main_col_general_all_scheduling_enabled" <?php echo esc_attr( $all_scheduling_checked_html ); ?>/>
                 </td>
             </tr>
             <tr>
@@ -159,8 +168,17 @@ class Disciple_Tools_Magic_Links_Tab_General {
                                                                                      data-content="ml_general_right_docs_all_send_channels_enabled_content">&#63;</a>]
                 </td>
                 <td>
+                    <?php
+                    $all_channels_checked_html = 'checked';
+                    if ( ! Disciple_Tools_Magic_Links_API::option_exists( Disciple_Tools_Magic_Links_API::$option_dt_magic_links_all_channels_enabled ) ) {
+                        // Ensure initial setup setting, is enabled by default
+                        Disciple_Tools_Magic_Links_API::update_option( Disciple_Tools_Magic_Links_API::$option_dt_magic_links_all_channels_enabled, '1' );
+                    } else {
+                        $all_channels_checked_html = boolval( Disciple_Tools_Magic_Links_API::fetch_option( Disciple_Tools_Magic_Links_API::$option_dt_magic_links_all_channels_enabled ) ) ? 'checked' : '';
+                    }
+                    ?>
                     <input type="checkbox"
-                           id="ml_general_main_col_general_all_channels_enabled" <?php echo esc_attr( boolval( Disciple_Tools_Magic_Links_API::fetch_option( Disciple_Tools_Magic_Links_API::$option_dt_magic_links_all_channels_enabled ) ) ? 'checked' : '' ); ?>/>
+                           id="ml_general_main_col_general_all_channels_enabled" <?php echo esc_attr( $all_channels_checked_html ); ?>/>
                 </td>
             </tr>
             <tr>
