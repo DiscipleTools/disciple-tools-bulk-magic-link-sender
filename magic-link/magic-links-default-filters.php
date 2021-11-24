@@ -50,7 +50,7 @@ function dt_email_sending_channel_field( $user ): array {
 
         case Disciple_Tools_Magic_Links_API::$assigned_user_type_id_contacts:
 
-            $user_contact = DT_Posts::get_post( 'contacts', Disciple_Tools_Magic_Links_API::get_contact_id_by_user_id( $user->dt_id ), true, false );
+            $user_contact = DT_Posts::get_post( 'contacts', $user->dt_id, true, false );
             if ( ! empty( $user_contact ) && ! is_wp_error( $user_contact ) && isset( $user_contact['contact_email'] ) ) {
                 foreach ( $user_contact['contact_email'] as $email ) {
                     if ( ! empty( $email['value'] ) ) {
@@ -58,10 +58,6 @@ function dt_email_sending_channel_field( $user ): array {
                     }
                 }
             }
-            break;
-
-        case Disciple_Tools_Magic_Links_API::$assigned_user_type_id_groups:
-            // TODO
             break;
     }
 

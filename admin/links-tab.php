@@ -32,13 +32,15 @@ class Disciple_Tools_Magic_Links_Tab_Links {
 
         wp_localize_script(
             "dt_magic_links_script", "dt_magic_links", array(
-                'dt_magic_link_types'        => Disciple_Tools_Magic_Links_API::fetch_magic_link_types(),
-                'dt_users'                   => Disciple_Tools_Magic_Links_API::fetch_dt_users(),
-                'dt_teams'                   => Disciple_Tools_Magic_Links_API::fetch_dt_teams(),
-                'dt_magic_link_objects'      => Disciple_Tools_Magic_Links_API::fetch_option_link_objs(),
-                'dt_endpoint_send_now'       => Disciple_Tools_Magic_Links_API::fetch_endpoint_send_now_url(),
-                'dt_default_message'         => Disciple_Tools_Magic_Links_API::fetch_default_send_msg(),
-                'dt_default_send_channel_id' => Disciple_Tools_Magic_Links_API::$channel_email_id
+                'dt_magic_link_types'           => Disciple_Tools_Magic_Links_API::fetch_magic_link_types(),
+                'dt_users'                      => Disciple_Tools_Magic_Links_API::fetch_dt_users(),
+                'dt_teams'                      => Disciple_Tools_Magic_Links_API::fetch_dt_teams(),
+                'dt_groups'                     => Disciple_Tools_Magic_Links_API::fetch_dt_groups(),
+                'dt_magic_link_objects'         => Disciple_Tools_Magic_Links_API::fetch_option_link_objs(),
+                'dt_endpoint_send_now'          => Disciple_Tools_Magic_Links_API::fetch_endpoint_send_now_url(),
+                'dt_endpoint_user_links_manage' => Disciple_Tools_Magic_Links_API::fetch_endpoint_user_links_manage_url(),
+                'dt_default_message'            => Disciple_Tools_Magic_Links_API::fetch_default_send_msg(),
+                'dt_default_send_channel_id'    => Disciple_Tools_Magic_Links_API::$channel_email_id
             )
         );
     }
@@ -62,13 +64,21 @@ class Disciple_Tools_Magic_Links_Tab_Links {
                     // Attempt to locate an existing object with same id
                     $current_link_obj = Disciple_Tools_Magic_Links_API::fetch_option_link_obj( $updating_link_obj->id );
 
-                    // Nuke any existing user app magic link urls
-                    if ( ! empty( $current_link_obj ) && ! empty( $current_link_obj->type ) && ! empty( $current_link_obj->assigned ) ) {
-                        Disciple_Tools_Magic_Links_API::update_user_app_magic_links( $current_link_obj->type, $current_link_obj->assigned, true );
+                    // In an attempt to be more surgical, identify and only focus
+                    // on the deltas between previously saved and recently updated..!
+                    $stale_users = Disciple_Tools_Magic_Links_API::extract_assigned_user_deltas( $current_link_obj->assigned ?? [], $updating_link_obj->assigned ?? [] );
+                    $new_users   = Disciple_Tools_Magic_Links_API::extract_assigned_user_deltas( $updating_link_obj->assigned ?? [], $current_link_obj->assigned ?? [] );
+
+                    // If this is the very first update, ensure all new users are identified
+                    // and processed accordingly!
+                    if ( ! isset( $current_link_obj->id ) && empty( $new_users ) && ! empty( $updating_link_obj->assigned ) ) {
+                        $new_users = $updating_link_obj->assigned;
                     }
 
-                    // Create new app magic link urls for each assigned user
-                    Disciple_Tools_Magic_Links_API::update_user_app_magic_links( $updating_link_obj->type, $updating_link_obj->assigned, false );
+                    // Refresh user magic links accordingly; stale users to have links removed,
+                    // whilst new users are to have links created and assigned.
+                    Disciple_Tools_Magic_Links_API::update_magic_links( $current_link_obj->type ?? null, $stale_users, true );
+                    Disciple_Tools_Magic_Links_API::update_magic_links( $updating_link_obj->type, $new_users, false );
 
                     // Save latest updates
                     Disciple_Tools_Magic_Links_API::update_option_link_obj( $updating_link_obj );
@@ -168,15 +178,35 @@ class Disciple_Tools_Magic_Links_Tab_Links {
                                                data-title="ml_links_right_docs_assign_users_teams_title"
                                                data-content="ml_links_right_docs_assign_users_teams_content">&#63;</a>]
                 </th>
+                <th></th>
             </tr>
             </thead>
             <tbody>
             <tr>
-                <td>
+                <td colspan="2">
                     <?php $this->main_column_assign_users_teams(); ?>
                 </td>
             </tr>
             </tbody>
+            <tfoot>
+            <tr>
+                <td>
+                    <button disabled style="max-width: 100%;" type="submit"
+                            id="ml_main_col_assign_users_teams_links_but_refresh"
+                            class="button float-right"><?php esc_html_e( "Refresh All Links", 'disciple_tools' ) ?></button>
+
+                    <button disabled style="max-width: 100%;" type="submit"
+                            id="ml_main_col_assign_users_teams_links_but_delete"
+                            class="button float-right"><?php esc_html_e( "Delete All Links", 'disciple_tools' ) ?></button>
+                </td>
+                <td>
+                    <span style="float:right;">
+                        <button type="submit" id="ml_main_col_assign_users_teams_update_but"
+                                class="button float-right"><?php esc_html_e( "Update", 'disciple_tools' ) ?></button>
+                    </span>
+                </td>
+            </tr>
+            </tfoot>
         </table>
         <br>
         <!-- End Box -->
@@ -342,6 +372,7 @@ class Disciple_Tools_Magic_Links_Tab_Links {
             <thead>
             <tr>
                 <th>Name</th>
+                <th>Enabled</th>
             </tr>
             </thead>
             <tbody>
@@ -353,7 +384,7 @@ class Disciple_Tools_Magic_Links_Tab_Links {
 
     private function main_column_assign_users_teams() {
         ?>
-        <select style="min-width: 80%;" id="ml_main_col_assign_users_teams_select">
+        <select style="min-width: 90%;" id="ml_main_col_assign_users_teams_select">
             <option disabled selected value>-- select users & teams to receive links --</option>
 
             <?php
@@ -380,6 +411,18 @@ class Disciple_Tools_Magic_Links_Tab_Links {
             }
             ?>
 
+            <?php
+            // Source available dt groups
+            $dt_groups = Disciple_Tools_Magic_Links_API::fetch_dt_groups();
+            if ( ! empty( $dt_groups ) ) {
+                echo '<option disabled>-- groups --</option>';
+                foreach ( $dt_groups as $group ) {
+                    $value = 'groups+' . $group['id'];
+                    echo '<option value="' . esc_attr( $value ) . '">' . esc_attr( $group['name'] ) . '</option>';
+                }
+            }
+            ?>
+
         </select>
 
         <span style="float:right;">
@@ -388,7 +431,7 @@ class Disciple_Tools_Magic_Links_Tab_Links {
         </span>
         <br><br>
 
-        Currently Assigned Users & Teams
+        Currently Assigned Users, Teams & Groups
         <hr>
 
         <table class="widefat striped" id="ml_main_col_assign_users_teams_table">
@@ -398,6 +441,7 @@ class Disciple_Tools_Magic_Links_Tab_Links {
                 <th>Name</th>
                 <th>Phone</th>
                 <th>Email</th>
+                <th>Link</th>
                 <th></th>
             </tr>
             </thead>
@@ -491,7 +535,18 @@ class Disciple_Tools_Magic_Links_Tab_Links {
 
                     &nbsp;&nbsp;&nbsp;
                     <input type="checkbox" id="ml_main_col_schedules_links_expire_never" value=""/> Never Expires
+                </td>
+            </tr>
+            <tr>
+                <td style="vertical-align: middle;">Links Expire On [<a href="#" class="ml-links-docs"
+                                                                        data-title="ml_links_right_docs_links_expire_on_title"
+                                                                        data-content="ml_links_right_docs_links_expire_on_content">&#63;</a>]
+                </td>
+                <td style="vertical-align: middle;">
                     <input type="hidden" id="ml_main_col_schedules_links_expire_base_ts" value=""/>
+                    <input type="hidden" id="ml_main_col_schedules_links_expire_on_ts" value=""/>
+                    <input style="min-width: 100%;" type="text" id="ml_main_col_schedules_links_expire_on_ts_formatted"
+                           readonly/>
                 </td>
             </tr>
             <tr>

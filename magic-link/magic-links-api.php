@@ -25,7 +25,6 @@ class Disciple_Tools_Magic_Links_API {
 
     public static $assigned_user_type_id_users = 'users';
     public static $assigned_user_type_id_contacts = 'contacts';
-    public static $assigned_user_type_id_groups = 'groups';
 
     public static function fetch_magic_link_types(): array {
         $filtered_types = apply_filters( 'dt_settings_apps_list', [] );
@@ -53,6 +52,28 @@ class Disciple_Tools_Magic_Links_API {
         return null;
     }
 
+    public static function fetch_user_magic_link( $user_id ): string {
+        foreach ( self::fetch_magic_link_types() as $app ) {
+            $hash = get_user_option( $app['key'], $user_id );
+            if ( ! empty( $hash ) ) {
+                return trailingslashit( trailingslashit( site_url() ) . $app['url_base'] ) . $hash;
+            }
+        }
+
+        return '';
+    }
+
+    public static function fetch_post_magic_link( $post_id ): string {
+        foreach ( self::fetch_magic_link_types() as $app ) {
+            $hash = get_post_meta( $post_id, $app['key'], true );
+            if ( ! empty( $hash ) ) {
+                return trailingslashit( trailingslashit( site_url() ) . $app['url_base'] ) . $hash;
+            }
+        }
+
+        return '';
+    }
+
     public static function fetch_dt_users(): array {
         global $wpdb;
 
@@ -74,7 +95,8 @@ class Disciple_Tools_Magic_Links_API {
                         'contact_id' => $contact_id,
                         'name'       => $user['display_name'],
                         'phone'      => self::fetch_dt_contacts_comms_info( $contact_id, 'contact_phone' ),
-                        'email'      => self::fetch_wp_users_comms_info( $user['ID'], 'email' )
+                        'email'      => self::fetch_wp_users_comms_info( $user['ID'], 'email' ),
+                        'link'       => self::fetch_user_magic_link( $user['ID'] )
                     ];
                 }
             }
@@ -104,7 +126,7 @@ class Disciple_Tools_Magic_Links_API {
                 if ( ! empty( $team ) && ! is_wp_error( $team ) && isset( $team['group_type']['key'] ) && $team['group_type']['key'] === 'team' ) {
 
                     // Ensure team members also contain corresponding user ids
-                    $updated_team = self::capture_team_member_user_ids( $team );
+                    $updated_team = self::capture_member_ids( $team );
 
                     // Only capture what we need
                     $teams[] = [
@@ -121,21 +143,59 @@ class Disciple_Tools_Magic_Links_API {
         return [];
     }
 
-    private static function capture_team_member_user_ids( $team ): array {
-        if ( ! empty( $team ) && isset( $team['members'] ) ) {
-            foreach ( $team['members'] as $key => $member ) {
+    public static function fetch_dt_groups(): array {
+        global $wpdb;
 
-                // Fetch corresponding user ids for team members; which currently deal in contact post ids!
-                $corresponds_to_user_id = get_post_meta( $member['ID'], "corresponds_to_user", true );
-                if ( ! empty( $corresponds_to_user_id ) ) {
-                    $team['members'][ $key ]['user_id'] = $corresponds_to_user_id;
-                    $team['members'][ $key ]['phone']   = self::fetch_dt_contacts_comms_info( $member['ID'], 'contact_phone' );
-                    $team['members'][ $key ]['email']   = self::fetch_wp_users_comms_info( $corresponds_to_user_id, 'email' );
+        // Fetch group ids other than teams
+        $group_ids = $wpdb->get_results( "
+        SELECT DISTINCT(pm.post_id)
+        FROM $wpdb->posts p
+        LEFT JOIN $wpdb->postmeta as pm ON (p.ID = pm.post_id AND pm.meta_key = 'group_type')
+        WHERE pm.meta_value != 'team';
+        ", ARRAY_A );
+
+        // Fetch group objects
+        if ( ! empty( $group_ids ) ) {
+            $groups = [];
+            foreach ( $group_ids as $id ) {
+                $group = DT_Posts::get_post( 'groups', $id['post_id'], true, false );
+                if ( ! empty( $group ) && ! is_wp_error( $group ) && isset( $group['group_type']['key'] ) && $group['group_type']['key'] !== 'team' ) {
+
+                    // Ensure group members also contain corresponding user ids
+                    $updated_group = self::capture_member_ids( $group );
+
+                    // Only capture what we need
+                    $groups[] = [
+                        'id'      => $updated_group['ID'],
+                        'name'    => $updated_group['name'],
+                        'members' => $updated_group['members']
+                    ];
                 }
+            }
+
+            return $groups;
+        }
+
+        return [];
+    }
+
+    private static function capture_member_ids( $members ): array {
+        if ( ! empty( $members ) && isset( $members['members'] ) ) {
+            foreach ( $members['members'] as $key => $member ) {
+
+                // Fetch corresponding wp-user/contact ids for members; which currently default to post ids!
+                $corresponds_to_user_id = get_post_meta( $member['ID'], "corresponds_to_user", true );
+                $has_wp_user            = ( ! empty( $corresponds_to_user_id ) );
+
+                $members['members'][ $key ]['type']    = $has_wp_user ? 'wp_user' : 'post';
+                $members['members'][ $key ]['type_id'] = $has_wp_user ? $corresponds_to_user_id : $member['ID'];
+                $members['members'][ $key ]['phone']   = self::fetch_dt_contacts_comms_info( $member['ID'], 'contact_phone' );
+                $members['members'][ $key ]['email']   = $has_wp_user ? self::fetch_wp_users_comms_info( $corresponds_to_user_id, 'email' ) : self::fetch_dt_contacts_comms_info( $member['ID'], 'contact_email' );
+                $members['members'][ $key ]['link']    = $has_wp_user ? self::fetch_user_magic_link( $corresponds_to_user_id ) : self::fetch_post_magic_link( $member['ID'] );
             }
         }
 
-        return $team;
+        return $members;
     }
 
     private static function fetch_dt_contacts_comms_info( $contact_id, $field_id ): array {
@@ -171,7 +231,26 @@ class Disciple_Tools_Magic_Links_API {
     public static function fetch_option_link_objs() {
         $option = get_option( self::$option_dt_magic_links_objects );
 
-        return ( ! empty( $option ) ) ? json_decode( $option ) : (object) [];
+        // Ensure predicted expiration dates are kept accurate!
+        if ( ! empty( $option ) ) {
+
+            $link_objs = [];
+            foreach ( json_decode( $option ) as $id => $link_obj ) {
+                $amt           = $link_obj->schedule->links_expire_within_amount;
+                $time_unit     = $link_obj->schedule->links_expire_within_time_unit;
+                $base_ts       = $link_obj->schedule->links_expire_within_base_ts;
+                $never_expires = $link_obj->schedule->links_never_expires;
+
+                $link_obj->schedule->links_expire_on_ts           = self::determine_links_expiry_point( $amt, $time_unit, $base_ts );
+                $link_obj->schedule->links_expire_on_ts_formatted = self::fetch_links_expired_formatted_date( $never_expires, $base_ts, $amt, $time_unit );
+
+                $link_objs[ $link_obj->id ] = $link_obj;
+            }
+
+            return (object) $link_objs;
+        }
+
+        return (object) [];
     }
 
     public static function fetch_option_link_obj( $link_obj_id ) {
@@ -197,24 +276,55 @@ class Disciple_Tools_Magic_Links_API {
         update_option( $option, $value );
     }
 
-    public static function update_user_app_magic_links( $magic_key, $assigned, $delete ) {
+    public static function option_exists( $option ): bool {
+        global $wpdb;
+        $row = $wpdb->get_row( $wpdb->prepare( "SELECT option_value FROM $wpdb->options WHERE option_name = %s LIMIT 1", $option ) );
+
+        return is_object( $row );
+    }
+
+    public static function update_magic_links( $magic_key, $assigned, $delete ) {
         if ( ! empty( $magic_key ) && ! empty( $assigned ) ) {
             foreach ( $assigned ?? [] as $user ) {
 
                 // Only process types: user + members
                 if ( isset( $user->type ) && in_array( strtolower( trim( $user->type ) ), [ 'user', 'member' ] ) ) {
-                    if ( isset( $user->dt_id ) ) {
+                    if ( isset( $user->dt_id, $user->sys_type ) ) {
 
-                        // Delete/Create accordingly, based on flag!
+                        // Delete/Create accordingly, based on various flags!
                         if ( $delete === true ) {
-                            delete_user_option( $user->dt_id, $magic_key );
+                            switch ( strtolower( trim( $user->sys_type ) ) ) {
+                                case 'wp_user':
+                                    delete_user_option( $user->dt_id, $magic_key );
+                                    break;
+                                case 'post':
+                                    delete_post_meta( $user->dt_id, $magic_key );
+                                    break;
+                            }
                         } else {
-                            update_user_option( $user->dt_id, $magic_key, dt_create_unique_key() );
+                            switch ( strtolower( trim( $user->sys_type ) ) ) {
+                                case 'wp_user':
+                                    update_user_option( $user->dt_id, $magic_key, dt_create_unique_key() );
+                                    break;
+                                case 'post':
+                                    update_post_meta( $user->dt_id, $magic_key, dt_create_unique_key() );
+                                    break;
+                            }
                         }
                     }
                 }
             }
         }
+    }
+
+    public static function extract_assigned_user_deltas( $assigned_a, $assigned_b ) {
+        if ( ! empty( $assigned_a ) && ! empty( $assigned_b ) ) {
+            return array_udiff( $assigned_a, $assigned_b, function ( $user_a, $user_b ) {
+                return $user_a->dt_id - $user_b->dt_id;
+            } );
+        }
+
+        return [];
     }
 
     public static function fetch_sending_channels(): array {
@@ -351,17 +461,13 @@ class Disciple_Tools_Magic_Links_API {
     }
 
     public static function determine_assigned_user_type( $user ): string {
-        if ( in_array( strtolower( trim( $user->type ) ), [
-            'user',
-            'member'
-        ] ) ) { // TODO: Determine if member is of type user or contact!
-            return self::$assigned_user_type_id_users;
-
-        } else if ( strtolower( trim( $user->type ) ) == 'contact' ) {
-            return self::$assigned_user_type_id_contacts;
-
-        } else if ( strtolower( trim( $user->type ) ) == 'group' ) {
-            return self::$assigned_user_type_id_groups;
+        if ( in_array( strtolower( trim( $user->type ) ), [ 'user', 'member' ] ) ) {
+            switch ( strtolower( trim( $user->sys_type ) ) ) {
+                case 'wp_user':
+                    return self::$assigned_user_type_id_users;
+                case 'post':
+                    return self::$assigned_user_type_id_contacts;
+            }
         }
 
         return '';
@@ -380,14 +486,10 @@ class Disciple_Tools_Magic_Links_API {
 
             case self::$assigned_user_type_id_contacts:
 
-                $user_contact = DT_Posts::get_post( 'contacts', self::get_contact_id_by_user_id( $user->dt_id ), true, false );
+                $user_contact = DT_Posts::get_post( 'contacts', $user->dt_id, true, false );
                 if ( ! empty( $user_contact ) && ! is_wp_error( $user_contact ) ) {
                     $name = $user_contact['title'] ?? '';
                 }
-                break;
-
-            case self::$assigned_user_type_id_groups:
-                // TODO
                 break;
         }
 
@@ -398,7 +500,7 @@ class Disciple_Tools_Magic_Links_API {
         $msg = '';
 
         // First, build magic link url
-        $link_url = self::build_magic_link_url( $link_obj, $user->dt_id, $magic_link_url_base );
+        $link_url = self::build_magic_link_url( $link_obj, $user, $magic_link_url_base );
         if ( ! empty( $link_obj->message ) && ! empty( $link_url ) && $link_url !== '' ) {
 
             // Format expired date
@@ -439,10 +541,20 @@ Thanks!';
         return __( 'Smart Link', 'disciple_tools' );
     }
 
-    private static function build_magic_link_url( $link_obj, $user_id, $magic_link_url_base ): string {
-        $hash = get_user_option( $link_obj->type, $user_id );
+    private static function build_magic_link_url( $link_obj, $user, $magic_link_url_base ): string {
+        $hash = '';
+        switch ( strtolower( trim( $user->sys_type ) ) ) {
+            case 'wp_user':
+                $hash = get_user_option( $link_obj->type, $user->dt_id );
+                break;
+            case 'post':
+                $hash = get_post_meta( $user->dt_id, $link_obj->type, true );
+                break;
+        }
+
+        // Assuming a valid hash has been located, build url accordingly.
         if ( ! empty( $hash ) ) {
-            return trailingslashit( trailingslashit( site_url() ) . $magic_link_url_base ) . $hash;
+            return trailingslashit( trailingslashit( site_url() ) . $magic_link_url_base ) . $hash . '?id=' . $link_obj->id . '&type=' . $user->sys_type;
         }
 
         return '';
@@ -465,22 +577,26 @@ Thanks!';
         return $expiry_point < time(); // In the past!
     }
 
+    public static function determine_links_expiry_point( $amt, $time_unit, $base_ts ) {
+        return strtotime( '+' . $amt . ' ' . $time_unit, $base_ts );
+    }
+
     public static function has_links_expired( $never_expires, $base_ts, $amt, $time_unit ): bool {
         if ( $never_expires === true ) {
             return false;
         }
 
-        $expiry_point = strtotime( '+' . $amt . ' ' . $time_unit, $base_ts );
+        $expiry_point = self::determine_links_expiry_point( $amt, $time_unit, $base_ts );
 
         return $expiry_point < time(); // In the past!
     }
 
     public static function fetch_links_expired_formatted_date( $never_expires, $base_ts, $amt, $time_unit ): string {
         if ( $never_expires === true ) {
-            return 'Never';
+            return __( 'Never', 'disciple_tools' );
         }
 
-        $expiry_point = strtotime( '+' . $amt . ' ' . $time_unit, $base_ts );
+        $expiry_point = self::determine_links_expiry_point( $amt, $time_unit, $base_ts );
 
         return self::format_timestamp_in_local_time_zone( $expiry_point );
     }
@@ -503,6 +619,10 @@ Thanks!';
 
     public static function fetch_endpoint_send_now_url(): string {
         return trailingslashit( site_url() ) . 'wp-json/disciple_tools_magic_links/v1/send_now';
+    }
+
+    public static function fetch_endpoint_user_links_manage_url(): string {
+        return trailingslashit( site_url() ) . 'wp-json/disciple_tools_magic_links/v1/user_links_manage';
     }
 
     public static function fetch_endpoint_report_url(): string {
@@ -553,11 +673,42 @@ Thanks!';
         foreach ( $users ?? [] as $user ) {
             if ( in_array( trim( strtolower( $user->type ) ), [ 'user', 'member' ] ) ) {
 
-                // Switch current user id status and fetch associated contacts list
-                wp_set_current_user( $user->dt_id );
+                $posts = [];
 
-                // Fetch associated contacts list
-                $posts = DT_Posts::list_posts( 'contacts', [ 'limit' => 1000 ] );
+                // Posts list to be generated accordingly, based on user type
+                switch ( self::determine_assigned_user_type( $user ) ) {
+                    case self::$assigned_user_type_id_users:
+
+                        // Switch current user id status and fetch associated contacts list
+                        wp_set_current_user( $user->dt_id );
+
+                        // Fetch associated contacts list
+                        $posts = DT_Posts::list_posts( 'contacts', [
+                            'limit'  => 1000,
+                            'fields' => [
+                                [
+                                    'assigned_to' => [ 'me' ],
+                                    "subassigned" => [ 'me' ]
+                                ],
+                                "overall_status" => [
+                                    "new",
+                                    "unassigned",
+                                    "assigned",
+                                    "active"
+                                ]
+                            ]
+                        ] );
+                        break;
+
+                    case self::$assigned_user_type_id_contacts:
+
+                        $post = DT_Posts::get_post( 'contacts', $user->dt_id, true, false );
+                        if ( ! empty( $post ) && ! is_wp_error( $post ) ) {
+                            $posts['total']   = 1;
+                            $posts['posts'][] = $post;
+                        }
+                        break;
+                }
 
                 // Iterate and return valid posts
                 if ( ! empty( $posts ) && isset( $posts['posts'], $posts['total'] ) ) {
