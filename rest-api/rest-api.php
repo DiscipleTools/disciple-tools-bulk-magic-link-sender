@@ -9,7 +9,7 @@ class Disciple_Tools_Magic_Links_Endpoints {
      * @link https://github.com/DiscipleTools/Documentation/blob/master/theme-core/capabilities.md
      * @var string[]
      */
-    public $permissions = [ 'access_contacts', 'dt_all_access_contacts', 'view_project_metrics' ];
+    public $permissions = [ 'manage_dt' ];
 
 
     /**
@@ -26,21 +26,27 @@ class Disciple_Tools_Magic_Links_Endpoints {
             $namespace, '/user_links_manage', [
                 'methods'             => WP_REST_Server::CREATABLE,
                 'callback'            => [ $this, 'user_links_manage' ],
-                'permission_callback' => '__return_true',
+                'permission_callback' => function ( WP_REST_Request $request ) {
+                    return $this->has_permission();
+                }
             ]
         );
         register_rest_route(
             $namespace, '/send_now', [
                 'methods'             => WP_REST_Server::CREATABLE,
                 'callback'            => [ $this, 'send_now' ],
-                'permission_callback' => '__return_true',
+                'permission_callback' => function ( WP_REST_Request $request ) {
+                    return $this->has_permission();
+                }
             ]
         );
         register_rest_route(
             $namespace, '/report', [
                 'methods'             => WP_REST_Server::READABLE,
                 'callback'            => [ $this, 'get_report' ],
-                'permission_callback' => '__return_true',
+                'permission_callback' => function ( WP_REST_Request $request ) {
+                    return $this->has_permission();
+                }
             ]
         );
     }

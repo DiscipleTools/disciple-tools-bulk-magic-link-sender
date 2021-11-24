@@ -684,6 +684,9 @@ jQuery(function ($) {
         url: window.dt_magic_links.dt_endpoint_send_now,
         method: 'POST',
         data: payload,
+        beforeSend: (xhr) => {
+          xhr.setRequestHeader("X-WP-Nonce", window.dt_admin_scripts.nonce);
+        },
         success: function (data) {
           // Enable send now button, on response and display payload message
           $('#ml_main_col_schedules_send_now_but').prop('disabled', false);
@@ -737,6 +740,9 @@ jQuery(function ($) {
       url: window.dt_magic_links.dt_endpoint_user_links_manage,
       method: 'POST',
       data: payload,
+      beforeSend: (xhr) => {
+        xhr.setRequestHeader("X-WP-Nonce", window.dt_admin_scripts.nonce);
+      },
       success: function (data) {
         if (data && data['success']) {
 

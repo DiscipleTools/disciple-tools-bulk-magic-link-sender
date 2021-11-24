@@ -29,6 +29,9 @@ jQuery(function ($) {
       },
       contentType: "application/json; charset=utf-8",
       dataType: "json",
+      beforeSend: (xhr) => {
+        xhr.setRequestHeader("X-WP-Nonce", window.dt_admin_scripts.nonce);
+      },
       success: function (data) {
 
         if (data['success']) {
