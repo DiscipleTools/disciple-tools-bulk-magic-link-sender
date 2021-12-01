@@ -92,7 +92,6 @@ class Disciple_Tools_Magic_Links_Endpoints {
                 $response['success'] = false;
                 $response['message'] = 'Unable to locate a valid ' . $params['post_type'] . ' post record for id: ' . $params['post_id'];
             }
-
         } else {
             $response['success'] = false;
             $response['message'] = 'Unable to execute request, due to missing parameters.';
@@ -250,7 +249,6 @@ class Disciple_Tools_Magic_Links_Endpoints {
                     // TODO...
                     break;
             }
-
         } else {
             $response['success'] = false;
             $response['message'] = 'Unable to execute action, due to missing parameters.';
