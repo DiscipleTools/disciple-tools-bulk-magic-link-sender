@@ -65,7 +65,7 @@ function execute_scheduled_link_objects() {
                                     // Loop over assigned users and members
                                     foreach ( $link_obj->assigned ?? [] as $assigned ) {
 
-                                        if ( in_array( strtolower( trim( $assigned->type ) ), [ 'user', 'member' ] ) ) {
+                                        if ( in_array( strtolower( trim( $assigned->type ) ), Disciple_Tools_Magic_Links_API::$assigned_supported_types ) ) {
 
                                             // Process send request to assigned user, using available contact info
                                             Disciple_Tools_Magic_Links_API::send( $link_obj, $assigned, $logs );

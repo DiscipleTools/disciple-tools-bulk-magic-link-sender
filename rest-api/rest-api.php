@@ -23,9 +23,27 @@ class Disciple_Tools_Magic_Links_Endpoints {
         $namespace = 'disciple_tools_magic_links/v1';
 
         register_rest_route(
+            $namespace, '/get_post_record', [
+                'methods'             => WP_REST_Server::READABLE,
+                'callback'            => [ $this, 'get_post_record' ],
+                'permission_callback' => function ( WP_REST_Request $request ) {
+                    return $this->has_permission();
+                }
+            ]
+        );
+        register_rest_route(
             $namespace, '/user_links_manage', [
                 'methods'             => WP_REST_Server::CREATABLE,
                 'callback'            => [ $this, 'user_links_manage' ],
+                'permission_callback' => function ( WP_REST_Request $request ) {
+                    return $this->has_permission();
+                }
+            ]
+        );
+        register_rest_route(
+            $namespace, '/assigned_manage', [
+                'methods'             => WP_REST_Server::CREATABLE,
+                'callback'            => [ $this, 'assigned_manage' ],
                 'permission_callback' => function ( WP_REST_Request $request ) {
                     return $this->has_permission();
                 }
@@ -49,6 +67,38 @@ class Disciple_Tools_Magic_Links_Endpoints {
                 }
             ]
         );
+    }
+
+    public function get_post_record( WP_REST_Request $request ): array {
+
+        // Prepare response payload
+        $response = [];
+
+        $params = $request->get_params();
+        if ( isset( $params['post_type'], $params['post_id'] ) ) {
+
+            $post = DT_Posts::get_post( $params['post_type'], $params['post_id'], true, false, true );
+            if ( ! empty( $post ) && ! is_wp_error( $post ) ) {
+
+                // Also, check for any associated magic links
+                $post['ml_link'] = Disciple_Tools_Magic_Links_API::fetch_post_magic_link( $post['ID'] );
+
+                // Update response payload
+                $response['post']    = $post;
+                $response['success'] = true;
+                $response['message'] = 'Successfully loaded ' . $params['post_type'] . ' post record for id: ' . $params['post_id'];
+
+            } else {
+                $response['success'] = false;
+                $response['message'] = 'Unable to locate a valid ' . $params['post_type'] . ' post record for id: ' . $params['post_id'];
+            }
+
+        } else {
+            $response['success'] = false;
+            $response['message'] = 'Unable to execute request, due to missing parameters.';
+        }
+
+        return $response;
     }
 
     public function user_links_manage( WP_REST_Request $request ): array {
@@ -108,6 +158,107 @@ class Disciple_Tools_Magic_Links_Endpoints {
         return $response;
     }
 
+    public function assigned_manage( WP_REST_Request $request ): array {
+
+        // Prepare response payload
+        $response = [];
+
+        $params = $request->get_params();
+        if ( isset( $params['action'], $params['record'], $params['link_obj_id'], $params['magic_link_type'] ) ) {
+
+            // Adjust assigned array shape, to ensure it is processed accordingly further downstream
+            $record = json_decode( json_encode( $params['record'] ) );
+
+            // Execute accordingly, based on specified action
+            switch ( $params['action'] ) {
+                case 'add':
+
+                    // Load and update link object with new assignment
+                    $link_obj = Disciple_Tools_Magic_Links_API::fetch_option_link_obj( $params['link_obj_id'] );
+                    if ( ! empty( $link_obj ) && ! Disciple_Tools_Magic_Links_API::is_already_assigned( $record->id, $link_obj ) ) {
+
+                        // Update link object accordingly
+                        $link_obj->type       = $params['magic_link_type'];
+                        $link_obj->assigned[] = $record;
+
+                        // Save updated link object
+                        Disciple_Tools_Magic_Links_API::update_option_link_obj( $link_obj );
+
+                        /**
+                         * If record is of supported type, then also generate a new link
+                         * which is also returned within response payload!
+                         */
+                        if ( in_array( strtolower( trim( $record->type ) ), Disciple_Tools_Magic_Links_API::$assigned_supported_types ) ) {
+
+                            // Create new magic link
+                            Disciple_Tools_Magic_Links_API::update_magic_links( $link_obj->type, [ $record ], false );
+
+                            // Capture newly created magic link in url form
+                            $magic_link_type     = Disciple_Tools_Magic_Links_API::fetch_magic_link_type( $link_obj->type );
+                            $response['ml_link'] = Disciple_Tools_Magic_Links_API::build_magic_link_url( $link_obj, $record, $magic_link_type['url_base'] );
+                        }
+
+                        // All is well.. ;)
+                        $response['success'] = true;
+
+                    } else {
+                        $response['success'] = false;
+                        $response['message'] = 'Unable to execute action[' . $params['action'] . '], due to invalid link object and/or record already assigned.';
+                    }
+
+                    break;
+
+                case 'delete':
+
+                    // Load and update link object with new assignment
+                    $link_obj = Disciple_Tools_Magic_Links_API::fetch_option_link_obj( $params['link_obj_id'] );
+                    if ( ! empty( $link_obj ) && Disciple_Tools_Magic_Links_API::is_already_assigned( $record->id, $link_obj ) ) {
+
+                        // Update link object accordingly
+                        $updated_assigned = [];
+                        foreach ( $link_obj->assigned ?? [] as $already_assigned ) {
+                            if ( $already_assigned->id !== $record->id ) {
+                                $updated_assigned[] = $already_assigned;
+                            }
+                        }
+                        $link_obj->assigned = $updated_assigned;
+                        $link_obj->type     = $params['magic_link_type'];
+
+                        // Save updated link object
+                        Disciple_Tools_Magic_Links_API::update_option_link_obj( $link_obj );
+
+                        /**
+                         * If record is of supported type, then also attempt to remove any
+                         * associated magic links.
+                         */
+                        if ( in_array( strtolower( trim( $record->type ) ), Disciple_Tools_Magic_Links_API::$assigned_supported_types ) ) {
+                            Disciple_Tools_Magic_Links_API::update_magic_links( $link_obj->type, [ $record ], true );
+                        }
+
+                        // All is well.. ;)
+                        $response['success'] = true;
+
+                    } else {
+                        $response['success'] = false;
+                        $response['message'] = 'Unable to execute action[' . $params['action'] . '], due to invalid link object and/or record not already assigned.';
+                    }
+
+                    //Disciple_Tools_Magic_Links_API::update_magic_links( $params['magic_link_type'], $assigned, true );
+                    break;
+
+                case 'link':
+                    // TODO...
+                    break;
+            }
+
+        } else {
+            $response['success'] = false;
+            $response['message'] = 'Unable to execute action, due to missing parameters.';
+        }
+
+        return $response;
+    }
+
     public function send_now( WP_REST_Request $request ): array {
 
         // Prepare response payload
@@ -142,7 +293,7 @@ class Disciple_Tools_Magic_Links_Endpoints {
                 foreach ( $params['assigned'] ?? [] as $assigned ) {
 
                     $assigned = (object) $assigned;
-                    if ( in_array( strtolower( trim( $assigned->type ) ), [ 'user', 'member' ] ) ) {
+                    if ( in_array( strtolower( trim( $assigned->type ) ), Disciple_Tools_Magic_Links_API::$assigned_supported_types ) ) {
 
                         // Process send request to assigned user, using available contact info
                         Disciple_Tools_Magic_Links_API::send( $link_obj, $assigned, $logs );
