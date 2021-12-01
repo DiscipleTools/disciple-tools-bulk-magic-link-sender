@@ -174,7 +174,7 @@ class Disciple_Tools_Magic_Links_Endpoints {
 
                     // Load and update link object with new assignment
                     $link_obj = Disciple_Tools_Magic_Links_API::fetch_option_link_obj( $params['link_obj_id'] );
-                    if ( ! empty( $link_obj ) && ! Disciple_Tools_Magic_Links_API::is_already_assigned( $record->id, $link_obj ) ) {
+                    if ( ! empty( $link_obj ) && isset( $link_obj->id ) && ! Disciple_Tools_Magic_Links_API::is_already_assigned( $record->id, $link_obj ) ) {
 
                         // Update link object accordingly
                         $link_obj->type       = $params['magic_link_type'];
@@ -211,7 +211,7 @@ class Disciple_Tools_Magic_Links_Endpoints {
 
                     // Load and update link object with new assignment
                     $link_obj = Disciple_Tools_Magic_Links_API::fetch_option_link_obj( $params['link_obj_id'] );
-                    if ( ! empty( $link_obj ) && Disciple_Tools_Magic_Links_API::is_already_assigned( $record->id, $link_obj ) ) {
+                    if ( ! empty( $link_obj ) && isset( $link_obj->id ) && Disciple_Tools_Magic_Links_API::is_already_assigned( $record->id, $link_obj ) ) {
 
                         // Update link object accordingly
                         $updated_assigned = [];
