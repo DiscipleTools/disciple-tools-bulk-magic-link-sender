@@ -502,7 +502,7 @@ jQuery(function ($) {
     let record = fetch_users_teams_record(id);
     if (record) {
       let sys_type = 'wp_user';
-      return build_row_html(auto_update, id, id.split('+')[1], 'User', record['name'], sys_type, 'user', build_comms_html(record, 'phone'), build_comms_html(record, 'email'), build_link_html(record['link'], sys_type));
+      return build_row_html(id, id.split('+')[1], 'User', record['name'], sys_type, 'user', build_comms_html(record, 'phone'), build_comms_html(record, 'email'), build_link_html(record['links'], sys_type));
     }
     return null;
   }
@@ -549,14 +549,14 @@ jQuery(function ($) {
         // Capture team members accordingly, based on flags!
         if (inc_default_members && record['members'] && record['members'].length > 0) {
           record['members'].forEach(function (member, idx) {
-            html += build_row_html(auto_update, id + "+" + member['type_id'], member['type_id'], 'Member', member['post_title'], member['type'], member['post_type'], build_comms_html(member, 'phone'), build_comms_html(member, 'email'), build_link_html(member['link'], member['type']));
+            html += build_row_html(id + "+" + member['type_id'], member['type_id'], 'Member', member['post_title'], member['type'], member['post_type'], build_comms_html(member, 'phone'), build_comms_html(member, 'email'), build_link_html(member['links'], member['type']));
           });
         }
 
       } else { // Single member addition only! Usually resulting from a link object load!
 
         let member = fetch_member_record(record['members'], tokens[2]);
-        html = build_row_html(auto_update, id, member['type_id'], 'Member', member['post_title'], member['type'], member['post_type'], build_comms_html(member, 'phone'), build_comms_html(member, 'email'), build_link_html(member['link'], member['type']));
+        html = build_row_html(id, member['type_id'], 'Member', member['post_title'], member['type'], member['post_type'], build_comms_html(member, 'phone'), build_comms_html(member, 'email'), build_link_html(member['links'], member['type']));
 
       }
     }
@@ -605,9 +605,16 @@ jQuery(function ($) {
     return new RegExp('^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$').test(window.lodash.escape(email));
   }
 
-  function build_link_html(link, sys_type) {
-    if (link && $.trim(link).length > 0) {
-      return `<a class="button" href="${append_magic_link_params(link, sys_type)}" target="_blank">View</a>`;
+  function build_link_html(links, sys_type) {
+    // Ensure the correct link is used for given link object and selected magic link type.
+    let link_obj_id = $('#ml_main_col_link_objs_manage_id').val();
+    let ml_type = $('#ml_main_col_link_objs_manage_type').val();
+
+    if (links && links[ml_type + '_' + link_obj_id]) {
+      let link = links[ml_type + '_' + link_obj_id];
+      if (link && $.trim(link).length > 0) {
+        return `<a class="button" href="${append_magic_link_params(link, sys_type)}" target="_blank">View</a>`;
+      }
     }
 
     return '---';

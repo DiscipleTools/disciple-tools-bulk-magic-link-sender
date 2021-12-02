@@ -85,8 +85,8 @@ class Disciple_Tools_Magic_Links_Tab_Links {
 
                     // Refresh user magic links accordingly; stale users to have links removed,
                     // whilst new users are to have links created and assigned.
-                    Disciple_Tools_Magic_Links_API::update_magic_links( $current_link_obj->type ?? null, $stale_users, true );
-                    Disciple_Tools_Magic_Links_API::update_magic_links( $updating_link_obj->type, $new_users, false );
+                    Disciple_Tools_Magic_Links_API::update_magic_links( $current_link_obj ?? null, $stale_users, true );
+                    Disciple_Tools_Magic_Links_API::update_magic_links( $updating_link_obj, $new_users, false );
 
                     // Save latest updates
                     Disciple_Tools_Magic_Links_API::update_option_link_obj( $updating_link_obj );

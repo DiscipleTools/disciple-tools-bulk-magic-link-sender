@@ -111,10 +111,13 @@ class Disciple_Tools_Magic_Links_Endpoints {
             // Adjust assigned array shape, to ensure it is processed accordingly further downstream
             $assigned = json_decode( json_encode( $params['assigned'] ) );
 
+            // Attempt to load link object based on submitted id
+            $link_obj = Disciple_Tools_Magic_Links_API::fetch_option_link_obj( $params['link_obj_id'] );
+
             // Execute accordingly, based on specified action
             switch ( $params['action'] ) {
                 case 'refresh':
-                    Disciple_Tools_Magic_Links_API::update_magic_links( $params['magic_link_type'], $assigned, false );
+                    Disciple_Tools_Magic_Links_API::update_magic_links( $link_obj, $assigned, false );
 
                     // Also update base timestamp and future expiration points
                     if ( isset( $params['links_expire_within_amount'], $params['links_expire_within_time_unit'], $params['links_never_expires'] ) ) {
@@ -131,7 +134,7 @@ class Disciple_Tools_Magic_Links_Endpoints {
                     break;
 
                 case 'delete':
-                    Disciple_Tools_Magic_Links_API::update_magic_links( $params['magic_link_type'], $assigned, true );
+                    Disciple_Tools_Magic_Links_API::update_magic_links( $link_obj, $assigned, true );
                     break;
             }
 
