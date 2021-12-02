@@ -571,7 +571,7 @@ Thanks!';
         return __( 'Smart Link', 'disciple_tools' );
     }
 
-    private static function build_magic_link_url( $link_obj, $user, $magic_link_url_base ): string {
+    public static function build_magic_link_url( $link_obj, $user, $magic_link_url_base, $with_params = true ): string {
         $hash           = '';
         $magic_link_key = self::generate_magic_link_type_key( $link_obj );
         switch ( strtolower( trim( $user->sys_type ) ) ) {
@@ -585,7 +585,12 @@ Thanks!';
 
         // Assuming a valid hash has been located, build url accordingly.
         if ( ! empty( $hash ) ) {
-            return trailingslashit( trailingslashit( site_url() ) . $magic_link_url_base ) . $hash . '?id=' . $link_obj->id . '&type=' . $user->sys_type;
+            $url = trailingslashit( trailingslashit( site_url() ) . $magic_link_url_base ) . $hash;
+            if ( $with_params === true ) {
+                $url .= '?id=' . $link_obj->id . '&type=' . $user->sys_type;
+            }
+
+            return $url;
         }
 
         return '';

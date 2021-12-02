@@ -81,7 +81,7 @@ class Disciple_Tools_Magic_Links_Endpoints {
             if ( ! empty( $post ) && ! is_wp_error( $post ) ) {
 
                 // Also, check for any associated magic links
-                $post['ml_link'] = Disciple_Tools_Magic_Links_API::fetch_post_magic_link( $post['ID'] );
+                $post['ml_links'] = Disciple_Tools_Magic_Links_API::fetch_post_magic_links( $post['ID'] );
 
                 // Update response payload
                 $response['post']    = $post;
@@ -193,11 +193,11 @@ class Disciple_Tools_Magic_Links_Endpoints {
                         if ( in_array( strtolower( trim( $record->type ) ), Disciple_Tools_Magic_Links_API::$assigned_supported_types ) ) {
 
                             // Create new magic link
-                            Disciple_Tools_Magic_Links_API::update_magic_links( $link_obj->type, [ $record ], false );
+                            Disciple_Tools_Magic_Links_API::update_magic_links( $link_obj, [ $record ], false );
 
                             // Capture newly created magic link in url form
-                            $magic_link_type     = Disciple_Tools_Magic_Links_API::fetch_magic_link_type( $link_obj->type );
-                            $response['ml_link'] = Disciple_Tools_Magic_Links_API::build_magic_link_url( $link_obj, $record, $magic_link_type['url_base'] );
+                            $magic_link_type = Disciple_Tools_Magic_Links_API::fetch_magic_link_type( $link_obj->type );
+                            $response['ml_links'][ Disciple_Tools_Magic_Links_API::generate_magic_link_type_key( $link_obj ) ][] = Disciple_Tools_Magic_Links_API::build_magic_link_url( $link_obj, $record, $magic_link_type['url_base'], false );
                         }
 
                         // All is well.. ;)
@@ -234,7 +234,7 @@ class Disciple_Tools_Magic_Links_Endpoints {
                          * associated magic links.
                          */
                         if ( in_array( strtolower( trim( $record->type ) ), Disciple_Tools_Magic_Links_API::$assigned_supported_types ) ) {
-                            Disciple_Tools_Magic_Links_API::update_magic_links( $link_obj->type, [ $record ], true );
+                            Disciple_Tools_Magic_Links_API::update_magic_links( $link_obj, [ $record ], true );
                         }
 
                         // All is well.. ;)
@@ -245,7 +245,6 @@ class Disciple_Tools_Magic_Links_Endpoints {
                         $response['message'] = 'Unable to execute action[' . $params['action'] . '], due to invalid link object and/or record not already assigned.';
                     }
 
-                    //Disciple_Tools_Magic_Links_API::update_magic_links( $params['magic_link_type'], $assigned, true );
                     break;
 
                 case 'link':
