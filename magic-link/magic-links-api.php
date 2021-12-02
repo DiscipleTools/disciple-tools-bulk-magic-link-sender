@@ -25,6 +25,7 @@ class Disciple_Tools_Magic_Links_API {
 
     public static $assigned_user_type_id_users = 'users';
     public static $assigned_user_type_id_contacts = 'contacts';
+    public static $assigned_supported_types = [ 'user', 'member', 'contact' ];
 
     public static function fetch_magic_link_types(): array {
         $filtered_types = apply_filters( 'dt_settings_apps_list', [] );
@@ -268,6 +269,18 @@ class Disciple_Tools_Magic_Links_API {
         update_option( self::$option_dt_magic_links_objects, json_encode( $option_link_objs ) );
     }
 
+    public static function is_already_assigned( $id, $link_obj ): bool {
+        $assigned = false;
+
+        foreach ( $link_obj->assigned ?? [] as $user ) {
+            if ( $user->id === $id ) {
+                $assigned = true;
+            }
+        }
+
+        return $assigned;
+    }
+
     public static function fetch_option( $option ) {
         return get_option( $option );
     }
@@ -288,7 +301,7 @@ class Disciple_Tools_Magic_Links_API {
             foreach ( $assigned ?? [] as $user ) {
 
                 // Only process types: user + members
-                if ( isset( $user->type ) && in_array( strtolower( trim( $user->type ) ), [ 'user', 'member' ] ) ) {
+                if ( isset( $user->type ) && in_array( strtolower( trim( $user->type ) ), self::$assigned_supported_types ) ) {
                     if ( isset( $user->dt_id, $user->sys_type ) ) {
 
                         // Delete/Create accordingly, based on various flags!
@@ -461,7 +474,7 @@ class Disciple_Tools_Magic_Links_API {
     }
 
     public static function determine_assigned_user_type( $user ): string {
-        if ( in_array( strtolower( trim( $user->type ) ), [ 'user', 'member' ] ) ) {
+        if ( in_array( strtolower( trim( $user->type ) ), self::$assigned_supported_types ) ) {
             switch ( strtolower( trim( $user->sys_type ) ) ) {
                 case 'wp_user':
                     return self::$assigned_user_type_id_users;
@@ -541,7 +554,7 @@ Thanks!';
         return __( 'Smart Link', 'disciple_tools' );
     }
 
-    private static function build_magic_link_url( $link_obj, $user, $magic_link_url_base ): string {
+    public static function build_magic_link_url( $link_obj, $user, $magic_link_url_base ): string {
         $hash = '';
         switch ( strtolower( trim( $user->sys_type ) ) ) {
             case 'wp_user':
@@ -625,6 +638,14 @@ Thanks!';
         return trailingslashit( site_url() ) . 'wp-json/disciple_tools_magic_links/v1/user_links_manage';
     }
 
+    public static function fetch_endpoint_assigned_manage_url(): string {
+        return trailingslashit( site_url() ) . 'wp-json/disciple_tools_magic_links/v1/assigned_manage';
+    }
+
+    public static function fetch_endpoint_get_post_record_url(): string {
+        return trailingslashit( site_url() ) . 'wp-json/disciple_tools_magic_links/v1/get_post_record';
+    }
+
     public static function fetch_endpoint_report_url(): string {
         return trailingslashit( site_url() ) . 'wp-json/disciple_tools_magic_links/v1/report';
     }
@@ -671,7 +692,7 @@ Thanks!';
 
         $original_user = wp_get_current_user();
         foreach ( $users ?? [] as $user ) {
-            if ( in_array( trim( strtolower( $user->type ) ), [ 'user', 'member' ] ) ) {
+            if ( in_array( trim( strtolower( $user->type ) ), self::$assigned_supported_types ) ) {
 
                 $posts = [];
 

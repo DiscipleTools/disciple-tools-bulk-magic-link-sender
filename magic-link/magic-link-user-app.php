@@ -99,9 +99,10 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
             'label'       => $this->page_title,
             'description' => $this->page_description,
             'meta'        => [
-                'app_type'  => 'magic_link',
-                'post_type' => $this->post_type,
-                'fields'    => [
+                'app_type'      => 'magic_link',
+                'post_type'     => $this->post_type,
+                'contacts_only' => false,
+                'fields'        => [
                     [
                         'id'    => 'name',
                         'label' => $field_settings['name']['name']

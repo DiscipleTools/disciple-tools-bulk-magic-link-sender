@@ -23,11 +23,15 @@ class Disciple_Tools_Magic_Links_Tab_Links {
         wp_enqueue_style( 'daterangepicker-css' );
         wp_enqueue_script( 'daterangepicker-js', 'https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.js', [ 'moment' ], '3.1.0', true );
 
+        dt_theme_enqueue_script( 'typeahead-jquery', 'dt-core/dependencies/typeahead/dist/jquery.typeahead.min.js', array( 'jquery' ), true );
+        dt_theme_enqueue_style( 'typeahead-jquery-css', 'dt-core/dependencies/typeahead/dist/jquery.typeahead.min.css', array() );
+
         wp_enqueue_script( 'dt_magic_links_script', plugin_dir_url( __FILE__ ) . 'js/links-tab.js', [
             'jquery',
             'lodash',
             'moment',
-            'daterangepicker-js'
+            'daterangepicker-js',
+            'typeahead-jquery'
         ], filemtime( dirname( __FILE__ ) . '/js/links-tab.js' ), true );
 
         wp_localize_script(
@@ -39,8 +43,12 @@ class Disciple_Tools_Magic_Links_Tab_Links {
                 'dt_magic_link_objects'         => Disciple_Tools_Magic_Links_API::fetch_option_link_objs(),
                 'dt_endpoint_send_now'          => Disciple_Tools_Magic_Links_API::fetch_endpoint_send_now_url(),
                 'dt_endpoint_user_links_manage' => Disciple_Tools_Magic_Links_API::fetch_endpoint_user_links_manage_url(),
+                'dt_endpoint_assigned_manage'   => Disciple_Tools_Magic_Links_API::fetch_endpoint_assigned_manage_url(),
+                'dt_endpoint_get_post_record'   => Disciple_Tools_Magic_Links_API::fetch_endpoint_get_post_record_url(),
                 'dt_default_message'            => Disciple_Tools_Magic_Links_API::fetch_default_send_msg(),
-                'dt_default_send_channel_id'    => Disciple_Tools_Magic_Links_API::$channel_email_id
+                'dt_default_send_channel_id'    => Disciple_Tools_Magic_Links_API::$channel_email_id,
+                'dt_base_url'                   => rest_url(),
+                'dt_wp_nonce'                   => esc_attr( wp_create_nonce( 'wp_rest' ) )
             )
         );
     }
@@ -384,52 +392,63 @@ class Disciple_Tools_Magic_Links_Tab_Links {
 
     private function main_column_assign_users_teams() {
         ?>
-        <select style="min-width: 90%;" id="ml_main_col_assign_users_teams_select">
-            <option disabled selected value>-- select users & teams to receive links --</option>
+        <table class="widefat striped">
+            <thead>
+            <tr>
+                <th>
+                    <select style="min-width: 90%;" id="ml_main_col_assign_users_teams_select">
+                        <option disabled selected value>-- select users & teams to receive links --</option>
 
-            <?php
-            // Source available dt users
-            $dt_users = Disciple_Tools_Magic_Links_API::fetch_dt_users();
-            if ( ! empty( $dt_users ) ) {
-                echo '<option disabled>-- users --</option>';
-                foreach ( $dt_users as $user ) {
-                    $value = 'users+' . $user['user_id'];
-                    echo '<option value="' . esc_attr( $value ) . '">' . esc_attr( $user['name'] ) . '</option>';
-                }
-            }
-            ?>
+                        <?php
+                        // Source available dt users
+                        $dt_users = Disciple_Tools_Magic_Links_API::fetch_dt_users();
+                        if ( ! empty( $dt_users ) ) {
+                            echo '<option disabled>-- users --</option>';
+                            foreach ( $dt_users as $user ) {
+                                $value = 'users+' . $user['user_id'];
+                                echo '<option value="' . esc_attr( $value ) . '">' . esc_attr( $user['name'] ) . '</option>';
+                            }
+                        }
+                        ?>
 
-            <?php
-            // Source available dt teams
-            $dt_teams = Disciple_Tools_Magic_Links_API::fetch_dt_teams();
-            if ( ! empty( $dt_teams ) ) {
-                echo '<option disabled>-- teams --</option>';
-                foreach ( $dt_teams as $team ) {
-                    $value = 'teams+' . $team['id'];
-                    echo '<option value="' . esc_attr( $value ) . '">' . esc_attr( $team['name'] ) . '</option>';
-                }
-            }
-            ?>
+                        <?php
+                        // Source available dt teams
+                        $dt_teams = Disciple_Tools_Magic_Links_API::fetch_dt_teams();
+                        if ( ! empty( $dt_teams ) ) {
+                            echo '<option disabled>-- teams --</option>';
+                            foreach ( $dt_teams as $team ) {
+                                $value = 'teams+' . $team['id'];
+                                echo '<option value="' . esc_attr( $value ) . '">' . esc_attr( $team['name'] ) . '</option>';
+                            }
+                        }
+                        ?>
 
-            <?php
-            // Source available dt groups
-            $dt_groups = Disciple_Tools_Magic_Links_API::fetch_dt_groups();
-            if ( ! empty( $dt_groups ) ) {
-                echo '<option disabled>-- groups --</option>';
-                foreach ( $dt_groups as $group ) {
-                    $value = 'groups+' . $group['id'];
-                    echo '<option value="' . esc_attr( $value ) . '">' . esc_attr( $group['name'] ) . '</option>';
-                }
-            }
-            ?>
+                        <?php
+                        // Source available dt groups
+                        $dt_groups = Disciple_Tools_Magic_Links_API::fetch_dt_groups();
+                        if ( ! empty( $dt_groups ) ) {
+                            echo '<option disabled>-- groups --</option>';
+                            foreach ( $dt_groups as $group ) {
+                                $value = 'groups+' . $group['id'];
+                                echo '<option value="' . esc_attr( $value ) . '">' . esc_attr( $group['name'] ) . '</option>';
+                            }
+                        }
+                        ?>
 
-        </select>
+                    </select>
 
-        <span style="float:right;">
-            <button id="ml_main_col_assign_users_teams_add" type="submit"
-                    class="button float-right"><?php esc_html_e( "Add", 'disciple_tools' ) ?></button>
-        </span>
-        <br><br>
+                    <div id="ml_main_col_assign_users_teams_typeahead_div" style="display: none;"></div>
+                </th>
+                <th>
+                    <span style="float:right;">
+                        <button id="ml_main_col_assign_users_teams_add" type="submit"
+                                class="button float-right"><?php esc_html_e( "Add", 'disciple_tools' ) ?></button>
+                    </span>
+                </th>
+            </tr>
+            </thead>
+        </table>
+        <br>
 
         Currently Assigned Users, Teams & Groups
         <hr>
