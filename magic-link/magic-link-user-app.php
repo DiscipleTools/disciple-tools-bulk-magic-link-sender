@@ -14,8 +14,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
     public $root = "smart_links"; // @todo define the root of the url {yoursite}/root/type/key/action
     public $type = 'user_contacts_updates'; // @todo define the type
     public $post_type = 'user';
-    public $meta_key = '';
-    private $meta_key_raw = '';
+    private $meta_key = '';
 
     private static $_instance = null;
 
@@ -38,13 +37,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
         /**
          * Once adjustments have been made, proceed with parent instantiation!
          */
-        $this->meta_key_raw = $this->meta_key = $this->root . '_' . $this->type . '_magic_key';
-
-        /**
-         * Ensure to append link obj id, if available!
-         */
-        $link_obj_id    = $this->fetch_incoming_link_param( 'id' );
-        $this->meta_key .= ( ! empty( $link_obj_id ) ) ? '_' . $link_obj_id : '';
+        $this->meta_key = $this->root . '_' . $this->type . '_magic_key';
         parent::__construct();
 
         /**
@@ -74,12 +67,6 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
 
     }
 
-    public function adjust_global_values_by_incoming_meta_key( $key ) {
-        if ( ! empty( $key ) ) {
-            $this->meta_key = $key;
-        }
-    }
-
     public function adjust_global_values_by_incoming_sys_type( $type ) {
         if ( ! empty( $type ) ) {
             switch ( $type ) {
@@ -106,12 +93,13 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
     public function dt_settings_apps_list( $apps_list ) {
         $field_settings = DT_Posts::get_post_field_settings( 'contacts' );
 
-        $apps_list[ $this->meta_key_raw ] = [
-            'key'         => $this->meta_key_raw,
-            'url_base'    => $this->root . '/' . $this->type,
-            'label'       => $this->page_title,
-            'description' => $this->page_description,
-            'meta'        => [
+        $apps_list[ $this->meta_key ] = [
+            'key'              => $this->meta_key,
+            'url_base'         => $this->root . '/' . $this->type,
+            'label'            => $this->page_title,
+            'description'      => $this->page_description,
+            'settings_display' => false,
+            'meta'             => [
                 'app_type'      => 'magic_link',
                 'post_type'     => $this->post_type,
                 'contacts_only' => false,
@@ -195,17 +183,6 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
         ?>
         <script></script>
         <?php
-    }
-
-    /**
-     * Extract incoming link specific parameters; E.g. link object id...
-     */
-    public function fetch_incoming_link_param( $param ) {
-        if ( isset( $_SERVER['REQUEST_URI'] ) ) {
-            parse_str( parse_url( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ), PHP_URL_QUERY ), $link_params );
-
-            return $link_params[ $param ] ?? '';
-        }
     }
 
     /**
@@ -693,12 +670,6 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                     'permission_callback' => function ( WP_REST_Request $request ) {
                         $magic = new DT_Magic_URL( $this->root );
 
-                        /**
-                         * Adjust global values accordingly, so as to accommodate both wp_user
-                         * and post requests.
-                         */
-                        $this->adjust_global_values_by_incoming_meta_key( $request->get_params()['parts']['meta_key'] );
-
                         return $magic->verify_rest_endpoint_permissions_on_post( $request );
                     },
                 ],
@@ -716,7 +687,6 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                          * Adjust global values accordingly, so as to accommodate both wp_user
                          * and post requests.
                          */
-                        $this->adjust_global_values_by_incoming_meta_key( $request->get_params()['parts']['meta_key'] );
                         $this->adjust_global_values_by_incoming_sys_type( $request->get_params()['sys_type'] );
 
                         return $magic->verify_rest_endpoint_permissions_on_post( $request );
@@ -736,7 +706,6 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                          * Adjust global values accordingly, so as to accommodate both wp_user
                          * and post requests.
                          */
-                        $this->adjust_global_values_by_incoming_meta_key( $request->get_params()['parts']['meta_key'] );
                         $this->adjust_global_values_by_incoming_sys_type( $request->get_params()['sys_type'] );
 
                         return $magic->verify_rest_endpoint_permissions_on_post( $request );
