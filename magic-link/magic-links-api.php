@@ -53,26 +53,38 @@ class Disciple_Tools_Magic_Links_API {
         return null;
     }
 
-    public static function fetch_user_magic_link( $user_id ): string {
-        foreach ( self::fetch_magic_link_types() as $app ) {
-            $hash = get_user_option( $app['key'], $user_id );
-            if ( ! empty( $hash ) ) {
-                return trailingslashit( trailingslashit( site_url() ) . $app['url_base'] ) . $hash;
+    public static function fetch_user_magic_links( $user_id ): array {
+        $links = [];
+        foreach ( self::fetch_option_link_objs() as $link_obj ) {
+            if ( ! empty( $link_obj ) ) {
+                $hash = get_user_option( self::generate_magic_link_type_key( $link_obj ), $user_id );
+                if ( ! empty( $hash ) ) {
+                    $magic_link_type = self::fetch_magic_link_type( $link_obj->type );
+                    if ( ! empty( $magic_link_type ) ) {
+                        $links[ self::generate_magic_link_type_key( $link_obj ) ][] = trailingslashit( trailingslashit( site_url() ) . $magic_link_type['url_base'] ) . $hash;
+                    }
+                }
             }
         }
 
-        return '';
+        return $links;
     }
 
-    public static function fetch_post_magic_link( $post_id ): string {
-        foreach ( self::fetch_magic_link_types() as $app ) {
-            $hash = get_post_meta( $post_id, $app['key'], true );
-            if ( ! empty( $hash ) ) {
-                return trailingslashit( trailingslashit( site_url() ) . $app['url_base'] ) . $hash;
+    public static function fetch_post_magic_links( $post_id ): array {
+        $links = [];
+        foreach ( self::fetch_option_link_objs() as $link_obj ) {
+            if ( ! empty( $link_obj ) ) {
+                $hash = get_post_meta( $post_id, self::generate_magic_link_type_key( $link_obj ), true );
+                if ( ! empty( $hash ) ) {
+                    $magic_link_type = self::fetch_magic_link_type( $link_obj->type );
+                    if ( ! empty( $magic_link_type ) ) {
+                        $links[ self::generate_magic_link_type_key( $link_obj ) ][] = trailingslashit( trailingslashit( site_url() ) . $magic_link_type['url_base'] ) . $hash;
+                    }
+                }
             }
         }
 
-        return '';
+        return $links;
     }
 
     public static function fetch_dt_users(): array {
@@ -97,7 +109,7 @@ class Disciple_Tools_Magic_Links_API {
                         'name'       => $user['display_name'],
                         'phone'      => self::fetch_dt_contacts_comms_info( $contact_id, 'contact_phone' ),
                         'email'      => self::fetch_wp_users_comms_info( $user['ID'], 'email' ),
-                        'link'       => self::fetch_user_magic_link( $user['ID'] )
+                        'links'      => self::fetch_user_magic_links( $user['ID'] )
                     ];
                 }
             }
@@ -192,7 +204,7 @@ class Disciple_Tools_Magic_Links_API {
                 $members['members'][ $key ]['type_id'] = $has_wp_user ? $corresponds_to_user_id : $member['ID'];
                 $members['members'][ $key ]['phone']   = self::fetch_dt_contacts_comms_info( $member['ID'], 'contact_phone' );
                 $members['members'][ $key ]['email']   = $has_wp_user ? self::fetch_wp_users_comms_info( $corresponds_to_user_id, 'email' ) : self::fetch_dt_contacts_comms_info( $member['ID'], 'contact_email' );
-                $members['members'][ $key ]['link']    = $has_wp_user ? self::fetch_user_magic_link( $corresponds_to_user_id ) : self::fetch_post_magic_link( $member['ID'] );
+                $members['members'][ $key ]['links']   = $has_wp_user ? self::fetch_user_magic_links( $corresponds_to_user_id ) : self::fetch_post_magic_links( $member['ID'] );
             }
         }
 
@@ -296,7 +308,12 @@ class Disciple_Tools_Magic_Links_API {
         return is_object( $row );
     }
 
-    public static function update_magic_links( $magic_key, $assigned, $delete ) {
+    public static function generate_magic_link_type_key( $link_obj ) {
+        return ( ! empty( $link_obj ) && isset( $link_obj->id, $link_obj->type ) ) ? trim( $link_obj->type ) . '_' . $link_obj->id : null;
+    }
+
+    public static function update_magic_links( $link_obj, $assigned, $delete ) {
+        $magic_key = self::generate_magic_link_type_key( $link_obj );
         if ( ! empty( $magic_key ) && ! empty( $assigned ) ) {
             foreach ( $assigned ?? [] as $user ) {
 
@@ -554,20 +571,26 @@ Thanks!';
         return __( 'Smart Link', 'disciple_tools' );
     }
 
-    public static function build_magic_link_url( $link_obj, $user, $magic_link_url_base ): string {
-        $hash = '';
+    public static function build_magic_link_url( $link_obj, $user, $magic_link_url_base, $with_params = true ): string {
+        $hash           = '';
+        $magic_link_key = self::generate_magic_link_type_key( $link_obj );
         switch ( strtolower( trim( $user->sys_type ) ) ) {
             case 'wp_user':
-                $hash = get_user_option( $link_obj->type, $user->dt_id );
+                $hash = get_user_option( $magic_link_key, $user->dt_id );
                 break;
             case 'post':
-                $hash = get_post_meta( $user->dt_id, $link_obj->type, true );
+                $hash = get_post_meta( $user->dt_id, $magic_link_key, true );
                 break;
         }
 
         // Assuming a valid hash has been located, build url accordingly.
         if ( ! empty( $hash ) ) {
-            return trailingslashit( trailingslashit( site_url() ) . $magic_link_url_base ) . $hash . '?id=' . $link_obj->id . '&type=' . $user->sys_type;
+            $url = trailingslashit( trailingslashit( site_url() ) . $magic_link_url_base ) . $hash;
+            if ( $with_params === true ) {
+                $url .= '?id=' . $link_obj->id . '&type=' . $user->sys_type;
+            }
+
+            return $url;
         }
 
         return '';

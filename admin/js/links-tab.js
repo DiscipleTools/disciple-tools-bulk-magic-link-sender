@@ -397,7 +397,7 @@ jQuery(function ($) {
   }
 
   function is_regular_assignment_user_select_element() {
-    return $('#ml_main_col_assign_users_teams_select').is(':visible') && $('#ml_main_col_assign_users_teams_typeahead_input').is(':hidden');
+    return $('#ml_main_col_assign_users_teams_select').is(':visible') && $('#ml_main_col_assign_users_teams_typeahead_div').is(':hidden');
   }
 
   function determine_assignment_user_select_id() {
@@ -502,7 +502,7 @@ jQuery(function ($) {
     let record = fetch_users_teams_record(id);
     if (record) {
       let sys_type = 'wp_user';
-      return build_row_html(auto_update, id, id.split('+')[1], 'User', record['name'], sys_type, 'user', build_comms_html(record, 'phone'), build_comms_html(record, 'email'), build_link_html(record['link'], sys_type));
+      return build_row_html(auto_update, id, id.split('+')[1], 'User', record['name'], sys_type, 'user', build_comms_html(record, 'phone'), build_comms_html(record, 'email'), build_link_html(record['links'], sys_type));
     }
     return null;
   }
@@ -511,7 +511,7 @@ jQuery(function ($) {
     let post = fetch_users_teams_record(id);
     if (post) {
       let sys_type = 'post';
-      return build_row_html(auto_update, id, id.split('+')[1], 'Contact', post['name'], sys_type, post['post_type'], build_comms_html(post, 'contact_phone'), build_comms_html(post, 'contact_email'), build_link_html(post['ml_link'], sys_type));
+      return build_row_html(auto_update, id, id.split('+')[1], 'Contact', post['name'], sys_type, post['post_type'], build_comms_html(post, 'contact_phone'), build_comms_html(post, 'contact_email'), build_link_html(post['ml_links'], sys_type));
     }
     return null;
   }
@@ -521,7 +521,7 @@ jQuery(function ($) {
     get_post_record_request('contacts', post_id, function (post) {
       if (post && post['ID']) {
         let sys_type = 'post';
-        let async_html = build_row_html(auto_update, id, post_id, 'Contact', post['name'], sys_type, post['post_type'], build_comms_html(post, 'contact_phone'), build_comms_html(post, 'contact_email'), build_link_html(post['ml_link'], sys_type));
+        let async_html = build_row_html(auto_update, id, post_id, 'Contact', post['name'], sys_type, post['post_type'], build_comms_html(post, 'contact_phone'), build_comms_html(post, 'contact_email'), build_link_html(post['ml_links'], sys_type));
 
         // If we have a valid html structure, then append to table listing
         if (async_html) {
@@ -549,14 +549,14 @@ jQuery(function ($) {
         // Capture team members accordingly, based on flags!
         if (inc_default_members && record['members'] && record['members'].length > 0) {
           record['members'].forEach(function (member, idx) {
-            html += build_row_html(auto_update, id + "+" + member['type_id'], member['type_id'], 'Member', member['post_title'], member['type'], member['post_type'], build_comms_html(member, 'phone'), build_comms_html(member, 'email'), build_link_html(member['link'], member['type']));
+            html += build_row_html(auto_update, id + "+" + member['type_id'], member['type_id'], 'Member', member['post_title'], member['type'], member['post_type'], build_comms_html(member, 'phone'), build_comms_html(member, 'email'), build_link_html(member['links'], member['type']));
           });
         }
 
       } else { // Single member addition only! Usually resulting from a link object load!
 
         let member = fetch_member_record(record['members'], tokens[2]);
-        html = build_row_html(auto_update, id, member['type_id'], 'Member', member['post_title'], member['type'], member['post_type'], build_comms_html(member, 'phone'), build_comms_html(member, 'email'), build_link_html(member['link'], member['type']));
+        html = build_row_html(auto_update, id, member['type_id'], 'Member', member['post_title'], member['type'], member['post_type'], build_comms_html(member, 'phone'), build_comms_html(member, 'email'), build_link_html(member['links'], member['type']));
 
       }
     }
@@ -605,9 +605,16 @@ jQuery(function ($) {
     return new RegExp('^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$').test(window.lodash.escape(email));
   }
 
-  function build_link_html(link, sys_type) {
-    if (link && $.trim(link).length > 0) {
-      return `<a class="button" href="${append_magic_link_params(link, sys_type)}" target="_blank">View</a>`;
+  function build_link_html(links, sys_type) {
+    // Ensure the correct link is used for given link object and selected magic link type.
+    let link_obj_id = $('#ml_main_col_link_objs_manage_id').val();
+    let ml_type = $('#ml_main_col_link_objs_manage_type').val();
+
+    if (links && links[ml_type + '_' + link_obj_id]) {
+      let link = links[ml_type + '_' + link_obj_id];
+      if (link && $.trim(link).length > 0) {
+        return `<a class="button" href="${append_magic_link_params(link, sys_type)}" target="_blank">View</a>`;
+      }
     }
 
     return '---';
@@ -1086,8 +1093,8 @@ jQuery(function ($) {
         if (data && data['success']) {
 
           // Update record accordingly, if a refreshed magic link has been returned!
-          if (data['ml_link']) {
-            refresh_assigned_record_link(record, data['ml_link']);
+          if (data['ml_links']) {
+            refresh_assigned_record_link(record, data['ml_links']);
           }
 
         } else {
@@ -1101,13 +1108,13 @@ jQuery(function ($) {
     });
   }
 
-  function refresh_assigned_record_link(record, link) {
-    if (record && link) {
+  function refresh_assigned_record_link(record, links) {
+    if (record && links) {
       let hit = fetch_assigned_record_row(record['id']);
 
       // Should only expect to have a single hit...!
       if (hit && hit.size() > 0) {
-        $(hit[0]).find('#ml_main_col_assign_users_teams_table_row_td_link').html(build_link_html(link, record['sys_type']));
+        $(hit[0]).find('#ml_main_col_assign_users_teams_table_row_td_link').html(build_link_html(links, record['sys_type']));
       }
     }
   }
