@@ -4,9 +4,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 } // Exit if accessed directly
 
 /**
- * Class Disciple_Tools_Magic_Links_Tab_Reporting
+ * Class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Reporting
  */
-class Disciple_Tools_Magic_Links_Tab_Reporting {
+class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Reporting {
 
     public function __construct() {
 
@@ -32,7 +32,7 @@ class Disciple_Tools_Magic_Links_Tab_Reporting {
 
         wp_localize_script(
             "dt_magic_reporting_script", "dt_magic_links", array(
-                'dt_endpoint_report' => Disciple_Tools_Magic_Links_API::fetch_endpoint_report_url()
+                'dt_endpoint_report' => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_endpoint_report_url()
             )
         );
     }

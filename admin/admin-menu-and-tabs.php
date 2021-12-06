@@ -4,20 +4,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 } // Exit if accessed directly
 
 /**
- * Class Disciple_Tools_Magic_Links_Menu
+ * Class Disciple_Tools_Bulk_Magic_Link_Sender_Menu
  */
-class Disciple_Tools_Magic_Links_Menu {
+class Disciple_Tools_Bulk_Magic_Link_Sender_Menu {
 
     public $token = 'disciple_tools_magic_links';
 
     private static $_instance = null;
 
     /**
-     * Disciple_Tools_Magic_Links_Menu Instance
+     * Disciple_Tools_Bulk_Magic_Link_Sender_Menu Instance
      *
-     * Ensures only one instance of Disciple_Tools_Magic_Links_Menu is loaded or can be loaded.
+     * Ensures only one instance of Disciple_Tools_Bulk_Magic_Link_Sender_Menu is loaded or can be loaded.
      *
-     * @return Disciple_Tools_Magic_Links_Menu instance
+     * @return Disciple_Tools_Bulk_Magic_Link_Sender_Menu instance
      * @since 0.1.0
      * @static
      */
@@ -47,7 +47,7 @@ class Disciple_Tools_Magic_Links_Menu {
      * @since 0.1
      */
     public function register_menu() {
-        add_submenu_page( 'dt_extensions', 'Magic Links', 'Magic Links', 'manage_dt', $this->token, [
+        add_submenu_page( 'dt_extensions', 'Bulk Magic Link Sender', 'Bulk Magic Link Sender', 'manage_dt', $this->token, [
             $this,
             'content'
         ] );
@@ -79,7 +79,7 @@ class Disciple_Tools_Magic_Links_Menu {
 
         ?>
         <div class="wrap">
-            <h2>DISCIPLE TOOLS : MAGIC LINKS</h2>
+            <h2>DISCIPLE TOOLS : BULK MAGIC LINK SENDER</h2>
             <h2 class="nav-tab-wrapper">
                 <a href="<?php echo esc_attr( $link ) . 'general' ?>"
                    class="nav-tab <?php echo esc_html( ( $tab == 'general' || ! isset( $tab ) ) ? 'nav-tab-active' : '' ); ?>">General</a>
@@ -97,27 +97,27 @@ class Disciple_Tools_Magic_Links_Menu {
             switch ( $tab ) {
                 case "general":
                     require( 'general-tab.php' );
-                    $object = new Disciple_Tools_Magic_Links_Tab_General();
+                    $object = new Disciple_Tools_Bulk_Magic_Link_Sender_Tab_General();
                     $object->content();
                     break;
                 case "links":
                     require( 'links-tab.php' );
-                    $object = new Disciple_Tools_Magic_Links_Tab_Links();
+                    $object = new Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links();
                     $object->content();
                     break;
                 case "email":
                     require( 'email-tab.php' );
-                    $object = new Disciple_Tools_Magic_Links_Tab_Email();
+                    $object = new Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Email();
                     $object->content();
                     break;
                 case "logging":
                     require( 'logging-tab.php' );
-                    $object = new Disciple_Tools_Magic_Links_Tab_Logging();
+                    $object = new Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Logging();
                     $object->content();
                     break;
                 case "reporting":
                     require( 'reporting-tab.php' );
-                    $object = new Disciple_Tools_Magic_Links_Tab_Reporting();
+                    $object = new Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Reporting();
                     $object->content();
                     break;
                 default:
@@ -131,4 +131,4 @@ class Disciple_Tools_Magic_Links_Menu {
     }
 }
 
-Disciple_Tools_Magic_Links_Menu::instance();
+Disciple_Tools_Bulk_Magic_Link_Sender_Menu::instance();

@@ -90,6 +90,25 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
         return $allowed_css;
     }
 
+    /**
+     * Builds magic link type settings payload:
+     * - key:               Unique magic link type key; which is usually composed of root, type and _magic_key suffix.
+     * - url_base:          URL path information to map with parent magic link type.
+     * - label:             Magic link type name.
+     * - description:       Magic link type description.
+     * - settings_display:  Boolean flag which determines if magic link type is to be listed within frontend user profile settings.
+     * - meta:              Magic link plugin related data.
+     *      - app_type:     Flag indicating type to be processed by magic link plugin.
+     *      - post_type     Magic link type post type.
+     *      - contacts_only:    Boolean flag indicating how magic link type user assignments are to be handled within magic link plugin.
+     *                          If True, lookup field to be provided within plugin for contacts only searching.
+     *                          If false, Dropdown option to be provided for user, team or group selection.
+     *      - fields:       List of fields to be displayed within magic link frontend form.
+     *
+     * @param $apps_list
+     *
+     * @return mixed
+     */
     public function dt_settings_apps_list( $apps_list ) {
         $field_settings = DT_Posts::get_post_field_settings( 'contacts' );
 
@@ -202,7 +221,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                 'milestones'     => DT_Posts::get_post_field_settings( 'contacts' )['milestones']['default'],
                 'overall_status' => DT_Posts::get_post_field_settings( 'contacts' )['overall_status']['default'],
                 'faith_status'   => DT_Posts::get_post_field_settings( 'contacts' )['faith_status']['default'],
-                'link_obj_id'    => Disciple_Tools_Magic_Links_API::fetch_option_link_obj( $this->fetch_incoming_link_param( 'id' ) ),
+                'link_obj_id'    => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $this->fetch_incoming_link_param( 'id' ) ),
                 'sys_type'       => $this->fetch_incoming_link_param( 'type' ),
                 'translations'   => [
                     'add' => __( 'Add Magic', 'disciple-tools-magic-links' ),

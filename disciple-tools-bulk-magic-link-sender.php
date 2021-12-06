@@ -1,13 +1,13 @@
 <?php
 /**
- * Plugin Name: Disciple Tools - Magic Links
- * Plugin URI: https://github.com/DiscipleTools/disciple-tools-magic-links
- * Description: Disciple Tools - Magic links user and teams assignment + schedule management for magic links dispatching over configured sending channels.
- * Text Domain: disciple-tools-magic-links
+ * Plugin Name: Disciple Tools - Bulk Magic Link Sender
+ * Plugin URI: https://github.com/DiscipleTools/disciple-tools-bulk-magic-link-sender
+ * Description: Disciple Tools - Bulk magic link sender for users, contacts, groups and teams assignment + schedule management for magic links dispatching over configured sending channels.
+ * Text Domain: disciple-tools-bulk-magic-link-sender
  * Domain Path: /languages
  * Version:  1.3
  * Author URI: https://github.com/DiscipleTools
- * GitHub Plugin URI: https://github.com/DiscipleTools/disciple-tools-magic-links
+ * GitHub Plugin URI: https://github.com/DiscipleTools/disciple-tools-bulk-magic-link-sender
  * Requires at least: 4.7.0
  * (Requires 4.7+ because of the integration of the REST API at 4.7 and the security requirements of this milestone version.)
  * Tested up to: 5.6
@@ -21,7 +21,7 @@
 /**
  * Refactoring (renaming) this plugin as your own:
  * 1. @todo Refactor all occurrences of the name Disciple_Tools_Plugin_Starter_Template, disciple_tools_plugin_starter_template, disciple-tools-plugin-starter-template, starter_post_type, and "Plugin Starter Template"
- * 2. @todo Rename the `disciple-tools-magic-links.php file.
+ * 2. @todo Rename the `disciple-tools-bulk-magic-link-sender.php file.
  * 3. @todo Update the README.md and LICENSE
  * 4. @todo Update the default.pot file if you intend to make your plugin multilingual. Use a tool like POEdit
  */
@@ -31,13 +31,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Gets the instance of the `Disciple_Tools_Magic_Links` class.
+ * Gets the instance of the `Disciple_Tools_Bulk_Magic_Link_Sender` class.
  *
  * @return object|bool
  * @since  0.1
  * @access public
  */
-function disciple_tools_magic_links() {
+function disciple_tools_bulk_magic_link_sender() {
     $disciple_tools_magic_links_required_dt_theme_version = '1.19';
     $wp_theme                                             = wp_get_theme();
     $version                                              = $wp_theme->version;
@@ -62,11 +62,11 @@ function disciple_tools_magic_links() {
         require_once get_template_directory() . '/dt-core/global-functions.php';
     }
 
-    return Disciple_Tools_Magic_Links::instance();
+    return Disciple_Tools_Bulk_Magic_Link_Sender::instance();
 
 }
 
-add_action( 'after_setup_theme', 'disciple_tools_magic_links', 20 );
+add_action( 'after_setup_theme', 'disciple_tools_bulk_magic_link_sender', 20 );
 
 /**
  * Singleton class for setting up the plugin.
@@ -74,7 +74,7 @@ add_action( 'after_setup_theme', 'disciple_tools_magic_links', 20 );
  * @since  0.1
  * @access public
  */
-class Disciple_Tools_Magic_Links {
+class Disciple_Tools_Bulk_Magic_Link_Sender {
 
     private static $_instance = null;
 
@@ -226,8 +226,8 @@ class Disciple_Tools_Magic_Links {
 
 
 // Register activation hook.
-register_activation_hook( __FILE__, [ 'Disciple_Tools_Magic_Links', 'activation' ] );
-register_deactivation_hook( __FILE__, [ 'Disciple_Tools_Magic_Links', 'deactivation' ] );
+register_activation_hook( __FILE__, [ 'Disciple_Tools_Bulk_Magic_Link_Sender', 'activation' ] );
+register_deactivation_hook( __FILE__, [ 'Disciple_Tools_Bulk_Magic_Link_Sender', 'deactivation' ] );
 
 
 if ( ! function_exists( 'disciple_tools_magic_links_hook_admin_notice' ) ) {
@@ -235,7 +235,7 @@ if ( ! function_exists( 'disciple_tools_magic_links_hook_admin_notice' ) ) {
         global $disciple_tools_magic_links_required_dt_theme_version;
         $wp_theme        = wp_get_theme();
         $current_version = $wp_theme->version;
-        $message         = "'Disciple Tools - Magic Links' plugin requires 'Disciple Tools' theme to work. Please activate 'Disciple Tools' theme or make sure it is latest version.";
+        $message         = "'Disciple Tools - Bulk Magic Link Sender' plugin requires 'Disciple Tools' theme to work. Please activate 'Disciple Tools' theme or make sure it is latest version.";
         if ( $wp_theme->get_template() === "disciple-tools-theme" ) {
             $message .= ' ' . sprintf( esc_html( 'Current Disciple Tools version: %1$s, required version: %2$s' ), esc_html( $current_version ), esc_html( $disciple_tools_magic_links_required_dt_theme_version ) );
         }
@@ -284,7 +284,7 @@ if ( ! function_exists( "dt_hook_ajax_notice_handler" ) ) {
  * This section runs the remote plugin updating service, so you can issue distributed updates to your plugin
  *
  * @note See the instructions for version updating to understand the steps involved.
- * @link https://github.com/DiscipleTools/disciple-tools-magic-links/wiki/Configuring-Remote-Updating-System
+ * @link https://github.com/DiscipleTools/disciple-tools-bulk-magic-link-sender/wiki/Configuring-Remote-Updating-System
  *
  * @todo Enable this section with your own hosted file
  * @todo An example of this file can be found in (version-control.json)
@@ -309,7 +309,7 @@ add_action( 'plugins_loaded', function () {
         }
         if ( class_exists( 'Puc_v4_Factory' ) ) {
             Puc_v4_Factory::buildUpdateChecker(
-                'https://raw.githubusercontent.com/DiscipleTools/disciple-tools-magic-links/master/version-control.json',
+                'https://raw.githubusercontent.com/DiscipleTools/disciple-tools-bulk-magic-link-sender/master/version-control.json',
                 __FILE__,
                 'disciple-tools-magic-links'
             );
@@ -357,7 +357,7 @@ add_action( 'tgmpa_register', function () {
         // Show admin notices or not.
         'dismissable'  => true,
         // If false, a user cannot dismiss the nag message.
-        'dismiss_msg'  => 'These are recommended plugins to complement your disciple tools magic links plugin.',
+        'dismiss_msg'  => 'These are recommended plugins to complement your disciple tools bulk magic link sender plugin.',
         // If 'dismissable' is false, this message will be output at top of nag.
         'is_automatic' => true,
         // Automatically activate plugins after installation or not.

@@ -3,7 +3,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 } // Exit if accessed directly.
 
-class Disciple_Tools_Magic_Links_Endpoints {
+class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
     /**
      * @todo Set the permissions your endpoint needs
      * @link https://github.com/DiscipleTools/Documentation/blob/master/theme-core/capabilities.md
@@ -81,7 +81,7 @@ class Disciple_Tools_Magic_Links_Endpoints {
             if ( ! empty( $post ) && ! is_wp_error( $post ) ) {
 
                 // Also, check for any associated magic links
-                $post['ml_links'] = Disciple_Tools_Magic_Links_API::fetch_post_magic_links( $post['ID'] );
+                $post['ml_links'] = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_post_magic_links( $post['ID'] );
 
                 // Update response payload
                 $response['post']    = $post;
@@ -112,12 +112,12 @@ class Disciple_Tools_Magic_Links_Endpoints {
             $assigned = json_decode( json_encode( $params['assigned'] ) );
 
             // Attempt to load link object based on submitted id
-            $link_obj = Disciple_Tools_Magic_Links_API::fetch_option_link_obj( $params['link_obj_id'] );
+            $link_obj = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $params['link_obj_id'] );
 
             // Execute accordingly, based on specified action
             switch ( $params['action'] ) {
                 case 'refresh':
-                    Disciple_Tools_Magic_Links_API::update_magic_links( $link_obj, $assigned, false );
+                    Disciple_Tools_Bulk_Magic_Link_Sender_API::update_magic_links( $link_obj, $assigned, false );
 
                     // Also update base timestamp and future expiration points
                     if ( isset( $params['links_expire_within_amount'], $params['links_expire_within_time_unit'], $params['links_never_expires'] ) ) {
@@ -128,13 +128,13 @@ class Disciple_Tools_Magic_Links_Endpoints {
                         $never_expires = $params['links_never_expires'];
 
                         $response['links_expire_within_base_ts']  = $base_ts;
-                        $response['links_expire_on_ts']           = Disciple_Tools_Magic_Links_API::determine_links_expiry_point( $amt, $time_unit, $base_ts );
-                        $response['links_expire_on_ts_formatted'] = Disciple_Tools_Magic_Links_API::fetch_links_expired_formatted_date( $never_expires, $base_ts, $amt, $time_unit );
+                        $response['links_expire_on_ts']           = Disciple_Tools_Bulk_Magic_Link_Sender_API::determine_links_expiry_point( $amt, $time_unit, $base_ts );
+                        $response['links_expire_on_ts_formatted'] = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_links_expired_formatted_date( $never_expires, $base_ts, $amt, $time_unit );
                     }
                     break;
 
                 case 'delete':
-                    Disciple_Tools_Magic_Links_API::update_magic_links( $link_obj, $assigned, true );
+                    Disciple_Tools_Bulk_Magic_Link_Sender_API::update_magic_links( $link_obj, $assigned, true );
                     break;
             }
 
@@ -148,9 +148,9 @@ class Disciple_Tools_Magic_Links_Endpoints {
             $response['success']   = true;
             $response['message']   = 'User links management action[' . $params['action'] . '] successfully executed.';
             $response['assigned']  = $assigned;
-            $response['dt_users']  = Disciple_Tools_Magic_Links_API::fetch_dt_users();
-            $response['dt_teams']  = Disciple_Tools_Magic_Links_API::fetch_dt_teams();
-            $response['dt_groups'] = Disciple_Tools_Magic_Links_API::fetch_dt_groups();
+            $response['dt_users']  = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_users();
+            $response['dt_teams']  = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_teams();
+            $response['dt_groups'] = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_groups();
 
         } else {
             $response['success'] = false;
@@ -176,28 +176,28 @@ class Disciple_Tools_Magic_Links_Endpoints {
                 case 'add':
 
                     // Load and update link object with new assignment
-                    $link_obj = Disciple_Tools_Magic_Links_API::fetch_option_link_obj( $params['link_obj_id'] );
-                    if ( ! empty( $link_obj ) && isset( $link_obj->id ) && ! Disciple_Tools_Magic_Links_API::is_already_assigned( $record->id, $link_obj ) ) {
+                    $link_obj = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $params['link_obj_id'] );
+                    if ( ! empty( $link_obj ) && isset( $link_obj->id ) && ! Disciple_Tools_Bulk_Magic_Link_Sender_API::is_already_assigned( $record->id, $link_obj ) ) {
 
                         // Update link object accordingly
                         $link_obj->type       = $params['magic_link_type'];
                         $link_obj->assigned[] = $record;
 
                         // Save updated link object
-                        Disciple_Tools_Magic_Links_API::update_option_link_obj( $link_obj );
+                        Disciple_Tools_Bulk_Magic_Link_Sender_API::update_option_link_obj( $link_obj );
 
                         /**
                          * If record is of supported type, then also generate a new link
                          * which is also returned within response payload!
                          */
-                        if ( in_array( strtolower( trim( $record->type ) ), Disciple_Tools_Magic_Links_API::$assigned_supported_types ) ) {
+                        if ( in_array( strtolower( trim( $record->type ) ), Disciple_Tools_Bulk_Magic_Link_Sender_API::$assigned_supported_types ) ) {
 
                             // Create new magic link
-                            Disciple_Tools_Magic_Links_API::update_magic_links( $link_obj, [ $record ], false );
+                            Disciple_Tools_Bulk_Magic_Link_Sender_API::update_magic_links( $link_obj, [ $record ], false );
 
                             // Capture newly created magic link in url form
-                            $magic_link_type = Disciple_Tools_Magic_Links_API::fetch_magic_link_type( $link_obj->type );
-                            $response['ml_links'][ Disciple_Tools_Magic_Links_API::generate_magic_link_type_key( $link_obj ) ][] = Disciple_Tools_Magic_Links_API::build_magic_link_url( $link_obj, $record, $magic_link_type['url_base'], false );
+                            $magic_link_type = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_magic_link_type( $link_obj->type );
+                            $response['ml_links'][ Disciple_Tools_Bulk_Magic_Link_Sender_API::generate_magic_link_type_key( $link_obj ) ][] = Disciple_Tools_Bulk_Magic_Link_Sender_API::build_magic_link_url( $link_obj, $record, $magic_link_type['url_base'], false );
                         }
 
                         // All is well.. ;)
@@ -213,8 +213,8 @@ class Disciple_Tools_Magic_Links_Endpoints {
                 case 'delete':
 
                     // Load and update link object with new assignment
-                    $link_obj = Disciple_Tools_Magic_Links_API::fetch_option_link_obj( $params['link_obj_id'] );
-                    if ( ! empty( $link_obj ) && isset( $link_obj->id ) && Disciple_Tools_Magic_Links_API::is_already_assigned( $record->id, $link_obj ) ) {
+                    $link_obj = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $params['link_obj_id'] );
+                    if ( ! empty( $link_obj ) && isset( $link_obj->id ) && Disciple_Tools_Bulk_Magic_Link_Sender_API::is_already_assigned( $record->id, $link_obj ) ) {
 
                         // Update link object accordingly
                         $updated_assigned = [];
@@ -227,14 +227,14 @@ class Disciple_Tools_Magic_Links_Endpoints {
                         $link_obj->type     = $params['magic_link_type'];
 
                         // Save updated link object
-                        Disciple_Tools_Magic_Links_API::update_option_link_obj( $link_obj );
+                        Disciple_Tools_Bulk_Magic_Link_Sender_API::update_option_link_obj( $link_obj );
 
                         /**
                          * If record is of supported type, then also attempt to remove any
                          * associated magic links.
                          */
-                        if ( in_array( strtolower( trim( $record->type ) ), Disciple_Tools_Magic_Links_API::$assigned_supported_types ) ) {
-                            Disciple_Tools_Magic_Links_API::update_magic_links( $link_obj, [ $record ], true );
+                        if ( in_array( strtolower( trim( $record->type ) ), Disciple_Tools_Bulk_Magic_Link_Sender_API::$assigned_supported_types ) ) {
+                            Disciple_Tools_Bulk_Magic_Link_Sender_API::update_magic_links( $link_obj, [ $record ], true );
                         }
 
                         // All is well.. ;)
@@ -269,14 +269,14 @@ class Disciple_Tools_Magic_Links_Endpoints {
         if ( isset( $params['assigned'], $params['link_obj_id'], $params['links_expire_within_base_ts'], $params['links_expire_within_amount'], $params['links_expire_within_time_unit'], $params['links_never_expires'] ) ) {
 
             // Load logs
-            $logs   = Disciple_Tools_Magic_Links_API::logging_load();
-            $logs[] = Disciple_Tools_Magic_Links_API::logging_create( '[SEND NOW REQUEST]' );
+            $logs   = Disciple_Tools_Bulk_Magic_Link_Sender_API::logging_load();
+            $logs[] = Disciple_Tools_Bulk_Magic_Link_Sender_API::logging_create( '[SEND NOW REQUEST]' );
 
             // Attempt to load link object based on submitted id
-            $link_obj = Disciple_Tools_Magic_Links_API::fetch_option_link_obj( $params['link_obj_id'] );
+            $link_obj = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $params['link_obj_id'] );
             if ( ! empty( $link_obj ) ) {
 
-                $logs[] = Disciple_Tools_Magic_Links_API::logging_create( 'Processing Link Object: ' . $link_obj->name );
+                $logs[] = Disciple_Tools_Bulk_Magic_Link_Sender_API::logging_create( 'Processing Link Object: ' . $link_obj->name );
 
                 /**
                  * Update link object with most recent key settings!
@@ -293,10 +293,10 @@ class Disciple_Tools_Magic_Links_Endpoints {
                 foreach ( $params['assigned'] ?? [] as $assigned ) {
 
                     $assigned = (object) $assigned;
-                    if ( in_array( strtolower( trim( $assigned->type ) ), Disciple_Tools_Magic_Links_API::$assigned_supported_types ) ) {
+                    if ( in_array( strtolower( trim( $assigned->type ) ), Disciple_Tools_Bulk_Magic_Link_Sender_API::$assigned_supported_types ) ) {
 
                         // Process send request to assigned user, using available contact info
-                        Disciple_Tools_Magic_Links_API::send( $link_obj, $assigned, $logs );
+                        Disciple_Tools_Bulk_Magic_Link_Sender_API::send( $link_obj, $assigned, $logs );
                     }
                 }
 
@@ -305,14 +305,14 @@ class Disciple_Tools_Magic_Links_Endpoints {
 
             } else {
                 $msg    = 'Unable to locate corresponding link object for id: ' . $params['link_obj_id'];
-                $logs[] = Disciple_Tools_Magic_Links_API::logging_create( $msg );
+                $logs[] = Disciple_Tools_Bulk_Magic_Link_Sender_API::logging_create( $msg );
 
                 $response['success'] = false;
                 $response['message'] = $msg;
             }
 
             // Update logging information
-            Disciple_Tools_Magic_Links_API::logging_update( $logs );
+            Disciple_Tools_Bulk_Magic_Link_Sender_API::logging_update( $logs );
 
         } else {
             $response['success'] = false;
@@ -334,7 +334,7 @@ class Disciple_Tools_Magic_Links_Endpoints {
 
         } else {
             $id      = $request->get_params()['id'];
-            $report  = Disciple_Tools_Magic_Links_API::fetch_report( $id );
+            $report  = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_report( $id );
             $success = ! empty( $report );
 
             $response['success'] = $success;
@@ -371,4 +371,4 @@ class Disciple_Tools_Magic_Links_Endpoints {
     }
 }
 
-Disciple_Tools_Magic_Links_Endpoints::instance();
+Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints::instance();

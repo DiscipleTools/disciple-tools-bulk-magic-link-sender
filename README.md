@@ -1,8 +1,8 @@
-[![Build Status](https://travis-ci.com/DiscipleTools/disciple-tools-magic-links.svg?branch=master)](https://travis-ci.com/DiscipleTools/disciple-tools-magic-links)
+[![Build Status](https://travis-ci.com/DiscipleTools/disciple-tools-bulk-magic-link-sender.svg?branch=master)](https://travis-ci.com/DiscipleTools/disciple-tools-bulk-magic-link-sender)
 
-# Disciple Tools - Magic links
+# Disciple Tools - Bulk Magic link Sender
 
-Disciple Tools - Magic links user and teams assignment + schedule management for magic links dispatching over configured sending channels.
+Disciple Tools - Bulk magic link sender for users, contacts, groups and teams assignment + schedule management for magic links dispatching over configured sending channels.
 
 ## Purpose
 
@@ -19,6 +19,7 @@ Both link object and user magic links can also be made to expire within a specif
 - Create/Update link objects.
 - Provide logging information for troubleshooting purposes.
 - Present a report of updated contact records since last successful message dispatch.
+- Bulk send magic links over Twilio & Email channels.
 
 
 ## Requirements
@@ -33,8 +34,8 @@ Both link object and user magic links can also be made to expire within a specif
 ## Contribution
 
 Contributions welcome. You can report issues and bugs in the
-[Issues](https://github.com/DiscipleTools/disciple-tools-magic-links/issues) section of the repo. You can present ideas
-in the [Discussions](https://github.com/DiscipleTools/disciple-tools-magic-links/discussions) section of the repo. And
-code contributions are welcome using the [Pull Request](https://github.com/DiscipleTools/disciple-tools-magic-links/pulls)
+[Issues](https://github.com/DiscipleTools/disciple-tools-bulk-magic-link-sender/issues) section of the repo. You can present ideas
+in the [Discussions](https://github.com/DiscipleTools/disciple-tools-bulk-magic-link-sender/discussions) section of the repo. And
+code contributions are welcome using the [Pull Request](https://github.com/DiscipleTools/disciple-tools-bulk-magic-link-sender/pulls)
 system for git. For a more details on contribution see the
-[contribution guidelines](https://github.com/DiscipleTools/disciple-tools-magic-links/blob/master/CONTRIBUTING.md).
+[contribution guidelines](https://github.com/DiscipleTools/disciple-tools-bulk-magic-link-sender/blob/master/CONTRIBUTING.md).

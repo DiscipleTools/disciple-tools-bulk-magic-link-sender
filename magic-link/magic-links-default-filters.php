@@ -10,8 +10,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 add_filter( 'dt_sending_channels', 'dt_email_sending_channels', 10, 1 );
 function dt_email_sending_channels( $channels ) {
     $channels[] = [
-        'id'      => Disciple_Tools_Magic_Links_API::$channel_email_id,
-        'name'    => Disciple_Tools_Magic_Links_API::$channel_email_name,
+        'id'      => Disciple_Tools_Bulk_Magic_Link_Sender_API::$channel_email_id,
+        'name'    => Disciple_Tools_Bulk_Magic_Link_Sender_API::$channel_email_name,
         'enabled' => dt_email_sending_channel_enabled(),
         'send'    => function ( $params = [] ) {
             return dt_email_sending_channel_send( $params );
@@ -22,7 +22,7 @@ function dt_email_sending_channels( $channels ) {
 }
 
 function dt_email_sending_channel_get_config() {
-    $option = Disciple_Tools_Magic_Links_API::fetch_option( Disciple_Tools_Magic_Links_API::$option_dt_magic_links_defaults_email );
+    $option = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_defaults_email );
 
     return ! empty( $option ) ? json_decode( $option, true ) : null;
 }
@@ -39,8 +39,8 @@ function dt_email_sending_channel_enabled(): bool {
 
 function dt_email_sending_channel_field( $user ): array {
     $field = [];
-    switch ( Disciple_Tools_Magic_Links_API::determine_assigned_user_type( $user ) ) {
-        case Disciple_Tools_Magic_Links_API::$assigned_user_type_id_users:
+    switch ( Disciple_Tools_Bulk_Magic_Link_Sender_API::determine_assigned_user_type( $user ) ) {
+        case Disciple_Tools_Bulk_Magic_Link_Sender_API::$assigned_user_type_id_users:
 
             $user_info = get_userdata( $user->dt_id );
             if ( ! empty( $user_info ) && ! is_wp_error( $user_info ) && isset( $user_info->data->user_email ) ) {
@@ -48,7 +48,7 @@ function dt_email_sending_channel_field( $user ): array {
             }
             break;
 
-        case Disciple_Tools_Magic_Links_API::$assigned_user_type_id_contacts:
+        case Disciple_Tools_Bulk_Magic_Link_Sender_API::$assigned_user_type_id_contacts:
 
             $user_contact = DT_Posts::get_post( 'contacts', $user->dt_id, true, false );
             if ( ! empty( $user_contact ) && ! is_wp_error( $user_contact ) && isset( $user_contact['contact_email'] ) ) {
@@ -87,7 +87,7 @@ function dt_email_sending_channel_send( $params ) {
 
                     // Build and dispatch notification email!
                     $email_to        = $email;
-                    $email_subject   = $email_obj['subject'] ?? Disciple_Tools_Magic_Links_API::fetch_default_email_subject();
+                    $email_subject   = $email_obj['subject'] ?? Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_default_email_subject();
                     $email_body      = $params['message'];
                     $email_headers[] = 'Content-Type: text/plain; charset=UTF-8';
                     if ( ! empty( $email_obj['from_name'] ) && ! empty( $email_obj['from_email'] ) ) {

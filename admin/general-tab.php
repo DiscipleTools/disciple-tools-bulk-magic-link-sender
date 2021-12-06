@@ -4,9 +4,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 } // Exit if accessed directly
 
 /**
- * Class Disciple_Tools_Magic_Links_Tab_General
+ * Class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_General
  */
-class Disciple_Tools_Magic_Links_Tab_General {
+class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_General {
 
     public function __construct() {
 
@@ -35,17 +35,17 @@ class Disciple_Tools_Magic_Links_Tab_General {
         if ( isset( $_POST['ml_general_main_col_general_form_nonce'] ) && wp_verify_nonce( sanitize_key( wp_unslash( $_POST['ml_general_main_col_general_form_nonce'] ) ), 'ml_general_main_col_general_form_nonce' ) ) {
             if ( isset( $_POST['ml_general_main_col_general_form_all_scheduling_enabled'] ) ) {
                 $all_scheduling_enabled = filter_var( wp_unslash( $_POST['ml_general_main_col_general_form_all_scheduling_enabled'] ), FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_FLAG_NO_ENCODE_QUOTES );
-                Disciple_Tools_Magic_Links_API::update_option( Disciple_Tools_Magic_Links_API::$option_dt_magic_links_all_scheduling_enabled, $all_scheduling_enabled );
+                Disciple_Tools_Bulk_Magic_Link_Sender_API::update_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_all_scheduling_enabled, $all_scheduling_enabled );
             }
 
             if ( isset( $_POST['ml_general_main_col_general_form_all_channels_enabled'] ) ) {
                 $all_channels_enabled = filter_var( wp_unslash( $_POST['ml_general_main_col_general_form_all_channels_enabled'] ), FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_FLAG_NO_ENCODE_QUOTES );
-                Disciple_Tools_Magic_Links_API::update_option( Disciple_Tools_Magic_Links_API::$option_dt_magic_links_all_channels_enabled, $all_channels_enabled );
+                Disciple_Tools_Bulk_Magic_Link_Sender_API::update_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_all_channels_enabled, $all_channels_enabled );
             }
 
             if ( isset( $_POST['ml_general_main_col_general_form_default_time_zone'] ) ) {
                 $default_time_zone = filter_var( wp_unslash( $_POST['ml_general_main_col_general_form_default_time_zone'] ), FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_FLAG_NO_ENCODE_QUOTES );
-                Disciple_Tools_Magic_Links_API::update_option( Disciple_Tools_Magic_Links_API::$option_dt_magic_links_local_time_zone, $default_time_zone );
+                Disciple_Tools_Bulk_Magic_Link_Sender_API::update_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_local_time_zone, $default_time_zone );
             }
         }
     }
@@ -151,11 +151,11 @@ class Disciple_Tools_Magic_Links_Tab_General {
                 <td>
                     <?php
                     $all_scheduling_checked_html = 'checked';
-                    if ( ! Disciple_Tools_Magic_Links_API::option_exists( Disciple_Tools_Magic_Links_API::$option_dt_magic_links_all_scheduling_enabled ) ) {
+                    if ( ! Disciple_Tools_Bulk_Magic_Link_Sender_API::option_exists( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_all_scheduling_enabled ) ) {
                         // Ensure initial setup setting, is enabled by default
-                        Disciple_Tools_Magic_Links_API::update_option( Disciple_Tools_Magic_Links_API::$option_dt_magic_links_all_scheduling_enabled, '1' );
+                        Disciple_Tools_Bulk_Magic_Link_Sender_API::update_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_all_scheduling_enabled, '1' );
                     } else {
-                        $all_scheduling_checked_html = boolval( Disciple_Tools_Magic_Links_API::fetch_option( Disciple_Tools_Magic_Links_API::$option_dt_magic_links_all_scheduling_enabled ) ) ? 'checked' : '';
+                        $all_scheduling_checked_html = boolval( Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_all_scheduling_enabled ) ) ? 'checked' : '';
                     }
                     ?>
                     <input type="checkbox"
@@ -170,11 +170,11 @@ class Disciple_Tools_Magic_Links_Tab_General {
                 <td>
                     <?php
                     $all_channels_checked_html = 'checked';
-                    if ( ! Disciple_Tools_Magic_Links_API::option_exists( Disciple_Tools_Magic_Links_API::$option_dt_magic_links_all_channels_enabled ) ) {
+                    if ( ! Disciple_Tools_Bulk_Magic_Link_Sender_API::option_exists( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_all_channels_enabled ) ) {
                         // Ensure initial setup setting, is enabled by default
-                        Disciple_Tools_Magic_Links_API::update_option( Disciple_Tools_Magic_Links_API::$option_dt_magic_links_all_channels_enabled, '1' );
+                        Disciple_Tools_Bulk_Magic_Link_Sender_API::update_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_all_channels_enabled, '1' );
                     } else {
-                        $all_channels_checked_html = boolval( Disciple_Tools_Magic_Links_API::fetch_option( Disciple_Tools_Magic_Links_API::$option_dt_magic_links_all_channels_enabled ) ) ? 'checked' : '';
+                        $all_channels_checked_html = boolval( Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_all_channels_enabled ) ) ? 'checked' : '';
                     }
                     ?>
                     <input type="checkbox"
@@ -186,9 +186,9 @@ class Disciple_Tools_Magic_Links_Tab_General {
                 <td>
                     <select id="ml_general_main_col_general_default_time_zone">
                         <?php
-                        $option            = Disciple_Tools_Magic_Links_API::fetch_option( Disciple_Tools_Magic_Links_API::$option_dt_magic_links_local_time_zone );
+                        $option            = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_local_time_zone );
                         $default_time_zone = ! empty( $option ) ? $option : 'UTC';
-                        foreach ( Disciple_Tools_Magic_Links_API::list_available_time_zones() as $time_zone ) {
+                        foreach ( Disciple_Tools_Bulk_Magic_Link_Sender_API::list_available_time_zones() as $time_zone ) {
                             $selected = ( $default_time_zone === $time_zone ) ? 'selected' : '';
                             ?>
                             <option <?php echo esc_attr( $selected ) ?>
@@ -239,18 +239,18 @@ class Disciple_Tools_Magic_Links_Tab_General {
             </thead>
             <tbody>
             <?php
-            $link_objs = Disciple_Tools_Magic_Links_API::fetch_option_link_objs();
+            $link_objs = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_objs();
             if ( ! empty( $link_objs ) ) {
                 foreach ( $link_objs as $id => $link_obj ) {
                     if ( $link_obj->enabled ) {
 
-                        $last_cron_run      = Disciple_Tools_Magic_Links_API::format_timestamp_in_local_time_zone( Disciple_Tools_Magic_Links_API::fetch_option( Disciple_Tools_Magic_Links_API::$option_dt_magic_links_last_cron_run ) );
-                        $last_scheduled_run = ! empty( $link_obj->schedule->last_schedule_run ) ? Disciple_Tools_Magic_Links_API::format_timestamp_in_local_time_zone( $link_obj->schedule->last_schedule_run ) : '---';
-                        $last_success_send  = ! empty( $link_obj->schedule->last_success_send ) ? Disciple_Tools_Magic_Links_API::format_timestamp_in_local_time_zone( $link_obj->schedule->last_success_send ) : '---';
+                        $last_cron_run      = Disciple_Tools_Bulk_Magic_Link_Sender_API::format_timestamp_in_local_time_zone( Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_last_cron_run ) );
+                        $last_scheduled_run = ! empty( $link_obj->schedule->last_schedule_run ) ? Disciple_Tools_Bulk_Magic_Link_Sender_API::format_timestamp_in_local_time_zone( $link_obj->schedule->last_schedule_run ) : '---';
+                        $last_success_send  = ! empty( $link_obj->schedule->last_success_send ) ? Disciple_Tools_Bulk_Magic_Link_Sender_API::format_timestamp_in_local_time_zone( $link_obj->schedule->last_success_send ) : '---';
                         $next_scheduled_run = '---';
                         if ( ! empty( $link_obj->schedule->freq_amount ) && ! empty( $link_obj->schedule->freq_time_unit ) && ! empty( $link_obj->schedule->last_schedule_run ) ) {
                             $next_run           = strtotime( '+' . $link_obj->schedule->freq_amount . ' ' . $link_obj->schedule->freq_time_unit, $link_obj->schedule->last_schedule_run );
-                            $next_scheduled_run = Disciple_Tools_Magic_Links_API::format_timestamp_in_local_time_zone( $next_run );
+                            $next_scheduled_run = Disciple_Tools_Bulk_Magic_Link_Sender_API::format_timestamp_in_local_time_zone( $next_run );
                         }
 
                         ?>

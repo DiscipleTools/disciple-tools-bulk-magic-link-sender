@@ -4,9 +4,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 } // Exit if accessed directly
 
 /**
- * Class Disciple_Tools_Magic_Links_Tab_Links
+ * Class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links
  */
-class Disciple_Tools_Magic_Links_Tab_Links {
+class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
 
     public function __construct() {
 
@@ -36,17 +36,17 @@ class Disciple_Tools_Magic_Links_Tab_Links {
 
         wp_localize_script(
             "dt_magic_links_script", "dt_magic_links", array(
-                'dt_magic_link_types'           => Disciple_Tools_Magic_Links_API::fetch_magic_link_types(),
-                'dt_users'                      => Disciple_Tools_Magic_Links_API::fetch_dt_users(),
-                'dt_teams'                      => Disciple_Tools_Magic_Links_API::fetch_dt_teams(),
-                'dt_groups'                     => Disciple_Tools_Magic_Links_API::fetch_dt_groups(),
-                'dt_magic_link_objects'         => Disciple_Tools_Magic_Links_API::fetch_option_link_objs(),
-                'dt_endpoint_send_now'          => Disciple_Tools_Magic_Links_API::fetch_endpoint_send_now_url(),
-                'dt_endpoint_user_links_manage' => Disciple_Tools_Magic_Links_API::fetch_endpoint_user_links_manage_url(),
-                'dt_endpoint_assigned_manage'   => Disciple_Tools_Magic_Links_API::fetch_endpoint_assigned_manage_url(),
-                'dt_endpoint_get_post_record'   => Disciple_Tools_Magic_Links_API::fetch_endpoint_get_post_record_url(),
-                'dt_default_message'            => Disciple_Tools_Magic_Links_API::fetch_default_send_msg(),
-                'dt_default_send_channel_id'    => Disciple_Tools_Magic_Links_API::$channel_email_id,
+                'dt_magic_link_types'           => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_magic_link_types(),
+                'dt_users'                      => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_users(),
+                'dt_teams'                      => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_teams(),
+                'dt_groups'                     => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_groups(),
+                'dt_magic_link_objects'         => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_objs(),
+                'dt_endpoint_send_now'          => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_endpoint_send_now_url(),
+                'dt_endpoint_user_links_manage' => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_endpoint_user_links_manage_url(),
+                'dt_endpoint_assigned_manage'   => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_endpoint_assigned_manage_url(),
+                'dt_endpoint_get_post_record'   => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_endpoint_get_post_record_url(),
+                'dt_default_message'            => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_default_send_msg(),
+                'dt_default_send_channel_id'    => Disciple_Tools_Bulk_Magic_Link_Sender_API::$channel_email_id,
                 'dt_base_url'                   => rest_url(),
                 'dt_wp_nonce'                   => esc_attr( wp_create_nonce( 'wp_rest' ) )
             )
@@ -70,12 +70,12 @@ class Disciple_Tools_Magic_Links_Tab_Links {
                 if ( ! empty( $updating_link_obj ) && isset( $updating_link_obj->id ) ) {
 
                     // Attempt to locate an existing object with same id
-                    $current_link_obj = Disciple_Tools_Magic_Links_API::fetch_option_link_obj( $updating_link_obj->id );
+                    $current_link_obj = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $updating_link_obj->id );
 
                     // In an attempt to be more surgical, identify and only focus
                     // on the deltas between previously saved and recently updated..!
-                    $stale_users = Disciple_Tools_Magic_Links_API::extract_assigned_user_deltas( $current_link_obj->assigned ?? [], $updating_link_obj->assigned ?? [] );
-                    $new_users   = Disciple_Tools_Magic_Links_API::extract_assigned_user_deltas( $updating_link_obj->assigned ?? [], $current_link_obj->assigned ?? [] );
+                    $stale_users = Disciple_Tools_Bulk_Magic_Link_Sender_API::extract_assigned_user_deltas( $current_link_obj->assigned ?? [], $updating_link_obj->assigned ?? [] );
+                    $new_users   = Disciple_Tools_Bulk_Magic_Link_Sender_API::extract_assigned_user_deltas( $updating_link_obj->assigned ?? [], $current_link_obj->assigned ?? [] );
 
                     // If this is the very first update, ensure all new users are identified
                     // and processed accordingly!
@@ -85,11 +85,11 @@ class Disciple_Tools_Magic_Links_Tab_Links {
 
                     // Refresh user magic links accordingly; stale users to have links removed,
                     // whilst new users are to have links created and assigned.
-                    Disciple_Tools_Magic_Links_API::update_magic_links( $current_link_obj ?? null, $stale_users, true );
-                    Disciple_Tools_Magic_Links_API::update_magic_links( $updating_link_obj, $new_users, false );
+                    Disciple_Tools_Bulk_Magic_Link_Sender_API::update_magic_links( $current_link_obj ?? null, $stale_users, true );
+                    Disciple_Tools_Bulk_Magic_Link_Sender_API::update_magic_links( $updating_link_obj, $new_users, false );
 
                     // Save latest updates
-                    Disciple_Tools_Magic_Links_API::update_option_link_obj( $updating_link_obj );
+                    Disciple_Tools_Bulk_Magic_Link_Sender_API::update_option_link_obj( $updating_link_obj );
                 }
             }
         }
@@ -305,7 +305,7 @@ class Disciple_Tools_Magic_Links_Tab_Links {
             <option disabled selected value>-- select available link object --</option>
 
             <?php
-            $option_link_objs = Disciple_Tools_Magic_Links_API::fetch_option_link_objs();
+            $option_link_objs = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_objs();
             foreach ( $option_link_objs ?? (object) [] as $id => $obj ) {
                 echo '<option value="' . esc_attr( $id ) . '">' . esc_attr( $obj->name ) . '</option>';
             }
@@ -359,7 +359,7 @@ class Disciple_Tools_Magic_Links_Tab_Links {
 
                         <?php
                         // Source available magic link types
-                        $magic_link_types = Disciple_Tools_Magic_Links_API::fetch_magic_link_types();
+                        $magic_link_types = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_magic_link_types();
                         if ( ! empty( $magic_link_types ) ) {
                             foreach ( $magic_link_types as $type ) {
                                 echo '<option value="' . esc_attr( $type['key'] ) . '">' . esc_attr( $type['label'] ) . '</option>';
@@ -401,7 +401,7 @@ class Disciple_Tools_Magic_Links_Tab_Links {
 
                         <?php
                         // Source available dt users
-                        $dt_users = Disciple_Tools_Magic_Links_API::fetch_dt_users();
+                        $dt_users = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_users();
                         if ( ! empty( $dt_users ) ) {
                             echo '<option disabled>-- users --</option>';
                             foreach ( $dt_users as $user ) {
@@ -413,7 +413,7 @@ class Disciple_Tools_Magic_Links_Tab_Links {
 
                         <?php
                         // Source available dt teams
-                        $dt_teams = Disciple_Tools_Magic_Links_API::fetch_dt_teams();
+                        $dt_teams = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_teams();
                         if ( ! empty( $dt_teams ) ) {
                             echo '<option disabled>-- teams --</option>';
                             foreach ( $dt_teams as $team ) {
@@ -425,7 +425,7 @@ class Disciple_Tools_Magic_Links_Tab_Links {
 
                         <?php
                         // Source available dt groups
-                        $dt_groups = Disciple_Tools_Magic_Links_API::fetch_dt_groups();
+                        $dt_groups = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_groups();
                         if ( ! empty( $dt_groups ) ) {
                             echo '<option disabled>-- groups --</option>';
                             foreach ( $dt_groups as $group ) {
@@ -520,7 +520,7 @@ class Disciple_Tools_Magic_Links_Tab_Links {
 
                         <?php
                         // Source available sending channels
-                        $sending_channels = Disciple_Tools_Magic_Links_API::fetch_sending_channels();
+                        $sending_channels = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_sending_channels();
                         if ( ! empty( $sending_channels ) ) {
                             foreach ( $sending_channels as $channel ) {
                                 echo '<option value="' . esc_attr( $channel['id'] ) . '">' . esc_attr( $channel['name'] ) . '</option>';
