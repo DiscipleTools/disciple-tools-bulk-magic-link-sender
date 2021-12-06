@@ -158,7 +158,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender {
      */
     public static function deactivation() {
         // add functions here that need to happen on deactivation
-        delete_option( 'dismissed-disciple-tools-magic-links' );
+        delete_option( 'dismissed-disciple-tools-bulk-magic-link-sender' );
     }
 
     /**
@@ -169,7 +169,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender {
      * @access public
      */
     public function i18n() {
-        $domain = 'disciple-tools-magic-links';
+        $domain = 'disciple-tools-bulk-magic-link-sender';
         load_plugin_textdomain( $domain, false, trailingslashit( dirname( plugin_basename( __FILE__ ) ) ) . 'languages' );
     }
 
@@ -181,7 +181,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender {
      * @access public
      */
     public function __toString() {
-        return 'disciple-tools-magic-links';
+        return 'disciple-tools-bulk-magic-link-sender';
     }
 
     /**
@@ -240,19 +240,19 @@ if ( ! function_exists( 'disciple_tools_magic_links_hook_admin_notice' ) ) {
             $message .= ' ' . sprintf( esc_html( 'Current Disciple Tools version: %1$s, required version: %2$s' ), esc_html( $current_version ), esc_html( $disciple_tools_magic_links_required_dt_theme_version ) );
         }
         // Check if it's been dismissed...
-        if ( ! get_option( 'dismissed-disciple-tools-magic-links', false ) ) { ?>
-            <div class="notice notice-error notice-disciple-tools-magic-links is-dismissible"
-                 data-notice="disciple-tools-magic-links">
+        if ( ! get_option( 'dismissed-disciple-tools-bulk-magic-link-sender', false ) ) { ?>
+            <div class="notice notice-error notice-disciple-tools-bulk-magic-link-sender is-dismissible"
+                 data-notice="disciple-tools-bulk-magic-link-sender">
                 <p><?php echo esc_html( $message ); ?></p>
             </div>
             <script>
                 jQuery(function ($) {
-                    $(document).on('click', '.notice-disciple-tools-magic-links .notice-dismiss', function () {
+                    $(document).on('click', '.notice-disciple-tools-bulk-magic-link-sender .notice-dismiss', function () {
                         $.ajax(ajaxurl, {
                             type: 'POST',
                             data: {
                                 action: 'dismissed_notice_handler',
-                                type: 'disciple-tools-magic-links',
+                                type: 'disciple-tools-bulk-magic-link-sender',
                                 security: '<?php echo esc_html( wp_create_nonce( 'wp_rest_dismiss' ) ) ?>'
                             }
                         })
@@ -311,7 +311,7 @@ add_action( 'plugins_loaded', function () {
             Puc_v4_Factory::buildUpdateChecker(
                 'https://raw.githubusercontent.com/DiscipleTools/disciple-tools-bulk-magic-link-sender/master/version-control.json',
                 __FILE__,
-                'disciple-tools-magic-links'
+                'disciple-tools-bulk-magic-link-sender'
             );
 
         }

@@ -224,7 +224,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                 'link_obj_id'    => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $this->fetch_incoming_link_param( 'id' ) ),
                 'sys_type'       => $this->fetch_incoming_link_param( 'type' ),
                 'translations'   => [
-                    'add' => __( 'Add Magic', 'disciple-tools-magic-links' ),
+                    'add' => __( 'Add Magic', 'disciple-tools-bulk-magic-link-sender' ),
                 ]
             ] ) ?>][0]
 

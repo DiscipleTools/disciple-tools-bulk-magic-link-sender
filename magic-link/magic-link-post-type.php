@@ -72,7 +72,7 @@ class Disciple_Tools_Magic_Links_Magic_Link extends DT_Magic_Url_Base {
     public function dt_details_additional_tiles( $tiles, $post_type = "" ) {
         if ( $post_type === $this->post_type ){
             $tiles["dt_starters_magic_url"] = [
-                "label" => __( "Magic Url", 'disciple-tools-magic-links' ),
+                "label" => __( "Magic Url", 'disciple-tools-bulk-magic-link-sender' ),
                 "description" => "The Magic URL sets up a page accessible without authentication, only the link is needed. Useful for small applications liked to this record, like quick surveys or updates."
             ];
         }
@@ -146,7 +146,7 @@ class Disciple_Tools_Magic_Links_Magic_Link extends DT_Magic_Url_Base {
                 'nonce' => wp_create_nonce( 'wp_rest' ),
                 'parts' => $this->parts,
                 'translations' => [
-                    'add' => __( 'Add Magic', 'disciple-tools-magic-links' ),
+                    'add' => __( 'Add Magic', 'disciple-tools-bulk-magic-link-sender' ),
                 ],
             ]) ?>][0]
 
