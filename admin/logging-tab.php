@@ -4,9 +4,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 } // Exit if accessed directly
 
 /**
- * Class Disciple_Tools_Magic_Links_Tab_Logging
+ * Class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Logging
  */
-class Disciple_Tools_Magic_Links_Tab_Logging {
+class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Logging {
     public function content() {
         ?>
         <div class="wrap">
@@ -88,7 +88,7 @@ class Disciple_Tools_Magic_Links_Tab_Logging {
             </tr>
             </thead>
             <?php
-            $logging = Disciple_Tools_Magic_Links_API::fetch_option( Disciple_Tools_Magic_Links_API::$option_dt_magic_links_logging );
+            $logging = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_logging );
             $logs    = ! empty( $logging ) ? json_decode( $logging ) : [];
             if ( ! empty( $logs ) ) {
                 $counter = 0;
@@ -96,7 +96,7 @@ class Disciple_Tools_Magic_Links_Tab_Logging {
                 for ( $x = count( $logs ) - 1; $x > 0; $x -- ) {
                     if ( ++ $counter <= $limit ) {
                         echo '<tr>';
-                        echo '<td style="vertical-align: middle; text-align: left; min-width: 150px;">' . esc_attr( Disciple_Tools_Magic_Links_API::format_timestamp_in_local_time_zone( $logs[ $x ]->timestamp ) ) . '</td>';
+                        echo '<td style="vertical-align: middle; text-align: left; min-width: 150px;">' . esc_attr( Disciple_Tools_Bulk_Magic_Link_Sender_API::format_timestamp_in_local_time_zone( $logs[ $x ]->timestamp ) ) . '</td>';
                         echo '<td style="vertical-align: middle; text-align: left;">' . esc_attr( $logs[ $x ]->log ) . '</td>';
                         echo '</td>';
                         echo '</tr>';

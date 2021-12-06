@@ -4,9 +4,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 } // Exit if accessed directly
 
 /**
- * Class Disciple_Tools_Magic_Links_Tab_Email
+ * Class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Email
  */
-class Disciple_Tools_Magic_Links_Tab_Email {
+class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Email {
 
     public function __construct() {
 
@@ -26,8 +26,8 @@ class Disciple_Tools_Magic_Links_Tab_Email {
 
         wp_localize_script(
             "dt_magic_links_email_script", "dt_magic_links", array(
-                'dt_magic_link_default_email_obj' => Disciple_Tools_Magic_Links_API::fetch_option( Disciple_Tools_Magic_Links_API::$option_dt_magic_links_defaults_email ),
-                'dt_default_email_subject'        => Disciple_Tools_Magic_Links_API::fetch_default_email_subject()
+                'dt_magic_link_default_email_obj' => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_defaults_email ),
+                'dt_default_email_subject'        => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_default_email_subject()
             )
         );
     }
@@ -47,7 +47,7 @@ class Disciple_Tools_Magic_Links_Tab_Email {
 
                 // Ensure we have something to work with
                 if ( ! empty( $updated_email_obj ) && isset( $updated_email_obj['enabled'] ) ) {
-                    Disciple_Tools_Magic_Links_API::update_option( Disciple_Tools_Magic_Links_API::$option_dt_magic_links_defaults_email, json_encode( $updated_email_obj ) );
+                    Disciple_Tools_Bulk_Magic_Link_Sender_API::update_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_defaults_email, json_encode( $updated_email_obj ) );
                 }
             }
         }

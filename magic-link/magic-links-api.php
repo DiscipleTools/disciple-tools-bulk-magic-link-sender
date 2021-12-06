@@ -4,9 +4,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 } // Exit if accessed directly
 
 /**
- * Class Disciple_Tools_Magic_Links_API
+ * Class Disciple_Tools_Bulk_Magic_Link_Sender_API
  */
-class Disciple_Tools_Magic_Links_API {
+class Disciple_Tools_Bulk_Magic_Link_Sender_API {
 
     public static $option_dt_magic_links_objects = 'dt_magic_links_objects';
     public static $option_dt_magic_links_all_scheduling_enabled = 'dt_magic_links_all_scheduling_enabled';

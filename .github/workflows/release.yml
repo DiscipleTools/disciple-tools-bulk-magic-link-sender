@@ -18,13 +18,13 @@ jobs:
 
       # - name: Run test suite
       #   run: composer run-script test
-      # cp -r * disciple-tools-magic-links.php admin metrics network post-type includes languages spinner.svg version-control.json LICENSE SECURITY.md disciple-tools-magic-links/ |
+      # cp -r * disciple-tools-bulk-magic-link-sender.php admin metrics network post-type includes languages spinner.svg version-control.json LICENSE SECURITY.md disciple-tools-bulk-magic-link-sender/ |
       # Below borrowed from https://github.com/actions/upload-release-asset
       - name: Build project
         run: |
-          mkdir disciple-tools-magic-links
-          cp -r disciple-tools-magic-links.php admin magic-link rest-api spinner.svg version-control.json LICENSE SECURITY.md disciple-tools-magic-links/
-          zip -r disciple-tools-magic-links.zip disciple-tools-magic-links
+          mkdir disciple-tools-bulk-magic-link-sender
+          cp -r disciple-tools-bulk-magic-link-sender.php admin magic-link rest-api spinner.svg version-control.json LICENSE SECURITY.md disciple-tools-bulk-magic-link-sender/
+          zip -r disciple-tools-bulk-magic-link-sender.zip disciple-tools-bulk-magic-link-sender
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -42,6 +42,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-          asset_path: ./disciple-tools-magic-links.zip
-          asset_name: disciple-tools-magic-links.zip
+          asset_path: ./disciple-tools-bulk-magic-link-sender.zip
+          asset_name: disciple-tools-bulk-magic-link-sender.zip
           asset_content_type: application/zip
