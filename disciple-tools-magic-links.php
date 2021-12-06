@@ -38,7 +38,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @access public
  */
 function disciple_tools_magic_links() {
-    $disciple_tools_magic_links_required_dt_theme_version = '1.0';
+    $disciple_tools_magic_links_required_dt_theme_version = '1.19';
     $wp_theme                                             = wp_get_theme();
     $version                                              = $wp_theme->version;
 
