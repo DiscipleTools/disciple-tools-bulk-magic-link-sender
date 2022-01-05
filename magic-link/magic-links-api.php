@@ -28,14 +28,18 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
     public static $assigned_supported_types = [ 'user', 'member', 'contact' ];
 
     public static function fetch_magic_link_types(): array {
-        $filtered_types = apply_filters( 'dt_settings_apps_list', [] );
+        $filtered_types = apply_filters( 'dt_magic_url_register_types', [] );
 
-        // Only focus on magic link related app settings
+        // Only focus on magic link related types
         $magic_link_types = [];
         if ( ! empty( $filtered_types ) ) {
-            foreach ( $filtered_types as $key => $app ) {
-                if ( isset( $app['meta'] ) && $app['meta']['app_type'] === 'magic_link' ) {
-                    $magic_link_types[] = $app;
+            foreach ( $filtered_types as $root ) {
+                if ( ! empty( $root ) && is_array( $root ) ) {
+                    foreach ( $root as $type ) {
+                        if ( isset( $type['meta']['app_type'] ) && $type['meta']['app_type'] === 'magic_link' ) {
+                            $magic_link_types[] = $type;
+                        }
+                    }
                 }
             }
         }

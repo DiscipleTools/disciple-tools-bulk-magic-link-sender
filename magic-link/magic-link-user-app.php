@@ -17,6 +17,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
     private $meta_key = '';
 
     private static $_instance = null;
+    public $meta = []; // Allows for instance specific data.
 
     public static function instance() {
         if ( is_null( self::$_instance ) ) {
@@ -33,6 +34,51 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
          * fall in line with extended class functionality!
          */
         $this->adjust_global_values_by_incoming_sys_type( $this->fetch_incoming_link_param( 'type' ) );
+
+        /**
+         * Specify metadata structure, specific to the processing of current
+         * magic link type.
+         *
+         * - meta:              Magic link plugin related data.
+         *      - app_type:     Flag indicating type to be processed by magic link plugin.
+         *      - post_type     Magic link type post type.
+         *      - contacts_only:    Boolean flag indicating how magic link type user assignments are to be handled within magic link plugin.
+         *                          If True, lookup field to be provided within plugin for contacts only searching.
+         *                          If false, Dropdown option to be provided for user, team or group selection.
+         *      - fields:       List of fields to be displayed within magic link frontend form.
+         */
+        $field_settings = DT_Posts::get_post_field_settings( 'contacts' );
+        $this->meta     = [
+            'app_type'      => 'magic_link',
+            'post_type'     => $this->post_type,
+            'contacts_only' => false,
+            'fields'        => [
+                [
+                    'id'    => 'name',
+                    'label' => $field_settings['name']['name']
+                ],
+                [
+                    'id'    => 'milestones',
+                    'label' => $field_settings['milestones']['name']
+                ],
+                [
+                    'id'    => 'overall_status',
+                    'label' => $field_settings['overall_status']['name']
+                ],
+                [
+                    'id'    => 'faith_status',
+                    'label' => $field_settings['faith_status']['name']
+                ],
+                [
+                    'id'    => 'contact_phone',
+                    'label' => $field_settings['contact_phone']['name']
+                ],
+                [
+                    'id'    => 'comments',
+                    'label' => __( 'Comments', 'disciple_tools' ) // Special Case!
+                ]
+            ]
+        ];
 
         /**
          * Once adjustments have been made, proceed with parent instantiation!
@@ -97,58 +143,18 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
      * - label:             Magic link type name.
      * - description:       Magic link type description.
      * - settings_display:  Boolean flag which determines if magic link type is to be listed within frontend user profile settings.
-     * - meta:              Magic link plugin related data.
-     *      - app_type:     Flag indicating type to be processed by magic link plugin.
-     *      - post_type     Magic link type post type.
-     *      - contacts_only:    Boolean flag indicating how magic link type user assignments are to be handled within magic link plugin.
-     *                          If True, lookup field to be provided within plugin for contacts only searching.
-     *                          If false, Dropdown option to be provided for user, team or group selection.
-     *      - fields:       List of fields to be displayed within magic link frontend form.
      *
      * @param $apps_list
      *
      * @return mixed
      */
     public function dt_settings_apps_list( $apps_list ) {
-        $field_settings = DT_Posts::get_post_field_settings( 'contacts' );
-
         $apps_list[ $this->meta_key ] = [
             'key'              => $this->meta_key,
             'url_base'         => $this->root . '/' . $this->type,
             'label'            => $this->page_title,
             'description'      => $this->page_description,
-            'settings_display' => true,
-            'meta'             => [
-                'app_type'      => 'magic_link',
-                'post_type'     => $this->post_type,
-                'contacts_only' => false,
-                'fields'        => [
-                    [
-                        'id'    => 'name',
-                        'label' => $field_settings['name']['name']
-                    ],
-                    [
-                        'id'    => 'milestones',
-                        'label' => $field_settings['milestones']['name']
-                    ],
-                    [
-                        'id'    => 'overall_status',
-                        'label' => $field_settings['overall_status']['name']
-                    ],
-                    [
-                        'id'    => 'faith_status',
-                        'label' => $field_settings['faith_status']['name']
-                    ],
-                    [
-                        'id'    => 'contact_phone',
-                        'label' => $field_settings['contact_phone']['name']
-                    ],
-                    [
-                        'id'    => 'comments',
-                        'label' => __( 'Comments', 'disciple_tools' ) // Special Case!
-                    ]
-                ]
-            ]
+            'settings_display' => true
         ];
 
         return $apps_list;
