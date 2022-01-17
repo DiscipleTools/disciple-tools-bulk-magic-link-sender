@@ -29,6 +29,32 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
 
     public function __construct() {
         /**
+         * Once adjustments have been made, proceed with parent instantiation!
+         */
+        $this->meta_key = $this->root . '_' . $this->type . '_magic_key';
+        parent::__construct();
+
+        /**
+         * user_app and module section
+         */
+        add_filter( 'dt_settings_apps_list', [ $this, 'dt_settings_apps_list' ], 10, 1 );
+        add_action( 'rest_api_init', [ $this, 'add_endpoints' ] );
+
+        /**
+         * tests if other URL
+         */
+        $url = dt_get_url_path();
+        if ( strpos( $url, $this->root . '/' . $this->type ) === false ) {
+            return;
+        }
+        /**
+         * tests magic link parts are registered and have valid elements
+         */
+        if ( ! $this->check_parts_match() ) {
+            return;
+        }
+
+        /**
          * As incoming requests could be for either valid wp users of contact
          * post records, ensure to adjust the $post_type accordingly; so as to
          * fall in line with extended class functionality!
@@ -79,32 +105,6 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                 ]
             ]
         ];
-
-        /**
-         * Once adjustments have been made, proceed with parent instantiation!
-         */
-        $this->meta_key = $this->root . '_' . $this->type . '_magic_key';
-        parent::__construct();
-
-        /**
-         * user_app and module section
-         */
-        add_filter( 'dt_settings_apps_list', [ $this, 'dt_settings_apps_list' ], 10, 1 );
-        add_action( 'rest_api_init', [ $this, 'add_endpoints' ] );
-
-        /**
-         * tests if other URL
-         */
-        $url = dt_get_url_path();
-        if ( strpos( $url, $this->root . '/' . $this->type ) === false ) {
-            return;
-        }
-        /**
-         * tests magic link parts are registered and have valid elements
-         */
-        if ( ! $this->check_parts_match() ) {
-            return;
-        }
 
         // load if valid url
         add_action( 'dt_blank_body', [ $this, 'body' ] );
