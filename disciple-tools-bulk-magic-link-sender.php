@@ -59,7 +59,7 @@ function disciple_tools_bulk_magic_link_sender() {
 
 }
 
-add_action( 'after_setup_theme', 'disciple_tools_bulk_magic_link_sender', 20 );
+add_action( 'after_setup_theme', 'disciple_tools_bulk_magic_link_sender', 1000 );
 
 /**
  * Singleton class for setting up the plugin.
