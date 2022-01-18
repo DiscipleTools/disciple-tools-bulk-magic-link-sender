@@ -46,37 +46,42 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
          *                          If True, lookup field to be provided within plugin for contacts only searching.
          *                          If false, Dropdown option to be provided for user, team or group selection.
          *      - fields:       List of fields to be displayed within magic link frontend form.
+         *      - field_refreshes:  Support field label updating.
          */
-        $field_settings = DT_Posts::get_post_field_settings( 'contacts' );
-        $this->meta     = [
-            'app_type'      => 'magic_link',
-            'post_type'     => $this->post_type,
-            'contacts_only' => false,
-            'fields'        => [
+        $this->meta = [
+            'app_type'       => 'magic_link',
+            'post_type'      => $this->post_type,
+            'contacts_only'  => false,
+            'fields'         => [
                 [
                     'id'    => 'name',
-                    'label' => $field_settings['name']['name']
+                    'label' => ''
                 ],
                 [
                     'id'    => 'milestones',
-                    'label' => $field_settings['milestones']['name']
+                    'label' => ''
                 ],
                 [
                     'id'    => 'overall_status',
-                    'label' => $field_settings['overall_status']['name']
+                    'label' => ''
                 ],
                 [
                     'id'    => 'faith_status',
-                    'label' => $field_settings['faith_status']['name']
+                    'label' => ''
                 ],
                 [
                     'id'    => 'contact_phone',
-                    'label' => $field_settings['contact_phone']['name']
+                    'label' => ''
                 ],
                 [
                     'id'    => 'comments',
                     'label' => __( 'Comments', 'disciple_tools' ) // Special Case!
                 ]
+            ],
+            'fields_refresh' => [
+                'enabled'    => true,
+                'post_type'  => 'contacts',
+                'ignore_ids' => [ 'comments' ]
             ]
         ];
 
