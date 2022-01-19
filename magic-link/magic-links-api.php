@@ -37,6 +37,29 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
                 if ( ! empty( $root ) && is_array( $root ) ) {
                     foreach ( $root as $type ) {
                         if ( isset( $type['meta']['app_type'] ) && $type['meta']['app_type'] === 'magic_link' ) {
+
+                            // Determine if field label refreshing is required
+                            if ( isset( $type['meta']['fields_refresh'] ) && $type['meta']['fields_refresh']['enabled'] ) {
+
+                                // Fetch corresponding field settings
+                                $field_settings = DT_Posts::get_post_field_settings( $type['meta']['fields_refresh']['post_type'] );
+                                if ( ! empty( $field_settings ) ) {
+
+                                    // Refresh field label, assuming it is not to be ignored
+                                    $refreshed_fields = [];
+                                    foreach ( $type['meta']['fields'] ?? [] as $field ) {
+                                        if ( ! in_array( $field['id'], $type['meta']['fields_refresh']['ignore_ids'] ) ) {
+                                            $field['label'] = $field_settings[ $field['id'] ]['name'];
+                                        }
+                                        $refreshed_fields[] = $field;
+                                    }
+
+                                    // Update type fields
+                                    $type['meta']['fields'] = $refreshed_fields;
+                                }
+                            }
+
+                            // Assign type to returning array
                             $magic_link_types[] = $type;
                         }
                     }
