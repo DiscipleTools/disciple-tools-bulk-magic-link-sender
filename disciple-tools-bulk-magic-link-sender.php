@@ -5,7 +5,7 @@
  * Description: Disciple Tools - Bulk magic link sender for users, contacts, groups and teams assignment + schedule management for magic links dispatching over configured sending channels.
  * Text Domain: disciple-tools-bulk-magic-link-sender
  * Domain Path: /languages
- * Version:  1.5.1
+ * Version:  1.5.2
  * Author URI: https://github.com/DiscipleTools
  * GitHub Plugin URI: https://github.com/DiscipleTools/disciple-tools-bulk-magic-link-sender
  * Requires at least: 4.7.0
@@ -59,7 +59,7 @@ function disciple_tools_bulk_magic_link_sender() {
 
 }
 
-add_action( 'after_setup_theme', 'disciple_tools_bulk_magic_link_sender', 1000 );
+add_action( 'after_setup_theme', 'disciple_tools_bulk_magic_link_sender', 20 );
 
 /**
  * Singleton class for setting up the plugin.
