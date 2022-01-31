@@ -617,7 +617,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
             <hr>
             <div id="content">
                 <div id="assigned_contacts_div" style="display: none;">
-                    <h3><?php esc_html_e( "ASSIGNED CONTACTS", 'disciple_tools' ) ?> [ <span id="total">0</span> ]</h3>
+                    <h3><?php esc_html_e( "Assigned Contacts", 'disciple_tools' ) ?> [ <span id="total">0</span> ]</h3>
                     <hr>
                     <div class="grid-x api-content-div-style" id="api-content">
                         <table class="api-content-table">
@@ -633,7 +633,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                 <br>
                 <br>
 
-                <h3><?php esc_html_e( "CONTACT DETAILS", 'disciple_tools' ) ?> [ <span id="contact_name">---</span> ]
+                <h3><?php esc_html_e( "Details", 'disciple_tools' ) ?> [ <span id="contact_name">---</span> ]
                 </h3>
                 <hr>
                 <div class="grid-x" id="form-content">
@@ -679,7 +679,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
 
                 <!-- SUBMIT UPDATES -->
                 <button id="content_submit_but" style="display: none; min-width: 100%;" class="button select-button">
-                    Submit
+                    <?php esc_html_e( "Submit Update", 'disciple_tools' ) ?>
                 </button>
             </div>
         </div>
