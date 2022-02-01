@@ -611,7 +611,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
         <div id="wrapper">
             <div class="grid-x">
                 <div class="cell center">
-                    <h2 id="title"><b><?php esc_html_e( $this->page_title, 'disciple_tools_bulk_magic_link_sender' ) ?></b></h2>
+                    <h2 id="title"><b><?php esc_html_e( 'User Contact Updates', 'disciple_tools_bulk_magic_link_sender' ) ?></b></h2>
                 </div>
             </div>
             <hr>
