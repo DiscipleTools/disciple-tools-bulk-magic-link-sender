@@ -1,0 +1,28 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: es_ES\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.0.1\n"
+
+#: magic-link/magic-link-user-app.php:614
+msgid "User Contact Updates"
+msgstr "Actualizaciones de contacto de usuario"
+
+#: magic-link/magic-link-user-app.php:620
+msgid "Assigned Contacts"
+msgstr "Contactos Asignados"
+
+#: magic-link/magic-link-user-app.php:636
+msgid "Details"
+msgstr "Detalles"
+
+#: magic-link/magic-link-user-app.php:682
+msgid "Submit Update"
+msgstr "Enviar actualización"
