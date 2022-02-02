@@ -18,6 +18,11 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
 
     private static $_instance = null;
     public $meta = []; // Allows for instance specific data.
+    public $translatable = [
+        'query',
+        'user',
+        'contact'
+    ]; // Order of translatable flags to be checked. Translate on first hit..!
 
     public static function instance() {
         if ( is_null( self::$_instance ) ) {
@@ -638,7 +643,11 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                 <hr>
                 <div class="grid-x" id="form-content">
                     <input id="post_id" type="hidden"/>
-                    <?php $field_settings = DT_Posts::get_post_field_settings( 'contacts' ); ?>
+                    <?php
+                    // Revert back to dt translations
+                    $this->hard_switch_to_default_dt_text_domain();
+                    $field_settings = DT_Posts::get_post_field_settings( 'contacts', false );
+                    ?>
                     <table style="display: none;" class="form-content-table">
                         <tbody>
                         <tr id="form_content_name_tr">
