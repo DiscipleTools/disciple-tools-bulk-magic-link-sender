@@ -107,6 +107,12 @@ class Disciple_Tools_Bulk_Magic_Link_Sender {
         }
 
         /**
+         * @todo Decide if you want to support localization of your plugin
+         * To remove: delete the line below and remove the folder named /languages
+         */
+        $this->i18n();
+
+        /**
          * @todo Decide if you want to customize links for your plugin in the plugin admin area
          * To remove: delete the lines below and remove the function named
          */
@@ -162,7 +168,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender {
      * @access public
      */
     public function i18n() {
-        $domain = 'disciple-tools-bulk-magic-link-sender';
+        $domain = 'disciple_tools_bulk_magic_link_sender';
         load_plugin_textdomain( $domain, false, trailingslashit( dirname( plugin_basename( __FILE__ ) ) ) . 'languages' );
     }
 
