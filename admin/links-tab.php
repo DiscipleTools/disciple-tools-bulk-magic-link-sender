@@ -37,6 +37,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
         wp_localize_script(
             "dt_magic_links_script", "dt_magic_links", array(
                 'dt_magic_link_types'           => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_magic_link_types(),
+                'dt_magic_link_templates'       => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_templates ),
                 'dt_users'                      => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_users(),
                 'dt_teams'                      => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_teams(),
                 'dt_groups'                     => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_groups(),
@@ -358,11 +359,34 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                         <option disabled selected value>-- select magic link type to be sent --</option>
 
                         <?php
-                        // Source available magic link types
+                        // Source available magic link types, ignoring templates at this stage
                         $magic_link_types = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_magic_link_types();
                         if ( ! empty( $magic_link_types ) ) {
                             foreach ( $magic_link_types as $type ) {
-                                echo '<option value="' . esc_attr( $type['key'] ) . '">' . esc_attr( $type['label'] ) . '</option>';
+
+                                /**
+                                 * Filter out master template class; which, in itself, is only the shepherd of child templates!
+                                 * Actual child magic link templates are extracted in the code block below; from options table.
+                                 */
+
+                                if ( ! isset( $type['meta']['class_type'] ) || ! in_array( $type['meta']['class_type'], [ 'template' ] ) ) {
+                                    echo '<option value="' . esc_attr( $type['key'] ) . '">' . esc_attr( $type['label'] ) . '</option>';
+                                }
+                            }
+                        }
+
+                        // Source available magic link templates
+                        $magic_link_templates = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_templates );
+                        if ( ! empty( $magic_link_templates ) ) {
+                            ?>
+                            <option disabled value>-- templates --</option>
+                            <?php
+                            foreach ( $magic_link_templates as $post_type ) {
+                                foreach ( $post_type ?? [] as $template ) {
+                                    if ( $template['enabled'] ) {
+                                        echo '<option value="' . esc_attr( $template['id'] ) . '">' . esc_attr( $template['name'] ) . '</option>';
+                                    }
+                                }
                             }
                         }
                         ?>

@@ -15,6 +15,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
     public static $option_dt_magic_links_last_cron_run = 'dt_magic_links_last_cron_run';
     public static $option_dt_magic_links_local_time_zone = 'dt_magic_links_local_time_zone';
     public static $option_dt_magic_links_defaults_email = 'dt_magic_links_defaults_email';
+    public static $option_dt_magic_links_templates = 'dt_magic_links_templates';
 
     public static $schedule_last_schedule_run = 'last_schedule_run';
     public static $schedule_last_success_send = 'last_success_send';
@@ -26,6 +27,9 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
     public static $assigned_user_type_id_users = 'users';
     public static $assigned_user_type_id_contacts = 'contacts';
     public static $assigned_supported_types = [ 'user', 'member', 'contact' ];
+
+    public static $prefix_templates_id = 'templates_';
+
 
     public static function fetch_magic_link_types(): array {
         $filtered_types = apply_filters( 'dt_magic_url_register_types', [] );
@@ -72,7 +76,18 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
 
     public static function fetch_magic_link_type( $key ) {
         foreach ( self::fetch_magic_link_types() as $app ) {
-            if ( $app['key'] === $key ) {
+
+            // Handle templates a little differently
+            if ( ( strpos( $key, self::$prefix_templates_id ) >= 0 ) && isset( $app['meta']['class_type'], $app['meta']['templates'] ) && in_array( $app['meta']['class_type'], [ 'template' ] ) ) {
+
+                // Iterate over templates, in search of a match!
+                foreach ( $app['meta']['templates'] ?? [] as $template ) {
+                    if ( ( $template['id'] ) === $key ) {
+                        return $template;
+                    }
+                }
+
+            } elseif ( $app['key'] === $key ) {
                 return $app;
             }
         }
@@ -105,7 +120,14 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
                 if ( ! empty( $hash ) ) {
                     $magic_link_type = self::fetch_magic_link_type( $link_obj->type );
                     if ( ! empty( $magic_link_type ) ) {
-                        $links[ self::generate_magic_link_type_key( $link_obj ) ][] = trailingslashit( trailingslashit( site_url() ) . $magic_link_type['url_base'] ) . $hash;
+
+                        // When dealing with templates, ensure _magic_key suffix is removed!
+                        $magic_link_url_base = $magic_link_type['url_base'];
+                        if ( strpos( $magic_link_url_base, 'templates/' ) !== false ) {
+                            $magic_link_url_base = str_replace( '_magic_key', '', $magic_link_url_base );
+                        }
+
+                        $links[ self::generate_magic_link_type_key( $link_obj ) ][] = trailingslashit( trailingslashit( site_url() ) . $magic_link_url_base ) . $hash;
                     }
                 }
             }
@@ -612,6 +634,13 @@ Thanks!';
 
         // Assuming a valid hash has been located, build url accordingly.
         if ( ! empty( $hash ) ) {
+
+            // When dealing with templates, ensure _magic_key suffix is removed!
+            if ( strpos( $magic_link_url_base, 'templates/' ) !== false ) {
+                $magic_link_url_base = str_replace( '_magic_key', '', $magic_link_url_base );
+            }
+
+            // Proceed with url generation
             $url = trailingslashit( trailingslashit( site_url() ) . $magic_link_url_base ) . $hash;
             if ( $with_params === true ) {
                 $url .= '?id=' . $link_obj->id . '&type=' . $user->sys_type;
