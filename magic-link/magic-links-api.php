@@ -86,7 +86,6 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
                         return $template;
                     }
                 }
-
             } elseif ( $app['key'] === $key ) {
                 return $app;
             }

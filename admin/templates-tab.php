@@ -26,7 +26,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
         dt_theme_enqueue_script( 'typeahead-jquery', 'dt-core/dependencies/typeahead/dist/jquery.typeahead.min.js', array( 'jquery' ), true );
         dt_theme_enqueue_style( 'typeahead-jquery-css', 'dt-core/dependencies/typeahead/dist/jquery.typeahead.min.css', array() );
 
-        wp_register_style( 'jquery-ui', 'https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.css' );
+        wp_register_style( 'jquery-ui', 'https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.css', [], '1.12.1' );
         wp_enqueue_style( 'jquery-ui' );
 
         wp_enqueue_script( 'dt_magic_links_script', plugin_dir_url( __FILE__ ) . 'js/templates-tab.js', [

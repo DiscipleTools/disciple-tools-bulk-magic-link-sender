@@ -212,9 +212,11 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         </style>
         <?php
         $typeahead_uri = get_template_directory_uri() . "/dt-core/dependencies/typeahead/dist/jquery.typeahead.min.css";
+        // phpcs:disable
         ?>
         <link rel="stylesheet" type="text/css" href="<?php esc_attr_e( $typeahead_uri ); ?>"/>
         <?php
+        // phpcs:enable
     }
 
     /**
@@ -225,9 +227,11 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
      */
     public function header_javascript() {
         $typeahead_uri = get_template_directory_uri() . "/dt-core/dependencies/typeahead/dist/jquery.typeahead.min.js";
+        // phpcs:disable
         ?>
         <script type="text/javascript" src="<?php esc_attr_e( $typeahead_uri ); ?>"></script>
         <?php
+        // phpcs:enable
     }
 
     /**
@@ -239,20 +243,15 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
     public function footer_javascript() {
         ?>
         <script>
-            // TODO: REMOVE UNUSED OBJECTS BELOW....
             let jsObject = [<?php echo json_encode( [
-                'map_key'        => DT_Mapbox_API::get_key(),
-                'root'           => esc_url_raw( rest_url() ),
-                'nonce'          => wp_create_nonce( 'wp_rest' ),
-                'parts'          => $this->parts,
-                'milestones'     => DT_Posts::get_post_field_settings( 'contacts' )['milestones']['default'],
-                'overall_status' => DT_Posts::get_post_field_settings( 'contacts' )['overall_status']['default'],
-                'faith_status'   => DT_Posts::get_post_field_settings( 'contacts' )['faith_status']['default'],
-                'link_obj_id'    => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $this->fetch_incoming_link_param( 'id' ) ),
-                'sys_type'       => $this->fetch_incoming_link_param( 'type' ),
-                'template'       => $this->template,
-                'post_fields'    => DT_Posts::get_post_field_settings( $this->template['post_type'] ),
-                'translations'   => [
+                'root'         => esc_url_raw( rest_url() ),
+                'nonce'        => wp_create_nonce( 'wp_rest' ),
+                'parts'        => $this->parts,
+                'link_obj_id'  => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $this->fetch_incoming_link_param( 'id' ) ),
+                'sys_type'     => $this->fetch_incoming_link_param( 'type' ),
+                'template'     => $this->template,
+                'post_fields'  => DT_Posts::get_post_field_settings( $this->template['post_type'] ),
+                'translations' => [
                     'regions_of_focus' => __( 'Regions of Focus', 'disciple_tools' ),
                     'all_locations'    => __( 'All Locations', 'disciple_tools' )
                 ]
@@ -395,7 +394,11 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                 html = `
                                 <tr>
                                     <td style="vertical-align: top;"><b>${window.lodash.escape(post_field['name'])}</b></td>
-                                    <td style="vertical-align: top;" class="form-content-table-field">${field_meta_html}<input id="field_${field['id']}" type="checkbox" value="" /></td>
+                                    <td style="vertical-align: top;" class="form-content-table-field">
+                                        ${field_meta_html}
+                                        <input id="field_initial_state_${field['id']}" type="hidden" value="false">
+                                        <input id="field_${field['id']}" type="checkbox" value="" />
+                                    </td>
                                 </tr>`;
                                 break;
 
@@ -441,6 +444,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                 <tr>
                                     <td style="vertical-align: top;"><b>${window.lodash.escape(post_field['name'])}</b></td>
                                     <td style="vertical-align: top;" class="form-content-table-field">${field_meta_html}
+                                        <input id="field_deletions_${field['id']}" type="hidden" value="[]">
                                         <div class="typeahead__container">
                                             <div class="typeahead__field">
                                                 <div class="typeahead__query">
@@ -498,6 +502,12 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                                     return [];
                                                 }, callback: {
                                                     onCancel: function (node, item) {
+
+                                                        // Keep a record of deleted options
+                                                        let deletions_field = jQuery('#field_deletions_' + field['id']);
+                                                        let deletions = JSON.parse(deletions_field.val());
+                                                        deletions.push(item);
+                                                        deletions_field.val(JSON.stringify(deletions));
                                                     }
                                                 }
                                             },
@@ -677,6 +687,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
 
                                             case 'boolean':
                                                 jQuery('#field_' + field['id']).prop('checked', post_field);
+                                                jQuery('#field_initial_state_' + field['id']).val(post_field ? 'true' : 'false');
                                                 break;
 
                                             case 'communication_channel':
@@ -698,7 +709,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                                     // Clear down existing typeahead arrays and containers
                                                     typeahead.items = [];
                                                     typeahead.comparedItems = [];
-                                                    $(typeahead.label.container).empty();
+                                                    jQuery(typeahead.label.container).empty();
 
                                                     // Iterate over post locations and update typeahead multiselect list accordingly
                                                     jQuery.each(post_field, function (idx, location) {
@@ -885,11 +896,15 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                         break;
 
                                     case 'boolean':
+                                        let initial_val = JSON.parse(jQuery(field_td).find('#field_initial_state_' + field_id).val());
+                                        let current_val = jQuery(field_td).find(selector).prop('checked');
+
                                         payload['fields']['dt'].push({
                                             id: field_id,
                                             dt_type: field_type,
                                             template_type: field_template_type,
-                                            value: jQuery(field_td).find(selector).prop('checked')
+                                            value: current_val,
+                                            changed: (initial_val !== current_val)
                                         });
                                         break;
 
@@ -909,7 +924,8 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                                 id: field_id,
                                                 dt_type: field_type,
                                                 template_type: field_template_type,
-                                                value: typeahead.items
+                                                value: typeahead.items,
+                                                deletions: JSON.parse(jQuery(field_td).find('#field_deletions_' + field_id).val())
                                             });
                                         }
                                         break;
@@ -1189,8 +1205,15 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                 case 'text':
                 case 'key_select':
                 case 'date':
-                case 'boolean':
                     $updates[ $field['id'] ] = $field['value'];
+                    break;
+
+                case 'boolean':
+
+                    // Only update if there has been a state change!
+                    if ( $field['changed'] === 'true' ) {
+                        $updates[ $field['id'] ] = $field['value'] === 'true';
+                    }
                     break;
 
                 case 'communication_channel':
@@ -1230,6 +1253,16 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                         $entry['value'] = $location['ID'];
                         $locations[]    = $entry;
                     }
+
+                    // Capture any incoming deletions
+                    foreach ( $field['deletions'] ?? [] as $location ) {
+                        $entry           = [];
+                        $entry['value']  = $location['ID'];
+                        $entry['delete'] = true;
+                        $locations[]     = $entry;
+                    }
+
+                    // Package and append to global updates
                     if ( ! empty( $locations ) ) {
                         $updates[ $field['id'] ] = [
                             'values' => $locations

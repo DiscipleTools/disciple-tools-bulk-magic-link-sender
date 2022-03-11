@@ -38,9 +38,22 @@ jQuery(function ($) {
     handle_update_request();
   });
 
+  $(document).on('click', '.ml-templates-docs', function (evt) {
+    handle_docs_request($(evt.currentTarget).data('title'), $(evt.currentTarget).data('content'));
+  });
+
   /**
    * Helper Functions
    */
+
+  function handle_docs_request(title_div, content_div) {
+    $('#ml_templates_right_docs_section').fadeOut('fast', function () {
+      $('#ml_templates_right_docs_title').html($('#' + title_div).html());
+      $('#ml_templates_right_docs_content').html($('#' + content_div).html());
+
+      $('#ml_templates_right_docs_section').fadeIn('fast');
+    });
+  }
 
   function handle_available_post_types_section_button_click(evt) {
 
