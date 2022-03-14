@@ -36,6 +36,12 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
     public function __construct() {
 
         /**
+         * Register default filters
+         */
+
+        add_filter( 'dt_magic_link_templates', [ $this, 'fetch_magic_link_templates_filter' ], 10, 1 );
+
+        /**
          * As incoming requests could be for either valid wp users of contact
          * post records, ensure to adjust the $post_type accordingly; to
          * fall in line with extended class functionality!
@@ -43,25 +49,24 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
 
         $this->adjust_global_values_by_incoming_sys_type( $this->fetch_incoming_link_param( 'type' ) );
 
-        /** TODO... UPDATED...!
+        /**
          * Specify metadata structure, specific to the processing of current
          * magic link type.
          *
          * - meta:              Magic link plugin related data.
          *      - app_type:     Flag indicating type to be processed by magic link plugin.
          *      - post_type     Magic link type post type.
-         *      - contacts_only:    Boolean flag indicating how magic link type user assignments are to be handled within magic link plugin.
-         *                          If True, lookup field to be provided within plugin for contacts only searching.
-         *                          If false, Dropdown option to be provided for user, team or group selection.
-         *      - fields:       List of fields to be displayed within magic link frontend form.
-         *      - field_refreshes:  Support field label updating.
+         *      - templates:    List of magic link templates.
          */
 
         $this->meta = [
-            'app_type'   => 'magic_link',
-            'post_type'  => $this->post_type,
-            'class_type' => 'template',
-            'templates'  => $this->fetch_magic_link_templates()
+            'app_type'     => 'magic_link',
+            'post_type'    => $this->post_type,
+            'class_type'   => 'template',
+            'templates'    => $this->fetch_magic_link_templates(),
+            'get_template' => function ( $id ) {
+                return $this->fetch_template_by_id( $id );
+            }
         ];
 
         /**
@@ -101,7 +106,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                 case 'wp_user':
                     $this->post_type = 'user';
                     break;
-                case 'post':
+                default: // 'post' or anything else!
                     $this->post_type = 'contacts';
                     break;
             }
@@ -173,6 +178,10 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         }
 
         return [];
+    }
+
+    public function fetch_magic_link_templates_filter( $templates ): array {
+        return array_merge( $templates, $this->fetch_magic_link_templates() );
     }
 
     /**
@@ -801,15 +810,15 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
              */
             let assigned_contacts_div = jQuery('#assigned_contacts_div');
             switch (jsObject.sys_type) {
-                case 'post':
-                    // Bypass contacts list and directly fetch requested contact details
-                    assigned_contacts_div.fadeOut('fast');
-                    window.get_contact(jsObject.parts.post_id);
-                    break;
-                default: // wp_user
+                case 'wp_user':
                     // Fetch assigned contacts for incoming user
                     assigned_contacts_div.fadeIn('fast');
                     window.get_magic();
+                    break;
+                default: // 'post' or anything else!
+                    // Bypass contacts list and directly fetch requested contact details
+                    assigned_contacts_div.fadeOut('fast');
+                    window.get_contact(jsObject.parts.post_id);
                     break;
             }
 
