@@ -14,6 +14,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
     public $type = 'template_id'; // Placeholder to be replaced with actual template ids
     public $post_type = 'contacts'; // Support ML contacts (which can be any one of the DT post types) by default!
     private $meta_key = '';
+    public $show_app_tile = true;
 
     private static $_instance = null;
     public $meta = []; // Allows for instance specific data.
@@ -36,10 +37,11 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
     public function __construct() {
 
         /**
-         * Register default filters
+         * Register default filters & actions
          */
 
         add_filter( 'dt_magic_link_templates', [ $this, 'fetch_magic_link_templates_filter' ], 10, 1 );
+        add_action( 'dt_details_additional_section', [ $this, 'dt_details_additional_section' ], 30, 2 );
 
         /**
          * As incoming requests could be for either valid wp users of contact
@@ -182,6 +184,55 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
 
     public function fetch_magic_link_templates_filter( $templates ): array {
         return array_merge( $templates, $this->fetch_magic_link_templates() );
+    }
+
+    public function dt_details_additional_section( $section, $post_type ) {
+        if ( ! $this->show_app_tile ) {
+            return;
+        }
+
+        /**
+         * Ensure to display template links for any assigned posts.
+         */
+
+        if ( $section === "apps" ) {
+
+            // Return if no templates are found.
+            $templates = $this->fetch_magic_link_templates();
+            if ( empty( $templates ) ) {
+                return;
+            }
+
+            // Only display template link if current post has been assigned.
+            $post               = DT_Posts::get_post( $post_type, get_the_ID() );
+            $assigned_templates = [];
+            foreach ( $templates as $template ) {
+                if ( isset( $post[ $template['id'] ] ) ) {
+                    $assigned_templates[] = $template;
+                }
+            }
+
+            // Only proceed if assigned templates have been found.
+            if ( ! empty( $assigned_templates ) ) {
+                ?>
+                <div class="section-subheader"><?php echo esc_html( __( "Templates", 'disciple_tools' ) ); ?></div>
+                <div class="section-app-links">
+                    <?php
+                    foreach ( $assigned_templates as $template ) {
+
+                        // Explode template id into parts -> {root}_{id/type}_magic_key
+                        $parts = explode( '_', $template['id'] );
+                        $link  = DT_Magic_URL::get_link_url( $parts[0], $parts[1], $post[ $template['id'] ] );
+                        ?>
+                        <a target="_blank" href="<?php echo esc_url( $link ); ?>" type="button"
+                           class="empty-select-button select-button small button"><?php echo esc_html( $template['name'] ); ?></a>
+                        <?php
+                    }
+                    ?>
+                </div>
+                <?php
+            }
+        }
     }
 
     /**
