@@ -3,6 +3,57 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 } // Exit if accessed directly.
 
+function fetch_magic_link_templates(): array {
+
+    $templates            = [];
+    $magic_link_templates = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_templates );
+
+    if ( ! empty( $magic_link_templates ) ) {
+        foreach ( $magic_link_templates as $post_type ) {
+            foreach ( $post_type ?? [] as $template ) {
+                if ( $template['enabled'] ) {
+
+                    // Populate url_base first...
+                    $template['url_base'] = str_replace( 'templates_', 'templates/', $template['id'] );
+
+                    // Capture updated template
+                    $templates[] = $template;
+                }
+            }
+        }
+    }
+
+    return $templates;
+}
+
+/**
+ * Class Disciple_Tools_Magic_Links_Templates_Loader
+ */
+class Disciple_Tools_Magic_Links_Templates_Loader {
+
+    private static $_instance = null;
+
+    public static function instance() {
+        if ( is_null( self::$_instance ) ) {
+            self::$_instance = new self();
+        }
+
+        return self::$_instance;
+    } // End instance()
+
+    public function __construct() {
+        self::load_templates();
+    }
+
+    private function load_templates() {
+        foreach ( fetch_magic_link_templates() ?? [] as $template ) {
+            new Disciple_Tools_Magic_Links_Templates( $template );
+        }
+    }
+}
+
+Disciple_Tools_Magic_Links_Templates_Loader::instance();
+
 /**
  * Class Disciple_Tools_Magic_Links_Templates
  */
@@ -12,8 +63,11 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
     public $page_description = 'Template Title Description';
     public $root = "templates"; // @todo define the root of the url {yoursite}/root/type/key/action
     public $type = 'template_id'; // Placeholder to be replaced with actual template ids
+    public $type_name = '';
     public $post_type = 'contacts'; // Support ML contacts (which can be any one of the DT post types) by default!
     private $meta_key = '';
+
+    public $show_bulk_send = true;
     public $show_app_tile = true;
 
     private static $_instance = null;
@@ -34,13 +88,25 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         return self::$_instance;
     } // End instance()
 
-    public function __construct() {
+    public function __construct( $template = null ) {
+
+        /**
+         * Assuming a valid template, then capture header values
+         */
+
+        if ( empty( $template ) ) {
+            return;
+        }
+
+        $this->type             = array_map( 'sanitize_key', wp_unslash( explode( '_', $template['id'] ) ) )[1];
+        $this->type_name        = $template['name'];
+        $this->page_title       = $template['name'];
+        $this->page_description = '';
 
         /**
          * Register default filters & actions
          */
 
-        add_filter( 'dt_magic_link_templates', [ $this, 'fetch_magic_link_templates_filter' ], 10, 1 );
         add_action( 'dt_details_additional_section', [ $this, 'dt_details_additional_section' ], 30, 2 );
 
         /**
@@ -65,7 +131,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
             'app_type'     => 'magic_link',
             'post_type'    => $this->post_type,
             'class_type'   => 'template',
-            'templates'    => $this->fetch_magic_link_templates(),
+            'templates'    => fetch_magic_link_templates(),
             'get_template' => function ( $id ) {
                 return $this->fetch_template_by_id( $id );
             }
@@ -149,41 +215,14 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         }
     }
 
-    private function fetch_magic_link_templates(): array {
-
-        $templates            = [];
-        $magic_link_templates = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_templates );
-
-        if ( ! empty( $magic_link_templates ) ) {
-            foreach ( $magic_link_templates as $post_type ) {
-                foreach ( $post_type ?? [] as $template ) {
-                    if ( $template['enabled'] ) {
-
-                        // Populate url_base first...
-                        $template['url_base'] = str_replace( 'templates_', 'templates/', $template['id'] );
-
-                        // Capture updated template
-                        $templates[] = $template;
-                    }
-                }
-            }
-        }
-
-        return $templates;
-    }
-
     private function fetch_template_by_id( $template_id ): array {
-        foreach ( $this->fetch_magic_link_templates() ?? [] as $template ) {
+        foreach ( fetch_magic_link_templates() ?? [] as $template ) {
             if ( $template['id'] === $template_id ) {
                 return $template;
             }
         }
 
         return [];
-    }
-
-    public function fetch_magic_link_templates_filter( $templates ): array {
-        return array_merge( $templates, $this->fetch_magic_link_templates() );
     }
 
     public function dt_details_additional_section( $section, $post_type ) {
@@ -198,7 +237,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         if ( $section === "apps" ) {
 
             // Return if no templates are found.
-            $templates = $this->fetch_magic_link_templates();
+            $templates = fetch_magic_link_templates();
             if ( empty( $templates ) ) {
                 return;
             }
@@ -1377,4 +1416,4 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
     }
 }
 
-Disciple_Tools_Magic_Links_Templates::instance();
+//...Disciple_Tools_Magic_Links_Templates::instance();
