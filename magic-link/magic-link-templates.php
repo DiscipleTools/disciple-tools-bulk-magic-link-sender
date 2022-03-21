@@ -428,6 +428,13 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                         switch (post_field['type']) {
 
                             case 'number':
+                                html = `
+                                <tr>
+                                    <td style="vertical-align: top;"><b>${window.lodash.escape(post_field['name'])}</b></td>
+                                    <td style="vertical-align: top; max-width: 50%;" class="form-content-table-field">${field_meta_html}<input id="field_${field['id']}" type="number" value="" /></td>
+                                </tr>`;
+                                break;
+
                             case 'textarea':
                             case 'text':
                                 html = `

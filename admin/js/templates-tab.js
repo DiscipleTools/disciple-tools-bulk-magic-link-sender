@@ -381,12 +381,14 @@ jQuery(function ($) {
 
     return `
         <div class="ui-state-default" style="margin-bottom: 10px; background: #FFFFFF;">
-            <span class="ui-icon ui-icon-arrow-4"></span>
             <input id="ml_main_col_selected_fields_sortable_field_id" type="hidden" value="${field_id}"/>
             <input id="ml_main_col_selected_fields_sortable_field_type" type="hidden" value="${field_type}"/>
             <table class="widefat striped">
                 <tbody>
                 <tr>
+                    <td style="vertical-align: middle; text-align: center; max-width: 5%;">
+                        <span class="ui-icon ui-icon-arrow-4"></span>
+                    </td>
                     <td style="vertical-align: middle; text-align: center; max-width: 10%;">
                         <input id="ml_main_col_selected_fields_sortable_field_enabled" type="checkbox" ${field_enabled ? 'checked' : ''}/>
                     </td>
