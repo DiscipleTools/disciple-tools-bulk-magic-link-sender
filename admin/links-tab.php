@@ -49,9 +49,22 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                 'dt_default_message'            => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_default_send_msg(),
                 'dt_default_send_channel_id'    => Disciple_Tools_Bulk_Magic_Link_Sender_API::$channel_email_id,
                 'dt_base_url'                   => rest_url(),
-                'dt_wp_nonce'                   => esc_attr( wp_create_nonce( 'wp_rest' ) )
+                'dt_wp_nonce'                   => esc_attr( wp_create_nonce( 'wp_rest' ) ),
+                'dt_previous_updated_link_obj'  => $this->fetch_previous_updated_link_obj()
             )
         );
+    }
+
+    private function fetch_previous_updated_link_obj() {
+        if ( isset( $_POST['ml_main_col_update_form_nonce'] ) && wp_verify_nonce( sanitize_key( wp_unslash( $_POST['ml_main_col_update_form_nonce'] ) ), 'ml_main_col_update_form_nonce' ) ) {
+            if ( isset( $_POST['ml_main_col_update_form_link_obj'] ) ) {
+                $sanitized_input = filter_var( wp_unslash( $_POST['ml_main_col_update_form_link_obj'] ), FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_FLAG_NO_ENCODE_QUOTES );
+
+                return json_decode( $this->final_post_param_sanitization( $sanitized_input ) );
+            }
+        }
+
+        return null;
     }
 
     private function final_post_param_sanitization( $str ) {

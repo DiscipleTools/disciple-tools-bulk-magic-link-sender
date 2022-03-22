@@ -41,10 +41,23 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
 
         wp_localize_script(
             "dt_magic_links_script", "dt_magic_links", array(
-                'dt_post_types'            => $this->fetch_post_types(),
-                'dt_magic_links_templates' => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_templates )
+                'dt_post_types'                => $this->fetch_post_types(),
+                'dt_magic_links_templates'     => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_templates ),
+                'dt_previous_updated_template' => $this->fetch_previous_updated_template()
             )
         );
+    }
+
+    private function fetch_previous_updated_template() {
+        if ( isset( $_POST['ml_main_col_update_form_nonce'] ) && wp_verify_nonce( sanitize_key( wp_unslash( $_POST['ml_main_col_update_form_nonce'] ) ), 'ml_main_col_update_form_nonce' ) ) {
+            if ( isset( $_POST['ml_main_col_update_form_template'] ) ) {
+                $sanitized_input = filter_var( wp_unslash( $_POST['ml_main_col_update_form_template'] ), FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_FLAG_NO_ENCODE_QUOTES );
+
+                return json_decode( $this->final_post_param_sanitization( $sanitized_input ), true );
+            }
+        }
+
+        return null;
     }
 
     private function final_post_param_sanitization( $str ) {

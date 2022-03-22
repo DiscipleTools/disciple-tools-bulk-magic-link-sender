@@ -1,6 +1,37 @@
 jQuery(function ($) {
 
   /**
+   * Initial States...
+   */
+
+  $(document).ready(function () {
+    let template = window.dt_magic_links.dt_previous_updated_template;
+    if (template) {
+
+      let found_post_type = false;
+
+      // Select corresponding post type
+      $('#available_post_types_section_buttons_table').find('tbody tr td').each(function (idx, td) {
+        let post_type_id = $(td).find('#available_post_types_section_post_type_id');
+        if (post_type_id && (post_type_id.val() === template['post_type'])) {
+          found_post_type = true;
+          $(td).find('.available-post-types-section-buttons').trigger('click');
+        }
+      });
+
+      // Only proceed if post type has been found!
+      if (found_post_type) {
+        $('#templates_management_section_table').find('tbody tr td').each(function (idx, td) {
+          let template_id = $(td).find('#templates_management_section_table_template_id');
+          if (template_id && (template_id.val() === template['id'])) {
+            $(td).find('.templates-management-section-table-template-link').trigger('click');
+          }
+        });
+      }
+    }
+  });
+
+  /**
    * Event Listeners
    */
 

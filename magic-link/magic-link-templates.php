@@ -353,6 +353,9 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                 'translations' => [
                     'regions_of_focus' => __( 'Regions of Focus', 'disciple_tools' ),
                     'all_locations'    => __( 'All Locations', 'disciple_tools' )
+                ],
+                'images'       => [
+                    'small-add.svg' => get_template_directory_uri() . '/dt-assets/images/small-add.svg'
                 ]
             ] ) ?>][0]
 
@@ -511,12 +514,45 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                             case 'communication_channel':
                                 html = `
                                 <tr>
-                                    <td style="vertical-align: top;"><b>${window.lodash.escape(post_field['name'])}</b></td>
-                                    <td style="vertical-align: top;" class="form-content-table-field">${field_meta_html}
-                                        <input id="field_key_${field['id']}" type="hidden" value="">
-                                        <input id="field_${field['id']}" type="text" value="" />
+                                    <td style="vertical-align: top;">
+                                        <b>${window.lodash.escape(post_field['name'])}</b>
+                                        <button data-list-class="${field['id']}" class="add-button-${field['id']}" type="button">
+                                            <img src="${jsObject['images']['small-add.svg']}" />
+                                        </button>
+                                    </td>
+                                    <td style="vertical-align: top;" class="form-content-table-field" id="form_content_table_field_${field['id']}">
+                                        ${field_meta_html}
+                                        <input id="field_deleted_keys" type="hidden" value="[]"/>
+                                        <div class="input-groups">${window.handle_template_field_code_generation_comms_channel(field['id'], 'new', '')}</div>
                                     </td>
                                 </tr>`;
+
+                                // Register add and removal listeners
+                                callback = function () {
+
+                                    // Add
+                                    jQuery('button.add-button-' + field['id']).on('click', evt => {
+                                        let input_groups = jQuery(evt.currentTarget).parent().parent().find('.input-groups');
+                                        input_groups.append(window.handle_template_field_code_generation_comms_channel(field['id'], 'new', ''));
+                                    });
+
+                                    // Remove
+                                    jQuery(document).on('click', '.channel-delete-button', evt => {
+
+                                        let key = jQuery(evt.currentTarget).data('key');
+
+                                        // If needed, keep a record of key for future api removal.
+                                        if (key !== 'new') {
+                                            let deleted_keys_input = jQuery(evt.currentTarget).parent().parent().parent().parent().find('#field_deleted_keys');
+                                            let deleted_keys = JSON.parse(deleted_keys_input.val());
+                                            deleted_keys.push(key);
+                                            deleted_keys_input.val(JSON.stringify(deleted_keys));
+                                        }
+
+                                        // Final removal of input group
+                                        jQuery(evt.currentTarget).parent().parent().remove();
+                                    });
+                                };
                                 break;
 
                             case 'date':
@@ -661,6 +697,31 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
             };
 
             /**
+             * Handle template field dynamic code generation - communication_channel
+             */
+            window.handle_template_field_code_generation_comms_channel = (field_id, key, value) => {
+                return `
+                    <div class="input-group">
+                        <input
+                            type="text"
+                            data-field="${window.lodash.escape(field_id)}"
+                            value="${window.lodash.escape(value)}"
+                            class="dt-communication-channel input-group-field"
+                            dir="auto"
+                            style="max-width: 50%;"
+                        />
+
+                        <div class="input-group-button">
+                            <button
+                                class="button alert input-height delete-button-style channel-delete-button delete-button new-${window.lodash.escape(field_id)}"
+                                data-field="${window.lodash.escape(field_id)}"
+                                data-key="${window.lodash.escape(key)}"
+                            >x</button>
+                        </div>
+                    </div>`;
+            }
+
+            /**
              * Fetch assigned contacts
              */
             window.get_magic = () => {
@@ -797,9 +858,21 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                                 break;
 
                                             case 'communication_channel':
+
+                                                // First, obtain handle onto input groups div and empty contents
+                                                let input_groups = jQuery('#form_content_table_field_' + field['id']).find('.input-groups');
+                                                input_groups.empty();
+
+                                                // Determine number of input fields to be created
                                                 if (post_field.length > 0) {
-                                                    jQuery('#field_key_' + field['id']).val(window.lodash.escape(post_field[0]['key']));
-                                                    jQuery('#field_' + field['id']).val(window.lodash.escape(post_field[0]['value']));
+
+                                                    // Generate inputs for each corresponding key/value pair
+                                                    jQuery.each(post_field, function (idx, value) {
+                                                        input_groups.append(window.handle_template_field_code_generation_comms_channel(field['id'], value['key'], value['value']));
+                                                    });
+
+                                                } else {
+                                                    input_groups.append(window.handle_template_field_code_generation_comms_channel(field['id'], 'new', ''));
                                                 }
                                                 break;
 
@@ -976,12 +1049,19 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                         break;
 
                                     case 'communication_channel':
+                                        let values = [];
+                                        jQuery(field_td).find('.input-group').each(function () {
+                                            values.push({
+                                                'key': jQuery(this).find('button').data('key'),
+                                                'value': jQuery(this).find('input').val()
+                                            });
+                                        });
                                         payload['fields']['dt'].push({
                                             id: field_id,
                                             dt_type: field_type,
                                             template_type: field_template_type,
-                                            value: jQuery(field_td).find(selector).val(),
-                                            key: jQuery(field_td).find('#field_key_' + field_id).val()
+                                            value: values,
+                                            deleted: JSON.parse(jQuery(field_td).find('#field_deleted_keys').val())
                                         });
                                         break;
 
@@ -1325,14 +1405,25 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                 case 'communication_channel':
                     $updates[ $field['id'] ] = [];
 
-                    $comm          = [];
-                    $comm['value'] = $field['value'];
+                    // First, capture additions and updates
+                    foreach ( $field['value'] ?? [] as $value ) {
+                        $comm          = [];
+                        $comm['value'] = $value['value'];
 
-                    if ( isset( $field['key'] ) && ! empty( $field['key'] ) ) {
-                        $comm['key'] = $field['key'];
+                        if ( $value['key'] !== 'new' ) {
+                            $comm['key'] = $value['key'];
+                        }
+
+                        $updates[ $field['id'] ][] = $comm;
                     }
 
-                    $updates[ $field['id'] ][] = $comm;
+                    // Next, capture deletions
+                    foreach ( $field['deleted'] ?? [] as $delete_key ) {
+                        $updates[ $field['id'] ][] = [
+                            'delete' => true,
+                            'key'    => $delete_key
+                        ];
+                    }
                     break;
 
                 case 'multi_select':
@@ -1422,5 +1513,3 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         }
     }
 }
-
-//...Disciple_Tools_Magic_Links_Templates::instance();

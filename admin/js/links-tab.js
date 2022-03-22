@@ -1,5 +1,13 @@
 jQuery(function ($) {
 
+  // Initial States
+  $(document).ready(function () {
+    let link_obj = window.dt_magic_links.dt_previous_updated_link_obj;
+    if (link_obj) {
+      $('#ml_main_col_available_link_objs_select').val(link_obj['id']).trigger('change');
+    }
+  });
+
   // Event Listeners
   $(document).on('click', '#ml_main_col_available_link_objs_new', function () {
     handle_new_link_obj_request();
