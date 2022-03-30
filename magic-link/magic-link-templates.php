@@ -26,6 +26,35 @@ function fetch_magic_link_templates(): array {
     return $templates;
 }
 
+function can_instantiate_template( $template ): bool {
+
+    // Ensure we have a valid template.
+    if ( empty( $template ) || ! isset( $template['id'] ) ) {
+        return false;
+    }
+
+    // Determine link object id based in incoming request.
+    $link_obj_id = null;
+    if ( isset( $_REQUEST['id'] ) ) {   // Initial frontend form request.
+        $link_obj_id = $_REQUEST['id'];
+
+    } elseif ( isset( $_REQUEST['parts'], $_REQUEST['parts']['instance_id'] ) ) {  // Subsequent frontend form requests.
+        $link_obj_id = $_REQUEST['parts']['instance_id'];
+
+    } elseif ( isset( $_REQUEST['link_obj_id'] ) ) {   // Admin get post record request.
+        $link_obj_id = $_REQUEST['link_obj_id'];
+
+    }
+    if ( empty( $link_obj_id ) ) {
+        return false;
+    }
+
+    // Locate corresponding link object and see if we have a match!
+    $link_obj = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $link_obj_id );
+
+    return ( ! empty( $link_obj ) && isset( $link_obj->type ) && $link_obj->type == $template['id'] );
+}
+
 /**
  * Class Disciple_Tools_Magic_Links_Templates_Loader
  */
@@ -47,7 +76,9 @@ class Disciple_Tools_Magic_Links_Templates_Loader {
 
     private function load_templates() {
         foreach ( fetch_magic_link_templates() ?? [] as $template ) {
-            new Disciple_Tools_Magic_Links_Templates( $template );
+            if ( can_instantiate_template( $template ) ) {
+                new Disciple_Tools_Magic_Links_Templates( $template );
+            }
         }
     }
 }
@@ -359,6 +390,8 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                 ]
             ] ) ?>][0]
 
+            console.log(jsObject);
+
             /**
              * Update form's title and initial header message, based on current
              * template details.
@@ -376,34 +409,51 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
             }
 
             /**
-             * Display fields associated with specified template; governed by
-             * link obj.
+             * Determine if field has been enabled
              */
+            window.is_field_enabled = (field_id) => {
 
-            let link_obj = jsObject['link_obj_id'];
+                // Enabled by default
+                let enabled = true;
 
-            let form_content_table = jQuery('.form-content-table');
-            form_content_table.fadeOut('fast', function () {
+                // Iterate over type field settings
+                if (jsObject.link_obj_id['type_fields']) {
+                    jsObject.link_obj_id['type_fields'].forEach(field => {
 
-                // Clear down existing table content.
-                form_content_table.find('tbody tr').remove();
-
-                // Iterate over fields, displaying accordingly; by link obj enabled flag!
-                jQuery.each(template['fields'], function (idx, field) {
-                    if (field['enabled'] && window.is_field_enabled(field['id'])) {
-                        let field_code = window.handle_template_field_code_generation(field);
-                        if (field_code['html']) {
-
-                            // Render field html and execute callback
-                            form_content_table.find('tbody').append(field_code['html']);
-                            field_code['callback']();
+                        // Is matched field enabled...?
+                        if (String(field['id']) === String(field_id)) {
+                            enabled = field['enabled'];
                         }
-                    }
-                });
+                    });
+                }
 
-                // Display template fields
-                form_content_table.fadeIn('fast');
-            });
+                return enabled;
+            };
+
+            /**
+             * Handle template field dynamic code generation - communication_channel
+             */
+            window.handle_template_field_code_generation_comms_channel = (field_id, key, value) => {
+                return `
+                    <div class="input-group">
+                        <input
+                            type="text"
+                            data-field="${window.lodash.escape(field_id)}"
+                            value="${window.lodash.escape(value)}"
+                            class="dt-communication-channel input-group-field"
+                            dir="auto"
+                            style="max-width: 50%;"
+                        />
+
+                        <div class="input-group-button">
+                            <button
+                                class="button alert input-height delete-button-style channel-delete-button delete-button new-${window.lodash.escape(field_id)}"
+                                data-field="${window.lodash.escape(field_id)}"
+                                data-key="${window.lodash.escape(key)}"
+                            >x</button>
+                        </div>
+                    </div>`;
+            }
 
             /**
              * Handle template field dynamic code generation
@@ -697,29 +747,34 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
             };
 
             /**
-             * Handle template field dynamic code generation - communication_channel
+             * Display fields associated with specified template; governed by
+             * link obj.
              */
-            window.handle_template_field_code_generation_comms_channel = (field_id, key, value) => {
-                return `
-                    <div class="input-group">
-                        <input
-                            type="text"
-                            data-field="${window.lodash.escape(field_id)}"
-                            value="${window.lodash.escape(value)}"
-                            class="dt-communication-channel input-group-field"
-                            dir="auto"
-                            style="max-width: 50%;"
-                        />
 
-                        <div class="input-group-button">
-                            <button
-                                class="button alert input-height delete-button-style channel-delete-button delete-button new-${window.lodash.escape(field_id)}"
-                                data-field="${window.lodash.escape(field_id)}"
-                                data-key="${window.lodash.escape(key)}"
-                            >x</button>
-                        </div>
-                    </div>`;
-            }
+            let link_obj = jsObject['link_obj_id'];
+
+            let form_content_table = jQuery('.form-content-table');
+            form_content_table.fadeOut('fast', function () {
+
+                // Clear down existing table content.
+                form_content_table.find('tbody tr').remove();
+
+                // Iterate over fields, displaying accordingly; by link obj enabled flag!
+                jQuery.each(template['fields'], function (idx, field) {
+                    if (field['enabled'] && window.is_field_enabled(field['id'])) {
+                        let field_code = window.handle_template_field_code_generation(field);
+                        if (field_code['html']) {
+
+                            // Render field html and execute callback
+                            form_content_table.find('tbody').append(field_code['html']);
+                            field_code['callback']();
+                        }
+                    }
+                });
+
+                // Display template fields
+                form_content_table.fadeIn('fast');
+            });
 
             /**
              * Fetch assigned contacts
@@ -939,28 +994,6 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                     });
                 });
             };
-
-            /**
-             * Determine if field has been enabled
-             */
-            window.is_field_enabled = (field_id) => {
-
-                // Enabled by default
-                let enabled = true;
-
-                // Iterate over type field settings
-                if (jsObject.link_obj_id['type_fields']) {
-                    jsObject.link_obj_id['type_fields'].forEach(field => {
-
-                        // Is matched field enabled...?
-                        if (String(field['id']) === String(field_id)) {
-                            enabled = field['enabled'];
-                        }
-                    });
-                }
-
-                return enabled;
-            }
 
             /**
              * Handle fetch request for contact details

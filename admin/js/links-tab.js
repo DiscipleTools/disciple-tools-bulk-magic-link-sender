@@ -430,7 +430,8 @@ jQuery(function ($) {
     // Build request payload
     let payload = {
       post_type: post_type,
-      post_id: post_id
+      post_id: post_id,
+      link_obj_id: $('#ml_main_col_link_objs_manage_id').val()
     };
 
     // Dispatch request.
