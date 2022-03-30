@@ -36,13 +36,13 @@ function can_instantiate_template( $template ): bool {
     // Determine link object id based in incoming request.
     $link_obj_id = null;
     if ( isset( $_REQUEST['id'] ) ) {   // Initial frontend form request.
-        $link_obj_id = $_REQUEST['id'];
+        $link_obj_id = sanitize_text_field( wp_unslash( $_REQUEST['id'] ) );
 
     } elseif ( isset( $_REQUEST['parts'], $_REQUEST['parts']['instance_id'] ) ) {  // Subsequent frontend form requests.
-        $link_obj_id = $_REQUEST['parts']['instance_id'];
+        $link_obj_id = sanitize_text_field( wp_unslash( $_REQUEST['parts']['instance_id'] ) );
 
     } elseif ( isset( $_REQUEST['link_obj_id'] ) ) {   // Admin get post record request.
-        $link_obj_id = $_REQUEST['link_obj_id'];
+        $link_obj_id = sanitize_text_field( wp_unslash( $_REQUEST['link_obj_id'] ) );
 
     }
     if ( empty( $link_obj_id ) ) {
