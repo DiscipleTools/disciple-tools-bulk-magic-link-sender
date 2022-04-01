@@ -44,6 +44,54 @@ function can_instantiate_template( $template ): bool {
     } elseif ( isset( $_REQUEST['link_obj_id'] ) ) {   // Admin get post record request.
         $link_obj_id = sanitize_text_field( wp_unslash( $_REQUEST['link_obj_id'] ) );
 
+    } elseif ( isset( $_SERVER['REQUEST_URI'] ) ) {
+
+        /**
+         * Determine if this is a frontend post type records
+         * display request?
+         */
+
+        $haystack = trim( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) );
+        $needle   = '/' . $template['post_type'] . '/';
+        if ( strpos( $haystack, $needle ) !== false ) {
+
+            // Extract post id
+            $uri_parts = array_values( array_filter( explode( '/', $haystack ) ) );
+            $uri_parts = array_map( 'sanitize_key', wp_unslash( $uri_parts ) );
+
+            if ( count( $uri_parts ) !== 2 ) {
+                return false;
+            }
+
+            try {
+                $post_type = $uri_parts[0];
+                $post_id   = $uri_parts[1];
+
+                // Fetch corresponding post
+                $post = DT_Posts::get_post( $post_type, $post_id );
+
+                // Determine if post is currently linked to template
+                return ( ! empty( $post ) && isset( $post[ $template['id'] ] ) );
+
+            } catch ( Exception $e ) {
+                return false;
+            }
+        }
+
+        /**
+         * Next, determine if this is a frontend generated magic link
+         * form display request; which does not contain additional link
+         * object info, to aid selection process!
+         */
+
+        try {
+            $template_url_parts = array_values( array_filter( explode( '_', $template['url_base'] ) ) );
+
+            return ( strpos( $haystack, $template_url_parts[0] ) !== false );
+
+        } catch ( Exception $e ) {
+            return false;
+        }
     }
     if ( empty( $link_obj_id ) ) {
         return false;
@@ -53,6 +101,15 @@ function can_instantiate_template( $template ): bool {
     $link_obj = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $link_obj_id );
 
     return ( ! empty( $link_obj ) && isset( $link_obj->type ) && $link_obj->type == $template['id'] );
+}
+
+add_action( 'dt_magic_link_load_templates', 'dt_ml_load_templates_func', 20, 1 );
+function dt_ml_load_templates_func( $post_type ) {
+    foreach ( fetch_magic_link_templates() ?? [] as $template ) {
+        if ( $template['post_type'] == $post_type ) {
+            new Disciple_Tools_Magic_Links_Templates( $template );
+        }
+    }
 }
 
 /**
