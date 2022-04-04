@@ -314,6 +314,20 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
         return (object) [];
     }
 
+    public static function delete_option_link_obj( $link_obj_id ) {
+        $option_link_objs = self::fetch_option_link_objs();
+
+        // Do we have a match?
+        if ( isset( $option_link_objs->{$link_obj_id} ) ) {
+
+            // Remove link object from options
+            unset( $option_link_objs->{$link_obj_id} );
+
+            // Save changes
+            update_option( self::$option_dt_magic_links_objects, json_encode( $option_link_objs ) );
+        }
+    }
+
     public static function fetch_option_link_obj( $link_obj_id ) {
         $option_link_objs = self::fetch_option_link_objs();
 

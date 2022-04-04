@@ -39,7 +39,16 @@ function can_instantiate_template( $template ): bool {
         $link_obj_id = sanitize_text_field( wp_unslash( $_REQUEST['id'] ) );
 
     } elseif ( isset( $_REQUEST['parts'], $_REQUEST['parts']['instance_id'] ) ) {  // Subsequent frontend form requests.
-        $link_obj_id = sanitize_text_field( wp_unslash( $_REQUEST['parts']['instance_id'] ) );
+
+        $instance_id = sanitize_text_field( wp_unslash( $_REQUEST['parts']['instance_id'] ) );
+
+        // Accommodate template only requests.
+        if ( empty( $instance_id ) ) {
+            return true;
+        }
+
+        // Accommodate template/link-object requests.
+        $link_obj_id = $instance_id;
 
     } elseif ( isset( $_REQUEST['link_obj_id'] ) ) {   // Admin get post record request.
         $link_obj_id = sanitize_text_field( wp_unslash( $_REQUEST['link_obj_id'] ) );
@@ -830,7 +839,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                 });
 
                 // Display template fields
-                form_content_table.fadeIn('fast');
+                //...form_content_table.fadeIn('fast');
             });
 
             /**

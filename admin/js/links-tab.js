@@ -29,6 +29,10 @@ jQuery(function ($) {
     handle_update_request();
   });
 
+  $(document).on('click', '#ml_main_col_delete_but', function () {
+    handle_delete_request();
+  });
+
   $(document).on('click', '#ml_main_col_assign_users_teams_update_but', function () {
     handle_update_request();
   });
@@ -63,6 +67,16 @@ jQuery(function ($) {
 
 
   // Helper Functions
+  function handle_delete_request() {
+    let id = $('#ml_main_col_link_objs_manage_id').val();
+    let name = $('#ml_main_col_link_objs_manage_name').val();
+
+    if (id && confirm(`Are you sure you wish to delete ${name}?`)) {
+      $('#ml_main_col_delete_form_link_obj_id').val(id);
+      $('#ml_main_col_delete_form').submit();
+    }
+  }
+
   function handle_new_link_obj_request() {
     reset_sections(true);
   }
@@ -96,6 +110,7 @@ jQuery(function ($) {
 
     if (display) {
       $('#ml_main_col_update_but').fadeIn('fast');
+      $('#ml_main_col_delete_but').fadeIn('fast');
     }
   }
 
@@ -993,6 +1008,7 @@ jQuery(function ($) {
 
       $('#ml_main_col_update_msg').html('').fadeOut('fast');
       $('#ml_main_col_update_but').fadeIn('fast');
+      $('#ml_main_col_delete_but').fadeIn('fast');
     }
   }
 

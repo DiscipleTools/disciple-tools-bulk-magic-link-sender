@@ -93,6 +93,32 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
                 }
             }
         }
+
+        if ( isset( $_POST['ml_main_col_delete_form_nonce'] ) && wp_verify_nonce( sanitize_key( wp_unslash( $_POST['ml_main_col_delete_form_nonce'] ) ), 'ml_main_col_delete_form_nonce' ) ) {
+            if ( isset( $_POST['ml_main_col_delete_form_template_post_type'], $_POST['ml_main_col_delete_form_template_id'] ) ) {
+
+                // Fetch template id to be deleted
+                $template_post_type = filter_var( wp_unslash( $_POST['ml_main_col_delete_form_template_post_type'] ), FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_FLAG_NO_ENCODE_QUOTES );
+                $template_id        = filter_var( wp_unslash( $_POST['ml_main_col_delete_form_template_id'] ), FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_FLAG_NO_ENCODE_QUOTES );
+
+                // Ensure we have something to work with
+                if ( ! empty( $template_post_type ) && ! empty( $template_id ) ) {
+
+                    // Fetch existing templates
+                    $templates = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_templates );
+
+                    // Determine if template has been previously set
+                    if ( isset( $templates[ $template_post_type ][ $template_id ] ) ) {
+
+                        // Remove template from templates array
+                        unset( $templates[ $template_post_type ][ $template_id ] );
+
+                        // Finally, save changes
+                        Disciple_Tools_Bulk_Magic_Link_Sender_API::update_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_templates, $templates );
+                    }
+                }
+            }
+        }
     }
 
     public function content() {
@@ -159,6 +185,23 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
         </table>
         <br>
         <!-- End Box -->
+
+        <!-- Template Deletion -->
+        <span style="float:right; margin-bottom: 15px;">
+            <button style="display: none;" type="submit" id="ml_main_col_delete_but"
+                    class="button float-right"><?php esc_html_e( "Delete", 'disciple_tools' ) ?></button>
+        </span>
+        <form method="post" id="ml_main_col_delete_form">
+            <input type="hidden" id="ml_main_col_delete_form_nonce" name="ml_main_col_delete_form_nonce"
+                   value="<?php echo esc_attr( wp_create_nonce( 'ml_main_col_delete_form_nonce' ) ) ?>"/>
+
+            <input type="hidden" id="ml_main_col_delete_form_template_post_type"
+                   name="ml_main_col_delete_form_template_post_type" value=""/>
+
+            <input type="hidden" id="ml_main_col_delete_form_template_id"
+                   name="ml_main_col_delete_form_template_id" value=""/>
+        </form>
+        <!-- Template Deletion -->
 
         <!-- Box -->
         <table style="display: none;" class="widefat striped" id="ml_main_col_template_details">
@@ -391,7 +434,6 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
         return [
             'array',
             'task',
-            'location_meta',
             'post_user_meta',
             'datetime_series',
             'hash'

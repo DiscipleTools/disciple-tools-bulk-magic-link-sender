@@ -69,6 +69,10 @@ jQuery(function ($) {
     handle_update_request();
   });
 
+  $(document).on('click', '#ml_main_col_delete_but', function () {
+    handle_delete_request();
+  });
+
   $(document).on('click', '.ml-templates-docs', function (evt) {
     handle_docs_request($(evt.currentTarget).data('title'), $(evt.currentTarget).data('content'));
   });
@@ -86,6 +90,18 @@ jQuery(function ($) {
     });
   }
 
+  function handle_delete_request() {
+    let template_post_type = $('#templates_management_section_selected_post_type').val();
+    let template_id = $('#ml_main_col_template_details_id').val();
+    let template_name = $('#ml_main_col_template_details_name').val();
+
+    if (template_id && confirm(`Are you sure you wish to delete ${template_name}?`)) {
+      $('#ml_main_col_delete_form_template_post_type').val(template_post_type);
+      $('#ml_main_col_delete_form_template_id').val(template_id);
+      $('#ml_main_col_delete_form').submit();
+    }
+  }
+
   function handle_available_post_types_section_button_click(evt) {
 
     // First, reset all buttons
@@ -97,7 +113,7 @@ jQuery(function ($) {
     $(evt.currentTarget).addClass('button-primary');
 
     // Hide and reset various views back to default state
-    template_views_update_but(...Array(2), function () {
+    template_views_update_and_delete_but(...Array(2), function () {
       template_views_message(...Array(3), function () {
         template_views_selected_fields(...Array(3), function () {
           template_views_template_details(...Array(3), function () {
@@ -121,12 +137,17 @@ jQuery(function ($) {
     });
   }
 
-  function template_views_update_but(fade_out = true, fade_speed = 'fast', callback = function () {
+  function template_views_update_and_delete_but(fade_out = true, fade_speed = 'fast', callback = function () {
   }) {
+
+    // Update Button
     let view_update_but = $('#ml_main_col_update_but');
     $('#ml_main_col_update_msg').fadeOut(fade_speed);
-
     fade_out ? view_update_but.fadeOut(fade_speed) : view_update_but.fadeIn(fade_speed);
+
+    // Delete Button
+    let view_delete_but = $('#ml_main_col_delete_but');
+    fade_out ? view_delete_but.fadeOut(fade_speed) : view_delete_but.fadeIn(fade_speed);
 
     callback();
   }
@@ -277,7 +298,7 @@ jQuery(function ($) {
   function handle_new_template_request() {
 
     // Hide and reset main views accordingly
-    template_views_update_but(...Array(2), function () {
+    template_views_update_and_delete_but(...Array(2), function () {
       template_views_message(...Array(3), function () {
         template_views_selected_fields(...Array(3), function () {
           template_views_template_details(...Array(3), function () {
@@ -289,7 +310,7 @@ jQuery(function ($) {
             template_views_template_details(false, 'slow');
             template_views_selected_fields(false, 'slow');
             template_views_message(false, 'slow');
-            template_views_update_but(false, 'slow');
+            template_views_update_and_delete_but(false, 'slow');
 
           });
         });
@@ -300,7 +321,7 @@ jQuery(function ($) {
   function handle_load_template_request(evt) {
 
     // Hide and reset main views accordingly - Ensure all resets have taken place prior to displaying loaded templete details!
-    template_views_update_but(...Array(2), function () {
+    template_views_update_and_delete_but(...Array(2), function () {
       template_views_message(...Array(3), function () {
         template_views_selected_fields(...Array(3), function () {
           template_views_template_details(...Array(3), function () {
@@ -325,7 +346,7 @@ jQuery(function ($) {
               });
               template_views_selected_fields(false, 'slow', {fields: template['fields']});
               template_views_message(false, 'slow', {text: template['message']});
-              template_views_update_but(false, 'slow');
+              template_views_update_and_delete_but(false, 'slow');
 
             } else {
               let update_msg = 'Unable to locate template details..!';

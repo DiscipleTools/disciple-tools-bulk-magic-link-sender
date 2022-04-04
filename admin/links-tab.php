@@ -107,6 +107,19 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                 }
             }
         }
+
+        if ( isset( $_POST['ml_main_col_delete_form_nonce'] ) && wp_verify_nonce( sanitize_key( wp_unslash( $_POST['ml_main_col_delete_form_nonce'] ) ), 'ml_main_col_delete_form_nonce' ) ) {
+            if ( isset( $_POST['ml_main_col_delete_form_link_obj_id'] ) ) {
+
+                // Fetch link object id to be deleted
+                $link_obj_id = filter_var( wp_unslash( $_POST['ml_main_col_delete_form_link_obj_id'] ), FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_FLAG_NO_ENCODE_QUOTES );
+
+                // Ensure we have something to work with
+                if ( ! empty( $link_obj_id ) ) {
+                    Disciple_Tools_Bulk_Magic_Link_Sender_API::delete_option_link_obj( $link_obj_id );
+                }
+            }
+        }
     }
 
     public function content() {
@@ -155,6 +168,20 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
         </table>
         <br>
         <!-- End Box -->
+
+        <!-- Links Object Deletion -->
+        <span style="float:right; margin-bottom: 15px;">
+            <button style="display: none;" type="submit" id="ml_main_col_delete_but"
+                    class="button float-right"><?php esc_html_e( "Delete", 'disciple_tools' ) ?></button>
+        </span>
+        <form method="post" id="ml_main_col_delete_form">
+            <input type="hidden" id="ml_main_col_delete_form_nonce" name="ml_main_col_delete_form_nonce"
+                   value="<?php echo esc_attr( wp_create_nonce( 'ml_main_col_delete_form_nonce' ) ) ?>"/>
+
+            <input type="hidden" id="ml_main_col_delete_form_link_obj_id"
+                   name="ml_main_col_delete_form_link_obj_id" value=""/>
+        </form>
+        <!-- Links Object Deletion -->
 
         <!-- Box -->
         <table style="display: none;" class="widefat striped" id="ml_main_col_link_objs_manage">
