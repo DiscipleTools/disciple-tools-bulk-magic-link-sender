@@ -466,8 +466,8 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
 
     private function render_custom_field_for_display( $field ) {
         ?>
-        <div class="section-subheader"><?php echo $field['label'] ?></div>
-        <input id="<?php echo $field['id'] ?>" type="text" class="text-input" value="">
+        <div class="section-subheader"><?php esc_attr_e( $field['label'] ); ?></div>
+        <input id="<?php esc_attr_e( $field['id'] ); ?>" type="text" class="text-input" value="">
         <?php
     }
 
@@ -817,6 +817,18 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                     });
                                 }
 
+                                // If available, load previous post record locations
+                                let typeahead = window.Typeahead[typeahead_field_input];
+                                let post_locations = jsObject['post'][field_id];
+                                if ((post_locations !== undefined) && typeahead) {
+                                    jQuery.each(post_locations, function (idx, location) {
+                                        typeahead.addMultiselectItemLayout({
+                                            ID: location['id'],
+                                            name: window.lodash.escape(location['label'])
+                                        });
+                                    });
+                                }
+
                                 break;
 
                             case 'multi_select':
@@ -844,22 +856,28 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                  * Load Date Range Picker
                                  */
 
-                                let post_date = jsObject['post'][field_id];
-                                jQuery(tr).find('#' + field_id).daterangepicker({
+                                let date_config = {
                                     singleDatePicker: true,
                                     timePicker: true,
-                                    startDate: (post_date !== undefined) ? moment.unix(post_date['timestamp']) : moment(),
                                     locale: {
                                         format: 'MMMM D, YYYY'
                                     }
-                                }, function (start, end, label) {
+                                };
+                                let post_date = jsObject['post'][field_id];
+                                if (post_date !== undefined) {
+                                    date_config['startDate'] = moment.unix(post_date['timestamp']);
+                                }
+
+                                jQuery(tr).find('#' + field_id).daterangepicker(date_config, function (start, end, label) {
                                     if (start) {
                                         field_meta.val(start.unix());
                                     }
                                 });
 
-                                // Set default hidden meta field value
-                                field_meta.val((post_date !== undefined) ? post_date['timestamp'] : (jQuery.now() / 1000));
+                                // If post timestamp available, set default hidden meta field value
+                                if (post_date !== undefined) {
+                                    field_meta.val(post_date['timestamp']);
+                                }
 
                                 /**
                                  * Clear Date
@@ -1735,14 +1753,15 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
 
                 <h3><?php esc_html_e( "Details", 'disciple_tools_bulk_magic_link_sender' ) ?>
                     [ <span
-                        id="contact_name"><?php echo( ! empty( $this->post ) ? $this->post['name'] : '---' ) ?></span> ]
+                        id="contact_name"><?php esc_attr_e( ! empty( $this->post ) ? $this->post['name'] : '---' ); ?></span>
+                    ]
                 </h3>
                 <hr>
                 <div class="grid-x" id="form-content">
                     <input id="post_id" type="hidden"
-                           value="<?php echo( ! empty( $this->post ) ? $this->post['ID'] : '' ) ?>"/>
+                           value="<?php esc_attr_e( ! empty( $this->post ) ? $this->post['ID'] : '' ); ?>"/>
                     <input id="post_type" type="hidden"
-                           value="<?php echo( ! empty( $this->post ) ? $this->post['post_type'] : '' ) ?>"/>
+                           value="<?php esc_attr_e( ! empty( $this->post ) ? $this->post['post_type'] : '' ); ?>"/>
                     <?php
                     // Revert back to dt translations
                     $this->hard_switch_to_default_dt_text_domain();
@@ -1769,9 +1788,9 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                     }
 
                                     // Generate hidden values to assist downstream processing
-                                    $hidden_values_html = '<input id="form_content_table_field_id" type="hidden" value="' . $field['id'] . '">';
-                                    $hidden_values_html .= '<input id="form_content_table_field_type" type="hidden" value="' . $post_field_type . '">';
-                                    $hidden_values_html .= '<input id="form_content_table_field_template_type" type="hidden" value="' . $field['type'] . '">';
+                                    $hidden_values_html = '<input id="form_content_table_field_id" type="hidden" value="' . esc_attr__( $field['id'] ) . '">';
+                                    $hidden_values_html .= '<input id="form_content_table_field_type" type="hidden" value="' . esc_attr__( $post_field_type ) . '">';
+                                    $hidden_values_html .= '<input id="form_content_table_field_template_type" type="hidden" value="' . esc_attr__( $field['type'] ) . '">';
                                     $hidden_values_html .= '<input id="form_content_table_field_meta" type="hidden" value="">';
 
                                     // Render field accordingly, based on template field type!
@@ -1779,7 +1798,11 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                         case 'dt':
                                             ?>
                                             <tr>
-                                                <?php echo $hidden_values_html; ?>
+                                                <?php
+                                                // phpcs:disable
+                                                echo $hidden_values_html;
+                                                // phpcs:enable
+                                                ?>
                                                 <td>
                                                     <?php
                                                     render_field_for_display( $field['id'], $this->post_field_settings, $this->post, true );
@@ -1791,7 +1814,11 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                         case 'custom':
                                             ?>
                                             <tr>
-                                                <?php echo $hidden_values_html; ?>
+                                                <?php
+                                                // phpcs:disable
+                                                echo $hidden_values_html;
+                                                // phpcs:enable
+                                                ?>
                                                 <td>
                                                     <?php
                                                     $this->render_custom_field_for_display( $field );
@@ -1812,9 +1839,9 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                     <tr>
                                         <td>
                                             <div class="section-subheader">
-                                                <?php echo $comment['comment_author'] . ' @ ' . $comment['comment_date'] ?>
+                                                <?php esc_attr_e( $comment['comment_author'] . ' @ ' . $comment['comment_date'] ); ?>
                                             </div>
-                                            <?php echo $comment['comment_content'] ?>
+                                            <?php esc_attr_e( $comment['comment_content'] ); ?>
                                         </td>
                                     </tr>
                                     <?php
