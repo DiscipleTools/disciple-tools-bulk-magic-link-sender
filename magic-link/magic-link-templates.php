@@ -466,8 +466,16 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
 
     private function render_custom_field_for_display( $field ) {
         ?>
-        <div class="section-subheader"><?php esc_attr_e( $field['label'] ); ?></div>
-        <input id="<?php esc_attr_e( $field['id'] ); ?>" type="text" class="text-input" value="">
+        <div class="section-subheader"><?php
+            // phpcs:disable
+            esc_attr_e( $field['label'] );
+            // phpcs:enable
+            ?></div>
+        <input id="<?php
+        // phpcs:disable
+        esc_attr_e( $field['id'] );
+        // phpcs:enable
+        ?>" type="text" class="text-input" value="">
         <?php
     }
 
@@ -1753,15 +1761,27 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
 
                 <h3><?php esc_html_e( "Details", 'disciple_tools_bulk_magic_link_sender' ) ?>
                     [ <span
-                        id="contact_name"><?php esc_attr_e( ! empty( $this->post ) ? $this->post['name'] : '---' ); ?></span>
+                        id="contact_name"><?php
+                        // phpcs:disable
+                        esc_attr_e( ! empty( $this->post ) ? $this->post['name'] : '---' );
+                        // phpcs:enable
+                        ?></span>
                     ]
                 </h3>
                 <hr>
                 <div class="grid-x" id="form-content">
                     <input id="post_id" type="hidden"
-                           value="<?php esc_attr_e( ! empty( $this->post ) ? $this->post['ID'] : '' ); ?>"/>
+                           value="<?php
+                           // phpcs:disable
+                           esc_attr_e( ! empty( $this->post ) ? $this->post['ID'] : '' );
+                           // phpcs:enable
+                           ?>"/>
                     <input id="post_type" type="hidden"
-                           value="<?php esc_attr_e( ! empty( $this->post ) ? $this->post['post_type'] : '' ); ?>"/>
+                           value="<?php
+                           // phpcs:disable
+                           esc_attr_e( ! empty( $this->post ) ? $this->post['post_type'] : '' );
+                           // phpcs:enable
+                           ?>"/>
                     <?php
                     // Revert back to dt translations
                     $this->hard_switch_to_default_dt_text_domain();
@@ -1788,9 +1808,9 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                     }
 
                                     // Generate hidden values to assist downstream processing
-                                    $hidden_values_html = '<input id="form_content_table_field_id" type="hidden" value="' . esc_attr__( $field['id'] ) . '">';
-                                    $hidden_values_html .= '<input id="form_content_table_field_type" type="hidden" value="' . esc_attr__( $post_field_type ) . '">';
-                                    $hidden_values_html .= '<input id="form_content_table_field_template_type" type="hidden" value="' . esc_attr__( $field['type'] ) . '">';
+                                    $hidden_values_html = '<input id="form_content_table_field_id" type="hidden" value="' . $field['id'] . '">';
+                                    $hidden_values_html .= '<input id="form_content_table_field_type" type="hidden" value="' . $post_field_type . '">';
+                                    $hidden_values_html .= '<input id="form_content_table_field_template_type" type="hidden" value="' . $field['type'] . '">';
                                     $hidden_values_html .= '<input id="form_content_table_field_meta" type="hidden" value="">';
 
                                     // Render field accordingly, based on template field type!
@@ -1839,9 +1859,17 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                     <tr>
                                         <td>
                                             <div class="section-subheader">
-                                                <?php esc_attr_e( $comment['comment_author'] . ' @ ' . $comment['comment_date'] ); ?>
+                                                <?php
+                                                // phpcs:disable
+                                                esc_attr_e( $comment['comment_author'] . ' @ ' . $comment['comment_date'] );
+                                                // phpcs:enable
+                                                ?>
                                             </div>
-                                            <?php esc_attr_e( $comment['comment_content'] ); ?>
+                                            <?php
+                                            // phpcs:disable
+                                            esc_attr_e( $comment['comment_content'] );
+                                            // phpcs:enable
+                                            ?>
                                         </td>
                                     </tr>
                                     <?php
