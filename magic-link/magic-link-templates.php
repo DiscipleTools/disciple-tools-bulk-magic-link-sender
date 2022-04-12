@@ -381,7 +381,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
             // phpcs:disable
             esc_attr_e( $field['label'] );
             // phpcs:enable
-            ?></div>
+        ?></div>
         <input id="<?php
         // phpcs:disable
         esc_attr_e( $field['id'] );
@@ -1155,13 +1155,13 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                            // phpcs:disable
                            esc_attr_e( ! empty( $this->post ) ? $this->post['ID'] : '' );
                            // phpcs:enable
-                           ?>"/>
+                            ?>"/>
                     <input id="post_type" type="hidden"
                            value="<?php
                            // phpcs:disable
                            esc_attr_e( ! empty( $this->post ) ? $this->post['post_type'] : '' );
                            // phpcs:enable
-                           ?>"/>
+                            ?>"/>
                     <?php
                     // Revert back to dt translations
                     $this->hard_switch_to_default_dt_text_domain();
