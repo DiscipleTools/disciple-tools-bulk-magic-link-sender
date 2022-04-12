@@ -76,17 +76,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
 
     public static function fetch_magic_link_type( $key ) {
         foreach ( self::fetch_magic_link_types() as $app ) {
-
-            // Handle templates a little differently
-            if ( ( strpos( $key, self::$prefix_templates_id ) >= 0 ) && isset( $app['meta']['class_type'], $app['meta']['templates'] ) && in_array( $app['meta']['class_type'], [ 'template' ] ) ) {
-
-                // Iterate over templates, in search of a match!
-                foreach ( $app['meta']['templates'] ?? [] as $template ) {
-                    if ( ( $template['id'] ) === $key ) {
-                        return $template;
-                    }
-                }
-            } elseif ( $app['key'] === $key ) {
+            if ( $app['key'] === $key ) {
                 return $app;
             }
         }

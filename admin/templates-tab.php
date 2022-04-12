@@ -436,7 +436,9 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
             'task',
             'post_user_meta',
             'datetime_series',
-            'hash'
+            'hash',
+            'user_select',
+            'connection'
         ];
     }
 
@@ -455,7 +457,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
                 $fields = [];
                 foreach ( $dt_post_type_settings['fields'] as $key => $dt_field ) {
 
-                    if ( ! in_array( $dt_field['type'], $field_types_to_ignore ) && ! ( $dt_field['hidden'] ?? false ) && ! ( $dt_field['private'] ?? false ) ) {
+                    if ( ! in_array( $dt_field['type'], $field_types_to_ignore ) && ! ( $dt_field['hidden'] ?? false ) && ! ( $dt_field['private'] ?? false ) && ! isset( $dt_field['section'] ) ) {
                         $fields[] = [
                             'id'        => $key,
                             'name'      => $dt_field['name'],

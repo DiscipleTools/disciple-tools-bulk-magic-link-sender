@@ -421,9 +421,10 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                             ?>
                             <option disabled value>-- templates --</option>
                             <?php
+                            $supported_template_post_types = $this->supported_template_post_types();
                             foreach ( $magic_link_templates as $post_type ) {
                                 foreach ( $post_type ?? [] as $template ) {
-                                    if ( $template['enabled'] ) {
+                                    if ( $template['enabled'] && in_array( $template['post_type'], $supported_template_post_types ) ) {
                                         echo '<option value="' . esc_attr( $template['id'] ) . '">' . esc_attr( $template['name'] ) . '</option>';
                                     }
                                 }
@@ -436,6 +437,12 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
             </tr>
         </table>
         <?php
+    }
+
+    private function supported_template_post_types(): array {
+        return [
+            'contacts'
+        ];
     }
 
     private function main_column_ml_type_fields() {
