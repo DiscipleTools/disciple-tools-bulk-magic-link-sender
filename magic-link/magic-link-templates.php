@@ -26,106 +26,6 @@ function fetch_magic_link_templates(): array {
     return $templates;
 }
 
-function can_instantiate_template( $template ): bool {
-
-    // Ensure we have a valid template.
-    if ( empty( $template ) || ! isset( $template['id'] ) ) {
-        return false;
-    }
-
-    // Determine link object id based in incoming request.
-    $link_obj_id = null;
-    if ( isset( $_REQUEST['id'] ) ) {   // Initial frontend form request.
-        $link_obj_id = sanitize_text_field( wp_unslash( $_REQUEST['id'] ) );
-
-    } elseif ( isset( $_REQUEST['parts'], $_REQUEST['parts']['instance_id'] ) ) {  // Subsequent frontend form requests.
-
-        $instance_id = sanitize_text_field( wp_unslash( $_REQUEST['parts']['instance_id'] ) );
-
-        // Accommodate template only requests.
-        if ( empty( $instance_id ) ) {
-            return true;
-        }
-
-        // Accommodate template/link-object requests.
-        $link_obj_id = $instance_id;
-
-    } elseif ( isset( $_REQUEST['link_obj_id'] ) ) {   // Admin get post record request.
-        $link_obj_id = sanitize_text_field( wp_unslash( $_REQUEST['link_obj_id'] ) );
-
-    } elseif ( isset( $_SERVER['REQUEST_URI'] ) ) {
-
-        /**
-         * Determine if this is a frontend post type records
-         * display request?
-         */
-
-        $haystack = trim( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) );
-        $needle   = '/' . $template['post_type'] . '/';
-        if ( strpos( $haystack, $needle ) !== false ) {
-
-            // Extract post id
-            $uri_parts = array_values( array_filter( explode( '/', $haystack ) ) );
-            $uri_parts = array_map( 'sanitize_key', wp_unslash( $uri_parts ) );
-
-            if ( count( $uri_parts ) !== 2 ) {
-                return false;
-            }
-
-            try {
-                $post_type = $uri_parts[0];
-                $post_id   = $uri_parts[1];
-
-                // Ensure post id is a valid numeric and not something like 'new'
-                if ( ! is_numeric( $post_id ) ) {
-                    return false;
-                }
-
-                // Fetch corresponding post
-                $post = DT_Posts::get_post( $post_type, $post_id );
-
-                // Determine if post is currently linked to template
-                return ( ! empty( $post ) && isset( $post[ $template['id'] ] ) );
-
-            } catch ( Exception $e ) {
-                return false;
-            }
-        }
-
-        /**
-         * Next, determine if this is a frontend generated magic link
-         * form display request; which does not contain additional link
-         * object info, to aid selection process!
-         */
-
-        try {
-            $template_url_parts = array_values( array_filter( explode( '_', $template['url_base'] ) ) );
-
-            return ( strpos( $haystack, $template_url_parts[0] ) !== false );
-
-        } catch ( Exception $e ) {
-            return false;
-        }
-    }
-    if ( empty( $link_obj_id ) ) {
-        return false;
-    }
-
-    // Locate corresponding link object and see if we have a match!
-    $link_obj = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $link_obj_id );
-
-    return ( ! empty( $link_obj ) && isset( $link_obj->type ) && $link_obj->type == $template['id'] );
-}
-
-add_action( 'dt_magic_link_load_templates', 'dt_ml_load_templates_func', 20, 1 );
-function dt_ml_load_templates_func( $post_type ) {
-    foreach ( fetch_magic_link_templates() ?? [] as $template ) {
-        if ( $template['post_type'] == $post_type ) {
-            new Disciple_Tools_Magic_Links_Templates( $template );
-        }
-    }
-}
-
 /**
  * Class Disciple_Tools_Magic_Links_Templates_Loader
  */
@@ -147,9 +47,7 @@ class Disciple_Tools_Magic_Links_Templates_Loader {
 
     private function load_templates() {
         foreach ( fetch_magic_link_templates() ?? [] as $template ) {
-            if ( can_instantiate_template( $template ) ) {
-                new Disciple_Tools_Magic_Links_Templates( $template );
-            }
+            new Disciple_Tools_Magic_Links_Templates( $template );
         }
     }
 }
@@ -195,32 +93,12 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
             return;
         }
 
+        $this->template         = $template;
+        $this->post_type        = $template['post_type'];
         $this->type             = array_map( 'sanitize_key', wp_unslash( explode( '_', $template['id'] ) ) )[1];
         $this->type_name        = $template['name'];
         $this->page_title       = $template['name'];
         $this->page_description = '';
-
-        /**
-         * If dealing with a specific templates request, then ensure global ml type placeholder
-         * is replaced with actual incoming template id!
-         */
-
-        $this->adjust_global_values_by_incoming_template_id();
-
-        /**
-         * Attempt to load sooner, rather than later; corresponding post record details.
-         */
-
-        $this->post = $this->fetch_post_by_incoming_hash_key();
-        if ( ! empty( $this->post ) && ! is_wp_error( $this->post ) ) {
-            $this->post_field_settings = DT_Posts::get_post_field_settings( $this->post['post_type'] );
-        }
-
-        /**
-         * Attempt to load corresponding link object, if a valid incoming id has been detected.
-         */
-
-        $this->link_obj = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $this->fetch_incoming_link_param( 'id' ) );
 
         /**
          * Specify metadata structure, specific to the processing of current
@@ -251,6 +129,21 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         if ( ! $this->check_parts_match() ) {
             return;
         }
+
+        /**
+         * Attempt to load sooner, rather than later; corresponding post record details.
+         */
+
+        $this->post = $this->fetch_post_by_incoming_hash_key();
+        if ( ! empty( $this->post ) && ! is_wp_error( $this->post ) ) {
+            $this->post_field_settings = DT_Posts::get_post_field_settings( $this->post['post_type'] );
+        }
+
+        /**
+         * Attempt to load corresponding link object, if a valid incoming id has been detected.
+         */
+
+        $this->link_obj = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $this->fetch_incoming_link_param( 'id' ) );
 
         /**
          * Load if valid url
@@ -286,51 +179,6 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         $allowed_css[] = 'mapbox-gl-css';
 
         return $allowed_css;
-    }
-
-    private function adjust_global_values_by_incoming_template_id() {
-        if ( strpos( dt_get_url_path( true ), $this->root . '/' ) !== false ) {
-
-            /**
-             * Once identified as a templates request, extract corresponding template id
-             */
-
-            $url_path = dt_get_url_path( true );
-            $parts    = explode( '/', $url_path );
-            $parts    = array_map( 'sanitize_key', wp_unslash( $parts ) );
-
-            /**
-             * Ensure to adapt to different url shapes, based on request source! I.e. Initial requests
-             * or subsequent internal form requests?
-             */
-
-            $idx = ( count( $parts ) === 3 ) ? 1 : 3;
-
-            if ( isset( $parts[ $idx ] ) ) {
-
-                // Ensure to drop any magic_key references; which will be re-assigned further downstream!
-                $this->type = str_replace( '_magic_key', '', $parts[ $idx ] );
-
-                // Update other global variables, such as page title, etc...
-                $template_id    = 'templates_' . $this->type . '_magic_key';
-                $this->template = $this->fetch_template_by_id( $template_id );
-                if ( ! empty( $this->template ) ) {
-                    $this->post_type        = $this->template['post_type'];
-                    $this->page_title       = $this->template['name'];
-                    $this->page_description = '';
-                }
-            }
-        }
-    }
-
-    private function fetch_template_by_id( $template_id ): array {
-        foreach ( fetch_magic_link_templates() ?? [] as $template ) {
-            if ( $template['id'] === $template_id ) {
-                return $template;
-            }
-        }
-
-        return [];
     }
 
     private function fetch_post_by_incoming_hash_key() {
