@@ -203,6 +203,7 @@ jQuery(function ($) {
     id: 'templates_' + moment().unix() + '_magic_key',
     enabled: true,
     name: '',
+    title: '',
     custom_fields: '',
     show_recent_comments: true
   }, callback = function () {
@@ -214,6 +215,7 @@ jQuery(function ($) {
         $('#ml_main_col_template_details_id').val(data.id);
         $('#ml_main_col_template_details_enabled').prop('checked', data.enabled);
         $('#ml_main_col_template_details_name').val(data.name);
+        $('#ml_main_col_template_details_title').val(data.title);
         $('#ml_main_col_template_details_custom_fields').val(data.custom_fields);
         $('#ml_main_col_template_details_show_recent_comments').prop('checked', data.show_recent_comments);
         callback();
@@ -223,6 +225,7 @@ jQuery(function ($) {
       $('#ml_main_col_template_details_id').val(data.id);
       $('#ml_main_col_template_details_enabled').prop('checked', data.enabled);
       $('#ml_main_col_template_details_name').val(data.name);
+      $('#ml_main_col_template_details_title').val(data.title);
       $('#ml_main_col_template_details_custom_fields').val(data.custom_fields);
       $('#ml_main_col_template_details_show_recent_comments').prop('checked', data.show_recent_comments);
       view_template_details.fadeIn(fade_speed, function () {
@@ -341,6 +344,7 @@ jQuery(function ($) {
                 id: template['id'],
                 enabled: template['enabled'],
                 name: template['name'],
+                title: template['title'],
                 custom_fields: '',
                 show_recent_comments: template['show_recent_comments']
               });
@@ -467,6 +471,7 @@ jQuery(function ($) {
     let id = $('#ml_main_col_template_details_id').val();
     let enabled = $('#ml_main_col_template_details_enabled').prop('checked');
     let name = $('#ml_main_col_template_details_name').val();
+    let title = $('#ml_main_col_template_details_title').val();
     let show_recent_comments = $('#ml_main_col_template_details_show_recent_comments').prop('checked');
     let message = $('#ml_main_col_msg_textarea').val();
     let fields = fetch_selected_fields();
@@ -497,11 +502,12 @@ jQuery(function ($) {
       // Proceed with packaging values into json structure, ready for saving
       let template_obj = {
         'id': id,
-        'class_type': 'template', // TODO: Keep an aya on this one - Be sure to remove if not used!
+        'class_type': 'template', // TODO: Keep an eye on this one - Be sure to remove if not used!
         'url_base': '', // Populated further downstream by parent templates type class!
         'post_type': post_type,
         'enabled': enabled,
         'name': name,
+        'title': title,
         'show_recent_comments': show_recent_comments,
         'message': message,
         'fields': fields

@@ -380,6 +380,13 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
                 </td>
             </tr>
             <tr>
+                <td style="vertical-align: middle;">Template Title</td>
+                <td>
+                    <input style="min-width: 100%;" type="text" id="ml_main_col_template_details_title"
+                           value=""/>
+                </td>
+            </tr>
+            <tr>
                 <td style="vertical-align: middle;">Post Type Fields</td>
                 <td>
                     <select style="min-width: 85%;" id="ml_main_col_template_details_fields">

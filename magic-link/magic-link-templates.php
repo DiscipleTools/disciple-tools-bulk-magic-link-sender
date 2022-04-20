@@ -134,7 +134,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
          * Attempt to load sooner, rather than later; corresponding post record details.
          */
 
-        $this->post = $this->fetch_post_by_incoming_hash_key();
+        $this->post = DT_Posts::get_post( $this->post_type, $this->parts['post_id'], true, false );
         if ( ! empty( $this->post ) && ! is_wp_error( $this->post ) ) {
             $this->post_field_settings = DT_Posts::get_post_field_settings( $this->post['post_type'] );
         }
@@ -179,36 +179,6 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         $allowed_css[] = 'mapbox-gl-css';
 
         return $allowed_css;
-    }
-
-    private function fetch_post_by_incoming_hash_key() {
-        if ( strpos( dt_get_url_path( true ), $this->root . '/' ) !== false ) {
-
-            global $wpdb;
-
-            // Extract request uri parts, in search of hash key
-            $url_path = dt_get_url_path( true );
-            $parts    = explode( '/', $url_path );
-            $parts    = array_map( 'sanitize_key', wp_unslash( $parts ) );
-
-            $meta_key   = ! empty( $this->template ) ? $this->template['id'] : '';
-            $public_key = $parts[2];
-
-            // Attempt to locate corresponding post id
-            $post_id = $wpdb->get_var( $wpdb->prepare( "
-                SELECT pm.post_id
-                FROM $wpdb->postmeta as pm
-                WHERE pm.meta_key LIKE %s
-                  AND pm.meta_value = %s
-                  ", $meta_key . '%', $public_key ) );
-
-            // Assuming we have stuff, attempt to load post record details
-            if ( ! empty( $post_id ) && ! is_wp_error( $post_id ) ) {
-                return DT_Posts::get_post( $this->post_type, $post_id, true, false );
-            }
-        }
-
-        return null;
     }
 
     private function is_link_obj_field_enabled( $field_id ): bool {
@@ -955,6 +925,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
     }
 
     public function body() {
+        $has_title = ! empty( $this->template ) && ( isset( $this->template['title'] ) && ! empty( $this->template['title'] ) );
         ?>
         <div id="custom-style"></div>
         <div id="wrapper">
@@ -964,14 +935,20 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                         <b>
                             <?php
                             // phpcs:disable
-                            esc_attr_e( ! empty( $this->template ) ? $this->template['name'] : '---' );
+                            esc_attr_e( $has_title ? $this->template['title'] : '' );
                             // phpcs:enable
                             ?>
                         </b>
                     </h2>
                 </div>
             </div>
-            <hr>
+            <?php
+            if ( $has_title ) {
+                ?>
+                <hr/>
+                <?php
+            }
+            ?>
             <div id="content">
 
                 <!-- TEMPLATE MESSAGE -->
@@ -987,14 +964,14 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                 <span id="error" style="color: red;"></span>
                 <br>
 
-                <h3><?php esc_html_e( "Details", 'disciple_tools_bulk_magic_link_sender' ) ?>
-                    [ <span
-                        id="contact_name"><?php
+                <h3>
+                    <span id="contact_name">
+                        <?php
                         // phpcs:disable
                         esc_attr_e( ! empty( $this->post ) ? $this->post['name'] : '---' );
                         // phpcs:enable
-                        ?></span>
-                    ]
+                        ?>
+                    </span>
                 </h3>
                 <hr>
                 <div class="grid-x" id="form-content">
