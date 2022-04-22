@@ -882,7 +882,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                 id: field_id,
                                 dt_type: field_type,
                                 template_type: field_template_type,
-                                value: jQuery(tr).find(selector).val()
+                                value: jQuery(tr).find(selector).val() ? jQuery(tr).find('.section-subheader').html() + ': ' + jQuery(tr).find(selector).val() : ''
                             });
                         }
                     });
