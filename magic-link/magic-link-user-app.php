@@ -611,18 +611,20 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
     }
 
     public function body() {
+        // Revert back to dt translations
+        $this->hard_switch_to_default_dt_text_domain();
         ?>
         <div id="custom-style"></div>
         <div id="wrapper">
             <div class="grid-x">
                 <div class="cell center">
-                    <h2 id="title"><b><?php esc_html_e( 'User Contact Updates', 'disciple_tools_bulk_magic_link_sender' ) ?></b></h2>
+                    <h2 id="title"><b><?php esc_html_e( 'Updates Needed', 'disciple_tools' ) ?></b></h2>
                 </div>
             </div>
             <hr>
             <div id="content">
                 <div id="assigned_contacts_div" style="display: none;">
-                    <h3><?php esc_html_e( "Assigned Contacts", 'disciple_tools_bulk_magic_link_sender' ) ?> [ <span id="total">0</span> ]</h3>
+                    <h3><?php esc_html_e( "Contacts", 'disciple_tools' ) ?> [ <span id="total">0</span> ]</h3>
                     <hr>
                     <div class="grid-x api-content-div-style" id="api-content">
                         <table class="api-content-table">
@@ -638,14 +640,12 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                 <br>
                 <br>
 
-                <h3><?php esc_html_e( "Details", 'disciple_tools_bulk_magic_link_sender' ) ?> [ <span id="contact_name">---</span> ]
+                <h3><span id="contact_name"></span>
                 </h3>
                 <hr>
                 <div class="grid-x" id="form-content">
                     <input id="post_id" type="hidden"/>
                     <?php
-                    // Revert back to dt translations
-                    $this->hard_switch_to_default_dt_text_domain();
                     $field_settings = DT_Posts::get_post_field_settings( 'contacts', false );
                     ?>
                     <table style="display: none;" class="form-content-table">
@@ -688,7 +688,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
 
                 <!-- SUBMIT UPDATES -->
                 <button id="content_submit_but" style="display: none; min-width: 100%;" class="button select-button">
-                    <?php esc_html_e( "Submit Update", 'disciple_tools_bulk_magic_link_sender' ) ?>
+                    <?php esc_html_e( "Submit Update", 'disciple_tools' ) ?>
                 </button>
             </div>
         </div>
