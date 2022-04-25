@@ -85,6 +85,8 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Menu {
                    class="nav-tab <?php echo esc_html( ( $tab == 'general' || ! isset( $tab ) ) ? 'nav-tab-active' : '' ); ?>">General</a>
                 <a href="<?php echo esc_attr( $link ) . 'links' ?>"
                    class="nav-tab <?php echo esc_html( ( $tab == 'links' || ! isset( $tab ) ) ? 'nav-tab-active' : '' ); ?>">Links</a>
+                <a href="<?php echo esc_attr( $link ) . 'templates' ?>"
+                   class="nav-tab <?php echo esc_html( ( $tab == 'templates' || ! isset( $tab ) ) ? 'nav-tab-active' : '' ); ?>">Templates</a>
                 <a href="<?php echo esc_attr( $link ) . 'email' ?>"
                    class="nav-tab <?php echo esc_html( ( $tab == 'email' || ! isset( $tab ) ) ? 'nav-tab-active' : '' ); ?>">Email</a>
                 <a href="<?php echo esc_attr( $link ) . 'logging' ?>"
@@ -103,6 +105,11 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Menu {
                 case "links":
                     require( 'links-tab.php' );
                     $object = new Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links();
+                    $object->content();
+                    break;
+                case "templates":
+                    require( 'templates-tab.php' );
+                    $object = new Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates();
                     $object->content();
                     break;
                 case "email":

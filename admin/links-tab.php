@@ -37,6 +37,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
         wp_localize_script(
             "dt_magic_links_script", "dt_magic_links", array(
                 'dt_magic_link_types'           => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_magic_link_types(),
+                'dt_magic_link_templates'       => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_templates ),
                 'dt_users'                      => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_users(),
                 'dt_teams'                      => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_teams(),
                 'dt_groups'                     => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_groups(),
@@ -48,9 +49,22 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                 'dt_default_message'            => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_default_send_msg(),
                 'dt_default_send_channel_id'    => Disciple_Tools_Bulk_Magic_Link_Sender_API::$channel_email_id,
                 'dt_base_url'                   => rest_url(),
-                'dt_wp_nonce'                   => esc_attr( wp_create_nonce( 'wp_rest' ) )
+                'dt_wp_nonce'                   => esc_attr( wp_create_nonce( 'wp_rest' ) ),
+                'dt_previous_updated_link_obj'  => $this->fetch_previous_updated_link_obj()
             )
         );
+    }
+
+    private function fetch_previous_updated_link_obj() {
+        if ( isset( $_POST['ml_main_col_update_form_nonce'] ) && wp_verify_nonce( sanitize_key( wp_unslash( $_POST['ml_main_col_update_form_nonce'] ) ), 'ml_main_col_update_form_nonce' ) ) {
+            if ( isset( $_POST['ml_main_col_update_form_link_obj'] ) ) {
+                $sanitized_input = filter_var( wp_unslash( $_POST['ml_main_col_update_form_link_obj'] ), FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_FLAG_NO_ENCODE_QUOTES );
+
+                return json_decode( $this->final_post_param_sanitization( $sanitized_input ) );
+            }
+        }
+
+        return null;
     }
 
     private function final_post_param_sanitization( $str ) {
@@ -90,6 +104,19 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
 
                     // Save latest updates
                     Disciple_Tools_Bulk_Magic_Link_Sender_API::update_option_link_obj( $updating_link_obj );
+                }
+            }
+        }
+
+        if ( isset( $_POST['ml_main_col_delete_form_nonce'] ) && wp_verify_nonce( sanitize_key( wp_unslash( $_POST['ml_main_col_delete_form_nonce'] ) ), 'ml_main_col_delete_form_nonce' ) ) {
+            if ( isset( $_POST['ml_main_col_delete_form_link_obj_id'] ) ) {
+
+                // Fetch link object id to be deleted
+                $link_obj_id = filter_var( wp_unslash( $_POST['ml_main_col_delete_form_link_obj_id'] ), FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_FLAG_NO_ENCODE_QUOTES );
+
+                // Ensure we have something to work with
+                if ( ! empty( $link_obj_id ) ) {
+                    Disciple_Tools_Bulk_Magic_Link_Sender_API::delete_option_link_obj( $link_obj_id );
                 }
             }
         }
@@ -141,6 +168,20 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
         </table>
         <br>
         <!-- End Box -->
+
+        <!-- Links Object Deletion -->
+        <span style="float:right; margin-bottom: 15px;">
+            <button style="display: none;" type="submit" id="ml_main_col_delete_but"
+                    class="button float-right"><?php esc_html_e( "Delete", 'disciple_tools' ) ?></button>
+        </span>
+        <form method="post" id="ml_main_col_delete_form">
+            <input type="hidden" id="ml_main_col_delete_form_nonce" name="ml_main_col_delete_form_nonce"
+                   value="<?php echo esc_attr( wp_create_nonce( 'ml_main_col_delete_form_nonce' ) ) ?>"/>
+
+            <input type="hidden" id="ml_main_col_delete_form_link_obj_id"
+                   name="ml_main_col_delete_form_link_obj_id" value=""/>
+        </form>
+        <!-- Links Object Deletion -->
 
         <!-- Box -->
         <table style="display: none;" class="widefat striped" id="ml_main_col_link_objs_manage">
@@ -358,11 +399,35 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                         <option disabled selected value>-- select magic link type to be sent --</option>
 
                         <?php
-                        // Source available magic link types
+                        // Source available magic link types, ignoring templates at this stage
                         $magic_link_types = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_magic_link_types();
                         if ( ! empty( $magic_link_types ) ) {
                             foreach ( $magic_link_types as $type ) {
-                                echo '<option value="' . esc_attr( $type['key'] ) . '">' . esc_attr( $type['label'] ) . '</option>';
+
+                                /**
+                                 * Filter out master template class; which, in itself, is only the shepherd of child templates!
+                                 * Actual child magic link templates are extracted in the code block below; from options table.
+                                 */
+
+                                if ( ! isset( $type['meta']['class_type'] ) || ! in_array( $type['meta']['class_type'], [ 'template' ] ) ) {
+                                    echo '<option value="' . esc_attr( $type['key'] ) . '">' . esc_attr( $type['label'] ) . '</option>';
+                                }
+                            }
+                        }
+
+                        // Source available magic link templates
+                        $magic_link_templates = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_templates );
+                        if ( ! empty( $magic_link_templates ) ) {
+                            ?>
+                            <option disabled value>-- templates --</option>
+                            <?php
+                            $supported_template_post_types = $this->supported_template_post_types();
+                            foreach ( $magic_link_templates as $post_type ) {
+                                foreach ( $post_type ?? [] as $template ) {
+                                    if ( $template['enabled'] && in_array( $template['post_type'], $supported_template_post_types ) ) {
+                                        echo '<option value="' . esc_attr( $template['id'] ) . '">' . esc_attr( $template['name'] ) . '</option>';
+                                    }
+                                }
                             }
                         }
                         ?>
@@ -372,6 +437,12 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
             </tr>
         </table>
         <?php
+    }
+
+    private function supported_template_post_types(): array {
+        return [
+            'contacts'
+        ];
     }
 
     private function main_column_ml_type_fields() {

@@ -93,8 +93,9 @@ class Disciple_Tools_Bulk_Magic_Link_Sender {
          * @todo Decide if you want to create a magic link
          * To remove: delete the line below and remove the folder named /magic-link
          */
-        require_once( 'magic-link/magic-link-user-app.php' );
         require_once( 'magic-link/magic-links-api.php' );
+        require_once( 'magic-link/magic-link-templates.php' );
+        require_once( 'magic-link/magic-link-user-app.php' );
         require_once( 'magic-link/magic-links-cron.php' );
         require_once( 'magic-link/magic-links-default-filters.php' );
 

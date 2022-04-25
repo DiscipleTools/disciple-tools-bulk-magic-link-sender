@@ -1,5 +1,13 @@
 jQuery(function ($) {
 
+  // Initial States
+  $(document).ready(function () {
+    let link_obj = window.dt_magic_links.dt_previous_updated_link_obj;
+    if (link_obj) {
+      $('#ml_main_col_available_link_objs_select').val(link_obj['id']).trigger('change');
+    }
+  });
+
   // Event Listeners
   $(document).on('click', '#ml_main_col_available_link_objs_new', function () {
     handle_new_link_obj_request();
@@ -19,6 +27,10 @@ jQuery(function ($) {
 
   $(document).on('click', '#ml_main_col_update_but', function () {
     handle_update_request();
+  });
+
+  $(document).on('click', '#ml_main_col_delete_but', function () {
+    handle_delete_request();
   });
 
   $(document).on('click', '#ml_main_col_assign_users_teams_update_but', function () {
@@ -55,6 +67,16 @@ jQuery(function ($) {
 
 
   // Helper Functions
+  function handle_delete_request() {
+    let id = $('#ml_main_col_link_objs_manage_id').val();
+    let name = $('#ml_main_col_link_objs_manage_name').val();
+
+    if (id && confirm(`Are you sure you wish to delete ${name}?`)) {
+      $('#ml_main_col_delete_form_link_obj_id').val(id);
+      $('#ml_main_col_delete_form').submit();
+    }
+  }
+
   function handle_new_link_obj_request() {
     reset_sections(true);
   }
@@ -88,6 +110,7 @@ jQuery(function ($) {
 
     if (display) {
       $('#ml_main_col_update_but').fadeIn('fast');
+      $('#ml_main_col_delete_but').fadeIn('fast');
     }
   }
 
@@ -225,39 +248,90 @@ jQuery(function ($) {
     return type_obj;
   }
 
+  function fetch_magic_link_template(type_key) {
+    let template = null;
+
+    if (type_key) {
+      let magic_link_templates = window.dt_magic_links.dt_magic_link_templates;
+      if (magic_link_templates) {
+
+        // Parse templates in search of required template
+        $.each(magic_link_templates, function (post_type_id, post_type) {
+          $.each(post_type, function (template_id, template_obj) {
+
+            // Match, keeping in mind template_ prefix
+            if (type_key.includes(template_obj['id'])) {
+              template = template_obj;
+            }
+          });
+        });
+      }
+    }
+
+    return template;
+  }
+
+  function is_template(type_key) {
+    return (type_key && type_key.includes('templates_'));
+  }
+
+  function build_magic_link_type_field_html(type_key, id, label) {
+    return `<tr>
+              <input id="ml_main_col_ml_type_fields_table_row_field_id" type="hidden" value="${id}">
+              <td>${window.lodash.escape(label)}</td>
+              <td><input id="ml_main_col_ml_type_fields_table_row_field_enabled" type="checkbox" ${is_magic_link_type_field_enabled(type_key, id, fetch_link_obj($('#ml_main_col_available_link_objs_select').val())) ? 'checked' : ''}></td>
+            </tr>`;
+  }
+
   function display_magic_link_type_fields() {
     let fields_table = $('#ml_main_col_ml_type_fields_table');
     let type_key = $('#ml_main_col_link_objs_manage_type').val();
-    let type_obj = fetch_magic_link_type_obj(type_key);
 
-    if (type_obj) {
-      fields_table.fadeOut('fast', function () {
+    // REfresh fields table
+    fields_table.fadeOut('fast', function () {
+      fields_table.find('tbody > tr').remove();
 
-        // Clear down table records
-        fields_table.find('tbody > tr').remove();
+      // Distinguish between regular magic link types and templates
+      if (is_template(type_key)) {
 
-        // Refresh fields list accordingly
-        type_obj['meta']['fields'].forEach(function (field, field_idx) {
-          if (field['id'] && field['label']) {
-            let html = `<tr>
-                          <input id="ml_main_col_ml_type_fields_table_row_field_id" type="hidden" value="${field['id']}">
-                          <td>${window.lodash.escape(field['label'])}</td>
-                          <td><input id="ml_main_col_ml_type_fields_table_row_field_enabled" type="checkbox" ${is_magic_link_type_field_enabled(type_key, field['id'], fetch_link_obj($('#ml_main_col_available_link_objs_select').val())) ? 'checked' : ''}></td>
-                        </tr>`;
-            fields_table.find('tbody:last').append(html);
-          }
-        });
+        let template = fetch_magic_link_template(type_key);
+        if (template) {
 
-        // Display fields table
-        fields_table.fadeIn('fast');
-      });
+          // Ignore disabled fields
+          $.each(template['fields'], function (idx, field) {
+            if (field['enabled']) {
+              fields_table.find('tbody:last').append(build_magic_link_type_field_html(type_key, field['id'], field['label']));
+            }
+          });
 
-      // Adjust assigned selector accordingly, based on type object contacts flag
-      adjust_assigned_selector_by_magic_link_type(type_obj);
-    }
+          // Adjust assigned selector accordingly, defaulting to contacts only
+          adjust_assigned_selector_by_magic_link_type(true);
+        }
+
+      } else {
+
+        let type_obj = fetch_magic_link_type_obj(type_key);
+        if (type_obj) {
+
+          // Refresh fields list accordingly
+          type_obj['meta']['fields'].forEach(function (field, field_idx) {
+            if (field['id'] && field['label']) {
+              fields_table.find('tbody:last').append(build_magic_link_type_field_html(type_key, field['id'], field['label']));
+            }
+          });
+
+          // Adjust assigned selector accordingly, based on type object contacts flag
+          adjust_assigned_selector_by_magic_link_type(type_obj['meta']['contacts_only']);
+        }
+      }
+
+      // Display fields table
+      fields_table.fadeIn('fast');
+
+    });
   }
 
-  function adjust_assigned_selector_by_magic_link_type(type_obj) {
+  function adjust_assigned_selector_by_magic_link_type(contacts_only) {
     let users_teams_select = $('#ml_main_col_assign_users_teams_select');
     let users_teams_typeahead_div = $('#ml_main_col_assign_users_teams_typeahead_div');
 
@@ -265,7 +339,7 @@ jQuery(function ($) {
      * CONTACTS ONLY ASSIGNMENTS
      */
 
-    if (type_obj && type_obj['meta']['contacts_only']) {
+    if (contacts_only) {
 
       // Display contacts typeahead input field
       users_teams_select.fadeOut('fast', function () {
@@ -371,7 +445,8 @@ jQuery(function ($) {
     // Build request payload
     let payload = {
       post_type: post_type,
-      post_id: post_id
+      post_id: post_id,
+      link_obj_id: $('#ml_main_col_link_objs_manage_id').val()
     };
 
     // Dispatch request.
@@ -933,6 +1008,7 @@ jQuery(function ($) {
 
       $('#ml_main_col_update_msg').html('').fadeOut('fast');
       $('#ml_main_col_update_but').fadeIn('fast');
+      $('#ml_main_col_delete_but').fadeIn('fast');
     }
   }
 
