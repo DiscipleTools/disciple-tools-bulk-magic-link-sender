@@ -1164,7 +1164,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                 case 'boolean':
 
                     // Only update if there has been a state change!
-                    if ( $field['changed'] === 'true' ) {
+                    if ( $field['changed'] ) {
                         $updates[ $field['id'] ] = $field['value'] === 'true';
                     }
                     break;
@@ -1198,7 +1198,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                     foreach ( $field['value'] ?? [] as $option ) {
                         $entry          = [];
                         $entry['value'] = $option['value'];
-                        if ( strtolower( trim( $option['delete'] ) ) === 'true' ) {
+                        if ( $option['delete'] ) {
                             $entry['delete'] = true;
                         }
                         $options[] = $entry;
