@@ -891,8 +891,8 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                     jQuery('#content_submit_but').prop('disabled', true);
 
                     jQuery.ajax({
-                        type: "GET",
-                        data: payload,
+                        type: "POST",
+                        data: JSON.stringify(payload),
                         contentType: "application/json; charset=utf-8",
                         dataType: "json",
                         url: jsObject.root + jsObject.parts.root + '/v1/' + jsObject.parts.type + '/update',
@@ -1122,10 +1122,10 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         register_rest_route(
             $namespace, '/' . $this->type . '/update', [
                 [
-                    'methods'             => "GET",
+                    'methods'             => "POST",
                     'callback'            => [ $this, 'update_record' ],
                     'permission_callback' => function ( WP_REST_Request $request ) {
-                        $magic = new DT_Magic_URL( $this->root );
+                        $magic = new DT_Magic_URL( $this->root, $request->get_params()['parts'] );
 
                         return $magic->verify_rest_endpoint_permissions_on_post( $request );
                     },
