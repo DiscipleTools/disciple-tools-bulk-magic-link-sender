@@ -1125,7 +1125,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                     'methods'             => "POST",
                     'callback'            => [ $this, 'update_record' ],
                     'permission_callback' => function ( WP_REST_Request $request ) {
-                        $magic = new DT_Magic_URL( $this->root, $request->get_params()['parts'] );
+                        $magic = new DT_Magic_URL( $this->root );
 
                         return $magic->verify_rest_endpoint_permissions_on_post( $request );
                     },
