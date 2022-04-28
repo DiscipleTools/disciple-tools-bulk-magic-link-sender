@@ -891,8 +891,8 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                     jQuery('#content_submit_but').prop('disabled', true);
 
                     jQuery.ajax({
-                        type: "GET",
-                        data: payload,
+                        type: "POST",
+                        data: JSON.stringify(payload),
                         contentType: "application/json; charset=utf-8",
                         dataType: "json",
                         url: jsObject.root + jsObject.parts.root + '/v1/' + jsObject.parts.type + '/update',
@@ -1122,7 +1122,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         register_rest_route(
             $namespace, '/' . $this->type . '/update', [
                 [
-                    'methods'             => "GET",
+                    'methods'             => "POST",
                     'callback'            => [ $this, 'update_record' ],
                     'permission_callback' => function ( WP_REST_Request $request ) {
                         $magic = new DT_Magic_URL( $this->root );
@@ -1164,7 +1164,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                 case 'boolean':
 
                     // Only update if there has been a state change!
-                    if ( $field['changed'] === 'true' ) {
+                    if ( $field['changed'] ) {
                         $updates[ $field['id'] ] = $field['value'] === 'true';
                     }
                     break;
@@ -1198,7 +1198,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                     foreach ( $field['value'] ?? [] as $option ) {
                         $entry          = [];
                         $entry['value'] = $option['value'];
-                        if ( strtolower( trim( $option['delete'] ) ) === 'true' ) {
+                        if ( $option['delete'] ) {
                             $entry['delete'] = true;
                         }
                         $options[] = $entry;
