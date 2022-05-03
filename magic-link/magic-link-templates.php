@@ -196,8 +196,12 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
     private function render_custom_field_for_display( $field ) {
         ?>
         <div class="section-subheader"><?php
+
+            // Support custom field label translations; or simply default to initial label entry.
+            $label = ( ! empty( $field['translations'] ) && isset( $field['translations'][ determine_locale() ] ) ) ? $field['translations'][ determine_locale() ]['translation'] : $field['label'];
+
             // phpcs:disable
-            esc_attr_e( $field['label'] );
+            esc_attr_e( $label );
             // phpcs:enable
         ?></div>
         <input id="<?php

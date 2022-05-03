@@ -43,7 +43,8 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
             "dt_magic_links_script", "dt_magic_links", array(
                 'dt_post_types'                => $this->fetch_post_types(),
                 'dt_magic_links_templates'     => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_templates ),
-                'dt_previous_updated_template' => $this->fetch_previous_updated_template()
+                'dt_previous_updated_template' => $this->fetch_previous_updated_template(),
+                'dt_languages_icon'            => esc_html( get_template_directory_uri() . "/dt-assets/images/languages.svg" )
             )
         );
     }
@@ -426,7 +427,28 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
     }
 
     private function main_column_selected_fields() {
+        $languages = dt_get_available_languages();
         ?>
+        <dialog id="ml_main_col_selected_fields_sortable_field_dialog">
+            <table id="ml_main_col_selected_fields_sortable_field_dialog_table">
+                <tbody>
+                <?php
+                foreach ( $languages as $code => $language ) {
+                    ?>
+                    <tr>
+                        <td><label><?php esc_html_e( $language['native_name'] ) ?></label></td>
+                        <td><input type="text"
+                                   id="ml_main_col_selected_fields_sortable_field_dialog_input"
+                                   data-language="<?php esc_attr_e( $language['language'] ); ?>"/>
+                        </td>
+                    </tr>
+                    <?php
+                }
+                ?>
+                </tbody>
+            </table>
+        </dialog>
+
         <div class="connected-sortable-fields"></div>
         <?php
     }
