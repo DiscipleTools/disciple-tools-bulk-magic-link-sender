@@ -436,10 +436,18 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
                 foreach ( $languages as $code => $language ) {
                     ?>
                     <tr>
-                        <td><label><?php esc_html_e( $language['native_name'] ) ?></label></td>
+                        <td><label><?php
+                                // phpcs:disable
+                                esc_html_e( $language['native_name'] );
+                                // phpcs:enable
+                                ?></label></td>
                         <td><input type="text"
                                    id="ml_main_col_selected_fields_sortable_field_dialog_input"
-                                   data-language="<?php esc_attr_e( $language['language'] ); ?>"/>
+                                   data-language="<?php
+                                   // phpcs:disable
+                                   esc_attr_e( $language['language'] );
+                                   // phpcs:enable
+                                   ?>"/>
                         </td>
                     </tr>
                     <?php
