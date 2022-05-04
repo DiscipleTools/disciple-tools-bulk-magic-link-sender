@@ -440,14 +440,14 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
                                 // phpcs:disable
                                 esc_html_e( $language['native_name'] );
                                 // phpcs:enable
-                                ?></label></td>
+                        ?></label></td>
                         <td><input type="text"
                                    id="ml_main_col_selected_fields_sortable_field_dialog_input"
                                    data-language="<?php
                                    // phpcs:disable
                                    esc_attr_e( $language['language'] );
                                    // phpcs:enable
-                                   ?>"/>
+                                    ?>"/>
                         </td>
                     </tr>
                     <?php
