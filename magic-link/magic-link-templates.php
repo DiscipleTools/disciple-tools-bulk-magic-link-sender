@@ -161,6 +161,10 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
             DT_Mapbox_API::load_mapbox_header_scripts();
             DT_Mapbox_API::load_mapbox_search_widget();
         }
+
+        // Support Typeahead APIs
+        wp_enqueue_script( 'jquery-typeahead', get_template_directory_uri() . '/dt-core/dependencies/typeahead/dist/jquery.typeahead.min.js', [ 'jquery' ] );
+        wp_enqueue_style( 'jquery-typeahead-css', get_template_directory_uri() . '/dt-core/dependencies/typeahead/dist/jquery.typeahead.min.css', [] );
     }
 
     public function dt_magic_url_base_allowed_js( $allowed_js ) {
@@ -169,6 +173,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         $allowed_js[] = 'mapbox-gl';
         $allowed_js[] = 'mapbox-cookie';
         $allowed_js[] = 'mapbox-search-widget';
+        $allowed_js[] = 'jquery-typeahead';
 
         return $allowed_js;
     }
@@ -177,6 +182,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         // @todo add or remove js files with this filter
         // example: $allowed_css[] = 'your-enqueue-handle';
         $allowed_css[] = 'mapbox-gl-css';
+        $allowed_css[] = 'jquery-typeahead-css';
 
         return $allowed_css;
     }
@@ -241,12 +247,6 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
             }
         </style>
         <?php
-        $typeahead_uri = get_template_directory_uri() . "/dt-core/dependencies/typeahead/dist/jquery.typeahead.min.css";
-        // phpcs:disable
-        ?>
-        <link rel="stylesheet" type="text/css" href="<?php echo esc_html( $typeahead_uri ); ?>"/>
-        <?php
-        // phpcs:enable
     }
 
     /**
@@ -256,12 +256,6 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
      * @todo remove if not needed
      */
     public function header_javascript() {
-        $typeahead_uri = get_template_directory_uri() . "/dt-core/dependencies/typeahead/dist/jquery.typeahead.min.js";
-        // phpcs:disable
-        ?>
-        <script type="text/javascript" src="<?php echo esc_html( $typeahead_uri ); ?>"></script>
-        <?php
-        // phpcs:enable
     }
 
     /**
