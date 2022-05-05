@@ -135,9 +135,6 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
          */
 
         $this->post = DT_Posts::get_post( $this->post_type, $this->parts['post_id'], true, false );
-        if ( ! empty( $this->post ) && ! is_wp_error( $this->post ) ) {
-            $this->post_field_settings = DT_Posts::get_post_field_settings( $this->post['post_type'] );
-        }
 
         /**
          * Attempt to load corresponding link object, if a valid incoming id has been detected.
@@ -1001,10 +998,8 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                          * based on hidden flags!
                          */
 
+                        $this->post_field_settings = DT_Posts::get_post_field_settings( $this->post['post_type'], false );
                         if ( ! empty( $this->post ) && ! empty( $this->post_field_settings ) && ! empty( $this->template ) ) {
-
-                            // Ensure custom fields are also included into the mix, post template class instantiation!
-                            $this->post_field_settings = apply_filters( 'dt_custom_fields_settings', $this->post_field_settings, $this->post['post_type'] );
 
                             // Display selected fields
                             foreach ( $this->template['fields'] ?? [] as $field ) {
