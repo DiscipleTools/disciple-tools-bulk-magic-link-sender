@@ -242,9 +242,11 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         </style>
         <?php
         $typeahead_uri = get_template_directory_uri() . "/dt-core/dependencies/typeahead/dist/jquery.typeahead.min.css";
+        // phpcs:disable
         ?>
         <link rel="stylesheet" type="text/css" href="<?php echo esc_html( $typeahead_uri ); ?>"/>
         <?php
+        // phpcs:enable
     }
 
     /**
@@ -255,9 +257,11 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
      */
     public function header_javascript() {
         $typeahead_uri = get_template_directory_uri() . "/dt-core/dependencies/typeahead/dist/jquery.typeahead.min.js";
+        // phpcs:disable
         ?>
         <script type="text/javascript" src="<?php echo esc_html( $typeahead_uri ); ?>"></script>
         <?php
+        // phpcs:enable
     }
 
     /**
