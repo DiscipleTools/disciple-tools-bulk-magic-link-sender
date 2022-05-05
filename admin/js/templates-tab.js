@@ -441,8 +441,11 @@ jQuery(function ($) {
           // Update button label's translation count.
           $(translate_but).find('.connected-sortable-fields-translate-but-label').text(Object.keys(updated_translations).length);
 
-          // Finally, close dialog.
+          // Close dialog.
           $(this).dialog('close');
+
+          // Finally, auto save changes.
+          handle_update_request();
         }
       }
     });
