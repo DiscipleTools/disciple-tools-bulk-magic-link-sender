@@ -200,15 +200,8 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
             // Support custom field label translations; or simply default to initial label entry.
             $label = ( ! empty( $field['translations'] ) && isset( $field['translations'][ determine_locale() ] ) ) ? $field['translations'][ determine_locale() ]['translation'] : $field['label'];
 
-            // phpcs:disable
-            esc_attr_e( $label );
-            // phpcs:enable
-        ?></div>
-        <input id="<?php
-        // phpcs:disable
-        esc_attr_e( $field['id'] );
-        // phpcs:enable
-        ?>" type="text" class="text-input" value="">
+            echo esc_html( $label ); ?></div>
+        <input id="<?php echo esc_html( $field['id'] ); ?>" type="text" class="text-input" value="">
         <?php
     }
 
@@ -249,11 +242,9 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         </style>
         <?php
         $typeahead_uri = get_template_directory_uri() . "/dt-core/dependencies/typeahead/dist/jquery.typeahead.min.css";
-        // phpcs:disable
         ?>
-        <link rel="stylesheet" type="text/css" href="<?php esc_attr_e( $typeahead_uri ); ?>"/>
+        <link rel="stylesheet" type="text/css" href="<?php echo esc_html( $typeahead_uri ); ?>"/>
         <?php
-        // phpcs:enable
     }
 
     /**
@@ -264,11 +255,9 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
      */
     public function header_javascript() {
         $typeahead_uri = get_template_directory_uri() . "/dt-core/dependencies/typeahead/dist/jquery.typeahead.min.js";
-        // phpcs:disable
         ?>
-        <script type="text/javascript" src="<?php esc_attr_e( $typeahead_uri ); ?>"></script>
+        <script type="text/javascript" src="<?php echo esc_html( $typeahead_uri ); ?>"></script>
         <?php
-        // phpcs:enable
     }
 
     /**
@@ -937,11 +926,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                 <div class="cell center">
                     <h2 id="title">
                         <b>
-                            <?php
-                            // phpcs:disable
-                            esc_attr_e( $has_title ? $this->template['title'] : '' );
-                            // phpcs:enable
-                            ?>
+                            <?php echo esc_html( $has_title ? $this->template['title'] : '' ); ?>
                         </b>
                     </h2>
                 </div>
@@ -957,11 +942,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
 
                 <!-- TEMPLATE MESSAGE -->
                 <p id="template_msg">
-                    <?php
-                    // phpcs:disable
-                    esc_attr_e( ! empty( $this->template ) && isset( $this->template['message'] ) ? $this->template['message'] : '' );
-                    // phpcs:enable
-                    ?>
+                    <?php echo esc_html( ! empty( $this->template ) && isset( $this->template['message'] ) ? $this->template['message'] : '' ); ?>
                 </p>
 
                 <!-- ERROR MESSAGES -->
@@ -970,27 +951,15 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
 
                 <h3>
                     <span id="contact_name">
-                        <?php
-                        // phpcs:disable
-                        esc_attr_e( ! empty( $this->post ) ? $this->post['name'] : '---' );
-                        // phpcs:enable
-                        ?>
+                        <?php echo esc_html( ! empty( $this->post ) ? $this->post['name'] : '---' ); ?>
                     </span>
                 </h3>
                 <hr>
                 <div class="grid-x" id="form-content">
                     <input id="post_id" type="hidden"
-                           value="<?php
-                           // phpcs:disable
-                           esc_attr_e( ! empty( $this->post ) ? $this->post['ID'] : '' );
-                           // phpcs:enable
-                            ?>"/>
+                           value="<?php echo esc_html( ! empty( $this->post ) ? $this->post['ID'] : '' ); ?>"/>
                     <input id="post_type" type="hidden"
-                           value="<?php
-                           // phpcs:disable
-                           esc_attr_e( ! empty( $this->post ) ? $this->post['post_type'] : '' );
-                           // phpcs:enable
-                            ?>"/>
+                           value="<?php echo esc_html( ! empty( $this->post ) ? $this->post['post_type'] : '' ); ?>"/>
                     <?php
                     // Revert back to dt translations
                     $this->hard_switch_to_default_dt_text_domain();
@@ -1083,17 +1052,9 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                     <tr>
                                         <td>
                                             <div class="section-subheader">
-                                                <?php
-                                                // phpcs:disable
-                                                esc_attr_e( $comment['comment_author'] . ' @ ' . $comment['comment_date'] );
-                                                // phpcs:enable
-                                                ?>
+                                                <?php echo esc_html( $comment['comment_author'] . ' @ ' . $comment['comment_date'] ); ?>
                                             </div>
-                                            <?php
-                                            // phpcs:disable
-                                            esc_attr_e( $comment['comment_content'] );
-                                            // phpcs:enable
-                                            ?>
+                                            <?php echo esc_html( $comment['comment_content'] ); ?>
                                         </td>
                                     </tr>
                                     <?php

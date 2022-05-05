@@ -188,7 +188,7 @@ jQuery(function ($) {
 
       // Reload previously selected fields
       $.each(data['fields'], function (idx, field) {
-        $('.connected-sortable-fields').append(build_new_selected_field_html(field['id'], field['label'], field['type'], field['enabled'], field['translations']));
+        $('.connected-sortable-fields').append(build_new_selected_field_html(field['id'], field['label'], field['type'], field['enabled'], (field['translations'] !== undefined) ? field['translations'] : {}));
       });
 
       // Instantiate sortable fields capabilities
