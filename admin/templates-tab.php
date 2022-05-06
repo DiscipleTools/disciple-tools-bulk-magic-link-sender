@@ -29,10 +29,6 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
         wp_register_style( 'jquery-ui', 'https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.css', [], '1.12.1' );
         wp_enqueue_style( 'jquery-ui' );
 
-        wp_register_style( 'jquery-confirm-css', 'https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/css/jquery-confirm.css', [], '3.3.4' );
-        wp_enqueue_style( 'jquery-confirm-css' );
-        wp_enqueue_script( 'jquery-confirm-js', 'https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js', [], '3.3.4', true );
-
         wp_enqueue_script( 'dt_magic_links_script', plugin_dir_url( __FILE__ ) . 'js/templates-tab.js', [
             'jquery',
             'lodash',
@@ -41,7 +37,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
             'typeahead-jquery',
             'jquery-ui-core',
             'jquery-ui-sortable',
-            'jquery-confirm-js'
+            'jquery-ui-dialog'
         ], filemtime( dirname( __FILE__ ) . '/js/templates-tab.js' ), true );
 
         wp_localize_script(
