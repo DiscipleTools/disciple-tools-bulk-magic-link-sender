@@ -51,18 +51,22 @@ jQuery(function ($) {
     let id = $('#ml_main_col_template_details_fields').val();
     let label = $('#ml_main_col_template_details_fields option:selected').text();
 
-    handle_selected_field_addition(id, label, 'dt', true);
+    handle_selected_field_addition(id, label, 'dt', true, {});
   });
 
   $(document).on('click', '#ml_main_col_template_details_custom_fields_add', function () {
     let id = moment().unix();
     let label = $('#ml_main_col_template_details_custom_fields').val();
 
-    handle_selected_field_addition(id, label, 'custom', true);
+    handle_selected_field_addition(id, label, 'custom', true, {});
   });
 
   $(document).on('click', '.connected-sortable-fields-remove-but', function (evt) {
     handle_selected_field_removal(evt);
+  });
+
+  $(document).on('click', '.connected-sortable-fields-translate-but', function (evt) {
+    handle_selected_field_translation(evt);
   });
 
   $(document).on('click', '#ml_main_col_update_but', function () {
@@ -184,7 +188,7 @@ jQuery(function ($) {
 
       // Reload previously selected fields
       $.each(data['fields'], function (idx, field) {
-        $('.connected-sortable-fields').append(build_new_selected_field_html(field['id'], field['label'], field['type'], field['enabled']));
+        $('.connected-sortable-fields').append(build_new_selected_field_html(field['id'], field['label'], field['type'], field['enabled'], (field['translations'] !== undefined) ? field['translations'] : {}));
       });
 
       // Instantiate sortable fields capabilities
@@ -376,9 +380,9 @@ jQuery(function ($) {
     return null;
   }
 
-  function handle_selected_field_addition(field_id, field_label, field_type, field_enabled) {
+  function handle_selected_field_addition(field_id, field_label, field_type, field_enabled, field_translations) {
     if (field_id && field_label && !field_already_selected(field_id, field_label)) {
-      $('.connected-sortable-fields').append(build_new_selected_field_html(field_id, field_label, field_type, field_enabled));
+      $('.connected-sortable-fields').append(build_new_selected_field_html(field_id, field_label, field_type, field_enabled, field_translations));
 
       // Reset fields accordingly
       switch (field_type) {
@@ -397,6 +401,66 @@ jQuery(function ($) {
   function handle_selected_field_removal(evt) {
     let field_div = $(evt.currentTarget).parent().parent().parent().parent().parent();
     field_div.remove();
+  }
+
+  function handle_selected_field_translation(evt) {
+
+    // Obtain handle to translation button, to be used further downstream.
+    let translate_but = $(evt.currentTarget);
+
+    // Obtain handle to, config and display translations dialog.
+    let dialog = $('#ml_main_col_selected_fields_sortable_field_dialog');
+    dialog.dialog({
+      modal: true,
+      autoOpen: false,
+      hide: 'fade',
+      show: 'fade',
+      height: 600,
+      width: 350,
+      resizable: false,
+      title: translate_but.data('field_label') + ' Field Translation',
+      buttons: {
+        Update: function () {
+
+          // Package list of available translations.
+          let updated_translations = {};
+          $('#ml_main_col_selected_fields_sortable_field_dialog_table').find('tbody tr input').each(function (idx, input) {
+
+            // Only package populated translation field values.
+            if ($(input).val()) {
+              updated_translations[$(input).data('language')] = {
+                language: $(input).data('language'),
+                translation: $(input).val()
+              };
+            }
+          });
+
+          // Persist packaged translations.
+          translate_but.data('field_translations', encodeURIComponent(JSON.stringify(updated_translations)));
+
+          // Update button label's translation count.
+          $(translate_but).find('.connected-sortable-fields-translate-but-label').text(Object.keys(updated_translations).length);
+
+          // Close dialog.
+          $(this).dialog('close');
+
+          // Finally, auto save changes.
+          handle_update_request();
+        }
+      }
+    });
+
+    // Clear-down and load existing field translations.
+    let translations = JSON.parse(decodeURIComponent(translate_but.data('field_translations')));
+    $('#ml_main_col_selected_fields_sortable_field_dialog_table').find('tbody tr input').each(function (idx, input) {
+      $(input).val('');
+      if (translations[$(input).data('language')]) {
+        $(input).val(translations[$(input).data('language')]['translation']);
+      }
+    });
+
+    // Finally, display translation dialog
+    dialog.dialog('open');
   }
 
   function field_already_selected(field_id, field_label) {
@@ -424,7 +488,7 @@ jQuery(function ($) {
     return already_selected;
   }
 
-  function build_new_selected_field_html(field_id, field_label, field_type, field_enabled) {
+  function build_new_selected_field_html(field_id, field_label, field_type, field_enabled, field_translations) {
 
     // Ensure default field labels are disabled and cannot be overwritten
     let label_disabled_html = '';
@@ -453,6 +517,7 @@ jQuery(function ($) {
                                type="text" value="${field_label}" ${label_disabled_html}/>
                     </td>
                     <td style="text-align: right;">
+                        ${build_translation_button_html(field_id, field_label, field_type, field_translations, label_disabled_html)}
                         <button type="submit" class="button float-right connected-sortable-fields-remove-but">
                             Remove
                         </button>
@@ -461,6 +526,20 @@ jQuery(function ($) {
                 </tbody>
             </table>
         </div>
+    `;
+  }
+
+  function build_translation_button_html(field_id, field_label, field_type, field_translations, disabled_html) {
+    return `
+      <button type="submit"
+      data-field_id="${field_id}"
+      data-field_label="${field_label}"
+      data-field_type="${field_type}"
+      data-field_translations="${encodeURIComponent(JSON.stringify(field_translations))}"
+      class="button float-right connected-sortable-fields-translate-but" ${disabled_html}>
+          <img style="height: 15px; vertical-align: middle;" src="${window.lodash.escape(window.dt_magic_links.dt_languages_icon)}" />
+          (<span class="connected-sortable-fields-translate-but-label">${Object.keys(field_translations).length}</span>)
+      </button>
     `;
   }
 
@@ -529,12 +608,14 @@ jQuery(function ($) {
       let type = $(field_div).find('#ml_main_col_selected_fields_sortable_field_type').val();
       let enabled = $(field_div).find('#ml_main_col_selected_fields_sortable_field_enabled').prop('checked');
       let label = $(field_div).find('#ml_main_col_selected_fields_sortable_field_label').val();
+      let translations = (type === 'dt') ? {} : JSON.parse(decodeURIComponent($(field_div).find('.connected-sortable-fields-translate-but').data('field_translations')));
 
       fields.push({
         'id': id,
         'type': type,
         'enabled': enabled,
-        'label': label
+        'label': label,
+        'translations': translations
       });
     });
 

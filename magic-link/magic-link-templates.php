@@ -158,6 +158,13 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
             DT_Mapbox_API::load_mapbox_header_scripts();
             DT_Mapbox_API::load_mapbox_search_widget();
         }
+
+        // Support Typeahead APIs
+        $path     = '/dt-core/dependencies/typeahead/dist/';
+        $path_js  = $path . 'jquery.typeahead.min.js';
+        $path_css = $path . 'jquery.typeahead.min.css';
+        wp_enqueue_script( 'jquery-typeahead', get_template_directory_uri() . $path_js, [ 'jquery' ], filemtime( get_template_directory() . $path_js ) );
+        wp_enqueue_style( 'jquery-typeahead-css', get_template_directory_uri() . $path_css, [], filemtime( get_template_directory() . $path_css ) );
     }
 
     public function dt_magic_url_base_allowed_js( $allowed_js ) {
@@ -166,6 +173,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         $allowed_js[] = 'mapbox-gl';
         $allowed_js[] = 'mapbox-cookie';
         $allowed_js[] = 'mapbox-search-widget';
+        $allowed_js[] = 'jquery-typeahead';
 
         return $allowed_js;
     }
@@ -174,6 +182,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         // @todo add or remove js files with this filter
         // example: $allowed_css[] = 'your-enqueue-handle';
         $allowed_css[] = 'mapbox-gl-css';
+        $allowed_css[] = 'jquery-typeahead-css';
 
         return $allowed_css;
     }
@@ -193,15 +202,12 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
     private function render_custom_field_for_display( $field ) {
         ?>
         <div class="section-subheader"><?php
-            // phpcs:disable
-            esc_attr_e( $field['label'] );
-            // phpcs:enable
-        ?></div>
-        <input id="<?php
-        // phpcs:disable
-        esc_attr_e( $field['id'] );
-        // phpcs:enable
-        ?>" type="text" class="text-input" value="">
+
+            // Support custom field label translations; or simply default to initial label entry.
+            $label = ( ! empty( $field['translations'] ) && isset( $field['translations'][ determine_locale() ] ) ) ? $field['translations'][ determine_locale() ]['translation'] : $field['label'];
+
+            echo esc_html( $label ); ?></div>
+        <input id="<?php echo esc_html( $field['id'] ); ?>" type="text" class="text-input" value="">
         <?php
     }
 
@@ -241,12 +247,6 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
             }
         </style>
         <?php
-        $typeahead_uri = get_template_directory_uri() . "/dt-core/dependencies/typeahead/dist/jquery.typeahead.min.css";
-        // phpcs:disable
-        ?>
-        <link rel="stylesheet" type="text/css" href="<?php esc_attr_e( $typeahead_uri ); ?>"/>
-        <?php
-        // phpcs:enable
     }
 
     /**
@@ -256,12 +256,6 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
      * @todo remove if not needed
      */
     public function header_javascript() {
-        $typeahead_uri = get_template_directory_uri() . "/dt-core/dependencies/typeahead/dist/jquery.typeahead.min.js";
-        // phpcs:disable
-        ?>
-        <script type="text/javascript" src="<?php esc_attr_e( $typeahead_uri ); ?>"></script>
-        <?php
-        // phpcs:enable
     }
 
     /**
@@ -930,11 +924,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                 <div class="cell center">
                     <h2 id="title">
                         <b>
-                            <?php
-                            // phpcs:disable
-                            esc_attr_e( $has_title ? $this->template['title'] : '' );
-                            // phpcs:enable
-                            ?>
+                            <?php echo esc_html( $has_title ? $this->template['title'] : '' ); ?>
                         </b>
                     </h2>
                 </div>
@@ -950,11 +940,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
 
                 <!-- TEMPLATE MESSAGE -->
                 <p id="template_msg">
-                    <?php
-                    // phpcs:disable
-                    esc_attr_e( ! empty( $this->template ) && isset( $this->template['message'] ) ? $this->template['message'] : '' );
-                    // phpcs:enable
-                    ?>
+                    <?php echo esc_html( ! empty( $this->template ) && isset( $this->template['message'] ) ? $this->template['message'] : '' ); ?>
                 </p>
 
                 <!-- ERROR MESSAGES -->
@@ -963,27 +949,15 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
 
                 <h3>
                     <span id="contact_name">
-                        <?php
-                        // phpcs:disable
-                        esc_attr_e( ! empty( $this->post ) ? $this->post['name'] : '---' );
-                        // phpcs:enable
-                        ?>
+                        <?php echo esc_html( ! empty( $this->post ) ? $this->post['name'] : '---' ); ?>
                     </span>
                 </h3>
                 <hr>
                 <div class="grid-x" id="form-content">
                     <input id="post_id" type="hidden"
-                           value="<?php
-                           // phpcs:disable
-                           esc_attr_e( ! empty( $this->post ) ? $this->post['ID'] : '' );
-                           // phpcs:enable
-                            ?>"/>
+                           value="<?php echo esc_html( ! empty( $this->post ) ? $this->post['ID'] : '' ); ?>"/>
                     <input id="post_type" type="hidden"
-                           value="<?php
-                           // phpcs:disable
-                           esc_attr_e( ! empty( $this->post ) ? $this->post['post_type'] : '' );
-                           // phpcs:enable
-                            ?>"/>
+                           value="<?php echo esc_html( ! empty( $this->post ) ? $this->post['post_type'] : '' ); ?>"/>
                     <?php
                     // Revert back to dt translations
                     $this->hard_switch_to_default_dt_text_domain();
@@ -1074,17 +1048,9 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                     <tr>
                                         <td>
                                             <div class="section-subheader">
-                                                <?php
-                                                // phpcs:disable
-                                                esc_attr_e( $comment['comment_author'] . ' @ ' . $comment['comment_date'] );
-                                                // phpcs:enable
-                                                ?>
+                                                <?php echo esc_html( $comment['comment_author'] . ' @ ' . $comment['comment_date'] ); ?>
                                             </div>
-                                            <?php
-                                            // phpcs:disable
-                                            esc_attr_e( $comment['comment_content'] );
-                                            // phpcs:enable
-                                            ?>
+                                            <?php echo esc_html( $comment['comment_content'] ); ?>
                                         </td>
                                     </tr>
                                     <?php
