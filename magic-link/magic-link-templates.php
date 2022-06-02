@@ -1067,7 +1067,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                 <button id="content_submit_but"
                         style="<?php echo( ! empty( $this->post ) ? '' : 'display: none;' ) ?> min-width: 100%;"
                         class="button select-button">
-                    <?php esc_html_e( "Submit Update", 'disciple_tools_bulk_magic_link_sender' ) ?>
+                    <?php esc_html_e( "Submit Update", 'disciple_tools' ) ?>
                 </button>
             </div>
         </div>
