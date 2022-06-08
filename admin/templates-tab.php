@@ -384,19 +384,31 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
             <tr>
                 <td style="vertical-align: middle;">Template Title</td>
                 <td>
-                    <input style="min-width: 100%;" type="text" id="ml_main_col_template_details_title"
+                    <input style="min-width: 80%;" type="text" id="ml_main_col_template_details_title"
                            value=""/>
+
+                    <span style="float:right;">
+                        <button type="submit"
+                                id="ml_main_col_template_details_title_translate_but"
+                                class="button float-right template-title-translate-but"
+                                data-field_translations="<?php echo esc_html( rawurlencode( '{}' ) ); ?>">
+                            <img style="height: 15px; width: 20px !important; vertical-align: middle;"
+                                 src="<?php echo esc_html( get_template_directory_uri() . "/dt-assets/images/languages.svg" ); ?>"/>
+                            (<span class="template-title-translate-but-label">0</span>)
+                        </button>
+                    </span>
                 </td>
             </tr>
             <tr>
                 <td style="vertical-align: middle;">Post Type Fields</td>
                 <td>
-                    <select style="min-width: 85%;" id="ml_main_col_template_details_fields">
+                    <select style="min-width: 80%;" id="ml_main_col_template_details_fields">
                         <option disabled selected value>-- select field --</option>
                     </select>
 
                     <span style="float:right;">
                         <button id="ml_main_col_template_details_fields_add" type="submit"
+                                style="width: 62px !important;"
                                 class="button float-right"><?php esc_html_e( "Add", 'disciple_tools' ) ?></button>
                     </span>
                 </td>
@@ -407,11 +419,12 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
                                                                            data-content="ml_templates_right_docs_custom_fields_content">&#63;</a>]
                 </td>
                 <td>
-                    <input style="min-width: 85%;" type="text" id="ml_main_col_template_details_custom_fields"
+                    <input style="min-width: 80%;" type="text" id="ml_main_col_template_details_custom_fields"
                            value=""/>
 
                     <span style="float:right;">
                         <button id="ml_main_col_template_details_custom_fields_add" type="submit"
+                                style="width: 62px !important;"
                                 class="button float-right"><?php esc_html_e( "Add", 'disciple_tools' ) ?></button>
                     </span>
                 </td>
