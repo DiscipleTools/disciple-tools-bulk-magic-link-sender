@@ -211,6 +211,10 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         <?php
     }
 
+    private function adjust_template_title_translation( $title, $title_translations ) {
+        return ( ! empty( $title_translations ) && isset( $title_translations[ determine_locale() ] ) ) ? $title_translations[ determine_locale() ]['translation'] : $title;
+    }
+
     /**
      * Writes custom styles to header
      *
@@ -924,7 +928,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                 <div class="cell center">
                     <h2 id="title">
                         <b>
-                            <?php echo esc_html( $has_title ? $this->template['title'] : '' ); ?>
+                            <?php echo esc_html( $has_title ? $this->adjust_template_title_translation( $this->template['title'], $this->template['title_translations'] ) : '' ); ?>
                         </b>
                     </h2>
                 </div>

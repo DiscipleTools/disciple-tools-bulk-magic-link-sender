@@ -81,6 +81,10 @@ jQuery(function ($) {
     handle_docs_request($(evt.currentTarget).data('title'), $(evt.currentTarget).data('content'));
   });
 
+  $(document).on('click', '.template-title-translate-but', function (evt) {
+    handle_template_title_translation(evt);
+  });
+
   /**
    * Helper Functions
    */
@@ -208,6 +212,7 @@ jQuery(function ($) {
     enabled: true,
     name: '',
     title: '',
+    title_translations: {},
     custom_fields: '',
     show_recent_comments: true
   }, callback = function () {
@@ -220,6 +225,8 @@ jQuery(function ($) {
         $('#ml_main_col_template_details_enabled').prop('checked', data.enabled);
         $('#ml_main_col_template_details_name').val(data.name);
         $('#ml_main_col_template_details_title').val(data.title);
+        $('#ml_main_col_template_details_title_translate_but').data('field_translations', encodeURIComponent(JSON.stringify(data.title_translations)));
+        $('.template-title-translate-but-label').text(Object.keys(data.title_translations).length);
         $('#ml_main_col_template_details_custom_fields').val(data.custom_fields);
         $('#ml_main_col_template_details_show_recent_comments').prop('checked', data.show_recent_comments);
         callback();
@@ -230,6 +237,8 @@ jQuery(function ($) {
       $('#ml_main_col_template_details_enabled').prop('checked', data.enabled);
       $('#ml_main_col_template_details_name').val(data.name);
       $('#ml_main_col_template_details_title').val(data.title);
+      $('#ml_main_col_template_details_title_translate_but').data('field_translations', encodeURIComponent(JSON.stringify(data.title_translations)));
+      $('.template-title-translate-but-label').text(Object.keys(data.title_translations).length);
       $('#ml_main_col_template_details_custom_fields').val(data.custom_fields);
       $('#ml_main_col_template_details_show_recent_comments').prop('checked', data.show_recent_comments);
       view_template_details.fadeIn(fade_speed, function () {
@@ -349,6 +358,7 @@ jQuery(function ($) {
                 enabled: template['enabled'],
                 name: template['name'],
                 title: template['title'],
+                title_translations: template['title_translations'] ?? {},
                 custom_fields: '',
                 show_recent_comments: template['show_recent_comments']
               });
@@ -455,7 +465,67 @@ jQuery(function ($) {
     $('#ml_main_col_selected_fields_sortable_field_dialog_table').find('tbody tr input').each(function (idx, input) {
       $(input).val('');
       if (translations[$(input).data('language')]) {
-        $(input).val(translations[$(input).data('language')]['translation']);
+        $(input).val($('<div>').html(translations[$(input).data('language')]['translation']).text());
+      }
+    });
+
+    // Finally, display translation dialog
+    dialog.dialog('open');
+  }
+
+  function handle_template_title_translation(evt) {
+
+    // Obtain handle to translation button, to be used further downstream.
+    let translate_but = $(evt.currentTarget);
+
+    // Obtain handle to, config and display translations dialog.
+    let dialog = $('#ml_main_col_selected_fields_sortable_field_dialog');
+    dialog.dialog({
+      modal: true,
+      autoOpen: false,
+      hide: 'fade',
+      show: 'fade',
+      height: 600,
+      width: 350,
+      resizable: false,
+      title: 'Template Title Translation',
+      buttons: {
+        Update: function () {
+
+          // Package list of available translations.
+          let updated_translations = {};
+          $('#ml_main_col_selected_fields_sortable_field_dialog_table').find('tbody tr input').each(function (idx, input) {
+
+            // Only package populated translation field values.
+            if ($(input).val()) {
+              updated_translations[$(input).data('language')] = {
+                language: $(input).data('language'),
+                translation: $(input).val()
+              };
+            }
+          });
+
+          // Persist packaged translations.
+          translate_but.data('field_translations', encodeURIComponent(JSON.stringify(updated_translations)));
+
+          // Update button label's translation count.
+          $(translate_but).find('.template-title-translate-but-label').text(Object.keys(updated_translations).length);
+
+          // Close dialog.
+          $(this).dialog('close');
+
+          // Finally, auto save changes.
+          handle_update_request();
+        }
+      }
+    });
+
+    // Clear-down and load existing field translations.
+    let translations = JSON.parse(decodeURIComponent(translate_but.data('field_translations')));
+    $('#ml_main_col_selected_fields_sortable_field_dialog_table').find('tbody tr input').each(function (idx, input) {
+      $(input).val('');
+      if (translations[$(input).data('language')]) {
+        $(input).val($('<div>').html(translations[$(input).data('language')]['translation']).text());
       }
     });
 
@@ -551,6 +621,7 @@ jQuery(function ($) {
     let enabled = $('#ml_main_col_template_details_enabled').prop('checked');
     let name = $('#ml_main_col_template_details_name').val();
     let title = $('#ml_main_col_template_details_title').val();
+    let title_translations = JSON.parse(decodeURIComponent($('#ml_main_col_template_details_title_translate_but').data('field_translations')));
     let show_recent_comments = $('#ml_main_col_template_details_show_recent_comments').prop('checked');
     let message = $('#ml_main_col_msg_textarea').val();
     let fields = fetch_selected_fields();
@@ -587,6 +658,7 @@ jQuery(function ($) {
         'enabled': enabled,
         'name': name,
         'title': title,
+        'title_translations': title_translations,
         'show_recent_comments': show_recent_comments,
         'message': message,
         'fields': fields
