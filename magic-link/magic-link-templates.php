@@ -150,6 +150,12 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         add_filter( 'dt_magic_url_base_allowed_css', [ $this, 'dt_magic_url_base_allowed_css' ], 10, 1 );
         add_filter( 'dt_magic_url_base_allowed_js', [ $this, 'dt_magic_url_base_allowed_js' ], 10, 1 );
         add_action( 'wp_enqueue_scripts', [ $this, 'wp_enqueue_scripts' ], 100 );
+        add_filter( 'dt_can_update_permission', [ $this, 'can_update_permission_filter' ], 10, 3 );
+    }
+
+    // Ensure template fields remain editable
+    public function can_update_permission_filter( $has_permission, $post_id, $post_type ) {
+        return true;
     }
 
     public function wp_enqueue_scripts() {
@@ -165,6 +171,8 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         $path_css = $path . 'jquery.typeahead.min.css';
         wp_enqueue_script( 'jquery-typeahead', get_template_directory_uri() . $path_js, [ 'jquery' ], filemtime( get_template_directory() . $path_js ) );
         wp_enqueue_style( 'jquery-typeahead-css', get_template_directory_uri() . $path_css, [], filemtime( get_template_directory() . $path_css ) );
+
+        wp_enqueue_style( 'material-font-icons-css', 'https://cdn.jsdelivr.net/npm/@mdi/font@6.6.96/css/materialdesignicons.min.css' );
     }
 
     public function dt_magic_url_base_allowed_js( $allowed_js ) {
@@ -183,6 +191,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         // example: $allowed_css[] = 'your-enqueue-handle';
         $allowed_css[] = 'mapbox-gl-css';
         $allowed_css[] = 'jquery-typeahead-css';
+        $allowed_css[] = 'material-font-icons-css';
 
         return $allowed_css;
     }
