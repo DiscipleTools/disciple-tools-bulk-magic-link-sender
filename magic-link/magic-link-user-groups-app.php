@@ -14,6 +14,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
     public $root = "smart_links"; // @todo define the root of the url {yoursite}/root/type/key/action
     public $type = 'user_groups_updates'; // @todo define the type
     public $post_type = 'user';
+    private $post_field_settings = null;
     private $meta_key = '';
 
     private static $_instance = null;
@@ -40,14 +41,22 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
          */
         $this->adjust_global_values_by_incoming_sys_type( $this->fetch_incoming_link_param( 'type' ) );
 
+        // Fetch all fields for groups
         $field_settings = DT_Posts::get_post_field_settings( 'groups', false );
-        dt_write_log(json_encode($field_settings, JSON_PRETTY_PRINT));
+
         $supported_types = ['text'];
         $fields = [];
         foreach ( $field_settings as $key => $value ) {
             // only allow supported field types
-            // ignore hidden or custom_display fields
-            if ( !in_array( $value['type'], $supported_types ) || $value['hidden'] || $value['custom_display']) {
+            if ( !in_array( $value['type'], $supported_types ) ) {
+                continue;
+            }
+            // ignore hidden fields
+            if ( isset( $value['hidden'] ) && $value['hidden'] ) {
+                continue;
+            }
+            // ignore custom_display fields
+            if ( isset( $value['hidden'] ) && $value['hidden'] ) {
                 continue;
             }
             $fields[] = [
@@ -60,6 +69,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
             'id'    => 'comments',
             'label' => __( 'Comments', 'disciple_tools' ) // Special Case!
         ];
+
         /**
          * Specify metadata structure, specific to the processing of current
          * magic link type.
@@ -234,7 +244,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                 'translations'   => [
                     'add' => __( 'Add Magic', 'disciple-tools-bulk-magic-link-sender' ),
                 ]
-            ] ) ?>][0]
+            ] ) ?>][0];
 
             /**
              * Fetch assigned groups
@@ -321,41 +331,12 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                     }).done(function (data) {
 
                         // Was our post fetch request successful...?
-                        if (data['success'] && data['post']) {
+                        if (data['success'] && data['form_html']) {
+                            // Inject form HTML from response
+                            jQuery('#form-content').replaceWith(data['form_html']);
 
                             // Display submit button
                             jQuery('#content_submit_but').fadeIn('fast');
-
-                            // ID
-                            jQuery('#post_id').val(data['post']['ID']);
-
-                            // NAME
-                            let post_name = window.lodash.escape(data['post']['name']);
-                            jQuery('#group_name').html(post_name);
-                            if (window.is_field_enabled('name')) {
-                                jQuery('#form_content_name_td').html(`
-                                <input id="post_name" type="text" value="${post_name}" />
-                                `);
-                            } else {
-                                jQuery('#form_content_name_tr').hide();
-                            }
-
-                            // COMMENTS
-                            if (window.is_field_enabled('comments')) {
-                                let counter = 0;
-                                let html_comments = `<textarea></textarea><br>`;
-                                if (data['comments']['comments']) {
-                                    data['comments']['comments'].forEach(comment => {
-                                        if (counter++ < comment_count) { // Enforce comment count limit..!
-                                            html_comments += `<b>${window.lodash.escape(comment['comment_author'])} @ ${window.lodash.escape(comment['comment_date'])}</b><br>`;
-                                            html_comments += `${window.lodash.escape(comment['comment_content'])}<hr>`;
-                                        }
-                                    });
-                                }
-                                jQuery('#form_content_comments_td').html(html_comments);
-                            } else {
-                                jQuery('#form_content_comments_tr').hide();
-                            }
 
                             // Display updated post fields
                             jQuery('.form-content-table').fadeIn('fast');
@@ -428,6 +409,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
              */
             jQuery('#content_submit_but').on("click", function () {
                 let id = jQuery('#post_id').val();
+                let post_type = jQuery('#post_type').val();
 
                 // Reset error message field
                 let error = jQuery('#error');
@@ -444,14 +426,109 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                         action: 'get',
                         parts: jsObject.parts,
                         sys_type: jsObject.sys_type,
-                        post_id: id
+                        post_id: id,
+                        post_type: post_type,
+                        fields: [],
                     }
-                    if (window.is_field_enabled('name')) {
-                        payload['name'] = String(jQuery('#post_name').val()).trim();
-                    }
-                    if (window.is_field_enabled('comments')) {
-                        payload['comments'] = jQuery('#form_content_comments_td').find('textarea').eq(0).val();
-                    }
+
+                    // Iterate over form fields, capturing values accordingly.
+                    jQuery('.form-content-table > tbody > tr').each(function (idx, tr) {
+
+                        let field_id = jQuery(tr).find('.form_content_table_field_id').val();
+                        let field_type = jQuery(tr).find('.form_content_table_field_type').val();
+                        let field_meta = jQuery(tr).find('.form_content_table_field_meta');
+
+                        let selector = '#' + field_id;
+                        switch (field_type) {
+
+                            case 'number':
+                            case 'textarea':
+                            case 'text':
+                            case 'key_select':
+                                payload['fields'].push({
+                                    id: field_id,
+                                    type: field_type,
+                                    value: jQuery(tr).find(selector).val()
+                                });
+                                break;
+
+                            case 'communication_channel':
+                                let values = [];
+                                jQuery(tr).find('.input-group').each(function () {
+                                    values.push({
+                                        'key': jQuery(this).find('button').data('key'),
+                                        'value': jQuery(this).find('input').val()
+                                    });
+                                });
+                                payload['fields'].push({
+                                    id: field_id,
+                                    type: field_type,
+                                    value: values,
+                                    deleted: field_meta.val() ? JSON.parse(field_meta.val()) : []
+                                });
+                                break;
+
+                            case 'multi_select':
+                                let options = [];
+                                jQuery(tr).find('button').each(function () {
+                                    options.push({
+                                        'value': jQuery(this).attr('id'),
+                                        'delete': jQuery(this).hasClass('empty-select-button')
+                                    });
+                                });
+                                payload['fields'].push({
+                                    id: field_id,
+                                    type: field_type,
+                                    value: options
+                                });
+                                break;
+
+                            case 'boolean':
+                                let initial_val = JSON.parse(jQuery(tr).find('#field_initial_state_' + field_id).val());
+                                let current_val = jQuery(tr).find(selector).prop('checked');
+
+                                payload['fields'].push({
+                                    id: field_id,
+                                    type: field_type,
+                                    value: current_val,
+                                    changed: (initial_val !== current_val)
+                                });
+                                break;
+
+                            case 'date':
+                                payload['fields'].push({
+                                    id: field_id,
+                                    type: field_type,
+                                    value: field_meta.val()
+                                });
+                                break;
+
+                            case 'tags':
+                            case 'location':
+                                let typeahead = window.Typeahead['.js-typeahead-' + field_id];
+                                if (typeahead) {
+                                    payload['fields'].push({
+                                        id: field_id,
+                                        type: field_type,
+                                        value: typeahead.items,
+                                        deletions: field_meta.val() ? JSON.parse(field_meta.val()) : []
+                                    });
+                                }
+                                break;
+
+                            case 'location_meta':
+                                payload['fields'].push({
+                                    id: field_id,
+                                    type: field_type,
+                                    value: (window.selected_location_grid_meta !== undefined) ? window.selected_location_grid_meta : '',
+                                    deletions: field_meta.val() ? JSON.parse(field_meta.val()) : []
+                                });
+                                break;
+
+                            default:
+                                break;
+                        }
+                    });
 
                     // Submit data for post update
                     jQuery('#content_submit_but').prop('disabled', true);
@@ -550,6 +627,109 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                     <?php esc_html_e( "Submit Update", 'disciple_tools' ) ?>
                 </button>
             </div>
+        </div>
+        <?php
+    }
+
+    public function post_form( $post, $fields ) {
+        ?>
+        <div class="grid-x" id="form-content">
+            <input id="post_id" type="hidden"
+                   value="<?php echo esc_html( ! empty( $post ) ? $post['ID'] : '' ); ?>"/>
+            <input id="post_type" type="hidden"
+                   value="<?php echo esc_html( ! empty( $post ) ? $post['post_type'] : '' ); ?>"/>
+            <?php
+            // Revert back to dt translations
+            $this->hard_switch_to_default_dt_text_domain();
+            ?>
+            <table style="<?php echo( ! empty( $post ) ? '' : 'display: none;' ) ?>" class="form-content-table">
+                <tbody>
+                <?php
+
+                /**
+                 * If a valid post is present, then display fields accordingly,
+                 * based on hidden flags!
+                 */
+
+                $this->post_field_settings = DT_Posts::get_post_field_settings( $post['post_type'], false );
+                if ( ! empty( $post ) && ! empty( $this->post_field_settings ) && ! empty( $fields ) ) {
+
+                    $excluded_fields = [ 'comments' ];
+                    $show_comments = false;
+                    // Display selected fields
+                    foreach ( $fields ?? [] as $field ) {
+                        $show_comments = $show_comments || ($field->id == 'comments' && $field->enabled);
+                        if ( $field->enabled && !in_array( $field->id, $excluded_fields ) ) {
+
+                            $post_field = $this->post_field_settings[ $field->id ];
+                            $post_field_type = $post_field['type'];
+
+                            // Generate hidden values to assist downstream processing
+                            $hidden_values_html = '<input class="form_content_table_field_id" type="hidden" value="' . $field->id . '">';
+                            $hidden_values_html .= '<input class="form_content_table_field_type" type="hidden" value="' . $post_field_type . '">';
+                            $hidden_values_html .= '<input class="form_content_table_field_meta" type="hidden" value="">';
+
+                            // Capture rendered field html
+                            ob_start();
+                            render_field_for_display( $field->id, $this->post_field_settings, $post, true );
+                            $rendered_field_html = ob_get_clean();
+
+                            // Only display if valid html content has been generated
+                            if ( ! empty( $rendered_field_html ) ) {
+                                ?>
+                                <tr>
+                                    <?php
+                                    // phpcs:disable
+                                    echo $hidden_values_html;
+                                    // phpcs:enable
+                                    ?>
+                                    <td>
+                                        <?php
+                                        // phpcs:disable
+                                        echo $rendered_field_html;
+                                        // phpcs:enable
+                                        ?>
+                                    </td>
+                                </tr>
+                                <?php
+                            }
+                        }
+                    }
+
+                    // If requested, display recent comments
+                    if ( $show_comments ) {
+                        ?>
+                        <tr>
+                            <input class="form_content_table_field_id" type="hidden" value="comments">
+                            <input class="form_content_table_field_type" type="hidden" value="textarea">
+                            <input class="form_content_table_field_meta" type="hidden" value="">
+                            <td>
+                                <div class="section-subheader"><?php esc_html_e( "Comments", 'disciple_tools' ) ?></div>
+                                <textarea id="comments"></textarea>
+                            </td>
+                        </tr>
+                        <?php
+                        $recent_comments = DT_Posts::get_post_comments( $post['post_type'], $post['ID'], false, 'all', [ 'number' => 2 ] );
+                        foreach ( $recent_comments['comments'] ?? [] as $comment ) {
+                            ?>
+                            <tr>
+                                <td>
+                                    <div class="section-subheader">
+                                        <?php echo esc_html( $comment['comment_author'] . ' @ ' . $comment['comment_date'] ); ?>
+                                    </div>
+                                    <?php echo esc_html( $comment['comment_content'] ); ?>
+                                </td>
+                            </tr>
+                            <?php
+                        }
+                    }
+                }
+                ?>
+                </tbody>
+            </table>
+            <pre style="display:none;"><code style="display: block;">
+            <?php print_r($post); ?>
+            </code></pre>
         </div>
         <?php
     }
@@ -674,10 +854,17 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
             $this->update_user_logged_in_state( $params['sys_type'], $params["parts"]["post_id"] );
         }
 
+        $link_obj = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $params["parts"]["instance_id"] );
+
         // Fetch corresponding groups post record
         $response = [];
         $post     = DT_Posts::get_post( 'groups', $params['post_id'], false );
         if ( ! empty( $post ) && ! is_wp_error( $post ) ) {
+            // start output buffer to capture markup output
+            ob_start();
+            $this->post_form( $post, (array)$link_obj->type_fields );
+            $response['form_html'] = ob_get_clean();
+
             $response['success']  = true;
             $response['post']     = $post;
             $response['comments'] = DT_Posts::get_post_comments( 'groups', $params['post_id'], false, 'all', [ 'number' => $params['comment_count'] ] );
@@ -702,29 +889,171 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
             $this->update_user_logged_in_state( $params['sys_type'], $params["parts"]["post_id"] );
         }
 
-        // Capture name, if present
         $updates = [];
-        if ( isset( $params['name'] ) && ! empty( $params['name'] ) ) {
-            $updates['name'] = $params['name'];
+        $comments = [];
+
+        // First, capture and package incoming DT field values
+        foreach ( $params['fields'] ?? [] as $field ) {
+            // Comments are handled separately, so pull them out and handle later
+            if ( $field['id'] == 'comments') {
+                $comments[] = $field['value'];
+                continue;
+            }
+
+            switch ( $field['type'] ) {
+                case 'number':
+                case 'textarea':
+                case 'text':
+                case 'key_select':
+                case 'date':
+                    $updates[ $field['id'] ] = $field['value'];
+                    break;
+
+                case 'boolean':
+
+                    // Only update if there has been a state change!
+                    if ( $field['changed'] ) {
+                        $updates[ $field['id'] ] = $field['value'] === 'true';
+                    }
+                    break;
+
+                case 'communication_channel':
+                    $updates[ $field['id'] ] = [];
+
+                    // First, capture additions and updates
+                    foreach ( $field['value'] ?? [] as $value ) {
+                        $comm          = [];
+                        $comm['value'] = $value['value'];
+
+                        if ( $value['key'] !== 'new' ) {
+                            $comm['key'] = $value['key'];
+                        }
+
+                        $updates[ $field['id'] ][] = $comm;
+                    }
+
+                    // Next, capture deletions
+                    foreach ( $field['deleted'] ?? [] as $delete_key ) {
+                        $updates[ $field['id'] ][] = [
+                            'delete' => true,
+                            'key'    => $delete_key
+                        ];
+                    }
+                    break;
+
+                case 'multi_select':
+                    $options = [];
+                    foreach ( $field['value'] ?? [] as $option ) {
+                        $entry          = [];
+                        $entry['value'] = $option['value'];
+                        if ( $option['delete'] ) {
+                            $entry['delete'] = true;
+                        }
+                        $options[] = $entry;
+                    }
+                    if ( ! empty( $options ) ) {
+                        $updates[ $field['id'] ] = [
+                            'values' => $options
+                        ];
+                    }
+                    break;
+
+                case 'location':
+                    $locations = [];
+                    foreach ( $field['value'] ?? [] as $location ) {
+                        $entry          = [];
+                        $entry['value'] = $location['ID'];
+                        $locations[]    = $entry;
+                    }
+
+                    // Capture any incoming deletions
+                    foreach ( $field['deletions'] ?? [] as $location ) {
+                        $entry           = [];
+                        $entry['value']  = $location['ID'];
+                        $entry['delete'] = true;
+                        $locations[]     = $entry;
+                    }
+
+                    // Package and append to global updates
+                    if ( ! empty( $locations ) ) {
+                        $updates[ $field['id'] ] = [
+                            'values' => $locations
+                        ];
+                    }
+                    break;
+
+                case 'location_meta':
+                    $locations = [];
+
+                    // Capture selected location, if available; or prepare shape
+                    if ( ! empty( $field['value'] ) && isset( $field['value'][ $field['id'] ] ) ) {
+                        $locations[ $field['id'] ] = $field['value'][ $field['id'] ];
+
+                    } else {
+                        $locations[ $field['id'] ] = [
+                            'values' => []
+                        ];
+                    }
+
+                    // Capture any incoming deletions
+                    foreach ( $field['deletions'] ?? [] as $id ) {
+                        $entry                                 = [];
+                        $entry['grid_meta_id']                 = $id;
+                        $entry['delete']                       = true;
+                        $locations[ $field['id'] ]['values'][] = $entry;
+                    }
+
+                    // Package and append to global updates
+                    if ( ! empty( $locations[ $field['id'] ]['values'] ) ) {
+                        $updates[ $field['id'] ] = $locations[ $field['id'] ];
+                    }
+                    break;
+
+                case 'tags':
+                    $tags = [];
+                    foreach ( $field['value'] ?? [] as $tag ) {
+                        $entry          = [];
+                        $entry['value'] = $tag['name'];
+                        $tags[]         = $entry;
+                    }
+
+                    // Capture any incoming deletions
+                    foreach ( $field['deletions'] ?? [] as $tag ) {
+                        $entry           = [];
+                        $entry['value']  = $tag['name'];
+                        $entry['delete'] = true;
+                        $tags[]          = $entry;
+                    }
+
+                    // Package and append to global updates
+                    if ( ! empty( $tags ) ) {
+                        $updates[ $field['id'] ] = [
+                            'values' => $tags
+                        ];
+                    }
+                    break;
+            }
         }
 
         // Update specified post record
-        $updated_post = DT_Posts::update_post( 'groups', $params['post_id'], $updates, false, false );
+        $updated_post = DT_Posts::update_post( $params['post_type'], $params['post_id'], $updates, false, false );
         if ( empty( $updated_post ) || is_wp_error( $updated_post ) ) {
             return [
                 'success' => false,
-                'message' => 'Unable to update group record details!'
+                'message' => 'Unable to update record details!'
             ];
         }
 
         // Add any available comments
-        if ( isset( $params['comments'] ) && ! empty( $params['comments'] ) ) {
-            $updated_comment = DT_Posts::add_post_comment( $updated_post['post_type'], $updated_post['ID'], $params['comments'], 'comment', [], false );
-            if ( empty( $updated_comment ) || is_wp_error( $updated_comment ) ) {
-                return [
-                    'success' => false,
-                    'message' => 'Unable to add comment to group record details!'
-                ];
+        if ( !empty( $comments ) ) {
+            foreach ( $comments as $comment ) {
+                $updated_comment = DT_Posts::add_post_comment( $updated_post['post_type'], $updated_post['ID'], $comment, 'comment', [], false );
+                if ( empty( $updated_comment ) || is_wp_error( $updated_comment ) ) {
+                    return [
+                        'success' => false,
+                        'message' => 'Unable to add comment to record details!'
+                    ];
+                }
             }
         }
 
