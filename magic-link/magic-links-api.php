@@ -49,8 +49,44 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
                                 $field_settings = DT_Posts::get_post_field_settings( $type['meta']['fields_refresh']['post_type'] );
                                 if ( ! empty( $field_settings ) ) {
 
-                                    // Refresh field label, assuming it is not to be ignored
                                     $refreshed_fields = [];
+
+                                    // Load all fields from post type settings
+                                    if ( $type['meta']['fields_refresh']['load_all'] ) {
+                                        $field_settings = DT_Posts::get_post_field_settings( $type['meta']['fields_refresh']['post_type'], false );
+                                        $supported_types = [
+                                            'number',
+                                            'textarea',
+                                            'text',
+                                            'key_select',
+                                            'date',
+                                            'communication_channel',
+                                            'multi_select',
+                                            'tags',
+                                            'location',
+                                            'connection',
+                                        ];
+                                        foreach ( $field_settings as $key => $value ) {
+                                            // only allow supported field types
+                                            if ( !in_array( $value['type'], $supported_types ) ) {
+                                                continue;
+                                            }
+                                            // ignore hidden fields
+                                            if ( isset( $value['hidden'] ) && $value['hidden'] ) {
+                                                continue;
+                                            }
+                                            // ignore custom_display fields
+                                            if ( isset( $value['hidden'] ) && $value['hidden'] ) {
+                                                continue;
+                                            }
+                                            $refreshed_fields[] = [
+                                                'id' => $key,
+                                                'label' => $value['name'],
+                                            ];
+                                        }
+                                    }
+
+                                    // Refresh field label, assuming it is not to be ignored
                                     foreach ( $type['meta']['fields'] ?? [] as $field ) {
                                         if ( ! in_array( $field['id'], $type['meta']['fields_refresh']['ignore_ids'] ) ) {
                                             $field['label'] = $field_settings[ $field['id'] ]['name'];
