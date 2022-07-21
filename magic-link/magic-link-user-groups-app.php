@@ -1226,6 +1226,32 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
     }
 
     public function post_form( $post, $fields ) {
+
+        $post_settings = DT_Posts::get_post_settings( 'groups' );
+        dt_write_log(json_encode( $post_settings, JSON_PRETTY_PRINT));
+        $this->post_field_settings = $post_settings['fields'];
+        if ( !empty( $fields ) && !empty( $this->post_field_settings ) ) {
+            // Sort fields based on tile settings
+            foreach ( $fields as &$field ) {
+                $priority = 999;
+                if ( key_exists( $field['id'], $this->post_field_settings ) ) {
+                    $field_setting = $this->post_field_settings[$field['id']];
+                    if (!empty($field_setting['tile']) && key_exists($field_setting['tile'], $post_settings['tiles'])) {
+                        $tile = $post_settings['tiles'][$field_setting['tile']];
+                        if (!empty($tile) && isset($tile['tile_priority']) && isset($tile['order'])) {
+                            $field_order = array_search($field['id'], $tile['order']);
+                            $priority = ($tile['tile_priority'] * 10) + $field_order;
+                        }
+                    }
+                }
+                $field['priority'] = $priority;
+            }
+            unset($field); // https://stackoverflow.com/questions/7158741/why-php-iteration-by-reference-returns-a-duplicate-last-record
+
+            usort( $fields, function($a, $b) {
+                return $a['priority'] - $b['priority'];
+            });
+        }
         ?>
         <div class="grid-x" id="form-content">
             <input id="post_id" type="hidden"
@@ -1250,22 +1276,23 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
 
                     $excluded_fields = [ 'comments' ];
                     $show_comments = false;
-                    // Display selected fields
-                    foreach ( $fields ?? [] as $field ) {
-                        $show_comments = $show_comments || ($field->id == 'comments' && $field->enabled);
-                        if ( $field->enabled && !in_array( $field->id, $excluded_fields ) ) {
 
-                            $post_field = $this->post_field_settings[ $field->id ];
+                    // Display selected fields
+                    foreach ( $fields as $field ) {
+                        $show_comments = $show_comments || ($field['id'] === 'comments' && $field['enabled']);
+                        if ( $field['enabled'] && !in_array( $field['id'], $excluded_fields ) ) {
+
+                            $post_field = $this->post_field_settings[ $field['id'] ];
                             $post_field_type = $post_field['type'];
 
                             // Generate hidden values to assist downstream processing
-                            $hidden_values_html = '<input class="form_content_table_field_id" type="hidden" value="' . $field->id . '">';
+                            $hidden_values_html = '<input class="form_content_table_field_id" type="hidden" value="' . $field['id'] . '">';
                             $hidden_values_html .= '<input class="form_content_table_field_type" type="hidden" value="' . $post_field_type . '">';
                             $hidden_values_html .= '<input class="form_content_table_field_meta" type="hidden" value="">';
 
                             // Capture rendered field html
                             ob_start();
-                            render_field_for_display( $field->id, $this->post_field_settings, $post, true );
+                            render_field_for_display( $field['id'], $this->post_field_settings, $post, true );
                             $rendered_field_html = ob_get_clean();
 
                             // Only display if valid html content has been generated
@@ -1456,7 +1483,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
         if ( ! empty( $post ) && ! is_wp_error( $post ) ) {
             // start output buffer to capture markup output
             ob_start();
-            $this->post_form( $post, (array)$link_obj->type_fields );
+            $this->post_form( $post, json_decode( json_encode( $link_obj->type_fields ), true ) );
             $response['form_html'] = ob_get_clean();
 
             $response['success']  = true;

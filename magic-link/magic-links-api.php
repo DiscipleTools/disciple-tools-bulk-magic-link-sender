@@ -52,7 +52,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
                                     $refreshed_fields = [];
 
                                     // Load all fields from post type settings
-                                    if ( $type['meta']['fields_refresh']['load_all'] ) {
+                                    if ( isset( $type['meta']['fields_refresh']['load_all'] ) && $type['meta']['fields_refresh']['load_all'] ) {
                                         $field_settings = DT_Posts::get_post_field_settings( $type['meta']['fields_refresh']['post_type'], false );
                                         $supported_types = [
                                             'number',
