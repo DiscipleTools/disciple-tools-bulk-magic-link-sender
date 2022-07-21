@@ -1228,27 +1228,27 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
     public function post_form( $post, $fields ) {
 
         $post_settings = DT_Posts::get_post_settings( 'groups' );
-        dt_write_log(json_encode( $post_settings, JSON_PRETTY_PRINT));
         $this->post_field_settings = $post_settings['fields'];
+
         if ( !empty( $fields ) && !empty( $this->post_field_settings ) ) {
             // Sort fields based on tile settings
             foreach ( $fields as &$field ) {
                 $priority = 999;
                 if ( key_exists( $field['id'], $this->post_field_settings ) ) {
                     $field_setting = $this->post_field_settings[$field['id']];
-                    if (!empty($field_setting['tile']) && key_exists($field_setting['tile'], $post_settings['tiles'])) {
+                    if ( !empty( $field_setting['tile'] ) && key_exists( $field_setting['tile'], $post_settings['tiles'] )) {
                         $tile = $post_settings['tiles'][$field_setting['tile']];
-                        if (!empty($tile) && isset($tile['tile_priority']) && isset($tile['order'])) {
-                            $field_order = array_search($field['id'], $tile['order']);
-                            $priority = ($tile['tile_priority'] * 10) + $field_order;
+                        if ( !empty( $tile ) && isset( $tile['tile_priority'] ) && isset( $tile['order'] )) {
+                            $field_order = array_search( $field['id'], $tile['order'] );
+                            $priority = ( $tile['tile_priority'] * 10 ) + $field_order;
                         }
                     }
                 }
                 $field['priority'] = $priority;
             }
-            unset($field); // https://stackoverflow.com/questions/7158741/why-php-iteration-by-reference-returns-a-duplicate-last-record
+            unset( $field ); // https://stackoverflow.com/questions/7158741/why-php-iteration-by-reference-returns-a-duplicate-last-record
 
-            usort( $fields, function($a, $b) {
+            usort( $fields, function( $a, $b) {
                 return $a['priority'] - $b['priority'];
             });
         }
@@ -1279,7 +1279,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
 
                     // Display selected fields
                     foreach ( $fields as $field ) {
-                        $show_comments = $show_comments || ($field['id'] === 'comments' && $field['enabled']);
+                        $show_comments = $show_comments || ( $field['id'] === 'comments' && $field['enabled'] );
                         if ( $field['enabled'] && !in_array( $field['id'], $excluded_fields ) ) {
 
                             $post_field = $this->post_field_settings[ $field['id'] ];
@@ -1349,7 +1349,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                 </tbody>
             </table>
             <pre style="display:none;"><code style="display: block;">
-            <?php print_r($post); ?>
+            <?php print_r( $post ); ?>
             </code></pre>
         </div>
         <?php
@@ -1452,7 +1452,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                 $data['total'] = $posts['total'];
                 foreach ( $posts['posts'] ?? [] as $post ) {
                     $post['id'] = $post['ID'];
-                    unset($post['ID']);
+                    unset( $post['ID'] );
                     $data['posts'][] = (object) $post;
                 }
             }
@@ -1673,8 +1673,8 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
         if ( !empty( $comments ) ) {
             foreach ( $comments as $comment ) {
                 if ( !empty( $comment ) ) {
-                    $updated_comment = DT_Posts::add_post_comment($updated_post['post_type'], $updated_post['ID'], $comment, 'comment', [], false);
-                    if (empty($updated_comment) || is_wp_error($updated_comment)) {
+                    $updated_comment = DT_Posts::add_post_comment( $updated_post['post_type'], $updated_post['ID'], $comment, 'comment', [], false );
+                    if (empty( $updated_comment ) || is_wp_error( $updated_comment )) {
                         return [
                             'success' => false,
                             'message' => 'Unable to add comment to record details!'
