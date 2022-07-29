@@ -64,7 +64,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
                                             'multi_select',
                                             'tags',
                                             'location',
-                                            'connection',
+                                            // 'connection',
                                         ];
                                         foreach ( $field_settings as $key => $value ) {
                                             // only allow supported field types
