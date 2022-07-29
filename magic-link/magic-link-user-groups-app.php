@@ -253,6 +253,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                 'root'           => esc_url_raw( rest_url() ),
                 'nonce'          => wp_create_nonce( 'wp_rest' ),
                 'parts'          => $this->parts,
+                'lang'           => $this->fetch_incoming_link_param('lang'),
                 'field_settings' => DT_Posts::get_post_field_settings( 'groups' ),
                 'link_obj_id'    => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $this->fetch_incoming_link_param( 'id' ) ),
                 'sys_type'       => $this->fetch_incoming_link_param( 'type' ),
@@ -269,7 +270,8 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                     type: "GET",
                     data: {
                         action: 'get',
-                        parts: jsObject.parts
+                        parts: jsObject.parts,
+                        lang: jsObject.lang,
                     },
                     contentType: "application/json; charset=utf-8",
                     dataType: "json",
@@ -307,7 +309,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                         let html = `<tr onclick="get_assigned_group_details('${window.lodash.escape(v.id)}', '${window.lodash.escape(v.name)}');">
                                 <td>${window.lodash.escape(v.name)}</td>
                                 <td>${window.lodash.escape(v.group_status.label)}</td>
-                                <td class="last-update">Last updated: ${window.lodash.escape(v.last_modified.formatted)}</td>
+                                <td class="last-update"><?php esc_html_e( "Updated", 'disciple_tools' ) ?>: ${window.lodash.escape(v.last_modified.formatted)}</td>
                             </tr>`;
 
                         table.find('tbody').append(html);
@@ -330,6 +332,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                         data: {
                             action: 'get',
                             parts: jsObject.parts,
+                            lang: jsObject.lang,
                             sys_type: jsObject.sys_type,
                             post_id: post_id,
                             comment_count: comment_count,
@@ -1518,6 +1521,8 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                 ]
             ] );
 
+            $this->determine_language_locale( $params["parts"] );
+
             // Revert to original user
             if ( ! empty( $original_user ) && isset( $original_user->ID ) ) {
                 wp_set_current_user( $original_user->ID );
@@ -1550,6 +1555,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
         if ( ! is_user_logged_in() ) {
             $this->update_user_logged_in_state( $params['sys_type'], $params["parts"]["post_id"] );
         }
+        $this->determine_language_locale( $params["parts"] );
 
         $link_obj = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $params["parts"]["instance_id"] );
 
