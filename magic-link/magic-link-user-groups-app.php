@@ -3,6 +3,13 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 } // Exit if accessed directly.
 
+function assoc_to_array($options) {
+    $keys = array_keys($options);
+    return array_map(function ($key) use ($options) {
+        $options[$key]['id'] = $key;
+        return $options[$key];
+    }, $keys);
+}
 
 /**
  * Class Disciple_Tools_Magic_Links_Magic_User_Groups_App
@@ -227,7 +234,8 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
      */
     public function header_javascript() {
         ?>
-        <script></script>
+        <script type="module" src="<?php echo esc_html( plugin_dir_url(__FILE__) . '../assets/dtwc/dist/form/dt-label/dt-label.js')?>"></script>
+        <script type="module" src="<?php echo esc_html( plugin_dir_url(__FILE__) . '../assets/dtwc/dist/form/dt-single-select/dt-single-select.js')?>"></script>
         <?php
     }
 
@@ -1225,11 +1233,74 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
         <?php
     }
 
+    /**
+     * Copied from theme to replace web component rendering. Can be removed if/when web-components are fully adopted in the theme.
+     * @param $field_key
+     * @param $fields
+     * @param $post
+     * @param bool $show_extra_controls
+     * @param bool $show_hidden
+     * @param string $field_id_prefix
+     */
+    public function render_field_as_web_component( $field_key, $fields, $post, $show_extra_controls = false, $show_hidden = false, $field_id_prefix = '' ) {
+        $disabled = 'disabled';
+        if ( isset( $post['post_type'] ) && isset( $post['ID'] ) ) {
+            $can_update = DT_Posts::can_update( $post['post_type'], $post['ID'] );
+        } else {
+            $can_update = true;
+        }
+        if ( $can_update || isset( $post["assigned_to"]["id"] ) && $post["assigned_to"]["id"] == get_current_user_id() ) {
+            $disabled = '';
+        }
+        $required_tag = ( isset( $fields[$field_key]["required"] ) && $fields[$field_key]["required"] === true ) ? 'required' : '';
+        $field_type = isset( $fields[$field_key]["type"] ) ? $fields[$field_key]["type"] : null;
+        $is_private = isset( $fields[$field_key]["private"] ) && $fields[$field_key]["private"] === true;
+        $display_field_id = $field_key;
+        if ( !empty( $field_id_prefix ) ) {
+            $display_field_id = $field_id_prefix . $field_key;
+        }
+        if ( isset( $fields[$field_key]["type"] ) && empty( $fields[$field_key]["custom_display"] ) && empty( $fields[$field_key]["hidden"] ) ) {
+            $allowed_types = apply_filters( 'dt_render_field_for_display_allowed_types', [ 'key_select', 'multi_select', 'date', 'datetime', 'text', 'textarea', 'number', 'connection', 'location', 'location_meta', 'communication_channel', 'tags', 'user_select' ] );
+            if ( !in_array( $field_type, $allowed_types ) ){
+                return;
+            }
+            if ( !dt_field_enabled_for_record_type( $fields[$field_key], $post ) ){
+                return;
+            }
+
+
+            ?>
+            <div class="section-subheader">
+                <dt-label
+                    <?php echo $is_private ? 'private' : null ?>
+                >
+                    <?php echo esc_html( $fields[$field_key]["name"] ); ?>
+                    <span slot="icon-start"><?php dt_render_field_icon( $fields[$field_key] );?></span>
+                    <span slot="private-tooltip"><?php _x( "Private Field: Only I can see it's content", 'disciple_tools' )?></span>
+                </dt-label>
+            </div>
+            <?php
+            if ( $field_type === "key_select" ) :
+                ?>
+                <dt-single-select class="select-field"
+                                  id="<?php echo esc_html( $display_field_id ); ?>"
+                                  name="<?php echo esc_html( $field_key ); ?>"
+                                  <?php echo esc_html( $required_tag ) ?>
+                                  <?php echo esc_html( $disabled ); ?>
+                                  value="<?php echo esc_attr( key_exists( $field_key, $post ) ? $post[$field_key]["key"] : null ) ?>"
+                                  options="<?php echo esc_attr( json_encode( assoc_to_array( $fields[$field_key]["default"] ) ) ) ?>"
+                              ></dt-single-select>
+
+            <?php endif;
+        }
+    }
+
     public function post_form( $post, $fields ) {
 
         $post_settings = DT_Posts::get_post_settings( 'groups' );
         $this->post_field_settings = $post_settings['fields'];
 
+        $wc_types = ['key_select'];
         if ( !empty( $fields ) && !empty( $this->post_field_settings ) ) {
             // Sort fields based on tile settings
             foreach ( $fields as &$field ) {
@@ -1292,8 +1363,13 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
 
                             // Capture rendered field html
                             ob_start();
-                            render_field_for_display( $field['id'], $this->post_field_settings, $post, true );
+                            if (in_array( $post_field_type, $wc_types ) ) {
+                                $this->render_field_as_web_component($field['id'], $this->post_field_settings, $post, true);
+                            } else {
+                                render_field_for_display($field['id'], $this->post_field_settings, $post, true);
+                            }
                             $rendered_field_html = ob_get_clean();
+
 
                             // Only display if valid html content has been generated
                             if ( ! empty( $rendered_field_html ) ) {
