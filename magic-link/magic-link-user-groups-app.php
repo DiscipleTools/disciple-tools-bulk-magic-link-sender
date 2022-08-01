@@ -3,9 +3,9 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 } // Exit if accessed directly.
 
-function assoc_to_array($options) {
-    $keys = array_keys($options);
-    return array_map(function ($key) use ($options) {
+function assoc_to_array( $options) {
+    $keys = array_keys( $options );
+    return array_map(function ( $key) use ( $options) {
         $options[$key]['id'] = $key;
         return $options[$key];
     }, $keys);
@@ -110,7 +110,30 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
         add_filter( 'dt_magic_url_base_allowed_css', [ $this, 'dt_magic_url_base_allowed_css' ], 10, 1 );
         add_filter( 'dt_magic_url_base_allowed_js', [ $this, 'dt_magic_url_base_allowed_js' ], 10, 1 );
         add_action( 'wp_enqueue_scripts', [ $this, 'wp_enqueue_scripts' ], 100 );
+        add_filter( 'script_loader_tag', [ $this, 'add_type_attribute' ], 10, 2 );
+    }
 
+    private function set_script_type_module( $script ) {
+        $re = '/type=[\'"](.*?)[\'"]/m';
+
+        preg_match_all( $re, $script, $matches, PREG_SET_ORDER, 0 );
+
+        if ( count( $matches ) > 0 ) {
+            $script = str_replace( $matches[0][0], 'type="module"', $script );
+        } else {
+            $script = str_replace( '<script ', '<script type="module" ', $script );
+        }
+
+        return $script;
+    }
+
+    public function add_type_attribute( $tag, $handle) {
+        if ( !str_contains( $handle, 'dtwc' ) ) {
+            return $tag;
+        }
+
+        // if script is a web component, we need to set the type to 'module' on the script tag
+        return $this->set_script_type_module( $tag );
     }
 
     public function adjust_global_values_by_incoming_sys_type( $type ) {
@@ -126,6 +149,11 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
         }
     }
 
+    private function enqueue_web_component( $name, $rel_path ) {
+        $path = '../assets/dtwc/dist/' . $rel_path;
+
+        wp_enqueue_script( 'dtwc-' . $name, plugin_dir_url( __FILE__ ) . $path, null, filemtime( plugin_dir_path( __FILE__ ) . $path ) );
+    }
     public function wp_enqueue_scripts() {
         // Support Geolocation APIs
         if ( DT_Mapbox_API::get_key() ) {
@@ -141,6 +169,9 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
         wp_enqueue_style( 'jquery-typeahead-css', get_template_directory_uri() . $path_css, [], filemtime( get_template_directory() . $path_css ) );
 
         wp_enqueue_style( 'material-font-icons-css', 'https://cdn.jsdelivr.net/npm/@mdi/font@6.6.96/css/materialdesignicons.min.css', [], '6.6.96' );
+
+        $this->enqueue_web_component( 'label', 'form/dt-label/dt-label.js' );
+        $this->enqueue_web_component( 'single-select', 'form/dt-single-select/dt-single-select.js' );
     }
 
     public function dt_magic_url_base_allowed_js( $allowed_js ) {
@@ -150,6 +181,8 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
         $allowed_js[] = 'mapbox-cookie';
         $allowed_js[] = 'mapbox-search-widget';
         $allowed_js[] = 'jquery-typeahead';
+        $allowed_js[] = 'dtwc-label';
+        $allowed_js[] = 'dtwc-single-select';
 
         return $allowed_js;
     }
@@ -234,8 +267,6 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
      */
     public function header_javascript() {
         ?>
-        <script type="module" src="<?php echo esc_html( plugin_dir_url(__FILE__) . '../assets/dtwc/dist/form/dt-label/dt-label.js')?>"></script>
-        <script type="module" src="<?php echo esc_html( plugin_dir_url(__FILE__) . '../assets/dtwc/dist/form/dt-single-select/dt-single-select.js')?>"></script>
         <?php
     }
 
@@ -253,7 +284,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                 'root'           => esc_url_raw( rest_url() ),
                 'nonce'          => wp_create_nonce( 'wp_rest' ),
                 'parts'          => $this->parts,
-                'lang'           => $this->fetch_incoming_link_param('lang'),
+                'lang'           => $this->fetch_incoming_link_param( 'lang' ),
                 'field_settings' => DT_Posts::get_post_field_settings( 'groups' ),
                 'link_obj_id'    => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $this->fetch_incoming_link_param( 'id' ) ),
                 'sys_type'       => $this->fetch_incoming_link_param( 'type' ),
@@ -1303,7 +1334,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
         $post_settings = DT_Posts::get_post_settings( 'groups' );
         $this->post_field_settings = $post_settings['fields'];
 
-        $wc_types = ['key_select'];
+        $wc_types = [ 'key_select' ];
         if ( !empty( $fields ) && !empty( $this->post_field_settings ) ) {
             // Sort fields based on tile settings
             foreach ( $fields as &$field ) {
@@ -1367,9 +1398,9 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                             // Capture rendered field html
                             ob_start();
                             if (in_array( $post_field_type, $wc_types ) ) {
-                                $this->render_field_as_web_component($field['id'], $this->post_field_settings, $post, true);
+                                $this->render_field_as_web_component( $field['id'], $this->post_field_settings, $post, true );
                             } else {
-                                render_field_for_display($field['id'], $this->post_field_settings, $post, true);
+                                render_field_for_display( $field['id'], $this->post_field_settings, $post, true );
                             }
                             $rendered_field_html = ob_get_clean();
 
