@@ -1,0 +1,43 @@
+body{
+  --primary-color-h: 206;
+  --primary-color-s: 43%;
+  --primary-color-l: 42%;
+
+  --secondary-color-h: 93;
+  --secondary-color-s: 48%;
+  --secondary-color-l: 55%;
+  --contrastThreshold: 60%;
+
+  /*  Calculations Based on Lightness  */
+  --lightnessTransform: 10%;
+  --darknessTransform: 15%;
+  --primary-color-light-l: calc(var(--primary-color-l) + var(--lightnessTransform));
+  --primary-color-dark-l: calc(var(--primary-color-l) - var(--darknessTransform));
+  --secondary-color-light-l: calc(var(--secondary-color-l) + var(--lightnessTransform));
+  --secondary-color-dark-l: calc(var(--secondary-color-l) - var(--darknessTransform));
+
+  --color-primary: hsl(var(--primary-color-h),
+                       var(--primary-color-s),
+                       var(--primary-color-l));
+  --color-secondary: hsl(var(--secondary-color-h),
+                       var(--secondary-color-s),
+                       var(--secondary-color-l));
+  --color-primary-dark:hsl(var(--primary-color-h),
+                       var(--primary-color-s),
+                       var(--primary-color-dark-l));
+  --color-secondary-dark:hsl(var(--secondary-color-h),
+                       var(--secondary-color-s),
+                       var(--secondary-color-dark-l));
+  --color-primary-light:hsl(var(--primary-color-h),
+                       var(--primary-color-s),
+                       var(--primary-color-light-l));
+  --color-secondary-light:hsl(var(--secondary-color-h),
+                       var(--secondary-color-s),
+                       var(--secondary-color-light-l));
+
+  --color-gray: hsl(0, 0%, 79%);
+
+
+  --background-color: #fefefe;
+  --border-color: var(--color-gray);
+}

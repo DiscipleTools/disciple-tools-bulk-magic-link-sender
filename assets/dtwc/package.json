@@ -1,0 +1,62 @@
+{
+  "name": "dt-web-components",
+  "description": "Disciple.Tools Web components following open-wc recommendations",
+  "author": "Disciple.Tools",
+  "license": "GPL-2.0-or-later",
+  "homepage": "https://disciple.tools",
+  "version": "0.0.1",
+  "main": "index.js",
+  "module": "index.js",
+  "scripts": {
+    "analyze": "cem analyze --litelement",
+    "start": "web-dev-server",
+    "lint": "eslint --ext .js,.html . --ignore-path .gitignore && prettier \"**/*.js\" --check --ignore-path .gitignore",
+    "format": "eslint --ext .js,.html . --fix --ignore-path .gitignore && prettier \"**/*.js\" --write --ignore-path .gitignore",
+    "test": "web-test-runner --coverage",
+    "test:watch": "web-test-runner --watch",
+    "storybook": "npm run analyze -- --exclude dist && web-dev-server -c .storybook/server.mjs",
+    "storybook:build": "npm run analyze -- --exclude dist && build-storybook",
+    "build": "rollup -c"
+  },
+  "dependencies": {
+    "@web/test-runner-commands": "^0.6.3",
+    "lit": "^2.0.2"
+  },
+  "devDependencies": {
+    "@custom-elements-manifest/analyzer": "^0.4.17",
+    "@open-wc/eslint-config": "^4.3.0",
+    "@open-wc/testing": "next",
+    "@rollup/plugin-node-resolve": "^13.3.0",
+    "@web/dev-server": "^0.1.28",
+    "@web/dev-server-storybook": "next",
+    "@web/rollup-plugin-copy": "^0.3.0",
+    "@web/test-runner": "^0.13.22",
+    "eslint": "^8.20.0",
+    "eslint-config-prettier": "^8.5.0",
+    "husky": "^4.3.8",
+    "lint-staged": "^10.5.4",
+    "prettier": "^2.4.1",
+    "rollup": "^2.77.2",
+    "rollup-plugin-minify-html-literals": "^1.2.6",
+    "rollup-plugin-multi-input": "^1.3.1",
+    "rollup-plugin-summary": "^1.4.3",
+    "rollup-plugin-terser": "^7.0.2"
+  },
+  "customElements": "custom-elements.json",
+  "eslintConfig": {
+    "extends": [
+      "@open-wc",
+      "prettier"
+    ]
+  },
+  "prettier": {
+    "singleQuote": true,
+    "arrowParens": "avoid"
+  },
+  "lint-staged": {
+    "*.js": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  }
+}
