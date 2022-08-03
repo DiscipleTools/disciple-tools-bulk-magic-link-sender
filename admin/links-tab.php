@@ -573,6 +573,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                     </select>
 
                     <select style="min-width: 10%;" id="ml_main_col_schedules_frequency_time_unit">
+                        <option value="minutes">Minutes</option>
                         <option value="hours">Hours</option>
                         <option value="days">Days</option>
                         <option value="weeks">Weeks</option>
@@ -617,6 +618,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                     </select>
 
                     <select style="min-width: 10%;" id="ml_main_col_schedules_links_expire_time_unit">
+                        <option value="minutes">Minutes</option>
                         <option value="hours">Hours</option>
                         <option value="days">Days</option>
                         <option value="weeks">Weeks</option>
