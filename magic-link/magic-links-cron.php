@@ -62,15 +62,9 @@ function execute_scheduled_link_objects() {
                                 // Determine if usage of global sending channels is enabled
                                 if ( boolval( Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_all_channels_enabled ) ) ) {
 
-                                    // Loop over assigned users and members
-                                    foreach ( $link_obj->assigned ?? [] as $assigned ) {
+                                    // Send messages to assigned users and members
+                                    execute_ml_send( $link_obj, $logs );
 
-                                        if ( in_array( strtolower( trim( $assigned->type ) ), Disciple_Tools_Bulk_Magic_Link_Sender_API::$assigned_supported_types ) ) {
-
-                                            // Process send request to assigned user, using available contact info
-                                            Disciple_Tools_Bulk_Magic_Link_Sender_API::send( $link_obj, $assigned, $logs );
-                                        }
-                                    }
                                 } else {
                                     $logs[] = Disciple_Tools_Bulk_Magic_Link_Sender_API::logging_create( 'Global sending channels disabled; no further action to be taken!' );
                                 }
@@ -84,6 +78,9 @@ function execute_scheduled_link_objects() {
 
                                     // Update links expire base timestamp, in order to ensure next checks are relative to recent updates
                                     Disciple_Tools_Bulk_Magic_Link_Sender_API::update_schedule_settings( $id, Disciple_Tools_Bulk_Magic_Link_Sender_API::$schedule_links_expire_base_ts, time() );
+
+                                    // Send messages to assigned users and members
+                                    execute_ml_send( $link_obj, $logs );
 
                                 } else {
                                     $logs[] = Disciple_Tools_Bulk_Magic_Link_Sender_API::logging_create( 'Terminating all assigned user magic links!' );
@@ -116,4 +113,14 @@ function execute_scheduled_link_objects() {
 
     // Update last cron run timestamp
     Disciple_Tools_Bulk_Magic_Link_Sender_API::update_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_last_cron_run, time() );
+}
+
+function execute_ml_send( $link_obj, &$logs ) {
+    foreach ( $link_obj->assigned ?? [] as $assigned ) {
+        if ( in_array( strtolower( trim( $assigned->type ) ), Disciple_Tools_Bulk_Magic_Link_Sender_API::$assigned_supported_types ) ) {
+
+            // Process send request to assigned user, using available contact info
+            Disciple_Tools_Bulk_Magic_Link_Sender_API::send( $link_obj, $assigned, $logs );
+        }
+    }
 }
