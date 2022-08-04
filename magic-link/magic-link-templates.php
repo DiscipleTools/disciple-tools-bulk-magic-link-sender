@@ -42,7 +42,9 @@ class Disciple_Tools_Magic_Links_Templates_Loader {
     } // End instance()
 
     public function __construct() {
-        self::load_templates();
+        add_action( "after_setup_theme", function (){
+            self::load_templates();
+        }, 200 );
     }
 
     private function load_templates() {
@@ -993,8 +995,11 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                 if ( $field['enabled'] && $this->is_link_obj_field_enabled( $field['id'] ) ) {
 
                                     $post_field_type = '';
-                                    if ( $field['type'] === 'dt' ) {
+                                    if ( $field['type'] === 'dt' && isset( $this->post_field_settings[$field['id']]['type'] ) ){
                                         $post_field_type = $this->post_field_settings[ $field['id'] ]['type'];
+                                    }
+                                    if ( empty( $post_field_type ) ){
+                                        continue;
                                     }
 
                                     // Generate hidden values to assist downstream processing
