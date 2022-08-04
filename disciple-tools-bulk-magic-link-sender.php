@@ -5,7 +5,7 @@
  * Description: Disciple Tools - Bulk magic link sender for users, contacts, groups and teams assignment + schedule management for magic links dispatching over configured sending channels.
  * Text Domain: disciple-tools-bulk-magic-link-sender
  * Domain Path: /languages
- * Version:  1.7.7
+ * Version:  1.7.8
  * Author URI: https://github.com/DiscipleTools
  * GitHub Plugin URI: https://github.com/DiscipleTools/disciple-tools-bulk-magic-link-sender
  * Requires at least: 4.7.0
@@ -81,18 +81,12 @@ class Disciple_Tools_Bulk_Magic_Link_Sender {
 
     private function __construct() {
         $is_rest = dt_is_rest();
-        /**
-         * @todo Decide if you want to use the REST API example
-         * To remove: delete this following line and remove the folder named /rest-api
-         */
+
         if ( $is_rest && strpos( dt_get_url_path(), 'disciple_tools_magic_links' ) !== false ) {
             require_once( 'rest-api/rest-api.php' ); // adds starter rest api class
         }
 
-        /**
-         * @todo Decide if you want to create a magic link
-         * To remove: delete the line below and remove the folder named /magic-link
-         */
+
         require_once( 'magic-link/magic-links-api.php' );
         require_once( 'magic-link/magic-link-templates.php' );
         require_once( 'magic-link/magic-link-user-app.php' );
@@ -100,24 +94,14 @@ class Disciple_Tools_Bulk_Magic_Link_Sender {
         require_once( 'magic-link/magic-links-cron.php' );
         require_once( 'magic-link/magic-links-default-filters.php' );
 
-        /**
-         * @todo Decide if you want to add a custom admin page in the admin area
-         * To remove: delete the 3 lines below and remove the folder named /admin
-         */
         if ( is_admin() ) {
             require_once( 'admin/admin-menu-and-tabs.php' ); // adds starter admin page and section for plugin
         }
 
-        /**
-         * @todo Decide if you want to support localization of your plugin
-         * To remove: delete the line below and remove the folder named /languages
-         */
+
         $this->i18n();
 
-        /**
-         * @todo Decide if you want to customize links for your plugin in the plugin admin area
-         * To remove: delete the lines below and remove the function named
-         */
+
         if ( is_admin() ) { // adds links to the plugin description area in the plugin admin list.
             add_filter( 'plugin_row_meta', [ $this, 'plugin_description_links' ], 10, 4 );
         }
@@ -277,20 +261,6 @@ if ( ! function_exists( "dt_hook_ajax_notice_handler" ) ) {
     }
 }
 
-/**
- * Plugin Releases and updates
- * @todo Uncomment and change the url if you want to support remote plugin updating with new versions of your plugin
- * To remove: delete the section of code below and delete the file called version-control.json in the plugin root
- *
- * This section runs the remote plugin updating service, so you can issue distributed updates to your plugin
- *
- * @note See the instructions for version updating to understand the steps involved.
- * @link https://github.com/DiscipleTools/disciple-tools-bulk-magic-link-sender/wiki/Configuring-Remote-Updating-System
- *
- * @todo Enable this section with your own hosted file
- * @todo An example of this file can be found in (version-control.json)
- * @todo Github is a good option for delivering static json.
- */
 /**
  * Check for plugin updates even when the active theme is not Disciple.Tools
  *
