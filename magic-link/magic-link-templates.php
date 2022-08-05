@@ -963,7 +963,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                 <br>
 
                 <h3>
-                    <span id="contact_name">
+                    <span id="contact_name" style="font-weight: bold">
                         <?php echo esc_html( ! empty( $this->post ) ? $this->post['name'] : '---' ); ?>
                     </span>
                 </h3>
