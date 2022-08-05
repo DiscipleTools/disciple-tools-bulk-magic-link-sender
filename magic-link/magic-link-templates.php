@@ -955,7 +955,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
 
                 <!-- TEMPLATE MESSAGE -->
                 <p id="template_msg">
-                    <?php echo esc_html( ! empty( $this->template ) && isset( $this->template['message'] ) ? $this->template['message'] : '' ); ?>
+                    <?php echo nl2br( esc_html( ! empty( $this->template ) && isset( $this->template['message'] ) ? $this->template['message'] : '' ) ); ?>
                 </p>
 
                 <!-- ERROR MESSAGES -->
