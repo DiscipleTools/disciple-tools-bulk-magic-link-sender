@@ -18,7 +18,8 @@ jQuery(function ($) {
   });
 
   $(document).on('click', '#ml_main_col_assign_users_teams_add', function () {
-    handle_add_users_teams_request(true, determine_assignment_user_select_id(), true, false);
+    handle_add_users_teams_request(true, determine_assignment_user_select_id(), true, false, function () {
+    });
   });
 
   $(document).on('click', '.ml-main-col-assign-users-teams-table-row-remove-but', function (e) {
@@ -33,7 +34,7 @@ jQuery(function ($) {
     handle_delete_request();
   });
 
-  $(document).on('click', '#ml_main_col_assign_users_teams_update_but', function () {
+  $(document).on('click', '#ml_main_col_link_manage_update_but', function () {
     handle_update_request();
   });
 
@@ -45,8 +46,16 @@ jQuery(function ($) {
     toggle_never_expires_element_states(true);
   });
 
-  $(document).on('click', '#ml_main_col_schedules_links_expire_never', function () {
+  $(document).on('click', '#ml_main_col_link_manage_links_expire_never', function () {
     toggle_never_expires_element_states(false);
+  });
+
+  $(document).on('click', '#ml_main_col_link_manage_links_refreshed_before_send', function () {
+    toggle_refreshed_before_send_element_states();
+  });
+
+  $(document).on('click', '#ml_main_col_schedules_enabled', function () {
+    toggle_schedule_manage_element_states();
   });
 
   $(document).on('click', '#ml_main_col_schedules_send_now_but', function () {
@@ -56,11 +65,11 @@ jQuery(function ($) {
   $(document).on('click', '.ml-links-docs', function (evt) {
     handle_docs_request($(evt.currentTarget).data('title'), $(evt.currentTarget).data('content'));
   });
-  $(document).on('click', '#ml_main_col_assign_users_teams_links_but_refresh', function () {
+  $(document).on('click', '#ml_main_col_link_manage_links_but_refresh', function () {
     handle_assigned_user_links_management('refresh', function () {
     });
   });
-  $(document).on('click', '#ml_main_col_assign_users_teams_links_but_delete', function () {
+  $(document).on('click', '#ml_main_col_link_manage_links_but_delete', function () {
     handle_assigned_user_links_management('delete', function () {
     });
   });
@@ -93,7 +102,12 @@ jQuery(function ($) {
     });
 
     reset_section(display, $('#ml_main_col_assign_users_teams'), function () {
-      reset_section_assign_users_teams([]);
+      reset_section_assign_users_teams([], function () {
+      });
+    });
+
+    reset_section(display, $('#ml_main_col_link_manage'), function () {
+      reset_section_link_manage('3', 'days', false, true, false);
     });
 
     reset_section(display, $('#ml_main_col_message'), function () {
@@ -103,7 +117,7 @@ jQuery(function ($) {
 
     reset_section(display, $('#ml_main_col_schedules'), function () {
       let default_send_channel_id = window.dt_magic_links.dt_default_send_channel_id;
-      reset_section_schedules(false, '1', 'hours', default_send_channel_id, '3', 'days', false, moment().unix(), '', '', true, '', '', false);
+      reset_section_schedules(false, '1', 'hours', default_send_channel_id, moment().unix(), '', false);
     });
 
     $('#ml_main_col_update_msg').html('').fadeOut('fast');
@@ -146,13 +160,32 @@ jQuery(function ($) {
     $('#ml_main_col_ml_type_fields_table').find('tbody tr').remove();
   }
 
-  function reset_section_assign_users_teams(assigned_users_teams) {
+  function reset_section_assign_users_teams(assigned_users_teams, callback) {
     $('#ml_main_col_assign_users_teams_select').val('');
     $('#ml_main_col_assign_users_teams_table').find('tbody > tr').remove();
 
     if (assigned_users_teams && assigned_users_teams.length > 0) {
       assigned_users_teams.forEach(function (element, idx) {
-        handle_add_users_teams_request(false, element['id'], false, true);
+        handle_add_users_teams_request(false, element['id'], false, true, function () {
+
+          // Retrospectively update link expiration details
+          if (element['links_expire_within_base_ts'] && element['links_expire_on_ts'] && element['links_expire_on_ts_formatted']) {
+            $('#ml_main_col_assign_users_teams_table').find('tbody > tr').each(function (tr_idx, tr) {
+
+              // Identify corresponding tr element
+              let id = $(tr).find('#ml_main_col_assign_users_teams_table_row_id').val();
+              if (id && new String(id).valueOf() === new String(element['id']).valueOf()) {
+                $(tr).find('#ml_main_col_assign_users_teams_table_row_td_link_expires_base_ts').val(element['links_expire_within_base_ts']);
+                $(tr).find('#ml_main_col_assign_users_teams_table_row_td_link_expires_on_ts').val(element['links_expire_on_ts']);
+                $(tr).find('#ml_main_col_assign_users_teams_table_row_td_link_expires_on_ts_formatted').html(element['links_expire_on_ts_formatted']);
+              }
+            });
+          }
+
+          // Execute callback
+          callback();
+
+        });
       });
     }
 
@@ -160,11 +193,24 @@ jQuery(function ($) {
     toggle_assigned_user_links_manage_but_states();
   }
 
+  function reset_section_link_manage(links_expire_within_amount, links_expire_within_time_unit, links_never_expires, links_refreshed_before_send, links_expire_auto_refresh_enabled) {
+    $('#ml_main_col_link_manage_links_expire_amount').val(links_expire_within_amount);
+    $('#ml_main_col_link_manage_links_expire_time_unit').val(links_expire_within_time_unit);
+    $('#ml_main_col_link_manage_links_expire_never').prop('checked', new String(links_never_expires).valueOf().toLowerCase() === 'true');
+    $('#ml_main_col_link_manage_links_refreshed_before_send').prop('checked', new String(links_refreshed_before_send).valueOf().toLowerCase() === 'true');
+    $('#ml_main_col_link_manage_links_expire_auto_refresh_enabled').prop('checked', new String(links_expire_auto_refresh_enabled).valueOf().toLowerCase() === 'true');
+
+    toggle_refreshed_before_send_element_states();
+    if ($('#ml_main_col_link_manage_links_expire_never').prop('checked')) {
+      toggle_never_expires_element_states(false);
+    }
+  }
+
   function reset_section_message(message) {
     $('#ml_main_col_msg_textarea').val(message);
   }
 
-  function reset_section_schedules(enabled, freq_amount, freq_time_unit, sending_channel, links_amount, links_time_unit, links_never_expires, links_base_ts, links_expire_on_ts, links_expire_on_ts_formatted, links_auto_refresh, last_schedule_run, last_success_send, send_now) {
+  function reset_section_schedules(enabled, freq_amount, freq_time_unit, sending_channel, last_schedule_run, last_success_send, send_now) {
     $('#ml_main_col_schedules_enabled').prop('checked', enabled);
     $('#ml_main_col_schedules_frequency_amount').val(freq_amount);
     $('#ml_main_col_schedules_frequency_time_unit').val(freq_time_unit);
@@ -178,15 +224,8 @@ jQuery(function ($) {
       });
     $('#ml_main_col_schedules_sending_channels').val(sending_channel_option_present ? sending_channel : '');
 
-    $('#ml_main_col_schedules_links_expire_amount').val(links_amount);
-    $('#ml_main_col_schedules_links_expire_time_unit').val(links_time_unit);
-    $('#ml_main_col_schedules_links_expire_never').prop('checked', links_never_expires);
-    $('#ml_main_col_schedules_links_expire_base_ts').val(links_base_ts);
-    $('#ml_main_col_schedules_links_expire_on_ts').val(links_expire_on_ts);
-    $('#ml_main_col_schedules_links_expire_on_ts_formatted').val(links_expire_on_ts_formatted);
-    $('#ml_main_col_schedules_links_expire_auto_refresh_enabled').prop('checked', links_auto_refresh);
-
-    toggle_never_expires_element_states(false);
+    //toggle_never_expires_element_states(false);
+    toggle_schedule_manage_element_states();
 
     $('#ml_main_col_schedules_last_schedule_run').val(last_schedule_run);
     $('#ml_main_col_schedules_last_success_send').val(last_success_send);
@@ -207,6 +246,13 @@ jQuery(function ($) {
     });
   }
 
+  function toggle_schedule_manage_element_states() {
+    let checked = $('#ml_main_col_schedules_enabled').prop('checked');
+
+    $('#ml_main_col_schedules_frequency_amount').prop('disabled', !checked);
+    $('#ml_main_col_schedules_frequency_time_unit').prop('disabled', !checked);
+  }
+
   function toggle_never_expires_element_states(is_obj_level) {
 
     if (is_obj_level) { // Object Level
@@ -214,21 +260,36 @@ jQuery(function ($) {
       $('#ml_main_col_link_objs_manage_expires').prop('disabled', disabled);
 
     } else { // Link Level
-      let disabled = $('#ml_main_col_schedules_links_expire_never').prop('checked');
-      $('#ml_main_col_schedules_links_expire_amount').prop('disabled', disabled);
-      $('#ml_main_col_schedules_links_expire_time_unit').prop('disabled', disabled);
-      $('#ml_main_col_schedules_links_expire_auto_refresh_enabled').prop('disabled', disabled);
+      let disabled = $('#ml_main_col_link_manage_links_expire_never').prop('checked');
+      $('#ml_main_col_link_manage_links_expire_amount').prop('disabled', disabled);
+      $('#ml_main_col_link_manage_links_expire_time_unit').prop('disabled', disabled);
+      $('#ml_main_col_link_manage_links_refreshed_before_send').prop('disabled', disabled);
+      $('#ml_main_col_link_manage_links_expire_auto_refresh_enabled').prop('disabled', disabled);
 
+      // Uncheck relevant widgets accordingly
+      if (disabled) {
+        $('#ml_main_col_link_manage_links_refreshed_before_send').prop('checked', false);
+        $('#ml_main_col_link_manage_links_expire_auto_refresh_enabled').prop('checked', false);
+      }
     }
 
+  }
+
+  function toggle_refreshed_before_send_element_states() {
+    let disabled = $('#ml_main_col_link_manage_links_refreshed_before_send').prop('checked');
+    $('#ml_main_col_link_manage_links_expire_auto_refresh_enabled').prop('disabled', disabled);
+
+    if (disabled) {
+      $('#ml_main_col_link_manage_links_expire_auto_refresh_enabled').prop('checked', false);
+    }
   }
 
   function toggle_assigned_user_links_manage_but_states() {
     let assigned_count = $('#ml_main_col_assign_users_teams_table').find('tbody > tr').length;
     let enabled = (assigned_count > 0);
 
-    $('#ml_main_col_assign_users_teams_links_but_refresh').prop('disabled', !enabled);
-    $('#ml_main_col_assign_users_teams_links_but_delete').prop('disabled', !enabled);
+    $('#ml_main_col_link_manage_links_but_refresh').prop('disabled', !enabled);
+    $('#ml_main_col_link_manage_links_but_delete').prop('disabled', !enabled);
   }
 
   function fetch_magic_link_type_obj(type_key) {
@@ -538,7 +599,11 @@ jQuery(function ($) {
     return enabled;
   }
 
-  function handle_add_users_teams_request(auto_update, selected_id, inc_default_members, load_contact_details) {
+  function handle_add_users_teams_request(auto_update, selected_id, inc_default_members, load_contact_details, callback) {
+
+    // Flag to determine callback execution
+    let execute_callback = true;
+
     // Ensure selection is valid and table does not already contain selection...
     if (selected_id && !already_has_users_teams(selected_id)) {
 
@@ -561,9 +626,13 @@ jQuery(function ($) {
           html = build_contact_row_html(auto_update, selected_id);
 
         } else {
+
+          // Ensure callback is executed following async return
+          execute_callback = false;
+
           // Invalidate html variable, as assigned table to be updated via request callbacks!
           html = null;
-          build_contact_row_html_async(auto_update, selected_id);
+          build_contact_row_html_async(auto_update, selected_id, callback);
         }
       }
 
@@ -575,6 +644,11 @@ jQuery(function ($) {
 
     // Toggle management button states accordingly based on assigned table shape!
     toggle_assigned_user_links_manage_but_states();
+
+    // Execute specified callback, unless told otherwise!
+    if (execute_callback) {
+      callback();
+    }
   }
 
   function already_has_users_teams(id) {
@@ -611,7 +685,7 @@ jQuery(function ($) {
     return null;
   }
 
-  function build_contact_row_html_async(auto_update, id) {
+  function build_contact_row_html_async(auto_update, id, callback) {
     let post_id = id.split('+')[1];
     get_post_record_request('contacts', post_id, function (post) {
       if (post && post['ID']) {
@@ -626,6 +700,9 @@ jQuery(function ($) {
 
       // Toggle management button states accordingly based on assigned table shape!
       toggle_assigned_user_links_manage_but_states();
+
+      // Execute specified callback
+      callback();
     });
   }
 
@@ -651,8 +728,9 @@ jQuery(function ($) {
       } else { // Single member addition only! Usually resulting from a link object load!
 
         let member = fetch_member_record(record['members'], tokens[2]);
-        html = build_row_html(auto_update, id, member['type_id'], 'Member', member['post_title'], member['type'], member['post_type'], build_comms_html(member, 'phone'), build_comms_html(member, 'email'), build_link_html(member['links'], member['type']));
-
+        if (member) {
+          html = build_row_html(auto_update, id, member['type_id'], 'Member', member['post_title'], member['type'], member['post_type'], build_comms_html(member, 'phone'), build_comms_html(member, 'email'), build_link_html(member['links'], member['type']));
+        }
       }
     }
     return html;
@@ -740,6 +818,11 @@ jQuery(function ($) {
                   <td style="vertical-align: middle;">${phone}</td>
                   <td style="vertical-align: middle;">${email}</td>
                   <td style="vertical-align: middle;" id="ml_main_col_assign_users_teams_table_row_td_link">${link}</td>
+                  <td style="vertical-align: middle;" id="ml_main_col_assign_users_teams_table_row_td_link_expires">
+                    <input id="ml_main_col_assign_users_teams_table_row_td_link_expires_base_ts" type="hidden" value=""/>
+                    <input id="ml_main_col_assign_users_teams_table_row_td_link_expires_on_ts" type="hidden" value=""/>
+                    <span id="ml_main_col_assign_users_teams_table_row_td_link_expires_on_ts_formatted">---</span>
+                  </td>
                   <td style="vertical-align: middle;">
                     <span style="float:right;">
                         <button type="submit" class="button float-right ml-main-col-assign-users-teams-table-row-remove-but">Remove</button>
@@ -757,7 +840,10 @@ jQuery(function ($) {
           'type': type,
           'name': name,
           'sys_type': sys_type,
-          'post_type': post_type
+          'post_type': post_type,
+          'links_expire_within_base_ts': '',
+          'links_expire_on_ts': '',
+          'links_expire_on_ts_formatted': ''
         });
       }
 
@@ -847,6 +933,9 @@ jQuery(function ($) {
         let name = $(removed_row).find('#ml_main_col_assign_users_teams_table_row_name').val();
         let sys_type = $(removed_row).find('#ml_main_col_assign_users_teams_table_row_sys_type').val();
         let post_type = $(removed_row).find('#ml_main_col_assign_users_teams_table_row_post_type').val();
+        let links_expire_within_base_ts = $(removed_row).find('#ml_main_col_assign_users_teams_table_row_td_link_expires_base_ts').val();
+        let links_expire_on_ts = $(removed_row).find('#ml_main_col_assign_users_teams_table_row_td_link_expires_on_ts').val();
+        let links_expire_on_ts_formatted = $(removed_row).find('#ml_main_col_assign_users_teams_table_row_td_link_expires_on_ts_formatted').html();
 
         handle_assigned_general_management('delete', {
           'id': id,
@@ -854,7 +943,10 @@ jQuery(function ($) {
           'type': type,
           'name': name,
           'sys_type': sys_type,
-          'post_type': post_type
+          'post_type': post_type,
+          'links_expire_within_base_ts': links_expire_within_base_ts,
+          'links_expire_on_ts': links_expire_on_ts,
+          'links_expire_on_ts_formatted': links_expire_on_ts_formatted
         });
       });
     }
@@ -883,13 +975,11 @@ jQuery(function ($) {
     let freq_amount = $('#ml_main_col_schedules_frequency_amount').val();
     let freq_time_unit = $('#ml_main_col_schedules_frequency_time_unit').val();
     let sending_channel = $('#ml_main_col_schedules_sending_channels').val();
-    let links_expire_within_amount = $('#ml_main_col_schedules_links_expire_amount').val();
-    let links_expire_within_time_unit = $('#ml_main_col_schedules_links_expire_time_unit').val();
-    let links_expire_within_base_ts = $('#ml_main_col_schedules_links_expire_base_ts').val();
-    let links_expire_on_ts = $('#ml_main_col_schedules_links_expire_on_ts').val();
-    let links_expire_on_ts_formatted = $('#ml_main_col_schedules_links_expire_on_ts_formatted').val();
-    let links_never_expires = $('#ml_main_col_schedules_links_expire_never').prop('checked');
-    let links_expire_auto_refresh_enabled = $('#ml_main_col_schedules_links_expire_auto_refresh_enabled').prop('checked');
+    let links_expire_within_amount = $('#ml_main_col_link_manage_links_expire_amount').val();
+    let links_expire_within_time_unit = $('#ml_main_col_link_manage_links_expire_time_unit').val();
+    let links_never_expires = $('#ml_main_col_link_manage_links_expire_never').prop('checked');
+    let links_refreshed_before_send = $('#ml_main_col_link_manage_links_refreshed_before_send').prop('checked');
+    let links_expire_auto_refresh_enabled = $('#ml_main_col_link_manage_links_expire_auto_refresh_enabled').prop('checked');
     let last_schedule_run = $('#ml_main_col_schedules_last_schedule_run').val();
     let last_success_send = $('#ml_main_col_schedules_last_success_send').val();
 
@@ -940,6 +1030,14 @@ jQuery(function ($) {
 
         'assigned': assigned_users_teams,
 
+        'link_manage': {
+          'links_expire_within_amount': links_expire_within_amount,
+          'links_expire_within_time_unit': links_expire_within_time_unit,
+          'links_never_expires': links_never_expires,
+          'links_refreshed_before_send': links_refreshed_before_send,
+          'links_expire_auto_refresh_enabled': links_expire_auto_refresh_enabled
+        },
+
         'message': message,
 
         'schedule': {
@@ -947,13 +1045,6 @@ jQuery(function ($) {
           'freq_amount': freq_amount,
           'freq_time_unit': freq_time_unit,
           'sending_channel': sending_channel,
-          'links_expire_within_amount': links_expire_within_amount,
-          'links_expire_within_time_unit': links_expire_within_time_unit,
-          'links_expire_within_base_ts': links_expire_within_base_ts,
-          'links_expire_on_ts': links_expire_on_ts,
-          'links_expire_on_ts_formatted': links_expire_on_ts_formatted,
-          'links_never_expires': links_never_expires,
-          'links_expire_auto_refresh_enabled': links_expire_auto_refresh_enabled,
           'last_schedule_run': last_schedule_run,
           'last_success_send': last_success_send
         }
@@ -1001,6 +1092,9 @@ jQuery(function ($) {
       let name = $(tr).find('#ml_main_col_assign_users_teams_table_row_name').val();
       let sys_type = $(tr).find('#ml_main_col_assign_users_teams_table_row_sys_type').val();
       let post_type = $(tr).find('#ml_main_col_assign_users_teams_table_row_post_type').val();
+      let link_expires_base_ts = $(tr).find('#ml_main_col_assign_users_teams_table_row_td_link_expires_base_ts').val();
+      let link_expires_on_ts = $(tr).find('#ml_main_col_assign_users_teams_table_row_td_link_expires_on_ts').val();
+      let link_expires_on_ts_formatted = $(tr).find('#ml_main_col_assign_users_teams_table_row_td_link_expires_on_ts_formatted').html();
 
       assigned.push({
         'id': id,
@@ -1008,7 +1102,10 @@ jQuery(function ($) {
         'type': type,
         'name': name,
         'sys_type': sys_type,
-        'post_type': post_type
+        'post_type': post_type,
+        'links_expire_within_base_ts': link_expires_base_ts,
+        'links_expire_on_ts': link_expires_on_ts,
+        'links_expire_on_ts_formatted': link_expires_on_ts_formatted
       });
     });
 
@@ -1029,7 +1126,14 @@ jQuery(function ($) {
       });
 
       reset_section(true, $('#ml_main_col_assign_users_teams'), function () {
-        reset_section_assign_users_teams(link_obj['assigned']);
+        reset_section_assign_users_teams(link_obj['assigned'], function () {
+        });
+      });
+
+      reset_section(true, $('#ml_main_col_link_manage'), function () {
+        if (link_obj['link_manage']) {
+          reset_section_link_manage(link_obj['link_manage']['links_expire_within_amount'], link_obj['link_manage']['links_expire_within_time_unit'], link_obj['link_manage']['links_never_expires'], link_obj['link_manage']['links_refreshed_before_send'], link_obj['link_manage']['links_expire_auto_refresh_enabled']);
+        }
       });
 
       reset_section(true, $('#ml_main_col_message'), function () {
@@ -1037,7 +1141,9 @@ jQuery(function ($) {
       });
 
       reset_section(true, $('#ml_main_col_schedules'), function () {
-        reset_section_schedules(link_obj['schedule']['enabled'], link_obj['schedule']['freq_amount'], link_obj['schedule']['freq_time_unit'], link_obj['schedule']['sending_channel'], link_obj['schedule']['links_expire_within_amount'], link_obj['schedule']['links_expire_within_time_unit'], link_obj['schedule']['links_never_expires'], link_obj['schedule']['links_expire_within_base_ts'], link_obj['schedule']['links_expire_on_ts'], link_obj['schedule']['links_expire_on_ts_formatted'], link_obj['schedule']['links_expire_auto_refresh_enabled'], link_obj['schedule']['last_schedule_run'], link_obj['schedule']['last_success_send'], true);
+        if (link_obj['schedule']) {
+          reset_section_schedules(link_obj['schedule']['enabled'], link_obj['schedule']['freq_amount'], link_obj['schedule']['freq_time_unit'], link_obj['schedule']['sending_channel'], link_obj['schedule']['last_schedule_run'], link_obj['schedule']['last_success_send'], true);
+        }
       });
 
       $('#ml_main_col_update_msg').html('').fadeOut('fast');
@@ -1068,10 +1174,12 @@ jQuery(function ($) {
     let payload = {
       assigned: fetch_assigned_users_teams(),
       link_obj_id: $('#ml_main_col_link_objs_manage_id').val(),
-      links_expire_within_base_ts: $('#ml_main_col_schedules_links_expire_base_ts').val(),
-      links_expire_within_amount: $('#ml_main_col_schedules_links_expire_amount').val(),
-      links_expire_within_time_unit: $('#ml_main_col_schedules_links_expire_time_unit').val(),
-      links_never_expires: $('#ml_main_col_schedules_links_expire_never').prop('checked')
+      links_expire_within_amount: $('#ml_main_col_link_manage_links_expire_amount').val(),
+      links_expire_within_time_unit: $('#ml_main_col_link_manage_links_expire_time_unit').val(),
+      links_never_expires: $('#ml_main_col_link_manage_links_expire_never').prop('checked'),
+      links_refreshed_before_send: $('#ml_main_col_link_manage_links_refreshed_before_send').prop('checked'),
+      links_expire_auto_refresh_enabled: $('#ml_main_col_link_manage_links_expire_auto_refresh_enabled').prop('checked'),
+      message: $('#ml_main_col_msg_textarea').val()
     };
 
     // Dispatch send now request.
@@ -1083,10 +1191,16 @@ jQuery(function ($) {
         xhr.setRequestHeader("X-WP-Nonce", window.dt_admin_scripts.nonce);
       },
       success: function (data) {
+
+        // Refresh assigned table so as to display updated user link states!
+        if (data['assigned']) {
+          reset_section_assign_users_teams(data['assigned'], function () {
+          });
+        }
+
         // Enable send now button, on response and display payload message
         $('#ml_main_col_schedules_send_now_but').prop('disabled', false);
         $('#ml_main_col_update_msg').html(data['message']).fadeIn('fast');
-
       },
       error: function (data) {
         console.log(data);
@@ -1118,14 +1232,14 @@ jQuery(function ($) {
       assigned: fetch_assigned_users_teams(),
       link_obj_id: $('#ml_main_col_link_objs_manage_id').val(),
       magic_link_type: $('#ml_main_col_link_objs_manage_type').val(),
-      links_expire_within_amount: $('#ml_main_col_schedules_links_expire_amount').val(),
-      links_expire_within_time_unit: $('#ml_main_col_schedules_links_expire_time_unit').val(),
-      links_never_expires: $('#ml_main_col_schedules_links_expire_never').prop('checked')
+      links_expire_within_amount: $('#ml_main_col_link_manage_links_expire_amount').val(),
+      links_expire_within_time_unit: $('#ml_main_col_link_manage_links_expire_time_unit').val(),
+      links_never_expires: $('#ml_main_col_link_manage_links_expire_never').prop('checked')
     };
 
     // Disable management buttons, so as to avoid multiple clicks!
-    $('#ml_main_col_assign_users_teams_links_but_refresh').prop('disabled', true);
-    $('#ml_main_col_assign_users_teams_links_but_delete').prop('disabled', true);
+    $('#ml_main_col_link_manage_links_but_refresh').prop('disabled', true);
+    $('#ml_main_col_link_manage_links_but_delete').prop('disabled', true);
     $('#ml_main_col_update_msg').html('').fadeOut('fast');
 
     // Dispatch links management request
@@ -1151,22 +1265,18 @@ jQuery(function ($) {
           }
 
           // Refresh assigned table so as to display updated user link states!
-          reset_section_assign_users_teams(data['assigned']);
-
-          // Ensure to update expiration settings, if action is of type refresh!
-          if (action === 'refresh' && data['links_expire_within_base_ts'] && data['links_expire_on_ts'] && data['links_expire_on_ts_formatted']) {
-            $('#ml_main_col_schedules_links_expire_base_ts').val(data['links_expire_within_base_ts']);
-            $('#ml_main_col_schedules_links_expire_on_ts').val(data['links_expire_on_ts']);
-            $('#ml_main_col_schedules_links_expire_on_ts_formatted').val(data['links_expire_on_ts_formatted']);
-          }
+          reset_section_assign_users_teams(data['assigned'], function () {
+            // Automatically save updates....
+            handle_update_request();
+          });
 
           // Friendly, reassuring message that all is still well in the world....!
           $('#ml_main_col_update_msg').html(data['message']).fadeIn('fast');
 
         } else {
           console.log(data);
-          $('#ml_main_col_assign_users_teams_links_but_refresh').prop('disabled', false);
-          $('#ml_main_col_assign_users_teams_links_but_delete').prop('disabled', false);
+          $('#ml_main_col_link_manage_links_but_refresh').prop('disabled', false);
+          $('#ml_main_col_link_manage_links_but_delete').prop('disabled', false);
           $('#ml_main_col_update_msg').html('Server error, please see browser console for more details.').fadeIn('fast');
         }
 
@@ -1175,8 +1285,8 @@ jQuery(function ($) {
       },
       error: function (data) {
         console.log(data);
-        $('#ml_main_col_assign_users_teams_links_but_refresh').prop('disabled', false);
-        $('#ml_main_col_assign_users_teams_links_but_delete').prop('disabled', false);
+        $('#ml_main_col_link_manage_links_but_refresh').prop('disabled', false);
+        $('#ml_main_col_link_manage_links_but_delete').prop('disabled', false);
         $('#ml_main_col_update_msg').html('Server error, please see browser console for more details.').fadeIn('fast');
       }
     });
@@ -1190,6 +1300,9 @@ jQuery(function ($) {
       record: record,
       link_obj_id: $('#ml_main_col_link_objs_manage_id').val(),
       magic_link_type: $('#ml_main_col_link_objs_manage_type').val(),
+      links_expire_within_amount: $('#ml_main_col_link_manage_links_expire_amount').val(),
+      links_expire_within_time_unit: $('#ml_main_col_link_manage_links_expire_time_unit').val(),
+      links_never_expires: $('#ml_main_col_link_manage_links_expire_never').prop('checked')
     };
 
     $.ajax({
@@ -1203,8 +1316,8 @@ jQuery(function ($) {
         if (data && data['success']) {
 
           // Update record accordingly, if a refreshed magic link has been returned!
-          if (data['ml_links']) {
-            refresh_assigned_record_link(record, data['ml_links']);
+          if (data['record'] && data['ml_links']) {
+            refresh_assigned_record_link(data['record'], data['ml_links']);
           }
 
         } else {
@@ -1225,6 +1338,13 @@ jQuery(function ($) {
       // Should only expect to have a single hit...!
       if (hit && hit.size() > 0) {
         $(hit[0]).find('#ml_main_col_assign_users_teams_table_row_td_link').html(build_link_html(links, record['sys_type']));
+
+        // Retrospectively update link expiration details
+        if (record['links_expire_within_base_ts'] && record['links_expire_on_ts'] && record['links_expire_on_ts_formatted']) {
+          $(hit[0]).find('#ml_main_col_assign_users_teams_table_row_td_link_expires_base_ts').val(record['links_expire_within_base_ts']);
+          $(hit[0]).find('#ml_main_col_assign_users_teams_table_row_td_link_expires_on_ts').val(record['links_expire_on_ts']);
+          $(hit[0]).find('#ml_main_col_assign_users_teams_table_row_td_link_expires_on_ts_formatted').html(record['links_expire_on_ts_formatted']);
+        }
       }
     }
   }

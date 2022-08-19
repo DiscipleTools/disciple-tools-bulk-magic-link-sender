@@ -237,20 +237,39 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                 </td>
             </tr>
             </tbody>
+        </table>
+        <br>
+        <!-- End Box -->
+
+        <!-- Box -->
+        <table style="display: none;" class="widefat striped" id="ml_main_col_link_manage">
+            <thead>
+            <tr>
+                <th>Link Management</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td colspan="2">
+                    <?php $this->main_column_link_manage(); ?>
+                </td>
+            </tr>
+            </tbody>
             <tfoot>
             <tr>
                 <td>
                     <button disabled style="max-width: 100%;" type="submit"
-                            id="ml_main_col_assign_users_teams_links_but_refresh"
+                            id="ml_main_col_link_manage_links_but_refresh"
                             class="button float-right"><?php esc_html_e( "Refresh All Links", 'disciple_tools' ) ?></button>
 
                     <button disabled style="max-width: 100%;" type="submit"
-                            id="ml_main_col_assign_users_teams_links_but_delete"
+                            id="ml_main_col_link_manage_links_but_delete"
                             class="button float-right"><?php esc_html_e( "Delete All Links", 'disciple_tools' ) ?></button>
                 </td>
                 <td>
                     <span style="float:right;">
-                        <button type="submit" id="ml_main_col_assign_users_teams_update_but"
+                        <button type="submit" id="ml_main_col_link_manage_update_but"
                                 class="button float-right"><?php esc_html_e( "Update", 'disciple_tools' ) ?></button>
                     </span>
                 </td>
@@ -542,6 +561,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                 <th>Phone</th>
                 <th>Email</th>
                 <th>Link</th>
+                <th>Expires</th>
                 <th></th>
             </tr>
             </thead>
@@ -550,6 +570,56 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
             </tbody>
         </table>
 
+        <?php
+    }
+
+    private function main_column_link_manage() {
+        ?>
+        <table class="widefat striped">
+            <tr>
+                <td style="vertical-align: middle;">Links Expire Within [<a href="#" class="ml-links-docs"
+                                                                            data-title="ml_links_right_docs_links_expire_title"
+                                                                            data-content="ml_links_right_docs_links_expire_content">&#63;</a>]
+                </td>
+                <td style="vertical-align: middle;">
+                    <select style="min-width: 10%;" id="ml_main_col_link_manage_links_expire_amount">
+                        <?php
+                        for ( $x = 1; $x <= 12; $x ++ ) {
+                            echo '<option value="' . esc_attr( $x ) . '">' . esc_attr( $x ) . '</option>';
+                        }
+                        ?>
+                    </select>
+
+                    <select style="min-width: 10%;" id="ml_main_col_link_manage_links_expire_time_unit">
+                        <option value="minutes">Minutes</option>
+                        <option value="hours">Hours</option>
+                        <option value="days">Days</option>
+                        <option value="weeks">Weeks</option>
+                        <option value="months">Months</option>
+                    </select>
+
+                    <input type="checkbox" id="ml_main_col_link_manage_links_expire_never" value=""/> Never Expires
+                </td>
+            </tr>
+            <tr>
+                <td style="vertical-align: middle;">Links Refreshed Before Sending [<a href="#" class="ml-links-docs"
+                                                                                            data-title="ml_links_right_docs_links_refreshed_before_send_title"
+                                                                                            data-content="ml_links_right_docs_links_refreshed_before_send_content">&#63;</a>]
+                </td>
+                <td>
+                    <input type="checkbox" id="ml_main_col_link_manage_links_refreshed_before_send" value=""/>
+                </td>
+            </tr>
+            <tr>
+                <td style="vertical-align: middle;">Links Expiry Auto-Refresh Enabled [<a href="#" class="ml-links-docs"
+                                                                                          data-title="ml_links_right_docs_auto_refresh_title"
+                                                                                          data-content="ml_links_right_docs_auto_refresh_content">&#63;</a>]
+                </td>
+                <td style="vertical-align: middle;">
+                    <input type="checkbox" id="ml_main_col_link_manage_links_expire_auto_refresh_enabled" value=""/>
+                </td>
+            </tr>
+        </table>
         <?php
     }
 
@@ -611,53 +681,6 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                         ?>
 
                     </select>
-                </td>
-            </tr>
-            <tr>
-                <td style="vertical-align: middle;">Links Expire Within [<a href="#" class="ml-links-docs"
-                                                                            data-title="ml_links_right_docs_links_expire_title"
-                                                                            data-content="ml_links_right_docs_links_expire_content">&#63;</a>]
-                </td>
-                <td style="vertical-align: middle;">
-                    <select style="min-width: 10%;" id="ml_main_col_schedules_links_expire_amount">
-                        <?php
-                        for ( $x = 1; $x <= 12; $x ++ ) {
-                            echo '<option value="' . esc_attr( $x ) . '">' . esc_attr( $x ) . '</option>';
-                        }
-                        ?>
-                    </select>
-
-                    <select style="min-width: 10%;" id="ml_main_col_schedules_links_expire_time_unit">
-                        <option value="minutes">Minutes</option>
-                        <option value="hours">Hours</option>
-                        <option value="days">Days</option>
-                        <option value="weeks">Weeks</option>
-                        <option value="months">Months</option>
-                    </select>
-
-                    &nbsp;&nbsp;&nbsp;
-                    <input type="checkbox" id="ml_main_col_schedules_links_expire_never" value=""/> Never Expires
-                </td>
-            </tr>
-            <tr>
-                <td style="vertical-align: middle;">Links Expire On [<a href="#" class="ml-links-docs"
-                                                                        data-title="ml_links_right_docs_links_expire_on_title"
-                                                                        data-content="ml_links_right_docs_links_expire_on_content">&#63;</a>]
-                </td>
-                <td style="vertical-align: middle;">
-                    <input type="hidden" id="ml_main_col_schedules_links_expire_base_ts" value=""/>
-                    <input type="hidden" id="ml_main_col_schedules_links_expire_on_ts" value=""/>
-                    <input style="min-width: 100%;" type="text" id="ml_main_col_schedules_links_expire_on_ts_formatted"
-                           readonly/>
-                </td>
-            </tr>
-            <tr>
-                <td style="vertical-align: middle;">Links Expiry Auto-Refresh Enabled [<a href="#" class="ml-links-docs"
-                                                                                          data-title="ml_links_right_docs_auto_refresh_title"
-                                                                                          data-content="ml_links_right_docs_auto_refresh_content">&#63;</a>]
-                </td>
-                <td style="vertical-align: middle;">
-                    <input type="checkbox" id="ml_main_col_schedules_links_expire_auto_refresh_enabled" value=""/>
                 </td>
             </tr>
             <tr>

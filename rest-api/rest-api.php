@@ -125,18 +125,30 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
                         $base_ts       = time();
                         $amt           = $params['links_expire_within_amount'];
                         $time_unit     = $params['links_expire_within_time_unit'];
-                        $never_expires = $params['links_never_expires'];
+                        $never_expires = in_array( strtolower( $params['links_never_expires'] ), [ 'true' ] );
 
-                        $response['links_expire_within_base_ts']  = $base_ts;
-                        $response['links_expire_on_ts']           = Disciple_Tools_Bulk_Magic_Link_Sender_API::determine_links_expiry_point( $amt, $time_unit, $base_ts );
-                        $response['links_expire_on_ts_formatted'] = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_links_expired_formatted_date( $never_expires, $base_ts, $amt, $time_unit );
+                        // Iterate over all assigned and update their respective expiration timestamps
+                        foreach ( $assigned ?? [] as &$member ) {
+                            $member = Disciple_Tools_Bulk_Magic_Link_Sender_API::refresh_user_links_expiration_values( $member, $base_ts, $amt, $time_unit, $never_expires );
+                        }
                     }
                     break;
 
                 case 'delete':
                     Disciple_Tools_Bulk_Magic_Link_Sender_API::update_magic_links( $link_obj, $assigned, true );
+
+                    // Iterate over all assigned and reset their respective expiration timestamps
+                    foreach ( $assigned ?? [] as &$member ) {
+                        $member->links_expire_within_base_ts  = '';
+                        $member->links_expire_on_ts           = '';
+                        $member->links_expire_on_ts_formatted = '';
+                    }
                     break;
             }
+
+            // Save updated link object
+            $link_obj->assigned = $assigned;
+            Disciple_Tools_Bulk_Magic_Link_Sender_API::update_option_link_obj( $link_obj );
 
             // Ensure current user has sufficient capabilities/roles for the tasks ahead!
             $current_user = wp_get_current_user();
@@ -181,10 +193,6 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
 
                         // Update link object accordingly
                         $link_obj->type       = $params['magic_link_type'];
-                        $link_obj->assigned[] = $record;
-
-                        // Save updated link object
-                        Disciple_Tools_Bulk_Magic_Link_Sender_API::update_option_link_obj( $link_obj );
 
                         /**
                          * If record is of supported type, then also generate a new link
@@ -195,13 +203,32 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
                             // Create new magic link
                             Disciple_Tools_Bulk_Magic_Link_Sender_API::update_magic_links( $link_obj, [ $record ], false );
 
+                            // Also update base timestamp and future expiration points
+                            if ( isset( $params['links_expire_within_amount'], $params['links_expire_within_time_unit'], $params['links_never_expires'] ) ) {
+
+                                $base_ts       = time();
+                                $amt           = $params['links_expire_within_amount'];
+                                $time_unit     = $params['links_expire_within_time_unit'];
+                                $never_expires = in_array( strtolower( $params['links_never_expires'] ), [ 'true' ] );
+
+                                $record = Disciple_Tools_Bulk_Magic_Link_Sender_API::refresh_user_links_expiration_values( $record, $base_ts, $amt, $time_unit, $never_expires );
+
+                            }
+
                             // Capture newly created magic link in url form
                             $magic_link_type = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_magic_link_type( $link_obj->type );
                             $response['ml_links'][ Disciple_Tools_Bulk_Magic_Link_Sender_API::generate_magic_link_type_key( $link_obj ) ][] = Disciple_Tools_Bulk_Magic_Link_Sender_API::build_magic_link_url( $link_obj, $record, $magic_link_type['url_base'], false );
                         }
 
+                        // Add record to the collective
+                        $link_obj->assigned[] = $record;
+
+                        // Save updated link object
+                        Disciple_Tools_Bulk_Magic_Link_Sender_API::update_option_link_obj( $link_obj );
+
                         // All is well.. ;)
                         $response['success'] = true;
+                        $response['record']  = $record;
 
                     } else {
                         $response['success'] = false;
@@ -266,7 +293,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
 
         // Ensure required parameters have been specified
         $params = $request->get_params();
-        if ( isset( $params['assigned'], $params['link_obj_id'], $params['links_expire_within_base_ts'], $params['links_expire_within_amount'], $params['links_expire_within_time_unit'], $params['links_never_expires'] ) ) {
+        if ( isset( $params['assigned'], $params['link_obj_id'], $params['links_expire_within_amount'], $params['links_expire_within_time_unit'], $params['links_never_expires'], $params['links_refreshed_before_send'], $params['links_expire_auto_refresh_enabled'] ) ) {
 
             // Load logs
             $logs   = Disciple_Tools_Bulk_Magic_Link_Sender_API::logging_load();
@@ -281,27 +308,55 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
                 /**
                  * Update link object with most recent key settings!
                  */
-                $link_obj->schedule->links_expire_within_base_ts   = $params['links_expire_within_base_ts'];
-                $link_obj->schedule->links_expire_within_amount    = $params['links_expire_within_amount'];
-                $link_obj->schedule->links_expire_within_time_unit = $params['links_expire_within_time_unit'];
-                $link_obj->schedule->links_never_expires           = $params['links_never_expires'];
+
+                if ( empty( $link_obj->link_manage ) ) {
+                    $link_obj->link_manage = (object) [];
+                }
+                $link_obj->link_manage->links_expire_within_amount        = $params['links_expire_within_amount'];
+                $link_obj->link_manage->links_expire_within_time_unit     = $params['links_expire_within_time_unit'];
+                $link_obj->link_manage->links_never_expires               = in_array( strtolower( $params['links_never_expires'] ), [ 'true' ] );
+                $link_obj->link_manage->links_refreshed_before_send       = in_array( strtolower( $params['links_refreshed_before_send'] ), [ 'true' ] );
+                $link_obj->link_manage->links_expire_auto_refresh_enabled = in_array( strtolower( $params['links_expire_auto_refresh_enabled'] ), [ 'true' ] );
+
+                /**
+                 * If present, capture latest message text.
+                 */
+
+                if ( ! empty( $params['message'] ) ) {
+                    $link_obj->message = $params['message'];
+                }
 
                 /**
                  * Loop over assigned users and members; which have been submitted and not loaded;
                  * as submitted params provide the most recent snapshot of link object shapes!
                  */
+
+                $updated_assigned = [];
                 foreach ( $params['assigned'] ?? [] as $assigned ) {
 
                     $assigned = (object) $assigned;
                     if ( in_array( strtolower( trim( $assigned->type ) ), Disciple_Tools_Bulk_Magic_Link_Sender_API::$assigned_supported_types ) ) {
 
                         // Process send request to assigned user, using available contact info
-                        Disciple_Tools_Bulk_Magic_Link_Sender_API::send( $link_obj, $assigned, $logs );
+                        $send_response = Disciple_Tools_Bulk_Magic_Link_Sender_API::send( $link_obj, $assigned, $logs );
+
+                        // Capture any updates
+                        $link_obj           = $send_response['link_obj'];
+                        $updated_assigned[] = $send_response['user'];
+
+                    } else {
+                        $updated_assigned[] = $assigned;
                     }
                 }
 
-                $response['success'] = true;
-                $response['message'] = 'Send request completed - See logging tab for further details.';
+                // Capture any potentially changed assignments and save updated link object
+                $link_obj->assigned = $updated_assigned;
+                Disciple_Tools_Bulk_Magic_Link_Sender_API::update_option_link_obj( $link_obj );
+
+                // Return successful response and updated assigned list
+                $response['success']  = true;
+                $response['message']  = 'Send request completed - See logging tab for further details.';
+                $response['assigned'] = $updated_assigned;
 
             } else {
                 $msg    = 'Unable to locate corresponding link object for id: ' . $params['link_obj_id'];
