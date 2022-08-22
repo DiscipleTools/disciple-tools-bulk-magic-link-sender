@@ -545,7 +545,6 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
                     } else {
                         $user = self::refresh_user_links_expiration_values( $user, $user->links_expire_within_base_ts, $link_obj->link_manage->links_expire_within_amount, $link_obj->link_manage->links_expire_within_time_unit, $link_obj->link_manage->links_never_expires );
                     }
-
                 } else if ( self::has_links_expired( $link_obj->link_manage->links_never_expires, $user->links_expire_within_base_ts, $link_obj->link_manage->links_expire_within_amount, $link_obj->link_manage->links_expire_within_time_unit ) ) {
 
                     // Nuke any stale, expired magic links
@@ -786,7 +785,7 @@ Thanks!';
                 }
 
                 // compare with current time to see if it was posted yesterday
-                if ( date( 'H' ) < ( $diff / 3600 ) ) {
+                if ( gmdate( 'H' ) < ( $diff / 3600 ) ) {
                     return 'Yesterday';
                 }
 
@@ -811,7 +810,7 @@ Thanks!';
                 return 'last month';
             }
 
-            return date( 'F Y', $ts );
+            return gmdate( 'F Y', $ts );
 
         } else {
 
@@ -835,19 +834,19 @@ Thanks!';
                 return 'Tomorrow';
             }
             if ( $day_diff < 4 ) {
-                return date( 'l', $ts );
+                return gmdate( 'l', $ts );
             }
-            if ( $day_diff < 7 + ( 7 - date( 'w' ) ) ) {
+            if ( $day_diff < 7 + ( 7 - gmdate( 'w' ) ) ) {
                 return 'next week';
             }
             if ( ceil( $day_diff / 7 ) < 4 ) {
                 return 'in ' . ceil( $day_diff / 7 ) . ' weeks';
             }
-            if ( intval( date( 'n', $ts ) ) == ( intval( date( 'n' ) ) + 1 ) ) {
+            if ( intval( gmdate( 'n', $ts ) ) == ( intval( gmdate( 'n' ) ) + 1 ) ) {
                 return 'next month';
             }
 
-            return date( 'F Y', $ts );
+            return gmdate( 'F Y', $ts );
         }
     }
 

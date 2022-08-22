@@ -59,7 +59,6 @@ function execute_scheduled_link_objects() {
                             } else {
                                 $logs[] = Disciple_Tools_Bulk_Magic_Link_Sender_API::logging_create( 'Global sending channels disabled; no further action to be taken!' );
                             }
-
                         } else {
                             $logs[] = Disciple_Tools_Bulk_Magic_Link_Sender_API::logging_create( 'Link object has now expired, terminating all assigned user magic links!' );
 
