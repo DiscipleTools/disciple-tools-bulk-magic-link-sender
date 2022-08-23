@@ -1,31 +1,48 @@
-import { html, css, LitElement } from 'lit';
+import { html, css } from 'lit';
+import DtFormBase from '../dt-form-base.js';
 import '../../icons/dt-spinner.js';
 import '../../icons/dt-checkmark.js';
 
-export class DtMultiSelect extends LitElement {
+export class DtMultiSelect extends DtFormBase {
   static get styles() {
-    return css`
+    return [
+      ...super.styles,
+      css`
       :host {
-        position: relative;
-        --borderWidth: 3px;
-        --borderColor: #78b13f;
-        color: var(--dt-multi-select-text-color, #555);
         position: relative;
         font-family: Helvetica, Arial, sans-serif;
       }
 
+      .input-group {
+        color: var(--dt-multi-select-text-color, #0a0a0a);
+        margin-bottom: 1rem;
+      }
+      .input-group.disabled input,
+      .input-group.disabled .field-container {
+        background-color: var(--disabled-color);
+      }
+      .input-group.disabled a,
+      .input-group.disabled button {
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+      .input-group.disabled *:hover {
+        cursor: not-allowed;
+      }
+
       .field-container {
-        background-color: #fefefe;
-        border: 1px solid var(--dt-component-border-color, #cacaca);
+        background-color: var( --dt-multi-select-background-color, #fefefe);
+        border: 1px solid var(--dt-form-border-color, #cacaca);
         border-radius: 0;
-        color: #0a0a0a;
+        color: var(--dt-multi-select-text-color, #0a0a0a);
         font-size: 1rem;
         font-weight: 300;
         min-height: 2.5rem;
         line-height: 1.5;
-        margin: 0 0 1.0666666667rem;
-        padding: 0.5333333333rem 1.6rem 0.5333333333rem 0.5333333333rem;
-        -webkit-box-sizing: border-box;
+        margin: 0;
+        padding-top: 0.54rem;
+        padding-bottom: 0.54rem;
+        padding-inline: 0.54rem 1.6rem;
         box-sizing: border-box;
         width: 100%;
         text-transform: none;
@@ -35,15 +52,17 @@ export class DtMultiSelect extends LitElement {
 
       .selected-option {
         border: 1px solid var(--dt-multi-select-tag-border-color, #c2e0ff);
-        background-color: var(--dt-multi-select-tag-bkrd-color, #ecf5fc);
+        background-color: var(--dt-multi-select-tag-background-color, #ecf5fc);
 
         display: flex;
         font-size: 0.875rem;
         position: relative;
-        padding-left: 4px;
         border-radius: 2px;
-        margin-right: 4px;
-        margin-bottom: 0.375rem;
+        margin-inline-end: 4px;
+        margin-block-end: 0.375rem;
+      }
+      .selected-option > *:first-child {
+        padding-inline-start: 4px;      
       }
       .selected-option * {
         align-self: center;
@@ -52,14 +71,17 @@ export class DtMultiSelect extends LitElement {
         background: transparent;
         outline: 0;
         border: 0;
-        border-left: 1px solid var(--dt-multi-select-tag-border-color, #c2e0ff);
-        margin-left: 4px;
+        border-inline-start: 1px solid var(--dt-multi-select-tag-border-color, #c2e0ff);
+        color: var(--dt-multi-select-text-color, #0a0a0a);
+        margin-inline-start: 4px;
       }
       .selected-option button:hover {
         cursor: pointer;
       }
 
       .field-container input {
+        background-color: var(--dt-form-background-color, #fff);
+        color: var(--dt-form-text-color, #000);
         flex-grow: 1;
         min-width: 50px;
         border: 0;
@@ -70,31 +92,36 @@ export class DtMultiSelect extends LitElement {
         border: 0;
         outline: 0;
       }
+      .field-container input::placeholder {
+        color: var(--dt-form-text-color, #000);;
+        opacity: 1;
+      }
+
 
       /* === Options List === */
       .option-list {
         list-style: none;
         margin: 0;
         padding: 0;
-        border: 1px solid var(--dt-component-border-color, #cacaca);
-        background: #fff;
+        border: 1px solid var(--dt-form-border-color, #cacaca);
+        background: var(--dt-form-background-color, #fefefe);
         z-index: 10;
         position: absolute;
         width: 100%;
         top: 0;
         left: 0;
-        box-shadow: 0px 5px 10px 0px;
+        box-shadow: var(--shadow-1);
         max-height: 150px;
         overflow-y: scroll;
       }
       .option-list li {
-        border-top: 1px solid var(--dt-component-border-color, #cacaca);
+        border-block-start: 1px solid var(--dt-form-border-color, #cacaca);
         outline: 0;
       }
       .option-list li div,
       .option-list li button {
         padding: 0.5rem 0.75rem;
-        color: #333;
+        color: var(--dt-multi-select-text-color, #0a0a0a);
         font-weight: 100;
         font-size: 1rem;
         text-decoration: none;
@@ -109,24 +136,14 @@ export class DtMultiSelect extends LitElement {
       .option-list li button:hover,
       .option-list li button.active {
         cursor: pointer;
-        background: var(--dt-multi-select-option-hover-bkrd, #f5f5f5);
+        background: var(--dt-multi-select-option-hover-background, #f5f5f5);
       }
-
-      /* === Inline Icons === */
-      .icon-overlay {
-        position: absolute;
-        right: 2rem;
-        top: 0;
-        height: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-    `;
+    `];
   }
 
   static get properties() {
     return {
+      ...super.properties,
       name: { type: String },
       placeholder: { type: String },
       options: { type: Array },
@@ -151,8 +168,6 @@ export class DtMultiSelect extends LitElement {
         type: Number,
         state: true,
       },
-      loading: { type: Boolean },
-      saved: { type: Boolean },
       onchange: { type: String },
     };
   }
@@ -161,6 +176,7 @@ export class DtMultiSelect extends LitElement {
     super();
     this.activeIndex = -1;
     this.filteredOptions = [];
+    this.detectTap = false;
   }
 
   firstUpdated() {
@@ -169,7 +185,7 @@ export class DtMultiSelect extends LitElement {
 
   updated() {
     if (this.shadowRoot.children && this.shadowRoot.children.length) {
-      this.containerHeight = this.shadowRoot.children[0].offsetHeight;
+      this.containerHeight = this.shadowRoot.querySelector('.input-group').offsetHeight;
     }
     this._scrollOptionListToActive();
   }
@@ -205,6 +221,27 @@ export class DtMultiSelect extends LitElement {
     }
   }
 
+  _touchStart(e) {
+    if (e.target) {
+      this.detectTap = false;
+    }
+  }
+
+  _touchMove(e) {
+    if (e.target) {
+      this.detectTap = true;
+    }
+  }
+
+  _touchEnd(e) {
+    if(!this.detectTap) {
+      if (e.target && e.target.value) {
+        this._clickOption(e);
+      }
+      this.detectTap = false;
+    }
+  }
+
   _keyboardSelectOption() {
     if (this.activeIndex > -1) {
       this._select(this.filteredOptions[this.activeIndex].id);
@@ -217,7 +254,6 @@ export class DtMultiSelect extends LitElement {
       detail: {
         field: this.name,
         oldValue: this.value,
-        newValue: value,
       },
     });
 
@@ -227,25 +263,27 @@ export class DtMultiSelect extends LitElement {
     } else {
       this.value = [value];
     }
+    event.detail.newValue = this.value;
     this.open = false; // close options list
     this.activeIndex = -1; // reset keyboard-selected option
 
     // dispatch event for use with addEventListener from javascript
     this.dispatchEvent(event);
 
-    // check for `onchange` html attribute to trigger event from attribute
-    // todo: test across browsers, `dispatchEvent` seems to work for html `onchange` in Chrome on MacOS
-    // if (this.onchange) {
-    //   // eslint-disable-next-line no-new-func
-    //   const fn = new Function('event', this.onchange);
-    //   // eval(this.onchange + '()');
-    //   fn(event);
-    // }
+    this._filterOptions();
   }
 
   _remove(e) {
     if (e.target && e.target.dataset && e.target.dataset.value) {
       this.value = (this.value || []).filter(i => i !== e.target.dataset.value);
+
+      // re-filter available options once option is de-selected
+      this._filterOptions();
+
+      // If option was de-selected while list was open, re-focus input
+      if (this.open) {
+        this.shadowRoot.querySelector('input').focus();
+      }
     }
   }
 
@@ -262,7 +300,8 @@ export class DtMultiSelect extends LitElement {
 
   _inputFocusOut(e) {
     // allow clicks on option list button to not close the option list
-    if (!e.relatedTarget || e.relatedTarget.nodeName !== 'BUTTON') {
+    // Safari actually passes the parent <li> as the relatedTarget
+    if (!e.relatedTarget || !['BUTTON','LI'].includes(e.relatedTarget.nodeName )) {
       this.open = false;
     }
   }
@@ -284,8 +323,17 @@ export class DtMultiSelect extends LitElement {
         this.open = true;
         this._listHighlightNext();
         break;
-      case 13: // tab
-      case 9: // enter
+      case 9: // tab
+        if (this.activeIndex < 0) {
+          // if pressing tab while no option is selected,
+          // close the list so you can go to next field
+          this.open = false;
+        } else {
+          e.preventDefault();
+        }
+        this._keyboardSelectOption();
+        break;
+      case 13: // enter
         this._keyboardSelectOption();
         break;
       case 27: // escape
@@ -354,11 +402,33 @@ export class DtMultiSelect extends LitElement {
           opt => html`
             <div class="selected-option">
               <span>${opt.label}</span>
-              <button @click="${this._remove}" data-value="${opt.id}">x</button>
+              <button @click="${this._remove}" ?disabled="${this.disabled}" data-value="${opt.id}">x</button>
             </div>
           `
         )
     );
+  }
+
+  _renderOption(opt, idx) {
+    return html`
+        <li tabindex="-1">
+          <button
+            value="${opt.id}"
+            type="button"
+            data-label="${opt.label}"
+            @click="${this._clickOption}"
+            @touchstart="${this._touchStart}"
+            @touchmove="${this._touchMove}"
+            @touchend="${this._touchEnd}"
+            tabindex="-1"
+            class="${this.activeIndex > -1 && this.activeIndex === idx
+      ? 'active'
+      : ''}"
+          >
+            ${opt.label}
+          </button>
+        </li>
+    `;
   }
 
   _renderOptions() {
@@ -366,26 +436,14 @@ export class DtMultiSelect extends LitElement {
       return html`<li><div>No options available</div></li>`;
     }
 
-    return this.filteredOptions.map(
-      (opt, idx) => html`
-        <li>
-          <button
-            value="${opt.id}"
-            data-label="${opt.label}"
-            @click="${this._clickOption}"
-            class="${this.activeIndex > -1 && this.activeIndex === idx
-              ? 'active'
-              : null}"
-          >
-            ${opt.label}
-          </button>
-        </li>
-      `
-    );
+    return this.filteredOptions.map((opt, idx) => this._renderOption(opt, idx));
   }
 
   render() {
     return html`
+    ${this.labelTemplate()}
+
+    <div class="input-group ${this.disabled ? 'disabled' : ''}">
       <div
         class="field-container"
         @click="${this._focusInput}"
@@ -396,9 +454,10 @@ export class DtMultiSelect extends LitElement {
           type="text"
           placeholder="${this.placeholder}"
           @focusin="${this._inputFocusIn}"
-          @focusout="${this._inputFocusOut}"
+          @blur="${this._inputFocusOut}"
           @keydown="${this._inputKeyDown}"
           @keyup="${this._inputKeyUp}"
+          ?disabled="${this.disabled}"
         />
       </div>
       <ul
@@ -411,7 +470,8 @@ export class DtMultiSelect extends LitElement {
       ${this.loading
         ? html`<dt-spinner class="icon-overlay"></dt-spinner>`
         : null}
-      ${this.saved ? html`<dt-checkmark class="icon-overlay"></dt-checkmark>` : null}
+      ${this.saved ? html`<dt-checkmark class="icon-overlay success"></dt-checkmark>` : null}
+    </div>
     `;
   }
 }

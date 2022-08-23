@@ -1,27 +1,47 @@
 import { html } from 'lit-html';
-import { themeCss } from '../../../stories-theme.js';
+import { themes, themeCss, argTypes } from '../../../stories-theme.js';
 import './dt-label.js';
 
 export default {
   title: 'dt-label',
   component: 'dt-label',
+  argTypes: {
+    theme: { control: 'select', options: Object.keys(themes), defaultValue: 'default' },
+    ...argTypes,
+  }
+
 };
 
-const Template = (args) => html`
+const Template = (args) => {
+  const {
+    label = 'Field Name',
+    icon,
+    privateLabel,
+    slotContent,
+  } = args;
+  return html`
   <style>
     ${themeCss(args)}
   </style>
   <dt-label
     ?private="${args.private}"
+    privateLabel="${privateLabel}"
+    icon="${icon}"
   >
-    ${args.label}
-    ${args.slotContent}
+    ${label}
+    ${slotContent}
   </dt-label>
 `;
+}
 
 export const Basic = Template.bind({});
 Basic.args = {
   label: 'My Field Label',
+};
+
+export const UrlIcon = Template.bind({});
+UrlIcon.args = {
+  icon: "https://cdn-icons-png.flaticon.com/512/1077/1077114.png",
 };
 
 export const ImgLabel = Template.bind({});
@@ -46,5 +66,5 @@ export const PrivateCustomTooltip = Template.bind({});
 PrivateCustomTooltip.args = {
   label: 'My Field Label',
   private: true,
-  slotContent: html`<span slot="private-tooltip">Add other language content here</span>`,
+  privateLabel: 'Add other language content here',
 };

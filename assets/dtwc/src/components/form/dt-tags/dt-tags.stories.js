@@ -1,45 +1,54 @@
 import { html } from 'lit';
-import { themeCss } from '../../../stories-theme.js';
+import { themes, themeCss, argTypes } from '../../../stories-theme.js';
 import './dt-tags.js';
 
 const basicOptions = [
   {
     id: 'opt1',
     label: 'Option 1',
+    link: '/#opt1',
   },
   {
     id: 'opt2',
     label: 'Option 2',
+    link: '/#opt2',
   },
   {
     id: 'opt3',
     label: 'Option 3',
+    link: '/#opt3',
   },
   {
     id: 'opt4',
     label: 'Option 4',
+    link: '/#opt4',
   },
   {
     id: 'opt5',
     label: 'Option 5',
+    link: '/#opt5',
   },
   {
     id: 'opt6',
     label: 'Option 6',
+    link: '/#opt6',
   },
   {
     id: 'opt7',
     label: 'Option 7',
+    link: '/#opt7',
   },
   {
     id: 'opt8',
     label: 'Option 8',
+    link: '/#opt8',
   },
 ];
 export default {
   title: 'dt-tags',
   component: 'dt-tags',
   argTypes: {
+    theme: { control: 'select', options: Object.keys(themes), defaultValue: 'default' },
     name: {
       control: 'text',
       type: { name: 'string', required: true },
@@ -129,6 +138,7 @@ export default {
         },
       },
     },
+    ...argTypes,
   },
   args: {
     placeholder: 'Select Tags',
@@ -138,16 +148,22 @@ export default {
 
 function Template(args) {
   const {
-    name = 'my-input',
+    name = 'field-name',
+    label = 'Field Name',
     options,
     placeholder,
     value,
-    onChange,
+    disabled = false,
+    icon = 'https://cdn-icons-png.flaticon.com/512/1077/1077114.png',
+    isPrivate,
+    privateLabel,
+    loading = false,
+    saved = false,
+    onchange,
+    open,
+    slot,
     onload,
     allowAdd,
-    loading,
-    saved,
-    open,
   } = args;
   return html`
     <style>
@@ -191,16 +207,22 @@ function Template(args) {
     </script>
     <dt-tags
       name="${name}"
+      label=${label}
       placeholder="${placeholder}"
       options="${JSON.stringify(options)}"
       value="${JSON.stringify(value)}"
-      onchange="${onChange}"
+      onchange="${onchange}"
       onload="${onload}"
+      ?disabled=${disabled}
+      icon="${icon}"
+      ?private=${isPrivate}
+      privateLabel="${privateLabel}"
       ?allowAdd="${allowAdd}"
       ?loading="${loading}"
       ?saved="${saved}"
       .open="${open}"
     >
+      ${slot}
     </dt-tags>
   `;
 }
@@ -208,6 +230,12 @@ function Template(args) {
 export const Empty = Template.bind({});
 Empty.args = {
   onload: '',
+};
+
+export const SvgIcon = Template.bind({});
+SvgIcon.args = {
+  icon: null,
+  slot: html`<svg slot="icon-start" xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><linearGradient id="lg"><stop offset="0%" stop-color="#000000"/><stop offset="100%" stop-color="#c3c3c3"/></linearGradient><rect x="2" y="2" width="96" height="96" style="fill:url(#lg);stroke:#ffffff;stroke-width:2"/><text x="50%" y="50%" font-size="18" text-anchor="middle" alignment-baseline="middle" font-family="monospace, sans-serif" fill="#ffffff">icon</text></svg>`,
 };
 
 export const StaticOptions = Template.bind({});
@@ -222,12 +250,7 @@ CustomPlaceholder.args = {
 
 export const SelectedValue = Template.bind({});
 SelectedValue.args = {
-  value: [
-    {
-      id: '2',
-      label: 'qui est esse',
-    },
-  ],
+  value: [basicOptions[1]],
 };
 
 export const LoadOptionsFromAPI = Template.bind({});
@@ -243,9 +266,20 @@ AddNewOption.args = {
 export const AutoSave = Template.bind({});
 AutoSave.args = {
   options: basicOptions,
-  onChange: 'onChange(event)',
+  onchange: 'onChange(event)',
 };
 
+export const Disabled = Template.bind({});
+Disabled.args = {
+  value: [
+    {
+      id: '2',
+      label: 'qui est esse',
+    },
+  ],
+  options: basicOptions,
+  disabled: true,
+};
 export const Loading = Template.bind({});
 Loading.args = {
   value: [

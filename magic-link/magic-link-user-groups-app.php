@@ -151,7 +151,9 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
 
     private function enqueue_web_component( $name, $rel_path ) {
         $path = '../assets/dtwc/dist/' . $rel_path;
+        $css_path = '../assets/dtwc/src/styles/light.css';
 
+        wp_enqueue_style( 'dtwc-light-css', plugin_dir_url( __FILE__ ) . $css_path, null, filemtime( plugin_dir_path( __FILE__ ) . $css_path ) );
         wp_enqueue_script( 'dtwc-' . $name, plugin_dir_url( __FILE__ ) . $path, null, filemtime( plugin_dir_path( __FILE__ ) . $path ) );
     }
     public function wp_enqueue_scripts() {
@@ -170,8 +172,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
 
         wp_enqueue_style( 'material-font-icons-css', 'https://cdn.jsdelivr.net/npm/@mdi/font@6.6.96/css/materialdesignicons.min.css', [], '6.6.96' );
 
-        $this->enqueue_web_component( 'label', 'form/dt-label/dt-label.js' );
-        $this->enqueue_web_component( 'single-select', 'form/dt-single-select/dt-single-select.js' );
+        $this->enqueue_web_component( 'form-components', 'form/index.js' );
     }
 
     public function dt_magic_url_base_allowed_js( $allowed_js ) {
@@ -181,8 +182,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
         $allowed_js[] = 'mapbox-cookie';
         $allowed_js[] = 'mapbox-search-widget';
         $allowed_js[] = 'jquery-typeahead';
-        $allowed_js[] = 'dtwc-label';
-        $allowed_js[] = 'dtwc-single-select';
+        $allowed_js[] = 'dtwc-form-components';
 
         return $allowed_js;
     }
@@ -193,6 +193,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
         $allowed_css[] = 'mapbox-gl-css';
         $allowed_css[] = 'jquery-typeahead-css';
         $allowed_css[] = 'material-font-icons-css';
+        $allowed_css[] = 'dtwc-light-css';
 
         return $allowed_css;
     }
@@ -1043,6 +1044,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                             case 'textarea':
                             case 'text':
                             case 'key_select':
+                            case 'date':
                                 payload['fields'].push({
                                     id: field_id,
                                     type: field_type,
@@ -1093,13 +1095,6 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                                 });
                                 break;
 
-                            case 'date':
-                                payload['fields'].push({
-                                    id: field_id,
-                                    type: field_type,
-                                    value: field_meta.val()
-                                });
-                                break;
 
                             case 'tags':
                             case 'location':
@@ -1304,26 +1299,68 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
 
 
             ?>
-            <div class="section-subheader">
-                <dt-label
-                    <?php echo $is_private ? 'private' : null ?>
-                >
-                    <?php echo esc_html( $fields[$field_key]["name"] ); ?>
-                    <span slot="icon-start"><?php dt_render_field_icon( $fields[$field_key] );?></span>
-                    <span slot="private-tooltip"><?php _x( "Private Field: Only I can see it's content", 'disciple_tools' )?></span>
-                </dt-label>
-            </div>
             <?php
+            $icon = null;
+            if ( isset( $fields[$field_key]["icon"] ) && !empty( $fields[$field_key]["icon"] ) ) {
+                $icon = $fields[$field_key]["icon"];
+            }
+
+            $icon_slot = '';
+            if ( isset( $field['font-icon'] ) && !empty( $field['font-icon'] ) ) {
+                $icon_slot = '<span slot="icon-start">
+                    <i class="dt-icon ' . esc_html( $field['font-icon'] ) . '"></i>
+                </span>';
+            }
+
+            $shared_attributes = '
+                  id="' . esc_html( $display_field_id ) . '"
+                  name="' . esc_html( $field_key ) .'"
+                  label="' . esc_html( $fields[$field_key]["name"] ) . '"
+                  icon="' . esc_html( $icon ) . '"
+                  ' . esc_html( $required_tag ) . '
+                  ' . esc_html( $disabled ) . '
+                  ' . ($is_private ? 'private privateLabel="' . esc_html( _x("Private Field: Only I can see it\'s content", 'disciple_tools') ) : null) . '
+            ';
             if ( $field_type === "key_select" ) :
                 ?>
                 <dt-single-select class="select-field"
-                                  id="<?php echo esc_html( $display_field_id ); ?>"
-                                  name="<?php echo esc_html( $field_key ); ?>"
-                                  <?php echo esc_html( $required_tag ) ?>
-                                  <?php echo esc_html( $disabled ); ?>
+                                  <?php echo $shared_attributes ?>
                                   value="<?php echo esc_attr( key_exists( $field_key, $post ) ? $post[$field_key]["key"] : null ) ?>"
                                   options="<?php echo esc_attr( json_encode( assoc_to_array( $fields[$field_key]["default"] ) ) ) ?>"
-                              ></dt-single-select>
+                              >
+                    <?php echo $icon_slot; ?>
+                </dt-single-select>
+
+            <?php elseif ( $field_type === "text" ) :?>
+                <dt-text
+                    <?php echo $shared_attributes ?>
+                    value="<?php echo esc_html( $post[$field_key] ?? "" ) ?>"
+                >
+                    <?php echo $icon_slot ?>
+                </dt-text>
+            <?php elseif ( $field_type === "textarea" ) :?>
+                <dt-textarea
+                    <?php echo $shared_attributes ?>
+                    value="<?php echo esc_html( $post[$field_key] ?? "" ) ?>"
+                >
+                    <?php echo $icon_slot ?>
+                </dt-textarea>
+            <?php elseif ( $field_type === "number" ) :?>
+                <dt-number
+                    <?php echo $shared_attributes ?>
+                    value="<?php echo esc_html( $post[$field_key] ?? "" ) ?>" <?php echo esc_html( $disabled ); ?>
+                    <?php echo is_numeric( $fields[$field_key]["min_option"] ) ? 'min="' . esc_html( $fields[$field_key]["min_option"] ?? "" ) . '"' : '' ?>
+                    <?php echo is_numeric( $fields[$field_key]["max_option"] ) ? 'max="' . esc_html( $fields[$field_key]["max_option"] ?? "" ) . '"' : '' ?>
+                >
+                    <?php echo $icon_slot ?>
+                </dt-number>
+            <?php elseif ( $field_type === "date" ) :?>
+                <dt-date
+                    <?php echo $shared_attributes ?>
+                    timestamp="<?php echo esc_html( $post[$field_key]["timestamp"] ?? '' ) ?>"
+                >
+                    <?php echo $icon_slot ?>
+                </dt-date>
 
             <?php endif;
         }
@@ -1332,17 +1369,18 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
     public function post_form( $post, $fields ) {
 
         $post_settings = DT_Posts::get_post_settings( 'groups' );
+        $post_tiles = DT_Posts::get_post_tiles( 'groups' );
         $this->post_field_settings = $post_settings['fields'];
 
-        $wc_types = [ 'key_select' ];
+        $wc_types = [ 'key_select', 'text', 'textarea', 'number', 'date' ];
         if ( !empty( $fields ) && !empty( $this->post_field_settings ) ) {
             // Sort fields based on tile settings
             foreach ( $fields as &$field ) {
                 $priority = 999;
-                if ( key_exists( $field['id'], $this->post_field_settings ) ) {
+                if ( !empty( $post_tiles ) && key_exists( $field['id'], $this->post_field_settings ) ) {
                     $field_setting = $this->post_field_settings[$field['id']];
-                    if ( !empty( $field_setting['tile'] ) && key_exists( $field_setting['tile'], $post_settings['tiles'] )) {
-                        $tile = $post_settings['tiles'][$field_setting['tile']];
+                    if ( !empty( $field_setting['tile'] ) && key_exists( $field_setting['tile'], $post_tiles )) {
+                        $tile = $post_tiles[$field_setting['tile']];
                         if ( !empty( $tile ) && isset( $tile['tile_priority'] ) && isset( $tile['order'] )) {
                             $field_order = array_search( $field['id'], $tile['order'] );
                             $priority = ( $tile['tile_priority'] * 10 ) + $field_order;
