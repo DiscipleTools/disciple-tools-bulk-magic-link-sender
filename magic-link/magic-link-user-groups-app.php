@@ -627,50 +627,6 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
 
                             break;
 
-                        case 'date':
-
-                            /**
-                             * Load Date Range Picker
-                             */
-
-                            let date_config = {
-                                singleDatePicker: true,
-                                timePicker: true,
-                                locale: {
-                                    format: 'MMMM D, YYYY'
-                                }
-                            };
-                            let post_date = jsObject['post'][field_id];
-                            if (post_date !== undefined) {
-                                date_config['startDate'] = moment.unix(post_date['timestamp']);
-                            }
-
-                            jQuery(tr).find('#' + field_id).daterangepicker(date_config, function (start, end, label) {
-                                if (start) {
-                                    field_meta.val(start.unix());
-                                }
-                            });
-
-                            // If post timestamp available, set default hidden meta field value
-                            if (post_date !== undefined) {
-                                field_meta.val(post_date['timestamp']);
-                            }
-
-                            /**
-                             * Clear Date
-                             */
-
-                            jQuery(tr).find('.clear-date-button').on('click', evt => {
-                                let input_id = jQuery(evt.currentTarget).data('inputid');
-
-                                if (input_id) {
-                                    jQuery(tr).find('#' + input_id).val('');
-                                    field_meta.val('');
-                                }
-                            });
-
-                            break;
-
                         case 'tags':
 
                             /**
@@ -1068,6 +1024,13 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                                 });
                                 break;
 
+                            case 'connection':
+                                payload['fields'].push({
+                                    id: field_id,
+                                    type: field_type,
+                                    value: jQuery(tr).find(selector).val()
+                                });
+                                break;
                             case 'multi_select':
                                 let options = [];
                                 jQuery(tr).find('button').each(function () {
@@ -1098,7 +1061,6 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
 
                             case 'tags':
                             case 'location':
-                            case 'connection':
                                 let typeahead = window.Typeahead['.js-typeahead-' + field_id];
                                 if (typeahead) {
                                     payload['fields'].push({
@@ -1154,6 +1116,49 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                         jQuery('#content_submit_but').prop('disabled', false);
                     });
                 }
+            });
+
+            jQuery(document).on('load', 'dt-connection', function (e) {
+                jQuery.ajax({
+                    type: "GET",
+                    data: {
+                        action: 'get',
+                        parts: jsObject.parts,
+                        lang: jsObject.lang,
+                        sys_type: jsObject.sys_type,
+                        field: e.detail.field,
+                        query: e.detail.query,
+                        ts: moment().unix() // Alter url shape, so as to force cache refresh!
+                    },
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    url: jsObject.root + jsObject.parts.root + '/v1/' + jsObject.parts.type + '/field-options',
+                    beforeSend: function (xhr) {
+                        xhr.setRequestHeader('X-WP-Nonce', jsObject.nonce);
+                        xhr.setRequestHeader('Cache-Control', 'no-store');
+                    }
+
+                }).done(function (data) {
+
+                    // Was our post fetch request successful...?
+                    if (data['success'] && data['options']) {
+                        e.detail.onSuccess(data.options.posts.map(function (post) {
+                            return {
+                                id: post.ID.toString(),
+                                label: post.name,
+                                status: post.status,
+                            };
+                        }));
+                    } else {
+                        // TODO: Error Msg...!
+                        e.detail.onError();
+                    }
+
+                }).fail(function (evt) {
+                    e.detail.onError(evt);
+                    console.log(evt);
+                    jQuery('#error').html(evt);
+                });
             });
         </script>
         <?php
@@ -1362,17 +1367,33 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                     <?php echo $icon_slot ?>
                 </dt-date>
 
+            <?php elseif ( $field_type === "connection" ) :?>
+                <?php $value = array_map(function ($value) {
+                    return [
+                        'id' => $value['ID'],
+                        'label' => $value['post_title'],
+                        'link' => $value['permalink'],
+                        'status' => $value['status'],
+                    ];
+                }, $post[$field_key]);
+                ?>
+                <dt-connection
+                    <?php echo $shared_attributes ?>
+                    value="<?php echo esc_attr( json_encode( $value ) ) ?>"
+                    allowAdd
+                >
+                    <?php echo $icon_slot ?>
+                </dt-connection>
             <?php endif;
         }
     }
 
-    public function post_form( $post, $fields ) {
+    public function post_form( $post, $fields, $post_settings ) {
 
-        $post_settings = DT_Posts::get_post_settings( 'groups' );
         $post_tiles = DT_Posts::get_post_tiles( 'groups' );
         $this->post_field_settings = $post_settings['fields'];
 
-        $wc_types = [ 'key_select', 'text', 'textarea', 'number', 'date' ];
+        $wc_types = [ 'key_select', 'text', 'textarea', 'number', 'date', 'connection' ];
         if ( !empty( $fields ) && !empty( $this->post_field_settings ) ) {
             // Sort fields based on tile settings
             foreach ( $fields as &$field ) {
@@ -1560,6 +1581,25 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                 ],
             ]
         );
+        register_rest_route(
+            $namespace, '/' . $this->type . '/field-options', [
+                [
+                    'methods'             => "GET",
+                    'callback'            => [ $this, 'get_field_options' ],
+                    'permission_callback' => function ( WP_REST_Request $request ) {
+                        $magic = new DT_Magic_URL( $this->root );
+
+                        /**
+                         * Adjust global values accordingly, so as to accommodate both wp_user
+                         * and post requests.
+                         */
+                        $this->adjust_global_values_by_incoming_sys_type( $request->get_params()['sys_type'] );
+
+                        return $magic->verify_rest_endpoint_permissions_on_post( $request );
+                    },
+                ],
+            ]
+        );
     }
 
     public function endpoint_get( WP_REST_Request $request ) {
@@ -1632,9 +1672,12 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
         $response = [];
         $post     = DT_Posts::get_post( 'groups', $params['post_id'], false );
         if ( ! empty( $post ) && ! is_wp_error( $post ) ) {
+            $post_settings = DT_Posts::get_post_settings( 'groups' );
+            $fields = json_decode(json_encode($link_obj->type_fields), true);
+
             // start output buffer to capture markup output
             ob_start();
-            $this->post_form( $post, json_decode( json_encode( $link_obj->type_fields ), true ) );
+            $this->post_form( $post, $fields, $post_settings );
             $response['form_html'] = ob_get_clean();
 
             $response['success']  = true;
@@ -1713,6 +1756,23 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                     }
                     break;
 
+                case 'connection':
+                    $options = [];
+                    foreach ( $field['value'] ?? [] as $connection ) {
+                        $entry = [];
+                        $entry['value'] = $connection['id'];
+                        if ( $connection['delete'] ) {
+                            $entry['delete'] = true;
+                        }
+                        $options[] = $entry;
+                    }
+                    if ( ! empty( $options ) ) {
+                        $updates[ $field['id'] ] = [
+                            'values' => $options
+                        ];
+                    }
+                    break;
+
                 case 'multi_select':
                     $options = [];
                     foreach ( $field['value'] ?? [] as $option ) {
@@ -1731,7 +1791,6 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                     break;
 
                 case 'location':
-                case 'connection':
                     $locations = [];
                     foreach ( $field['value'] ?? [] as $location ) {
                         $entry          = [];
@@ -1840,6 +1899,49 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
             'success' => true,
             'message' => ''
         ];
+    }
+
+    public function get_field_options( WP_REST_Request $request ) {
+        $params = $request->get_params();
+        if ( ! isset( $params['parts'], $params['action'], $params['field'], $params['sys_type'] ) ) {
+            return new WP_Error( __METHOD__, "Missing parameters", [ 'status' => 400 ] );
+        }
+
+        // Sanitize and fetch user/post id
+        $params = dt_recursive_sanitize_array( $params );
+
+        // Update logged-in user state if required accordingly, based on their sys_type
+        if ( ! is_user_logged_in() ) {
+            $this->update_user_logged_in_state( $params['sys_type'], $params["parts"]["post_id"] );
+        }
+        $this->determine_language_locale( $params["parts"] );
+
+        $options = [];
+
+        // get available post options for current field
+        $field = $params['field'];
+        $query = $params['query'];
+        $post_settings = DT_Posts::get_post_settings( 'groups' );
+        if ( key_exists( $field, $post_settings['fields'] ) ) {
+            $field_settings = $post_settings['fields'][$field];
+            if ( $field_settings['type'] === 'connection' ) {
+                $options = DT_Posts::get_viewable_compact( $field_settings[ 'post_type' ], $query ?? "" );
+            }
+        } else {
+            //can't find field
+        }
+
+        // Fetch corresponding groups post record
+        $response = [];
+        // $post     = DT_Posts::get_post( 'groups', $params['post_id'], false );
+        if ( ! empty( $options ) && ! is_wp_error( $options ) ) {
+            $response['options'] = $options;
+            $response['success']  = true;
+        } else {
+            $response['success'] = false;
+        }
+
+        return $response;
     }
 
     public function update_user_logged_in_state( $sys_type, $user_id ) {
