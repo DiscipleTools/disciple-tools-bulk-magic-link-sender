@@ -607,117 +607,6 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                             });
 
                             break;
-
-                        case 'tags':
-
-                            /**
-                             * Activate
-                             */
-
-                            // Hide new button and default to single entry
-                            jQuery(tr).find('.create-new-tag').hide();
-
-                            let typeahead_tags_field_input = '.js-typeahead-' + field_id;
-                            if (!window.Typeahead[typeahead_tags_field_input]) {
-                                jQuery(tr).find(typeahead_tags_field_input).typeahead({
-                                    input: typeahead_tags_field_input,
-                                    minLength: 0,
-                                    maxItem: 20,
-                                    searchOnFocus: true,
-                                    source: {
-                                        tags: {
-                                            display: ["name"],
-                                            ajax: {
-                                                url: jsObject['root'] + `dt-posts/v2/${jsObject['post']['post_type']}/multi-select-values`,
-                                                data: {
-                                                    s: "{{query}}",
-                                                    field: field_id
-                                                },
-                                                beforeSend: function (xhr) {
-                                                    xhr.setRequestHeader('X-WP-Nonce', jsObject['nonce']);
-                                                },
-                                                callback: {
-                                                    done: function (data) {
-                                                        return (data || []).map(tag => {
-                                                            return {name: tag}
-                                                        })
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    },
-                                    display: "name",
-                                    templateValue: "{{name}}",
-                                    emptyTemplate: function (query) {
-                                        const {addNewTagText, tagExistsText} = this.node[0].dataset
-                                        if (this.comparedItems.includes(query)) {
-                                            return tagExistsText.replace('%s', query)
-                                        }
-                                        const liItem = jQuery('<li>')
-                                        const button = jQuery('<button>', {
-                                            class: "button primary",
-                                            text: addNewTagText.replace('%s', query),
-                                        })
-                                        const tag = this.query
-                                        button.on("click", function () {
-                                            window.Typeahead[typeahead_tags_field_input].addMultiselectItemLayout({name: tag});
-                                        })
-                                        liItem.append(button);
-                                        return liItem;
-                                    },
-                                    dynamic: true,
-                                    multiselect: {
-                                        matchOn: ["name"],
-                                        data: function () {
-                                            return (jsObject['post'][field_id] || []).map(t => {
-                                                return {name: t}
-                                            })
-                                        },
-                                        callback: {
-                                            onCancel: function (node, item, event) {
-                                                // Keep a record of deleted tags
-                                                let deleted_items = (field_meta.val()) ? JSON.parse(field_meta.val()) : [];
-                                                deleted_items.push(item);
-                                                field_meta.val(JSON.stringify(deleted_items));
-                                            }
-                                        },
-                                        href: function (item) {
-                                        },
-                                    },
-                                    callback: {
-                                        onClick: function (node, a, item, event) {
-                                            event.preventDefault();
-                                            this.addMultiselectItemLayout({name: item.name});
-                                        },
-                                        onResult: function (node, query, result, resultCount) {
-                                            let text = TYPEAHEADS.typeaheadHelpText(resultCount, query, result)
-                                            jQuery(tr).find(`#${field_id}-result-container`).html(text);
-                                        },
-                                        onHideLayout: function () {
-                                            jQuery(tr).find(`#${field_id}-result-container`).html("");
-                                        },
-                                        onShowLayout() {
-                                        }
-                                    }
-                                });
-                            }
-
-                            /**
-                             * Load
-                             */
-
-                                // If available, load previous post record tags
-                            let typeahead_tags = window.Typeahead[typeahead_tags_field_input];
-                            let post_tags = jsObject['post'][field_id];
-                            if ((post_tags !== undefined) && typeahead_tags) {
-                                jQuery.each(post_tags, function (idx, tag) {
-                                    typeahead_tags.addMultiselectItemLayout({
-                                        name: window.lodash.escape(tag)
-                                    });
-                                });
-                            }
-
-                            break;
                     }
                 });
 
@@ -957,6 +846,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                                 });
                                 break;
                             case 'multi_select':
+                            case 'tags':
                                 payload['fields'].push({
                                     id: field_id,
                                     type: field_type,
@@ -977,7 +867,6 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                                 break;
 
 
-                            case 'tags':
                             case 'location':
                                 let typeahead = window.Typeahead['.js-typeahead-' + field_id];
                                 if (typeahead) {
@@ -1036,7 +925,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                 }
             });
 
-            jQuery(document).on('load', 'dt-connection', function (e) {
+            function loadOptions( field, query, callback, onError ) {
                 jQuery.ajax({
                     type: "GET",
                     data: {
@@ -1044,8 +933,8 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                         parts: jsObject.parts,
                         lang: jsObject.lang,
                         sys_type: jsObject.sys_type,
-                        field: e.detail.field,
-                        query: e.detail.query,
+                        field: field,
+                        query: query,
                         ts: moment().unix() // Alter url shape, so as to force cache refresh!
                     },
                     contentType: "application/json; charset=utf-8",
@@ -1057,7 +946,15 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                     }
 
                 }).done(function (data) {
-
+                    callback(data);
+                }).fail(function (evt) {
+                    onError(evt);
+                    console.log(evt);
+                    jQuery('#error').html(evt);
+                });
+            }
+            jQuery(document).on('load', 'dt-connection', function (e) {
+                function done(data) {
                     // Was our post fetch request successful...?
                     if (data['success'] && data['options']) {
                         e.detail.onSuccess(data.options.posts.map(function (post) {
@@ -1071,12 +968,25 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                         // TODO: Error Msg...!
                         e.detail.onError();
                     }
-
-                }).fail(function (evt) {
-                    e.detail.onError(evt);
-                    console.log(evt);
-                    jQuery('#error').html(evt);
-                });
+                }
+                loadOptions(e.detail.field, e.detail.query, done, e.detail.onError);
+            });
+            jQuery(document).on('load', 'dt-tags', function (e) {
+                function done(data) {
+                    // Was our post fetch request successful...?
+                    if (data['success'] && data['options']) {
+                        e.detail.onSuccess(data.options.map(function (tag) {
+                            return {
+                                id: tag,
+                                label: tag,
+                            };
+                        }));
+                    } else {
+                        // TODO: Error Msg...!
+                        e.detail.onError();
+                    }
+                }
+                loadOptions(e.detail.field, e.detail.query, done, e.detail.onError);
             });
         </script>
         <?php
@@ -1254,6 +1164,23 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                     <?php echo $icon_slot; ?>
                 </dt-single-select>
 
+            <?php elseif ( $field_type === "tags" ) : ?>
+                <?php $value = array_map(function ($value) {
+                    return [
+                        'id' => $value,
+                        'label' => $value,
+                    ];
+                }, $post[$field_key] ?? []);
+                ?>
+                <dt-tags
+                    <?php echo $shared_attributes ?>
+                    value="<?php echo esc_attr( json_encode( $value ) ) ?>"
+                    placeholder="<?php echo esc_html( sprintf( _x( "Search %s", "Search 'something'", 'disciple_tools' ), $fields[$field_key]['name'] ) )?>"
+                    allowAdd
+                >
+                    <?php echo $icon_slot ?>
+                </dt-tags>
+
             <?php elseif ( $field_type === "multi_select" ) : ?>
                 <?php $options = array_map(function ($key, $value) {
                     return [
@@ -1261,10 +1188,11 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                         'label' => $value['label'],
                     ];
                 }, array_keys( $fields[$field_key]["default"] ), $fields[$field_key]["default"]);
+                $value = isset( $post[$field_key] ) ? $post[$field_key] : [];
                 ?>
                 <dt-multi-select
                     <?php echo $shared_attributes ?>
-                    value="<?php echo esc_attr( json_encode( $post[$field_key] ) ) ?>"
+                    value="<?php echo esc_attr( json_encode( $value ) ) ?>"
                     options="<?php echo esc_attr( json_encode( $options ) ) ?>"
                     placeholder="<?php echo esc_html( sprintf( _x( "Search %s", "Search 'something'", 'disciple_tools' ), $fields[$field_key]['name'] ) )?>"
                     display="<?php echo isset( $fields[$field_key]["display"] ) ? $fields[$field_key]["display"] : 'typeahead' ?>"
@@ -1290,8 +1218,8 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                 <dt-number
                     <?php echo $shared_attributes ?>
                     value="<?php echo esc_html( $post[$field_key] ?? "" ) ?>" <?php echo esc_html( $disabled ); ?>
-                    <?php echo is_numeric( $fields[$field_key]["min_option"] ) ? 'min="' . esc_html( $fields[$field_key]["min_option"] ?? "" ) . '"' : '' ?>
-                    <?php echo is_numeric( $fields[$field_key]["max_option"] ) ? 'max="' . esc_html( $fields[$field_key]["max_option"] ?? "" ) . '"' : '' ?>
+                    <?php echo isset( $fields[$field_key]["min_option"] ) && is_numeric( $fields[$field_key]["min_option"] ) ? 'min="' . esc_html( $fields[$field_key]["min_option"] ?? "" ) . '"' : '' ?>
+                    <?php echo isset( $fields[$field_key]["max_option"] ) && is_numeric( $fields[$field_key]["max_option"] ) ? 'max="' . esc_html( $fields[$field_key]["max_option"] ?? "" ) . '"' : '' ?>
                 >
                     <?php echo $icon_slot ?>
                 </dt-number>
@@ -1330,7 +1258,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
         $post_tiles = DT_Posts::get_post_tiles( 'groups' );
         $this->post_field_settings = $post_settings['fields'];
 
-        $wc_types = [ 'key_select', 'multi_select', 'text', 'textarea', 'number', 'date', 'connection' ];
+        $wc_types = [ 'key_select', 'tags', 'multi_select', 'text', 'textarea', 'number', 'date', 'connection' ];
         if ( !empty( $fields ) && !empty( $this->post_field_settings ) ) {
             // Sort fields based on tile settings
             foreach ( $fields as &$field ) {
@@ -1677,7 +1605,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                         $comm          = [];
                         $comm['value'] = $value['value'];
 
-                        if ( $value['key'] !== 'new' ) {
+                        if ( isset( $value['key'] ) && $value['key'] !== 'new' ) {
                             $comm['key'] = $value['key'];
                         }
 
@@ -1698,7 +1626,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                     foreach ( $field['value'] ?? [] as $connection ) {
                         $entry = [];
                         $entry['value'] = $connection['id'];
-                        if ( $connection['delete'] ) {
+                        if ( isset( $connection['delete'] ) ) {
                             $entry['delete'] = true;
                         }
                         // if this is a new post
@@ -1793,20 +1721,15 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                 case 'tags':
                     $tags = [];
                     foreach ( $field['value'] ?? [] as $tag ) {
-                        $entry          = [];
-                        $entry['value'] = $tag['name'];
-                        $tags[]         = $entry;
+                        $entry = [];
+                        $entry['value'] = $tag['label'];
+                        if ( isset( $tag['delete'] ) ) {
+                            $entry['delete'] = true;
+                        }
+                        if ( !empty( $entry['value'] ) ) {
+                            $tags[] = $entry;
+                        }
                     }
-
-                    // Capture any incoming deletions
-                    foreach ( $field['deletions'] ?? [] as $tag ) {
-                        $entry           = [];
-                        $entry['value']  = $tag['name'];
-                        $entry['delete'] = true;
-                        $tags[]          = $entry;
-                    }
-
-                    // Package and append to global updates
                     if ( ! empty( $tags ) ) {
                         $updates[ $field['id'] ] = [
                             'values' => $tags
@@ -1869,12 +1792,15 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
 
         // get available post options for current field
         $field = $params['field'];
-        $query = $params['query'];
+        $query = isset( $params['query'] ) ? $params['query'] : "";
         $post_settings = DT_Posts::get_post_settings( 'groups' );
         if ( key_exists( $field, $post_settings['fields'] ) ) {
             $field_settings = $post_settings['fields'][$field];
+
             if ( $field_settings['type'] === 'connection' ) {
                 $options = DT_Posts::get_viewable_compact( $field_settings[ 'post_type' ], $query ?? "" );
+            } else if ( $field_settings['type'] === 'tags' ) {
+                $options = DT_Posts::get_multi_select_options( 'groups', $field, $query );
             }
         } else {
             //can't find field
@@ -1882,8 +1808,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
 
         // Fetch corresponding groups post record
         $response = [];
-        // $post     = DT_Posts::get_post( 'groups', $params['post_id'], false );
-        if ( ! empty( $options ) && ! is_wp_error( $options ) ) {
+        if ( !is_wp_error( $options ) ) {
             $response['options'] = $options;
             $response['success']  = true;
         } else {
