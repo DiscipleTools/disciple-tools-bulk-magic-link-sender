@@ -1378,7 +1378,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
             ];
 
             $options = apply_filters( 'dt_bulk_magic_link_sender_user_groups_posts_query', $options );
-            dt_write_log( json_encode( $options ) );
+
             // Fetch all assigned posts
             $posts = DT_Posts::list_posts( 'groups', $options );
 
