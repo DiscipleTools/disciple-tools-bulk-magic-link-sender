@@ -610,148 +610,6 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                     }
                 });
 
-                // General Typeaheads (from theme/dt-assets/js/new-record.js
-                $(".typeahead__query input").each((key, el)=>{
-                    let field_key = $(el).data('field')
-                    let post_type = $(el).data('post_type')
-                    let field_type = $(el).data('field_type')
-                    let field_meta = $(el).data('field_meta')
-                    typeaheadTotals = {}
-
-                    // Determine field class name to be used.
-                    let field_class = `.js-typeahead-${field_key}`;
-
-                    if (!window.Typeahead[field_class]) {
-
-                        if ( field_type === "location" ){
-                            $.typeahead({
-                                input: field_class,
-                                minLength: 0,
-                                accent: true,
-                                searchOnFocus: true,
-                                maxItem: 20,
-                                dropdownFilter: [{
-                                    key: 'group',
-                                    value: 'focus',
-                                    template: window.lodash.escape(jsObject['translations']['regions_of_focus']),
-                                    all: window.lodash.escape(jsObject['translations']['all_locations'])
-                                }],
-                                source: {
-                                    focus: {
-                                        display: "name",
-                                        ajax: {
-                                            url: jsObject['root'] + 'dt/v1/mapping_module/search_location_grid_by_name',
-                                            data: {
-                                                s: "{{query}}",
-                                                filter: function () {
-                                                    return window.lodash.get(window.Typeahead[field_class].filters.dropdown, 'value', 'all')
-                                                }
-                                            },
-                                            beforeSend: function (xhr) {
-                                                xhr.setRequestHeader('X-WP-Nonce', window.wpApiShare.nonce);
-                                            },
-                                            callback: {
-                                                done: function (data) {
-                                                    return data.location_grid
-                                                }
-                                            }
-                                        }
-                                    }
-                                },
-                                display: "name",
-                                templateValue: "{{name}}",
-                                dynamic: true,
-                                multiselect: {
-                                    matchOn: ["ID"],
-                                    data: function () {
-                                        return (jsObject.post[field_key] || []).map(g => {
-                                            return {ID: g.id, name: g.label}
-                                        })
-                                    },
-                                    callback: {
-                                        onCancel: function (node, item) {
-                                            // Keep a record of deleted options
-                                            let deleted_items = field_meta ? JSON.parse(field_meta) : [];
-                                            deleted_items.push(item);
-                                            $(el).data('field_meta', JSON.stringify(deleted_items));
-                                        }
-                                    }
-                                },
-                                callback: {
-                                    onClick: function(node, a, item, event){
-                                    },
-                                    onReady(){
-                                        this.filters.dropdown = {key: "group", value: "focus", template: window.lodash.escape(jsObject['translations']['regions_of_focus'])}
-                                        this.container
-                                            .removeClass("filter")
-                                            .find("." + this.options.selector.filterButton)
-                                            .html(window.lodash.escape(jsObject['translations']['regions_of_focus']));
-                                    },
-                                    onResult: function (node, query, result, resultCount) {
-                                        resultCount = typeaheadTotals.location_grid
-                                        let text = TYPEAHEADS.typeaheadHelpText(resultCount, query, result)
-                                        $('#location_grid-result-container').html(text);
-                                    },
-                                    onHideLayout: function () {
-                                        $('#location_grid-result-container').html("");
-                                    }
-                                }
-                            });
-                        } else if ( field_type === "user_select" ){
-                            //todo: move init from above to here to mimic new-record.js
-                        }
-                    }
-                });
-
-                let connection_type = null
-                //new record off a typeahead
-                $('.create-new-record').on('click', function(){
-                    connection_type = $(this).data('connection-key');
-                    $('#create-record-modal').foundation('open');
-                    $('.js-create-record .error-text').empty();
-                    $(".js-create-record-button").attr("disabled", false).removeClass("alert")
-                    $(".reveal-after-record-create").hide()
-                    $(".hide-after-record-create").show()
-                    $(".js-create-record input[name=title]").val('')
-                    //create new record
-                })
-                $(".js-create-record").on("submit", function(e) {
-                    e.preventDefault();
-                    $(".js-create-record-button").attr("disabled", true).addClass("loading");
-                    let title = $(".js-create-record input[name=title]").val()
-                    if ( !connection_type){
-                        $(".js-create-record .error-text").text(
-                            "Something went wrong. Please refresh and try again"
-                        );
-                        return;
-                    }
-                    let update_field = connection_type;
-                    API.create_post( jsObject.field_settings[update_field].post_type, {
-                        title,
-                        additional_meta: {
-                            created_from: jsObject.parts.post_id,
-                            add_connection: connection_type
-                        }
-                    }).then((newRecord)=>{
-                        $(".js-create-record-button").attr("disabled", false).removeClass("loading");
-                        $(".reveal-after-record-create").show()
-                        $("#new-record-link").html(`<a href="${window.lodash.escape( newRecord.permalink )}">${window.lodash.escape( title )}</a>`)
-                        $(".hide-after-record-create").hide()
-                        $('#go-to-record').attr('href', window.lodash.escape( newRecord.permalink ));
-                        // $( document ).trigger( "dt-post-connection-created", [ post, update_field ] );
-                        if ( Typeahead[`.js-typeahead-${connection_type}`] ){
-                            Typeahead[`.js-typeahead-${connection_type}`].addMultiselectItemLayout({ID:newRecord.ID.toString(), name:title})
-                            // masonGrid.masonry('layout')
-                        }
-                    })
-                        .catch(function(error) {
-                            $(".js-create-record-button").removeClass("loading").addClass("alert");
-                            $(".js-create-record .error-text").text(
-                                window.lodash.get( error, "responseJSON.message", "Something went wrong. Please refresh and try again" )
-                            );
-                            console.error(error);
-                        });
-                })
             };
 
             /**
@@ -814,6 +672,9 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                             case 'text':
                             case 'key_select':
                             case 'date':
+                            case 'multi_select':
+                            case 'tags':
+                            case 'location':
                                 payload['fields'].push({
                                     id: field_id,
                                     type: field_type,
@@ -845,14 +706,6 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                                     value: document.querySelector(selector).value,
                                 });
                                 break;
-                            case 'multi_select':
-                            case 'tags':
-                                payload['fields'].push({
-                                    id: field_id,
-                                    type: field_type,
-                                    value: document.querySelector(selector).value,
-                                });
-                                break;
 
                             case 'boolean':
                                 let initial_val = JSON.parse(jQuery(tr).find('#field_initial_state_' + field_id).val());
@@ -864,19 +717,6 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                                     value: current_val,
                                     changed: (initial_val !== current_val)
                                 });
-                                break;
-
-
-                            case 'location':
-                                let typeahead = window.Typeahead['.js-typeahead-' + field_id];
-                                if (typeahead) {
-                                    payload['fields'].push({
-                                        id: field_id,
-                                        type: field_type,
-                                        value: typeahead.items,
-                                        deletions: field_meta_typeahead ? JSON.parse(field_meta_typeahead) : []
-                                    });
-                                }
                                 break;
 
                             case 'location_meta':
@@ -925,7 +765,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                 }
             });
 
-            function loadOptions( field, query, callback, onError ) {
+            function loadOptions( detail, callback ) {
                 jQuery.ajax({
                     type: "GET",
                     data: {
@@ -933,8 +773,9 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                         parts: jsObject.parts,
                         lang: jsObject.lang,
                         sys_type: jsObject.sys_type,
-                        field: field,
-                        query: query,
+                        field: detail.field,
+                        filter: detail.filter,
+                        query: detail.query,
                         ts: moment().unix() // Alter url shape, so as to force cache refresh!
                     },
                     contentType: "application/json; charset=utf-8",
@@ -948,7 +789,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                 }).done(function (data) {
                     callback(data);
                 }).fail(function (evt) {
-                    onError(evt);
+                    detail.onError(evt);
                     console.log(evt);
                     jQuery('#error').html(evt);
                 });
@@ -969,7 +810,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                         e.detail.onError();
                     }
                 }
-                loadOptions(e.detail.field, e.detail.query, done, e.detail.onError);
+                loadOptions(e.detail, done);
             });
             jQuery(document).on('load', 'dt-tags', function (e) {
                 function done(data) {
@@ -986,7 +827,24 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                         e.detail.onError();
                     }
                 }
-                loadOptions(e.detail.field, e.detail.query, done, e.detail.onError);
+                loadOptions(e.detail, done);
+            });
+            jQuery(document).on('load', 'dt-location', function (e) {
+                function done(data) {
+                    // Was our post fetch request successful...?
+                    if (data['success'] && data['options']) {
+                        e.detail.onSuccess(data.options.location_grid.map(function (location) {
+                            return {
+                                id: location.grid_id,
+                                label: location.label,
+                            };
+                        }));
+                    } else {
+                        // TODO: Error Msg...!
+                        e.detail.onError();
+                    }
+                }
+                loadOptions(e.detail, done);
             });
         </script>
         <?php
@@ -1249,6 +1107,31 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                 >
                     <?php echo $icon_slot ?>
                 </dt-connection>
+
+            <?php elseif ( $field_type === "location" ) :?>
+                <?php $value = array_map(function ($value) {
+                    return [
+                        'id' => strval( $value['id'] ),
+                        'label' => $value['label'],
+                    ];
+                }, $post[$field_key]);
+                $filters = [[
+                    'id' => 'focus',
+                    'label' => __( 'Regions of Focus', 'disciple_tools' ),
+                ], [
+                    'id' => 'all',
+                    'label' => __( 'All Locations', 'disciple_tools' )
+                ]];
+                ?>
+                <dt-location
+                    <?php echo $shared_attributes ?>
+                    value="<?php echo esc_attr( json_encode( $value ) ) ?>"
+                    filters="<?php echo esc_attr( json_encode( $filters ) ) ?>"
+                    placeholder="<?php echo esc_html( sprintf( _x( "Search %s", "Search 'something'", 'disciple_tools' ), $fields[$field_key]['name'] ) )?>"
+                >
+                    <?php echo $icon_slot ?>
+                </dt-location>
+
             <?php endif;
         }
     }
@@ -1258,7 +1141,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
         $post_tiles = DT_Posts::get_post_tiles( 'groups' );
         $this->post_field_settings = $post_settings['fields'];
 
-        $wc_types = [ 'key_select', 'tags', 'multi_select', 'text', 'textarea', 'number', 'date', 'connection' ];
+        $wc_types = [ 'key_select', 'tags', 'multi_select', 'text', 'textarea', 'number', 'date', 'connection', 'location' ];
         if ( !empty( $fields ) && !empty( $this->post_field_settings ) ) {
             // Sort fields based on tile settings
             foreach ( $fields as &$field ) {
@@ -1667,30 +1550,6 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                     }
                     break;
 
-                case 'location':
-                    $locations = [];
-                    foreach ( $field['value'] ?? [] as $location ) {
-                        $entry          = [];
-                        $entry['value'] = $location['ID'];
-                        $locations[]    = $entry;
-                    }
-
-                    // Capture any incoming deletions
-                    foreach ( $field['deletions'] ?? [] as $location ) {
-                        $entry           = [];
-                        $entry['value']  = $location['ID'];
-                        $entry['delete'] = true;
-                        $locations[]     = $entry;
-                    }
-
-                    // Package and append to global updates
-                    if ( ! empty( $locations ) ) {
-                        $updates[ $field['id'] ] = [
-                            'values' => $locations
-                        ];
-                    }
-                    break;
-
                 case 'location_meta':
                     $locations = [];
 
@@ -1718,11 +1577,12 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                     }
                     break;
 
+                case 'location':
                 case 'tags':
                     $tags = [];
                     foreach ( $field['value'] ?? [] as $tag ) {
                         $entry = [];
-                        $entry['value'] = $tag['label'];
+                        $entry['value'] = $tag['id'] ?: $tag['label'];
                         if ( isset( $tag['delete'] ) ) {
                             $entry['delete'] = true;
                         }
@@ -1801,6 +1661,11 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                 $options = DT_Posts::get_viewable_compact( $field_settings[ 'post_type' ], $query ?? "" );
             } else if ( $field_settings['type'] === 'tags' ) {
                 $options = DT_Posts::get_multi_select_options( 'groups', $field, $query );
+            } else if ( $field_settings['type'] === 'location' ) {
+                $options = Disciple_Tools_Mapping_Queries::search_location_grid_by_name( [
+                    "search_query" => $query ?? "",
+                    "filter" => isset( $params['filter'] ) ? $params['filter'] : 'all',
+                ] );
             }
         } else {
             //can't find field
