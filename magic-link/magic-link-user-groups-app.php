@@ -753,64 +753,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
 
                     if (!window.Typeahead[field_class]) {
 
-                        if ( field_type === "connection"){
-
-                            $.typeahead({
-                                input: field_class,
-                                minLength: 0,
-                                accent: true,
-                                searchOnFocus: true,
-                                maxItem: 20,
-                                template: window.TYPEAHEADS.contactListRowTemplate,
-                                source: TYPEAHEADS.typeaheadPostsSource(post_type, field_key),
-                                display: ["name", "label"],
-                                templateValue: function() {
-                                    if (this.items[this.items.length - 1].label) {
-                                        return "{{label}}"
-                                    } else {
-                                        return "{{name}}"
-                                    }
-                                },
-                                dynamic: true,
-                                multiselect: {
-                                    matchOn: ["ID"],
-                                    data: function () {
-                                        return (jsObject.post[field_key] || [] ).map(g=>{
-                                            return {ID:g.ID, name:g.post_title, label: g.label}
-                                        })
-                                    },
-                                    callback: {
-                                        onCancel: function (node, item) {
-                                            // Keep a record of deleted options
-                                            let deleted_items = field_meta ? JSON.parse(field_meta) : [];
-                                            deleted_items.push(item);
-                                            $(el).data('field_meta', JSON.stringify(deleted_items));
-                                        }
-                                    }
-                                },
-                                callback: {
-                                    onResult: function (node, query, result, resultCount) {
-                                        let text = TYPEAHEADS.typeaheadHelpText(resultCount, query, result)
-                                        $(`#${field_key}-result-container`).html(text);
-                                    },
-                                    onHideLayout: function () {
-                                        $(`#${field_key}-result-container`).html("");
-                                    },
-                                    onClick: function (node, a, item, event ) {
-                                        /*if (!new_post[field_key]) {
-                                            new_post[field_key] = {values: []}
-                                        }
-                                        new_post[field_key].values.push({value: item.ID})*/
-
-                                        //get list from opening again
-                                        this.addMultiselectItemLayout(item)
-                                        event.preventDefault()
-                                        this.hideLayout();
-                                        this.resetInput();
-                                    }
-                                }
-                            });
-                        } else if ( field_type === "location" ){
+                        if ( field_type === "location" ){
                             $.typeahead({
                                 input: field_class,
                                 minLength: 0,
@@ -1004,7 +947,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                                 payload['fields'].push({
                                     id: field_id,
                                     type: field_type,
-                                    value: jQuery(tr).find(selector).val()
+                                    value: document.querySelector(selector).value,
                                 });
                                 break;
 
@@ -1028,7 +971,8 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                                 payload['fields'].push({
                                     id: field_id,
                                     type: field_type,
-                                    value: jQuery(tr).find(selector).val()
+                                    post_type: document.querySelector(selector).dataset.posttype,
+                                    value: document.querySelector(selector).value,
                                 });
                                 break;
                             case 'multi_select':
@@ -1380,6 +1324,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                 <dt-connection
                     <?php echo $shared_attributes ?>
                     value="<?php echo esc_attr( json_encode( $value ) ) ?>"
+                    data-posttype="<?php echo $fields[$field_key]["post_type"] ?>"
                     allowAdd
                 >
                     <?php echo $icon_slot ?>
@@ -1764,7 +1709,18 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                         if ( $connection['delete'] ) {
                             $entry['delete'] = true;
                         }
-                        $options[] = $entry;
+                        // if this is a new post
+                        if ( empty( $entry['value'] ) ) {
+                            $new_post = DT_Posts::create_post( $field['post_type'], [
+                                'name' => $connection['label'],
+                            ], true );
+                            if ( !empty( $new_post ) && key_exists( 'ID', $new_post ) ) {
+                                $entry['value'] = $new_post['ID'];
+                            }
+                        }
+                        if ( !empty( $entry['value'] ) ) {
+                            $options[] = $entry;
+                        }
                     }
                     if ( ! empty( $options ) ) {
                         $updates[ $field['id'] ] = [
