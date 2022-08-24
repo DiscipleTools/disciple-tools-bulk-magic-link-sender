@@ -1368,15 +1368,19 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
             $original_user = wp_get_current_user();
             wp_set_current_user( $user_id );
 
-            // Fetch all assigned posts
-            $posts = DT_Posts::list_posts( 'groups', [
+            $options = [
                 'limit'  => 1000,
                 'fields' => [
                     [
                         'assigned_to' => [ 'me' ]
                     ],
                 ]
-            ] );
+            ];
+
+            $options = apply_filters( 'dt_bulk_magic_link_sender_user_groups_posts_query', $options );
+            dt_write_log( json_encode( $options ) );
+            // Fetch all assigned posts
+            $posts = DT_Posts::list_posts( 'groups', $options );
 
             $this->determine_language_locale( $params["parts"] );
 
