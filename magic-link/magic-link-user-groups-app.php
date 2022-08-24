@@ -608,25 +608,6 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
 
                             break;
 
-                        case 'multi_select':
-
-                            /**
-                             * Handle Selections
-                             */
-
-                            jQuery(tr).find('.dt_multi_select').on("click", function (evt) {
-                                let multi_select = jQuery(evt.currentTarget);
-                                if (multi_select.hasClass('empty-select-button')) {
-                                    multi_select.removeClass('empty-select-button');
-                                    multi_select.addClass('selected-select-button');
-                                } else {
-                                    multi_select.removeClass('selected-select-button');
-                                    multi_select.addClass('empty-select-button');
-                                }
-                            });
-
-                            break;
-
                         case 'tags':
 
                             /**
@@ -976,17 +957,10 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                                 });
                                 break;
                             case 'multi_select':
-                                let options = [];
-                                jQuery(tr).find('button').each(function () {
-                                    options.push({
-                                        'value': jQuery(this).attr('id'),
-                                        'delete': jQuery(this).hasClass('empty-select-button')
-                                    });
-                                });
                                 payload['fields'].push({
                                     id: field_id,
                                     type: field_type,
-                                    value: options
+                                    value: document.querySelector(selector).value,
                                 });
                                 break;
 
@@ -1280,6 +1254,24 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                     <?php echo $icon_slot; ?>
                 </dt-single-select>
 
+            <?php elseif ( $field_type === "multi_select" ) : ?>
+                <?php $options = array_map(function ($key, $value) {
+                    return [
+                        'id' => $key,
+                        'label' => $value['label'],
+                    ];
+                }, array_keys( $fields[$field_key]["default"] ), $fields[$field_key]["default"]);
+                ?>
+                <dt-multi-select
+                    <?php echo $shared_attributes ?>
+                    value="<?php echo esc_attr( json_encode( $post[$field_key] ) ) ?>"
+                    options="<?php echo esc_attr( json_encode( $options ) ) ?>"
+                    placeholder="<?php echo esc_html( sprintf( _x( "Search %s", "Search 'something'", 'disciple_tools' ), $fields[$field_key]['name'] ) )?>"
+                    display="<?php echo isset( $fields[$field_key]["display"] ) ? $fields[$field_key]["display"] : 'typeahead' ?>"
+                >
+                    <?php echo $icon_slot ?>
+                </dt-multi-select>
+
             <?php elseif ( $field_type === "text" ) :?>
                 <dt-text
                     <?php echo $shared_attributes ?>
@@ -1338,7 +1330,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
         $post_tiles = DT_Posts::get_post_tiles( 'groups' );
         $this->post_field_settings = $post_settings['fields'];
 
-        $wc_types = [ 'key_select', 'text', 'textarea', 'number', 'date', 'connection' ];
+        $wc_types = [ 'key_select', 'multi_select', 'text', 'textarea', 'number', 'date', 'connection' ];
         if ( !empty( $fields ) && !empty( $this->post_field_settings ) ) {
             // Sort fields based on tile settings
             foreach ( $fields as &$field ) {
@@ -1733,8 +1725,9 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                     $options = [];
                     foreach ( $field['value'] ?? [] as $option ) {
                         $entry          = [];
-                        $entry['value'] = $option['value'];
-                        if ( $option['delete'] ) {
+                        $entry['value'] = $option;
+                        if ( strpos( $option, '-' ) === 0 ) {
+                            $entry['value'] = substr( $option, 1 );
                             $entry['delete'] = true;
                         }
                         $options[] = $entry;
