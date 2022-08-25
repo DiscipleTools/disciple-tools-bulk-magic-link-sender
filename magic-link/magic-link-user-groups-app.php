@@ -1001,14 +1001,14 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
             <?php
             $icon = null;
             if ( isset( $fields[$field_key]["icon"] ) && !empty( $fields[$field_key]["icon"] ) ) {
-                $icon = $fields[$field_key]["icon"];
+                $icon = 'icon=' . esc_attr( $fields[$field_key]["icon"] );
             }
 
             $shared_attributes = '
                   id=' . esc_attr( $display_field_id ) . '
                   name=' . esc_attr( $field_key ) .'
                   label=' . esc_attr( $fields[$field_key]["name"] ) . '
-                  icon=' . esc_attr( $icon ) . '
+                  ' . esc_html( $icon ) . '
                   ' . esc_html( $required_tag ) . '
                   ' . esc_html( $disabled ) . '
                   ' . ( $is_private ? 'private privateLabel=' . esc_attr( _x( "Private Field: Only I can see it\'s content", 'disciple_tools' ) ) : null ) . '
