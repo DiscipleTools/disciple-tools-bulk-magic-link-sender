@@ -953,6 +953,14 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
         <?php
     }
 
+    public function render_icon_slot( $field ) {
+        if ( isset( $field['font-icon'] ) && !empty( $field['font-icon'] ) ): ?>
+            <span slot="icon-start">
+                <i class="dt-icon ' . esc_html( $field['font-icon'] ) . '"></i>
+            </span>
+        <?php endif;
+    }
+
     /**
      * Copied from theme to replace web component rendering. Can be removed if/when web-components are fully adopted in the theme.
      * @param $field_key
@@ -996,34 +1004,27 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                 $icon = $fields[$field_key]["icon"];
             }
 
-            $icon_slot = '';
-            if ( isset( $field['font-icon'] ) && !empty( $field['font-icon'] ) ) {
-                $icon_slot = '<span slot="icon-start">
-                    <i class="dt-icon ' . esc_html( $field['font-icon'] ) . '"></i>
-                </span>';
-            }
-
             $shared_attributes = '
-                  id="' . esc_html( $display_field_id ) . '"
-                  name="' . esc_html( $field_key ) .'"
-                  label="' . esc_html( $fields[$field_key]["name"] ) . '"
-                  icon="' . esc_html( $icon ) . '"
+                  id=' . esc_attr( $display_field_id ) . '
+                  name=' . esc_attr( $field_key ) .'
+                  label=' . esc_attr( $fields[$field_key]["name"] ) . '
+                  icon=' . esc_attr( $icon ) . '
                   ' . esc_html( $required_tag ) . '
                   ' . esc_html( $disabled ) . '
-                  ' . ($is_private ? 'private privateLabel="' . esc_html( _x("Private Field: Only I can see it\'s content", 'disciple_tools') ) : null) . '
+                  ' . ( $is_private ? 'private privateLabel=' . esc_attr( _x( "Private Field: Only I can see it\'s content", 'disciple_tools' ) ) : null ) . '
             ';
             if ( $field_type === "key_select" ) :
                 ?>
                 <dt-single-select class="select-field"
-                                  <?php echo $shared_attributes ?>
+                                  <?php echo esc_html( $shared_attributes ) ?>
                                   value="<?php echo esc_attr( key_exists( $field_key, $post ) ? $post[$field_key]["key"] : null ) ?>"
                                   options="<?php echo esc_attr( json_encode( assoc_to_array( $fields[$field_key]["default"] ) ) ) ?>"
                               >
-                    <?php echo $icon_slot; ?>
+                    <?php $this->render_icon_slot( $fields[$field_key] ) ?>
                 </dt-single-select>
 
             <?php elseif ( $field_type === "tags" ) : ?>
-                <?php $value = array_map(function ($value) {
+                <?php $value = array_map(function ( $value) {
                     return [
                         'id' => $value,
                         'label' => $value,
@@ -1031,16 +1032,16 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                 }, $post[$field_key] ?? []);
                 ?>
                 <dt-tags
-                    <?php echo $shared_attributes ?>
+                    <?php echo esc_html( $shared_attributes ) ?>
                     value="<?php echo esc_attr( json_encode( $value ) ) ?>"
                     placeholder="<?php echo esc_html( sprintf( _x( "Search %s", "Search 'something'", 'disciple_tools' ), $fields[$field_key]['name'] ) )?>"
                     allowAdd
                 >
-                    <?php echo $icon_slot ?>
+                    <?php $this->render_icon_slot( $fields[$field_key] ) ?>
                 </dt-tags>
 
             <?php elseif ( $field_type === "multi_select" ) : ?>
-                <?php $options = array_map(function ($key, $value) {
+                <?php $options = array_map(function ( $key, $value) {
                     return [
                         'id' => $key,
                         'label' => $value['label'],
@@ -1049,48 +1050,48 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                 $value = isset( $post[$field_key] ) ? $post[$field_key] : [];
                 ?>
                 <dt-multi-select
-                    <?php echo $shared_attributes ?>
+                    <?php echo esc_html( $shared_attributes ) ?>
                     value="<?php echo esc_attr( json_encode( $value ) ) ?>"
                     options="<?php echo esc_attr( json_encode( $options ) ) ?>"
-                    placeholder="<?php echo esc_html( sprintf( _x( "Search %s", "Search 'something'", 'disciple_tools' ), $fields[$field_key]['name'] ) )?>"
-                    display="<?php echo isset( $fields[$field_key]["display"] ) ? $fields[$field_key]["display"] : 'typeahead' ?>"
+                    placeholder="<?php echo esc_attr( sprintf( _x( "Search %s", "Search 'something'", 'disciple_tools' ), $fields[$field_key]['name'] ) )?>"
+                    display="<?php echo esc_attr( isset( $fields[$field_key]["display"] ) ? $fields[$field_key]["display"] : 'typeahead' ) ?>"
                 >
-                    <?php echo $icon_slot ?>
+                    <?php $this->render_icon_slot( $fields[$field_key] ) ?>
                 </dt-multi-select>
 
             <?php elseif ( $field_type === "text" ) :?>
                 <dt-text
-                    <?php echo $shared_attributes ?>
+                    <?php echo esc_html( $shared_attributes ) ?>
                     value="<?php echo esc_html( $post[$field_key] ?? "" ) ?>"
                 >
-                    <?php echo $icon_slot ?>
+                    <?php $this->render_icon_slot( $fields[$field_key] ) ?>
                 </dt-text>
             <?php elseif ( $field_type === "textarea" ) :?>
                 <dt-textarea
-                    <?php echo $shared_attributes ?>
+                    <?php echo esc_html( $shared_attributes ) ?>
                     value="<?php echo esc_html( $post[$field_key] ?? "" ) ?>"
                 >
-                    <?php echo $icon_slot ?>
+                    <?php $this->render_icon_slot( $fields[$field_key] ) ?>
                 </dt-textarea>
             <?php elseif ( $field_type === "number" ) :?>
                 <dt-number
-                    <?php echo $shared_attributes ?>
+                    <?php echo esc_html( $shared_attributes ) ?>
                     value="<?php echo esc_html( $post[$field_key] ?? "" ) ?>" <?php echo esc_html( $disabled ); ?>
                     <?php echo isset( $fields[$field_key]["min_option"] ) && is_numeric( $fields[$field_key]["min_option"] ) ? 'min="' . esc_html( $fields[$field_key]["min_option"] ?? "" ) . '"' : '' ?>
                     <?php echo isset( $fields[$field_key]["max_option"] ) && is_numeric( $fields[$field_key]["max_option"] ) ? 'max="' . esc_html( $fields[$field_key]["max_option"] ?? "" ) . '"' : '' ?>
                 >
-                    <?php echo $icon_slot ?>
+                    <?php $this->render_icon_slot( $fields[$field_key] ) ?>
                 </dt-number>
             <?php elseif ( $field_type === "date" ) :?>
                 <dt-date
-                    <?php echo $shared_attributes ?>
+                    <?php echo esc_html( $shared_attributes ) ?>
                     timestamp="<?php echo esc_html( $post[$field_key]["timestamp"] ?? '' ) ?>"
                 >
-                    <?php echo $icon_slot ?>
+                    <?php $this->render_icon_slot( $fields[$field_key] ) ?>
                 </dt-date>
 
             <?php elseif ( $field_type === "connection" ) :?>
-                <?php $value = array_map(function ($value) {
+                <?php $value = array_map(function ( $value) {
                     return [
                         'id' => $value['ID'],
                         'label' => $value['post_title'],
@@ -1100,36 +1101,39 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                 }, $post[$field_key]);
                 ?>
                 <dt-connection
-                    <?php echo $shared_attributes ?>
+                    <?php echo esc_html( $shared_attributes ) ?>
                     value="<?php echo esc_attr( json_encode( $value ) ) ?>"
-                    data-posttype="<?php echo $fields[$field_key]["post_type"] ?>"
+                    data-posttype="<?php echo esc_attr( $fields[$field_key]["post_type"] ) ?>"
                     allowAdd
                 >
-                    <?php echo $icon_slot ?>
+                    <?php $this->render_icon_slot( $fields[$field_key] ) ?>
                 </dt-connection>
 
             <?php elseif ( $field_type === "location" ) :?>
-                <?php $value = array_map(function ($value) {
+                <?php $value = array_map(function ( $value) {
                     return [
                         'id' => strval( $value['id'] ),
                         'label' => $value['label'],
                     ];
                 }, $post[$field_key]);
-                $filters = [[
+                $filters = [
+                [
                     'id' => 'focus',
                     'label' => __( 'Regions of Focus', 'disciple_tools' ),
-                ], [
+                ],
+                [
                     'id' => 'all',
                     'label' => __( 'All Locations', 'disciple_tools' )
-                ]];
+                ]
+                ];
                 ?>
                 <dt-location
-                    <?php echo $shared_attributes ?>
+                    <?php echo esc_html( $shared_attributes ) ?>
                     value="<?php echo esc_attr( json_encode( $value ) ) ?>"
                     filters="<?php echo esc_attr( json_encode( $filters ) ) ?>"
                     placeholder="<?php echo esc_html( sprintf( _x( "Search %s", "Search 'something'", 'disciple_tools' ), $fields[$field_key]['name'] ) )?>"
                 >
-                    <?php echo $icon_slot ?>
+                    <?php $this->render_icon_slot( $fields[$field_key] ) ?>
                 </dt-location>
 
             <?php endif;
@@ -1425,7 +1429,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
         $post     = DT_Posts::get_post( 'groups', $params['post_id'], false );
         if ( ! empty( $post ) && ! is_wp_error( $post ) ) {
             $post_settings = DT_Posts::get_post_settings( 'groups' );
-            $fields = json_decode(json_encode($link_obj->type_fields), true);
+            $fields = json_decode( json_encode( $link_obj->type_fields ), true );
 
             // start output buffer to capture markup output
             ob_start();
@@ -1662,7 +1666,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
             $field_settings = $post_settings['fields'][$field];
 
             if ( $field_settings['type'] === 'connection' ) {
-                $options = DT_Posts::get_viewable_compact( $field_settings[ 'post_type' ], $query ?? "" );
+                $options = DT_Posts::get_viewable_compact( $field_settings['post_type'], $query ?? "" );
             } else if ( $field_settings['type'] === 'tags' ) {
                 $options = DT_Posts::get_multi_select_options( 'groups', $field, $query );
             } else if ( $field_settings['type'] === 'location' ) {
@@ -1671,7 +1675,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                     "filter" => isset( $params['filter'] ) ? $params['filter'] : 'all',
                 ] );
             }
-        } else {
+        // } else {
             //can't find field
         }
 
