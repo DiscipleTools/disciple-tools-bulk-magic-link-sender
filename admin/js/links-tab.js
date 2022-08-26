@@ -339,8 +339,8 @@ jQuery(function ($) {
             config_table.find('tr.supports_create input[type=checkbox]').prop('checked', checked);
           }
 
-          if (!has_config) {
-            config_table.hide();
+          if (has_config) {
+            config_table.show();
           }
         }
       }
