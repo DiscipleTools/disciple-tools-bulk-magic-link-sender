@@ -285,11 +285,14 @@ jQuery(function ($) {
 
   function display_magic_link_type_fields() {
     let fields_table = $('#ml_main_col_ml_type_fields_table');
+    let config_table = $('#ml_main_col_ml_type_config_table');
     let type_key = $('#ml_main_col_link_objs_manage_type').val();
 
-    // REfresh fields table
+    // Refresh fields table
     fields_table.fadeOut('fast', function () {
       fields_table.find('tbody > tr').remove();
+      config_table.show();
+      config_table.find('tbody > tr').hide();
 
       // Distinguish between regular magic link types and templates
       if (is_template(type_key)) {
@@ -322,6 +325,23 @@ jQuery(function ($) {
 
           // Adjust assigned selector accordingly, based on type object contacts flag
           adjust_assigned_selector_by_magic_link_type(type_obj['meta']['contacts_only']);
+
+          // Show config settings
+          let has_config = false;
+          if (type_obj['meta']['supports_create'] ) {
+            config_table.find('tr.supports_create').show();
+            let checked = false;
+            let link_obj = fetch_link_obj($('#ml_main_col_available_link_objs_select').val());
+            if (link_obj && link_obj['type_config'] && link_obj['type_config']['supports_create']) {
+              checked = true;
+              has_config = true;
+            }
+            config_table.find('tr.supports_create input[type=checkbox]').prop('checked', checked);
+          }
+
+          if (!has_config) {
+            config_table.hide();
+          }
         }
       }
 
@@ -852,6 +872,7 @@ jQuery(function ($) {
     let never_expires = $('#ml_main_col_link_objs_manage_expires_never').prop('checked');
     let type = $('#ml_main_col_link_objs_manage_type').val();
 
+    let type_config = fetch_magic_link_type_config_updates();
     let type_fields = fetch_magic_link_type_field_updates();
 
     let assigned_users_teams = fetch_assigned_users_teams();
@@ -914,6 +935,7 @@ jQuery(function ($) {
         'never_expires': never_expires,
         'type': type,
 
+        'type_config': type_config,
         'type_fields': type_fields,
 
         'assigned': assigned_users_teams,
@@ -941,6 +963,18 @@ jQuery(function ($) {
       // Submit link object package for saving
       $('#ml_main_col_update_form').submit();
     }
+  }
+
+  function fetch_magic_link_type_config_updates() {
+    let type_config = {};
+    $('#ml_main_col_ml_type_config_table').find('tbody > tr').each(function (idx, tr) {
+      let id = $(tr).find('#ml_main_col_ml_type_config_table_row_field_id').val();
+      let enabled = $(tr).find('#ml_main_col_ml_type_config_table_row_field_enabled').prop('checked');
+
+      type_config[id] = enabled;
+    });
+
+    return type_config;
   }
 
   function fetch_magic_link_type_field_updates() {

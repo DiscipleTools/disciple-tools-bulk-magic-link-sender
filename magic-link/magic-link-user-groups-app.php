@@ -70,6 +70,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
             'app_type'       => 'magic_link',
             'post_type'      => $this->post_type,
             'contacts_only'  => false,
+            'supports_create' => true,
             'fields'         => $fields,
             'fields_refresh' => [
                 'enabled'    => true,
@@ -858,6 +859,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
     public function body() {
         // Revert back to dt translations
         $this->hard_switch_to_default_dt_text_domain();
+        $link_obj = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $this->fetch_incoming_link_param( 'id' ) );
         ?>
         <div id="custom-style"></div>
         <div id="wrapper">
@@ -879,9 +881,11 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                     </div>
                     <br>
 
-                    <button id="add_new" class="button select-button">
-                        <?php esc_html_e( "Add New", 'disciple_tools' ) ?>
-                    </button>
+                    <?php if ( isset( $link_obj ) && property_exists( $link_obj, 'type_config' ) && property_exists( $link_obj->type_config, 'supports_create' ) && $link_obj->type_config->supports_create ): ?>
+                        <button id="add_new" class="button select-button">
+                            <?php esc_html_e( "Add New", 'disciple_tools' ) ?>
+                        </button>
+                    <?php endif; ?>
                 </div>
 
                 <h3><span id="group_name"></span>
@@ -1398,7 +1402,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
         // Fetch corresponding groups post record
         $response = [];
         if ( $params['post_id'] > 0 ) {
-            $post = DT_Posts::get_post('groups', $params['post_id'], false);
+            $post = DT_Posts::get_post( 'groups', $params['post_id'], false );
         } else {
             $post = [
                 'ID' => 0,
