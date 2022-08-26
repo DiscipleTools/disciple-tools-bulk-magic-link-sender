@@ -340,7 +340,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
 
                         let html = `<tr onclick="get_assigned_group_details('${window.lodash.escape(v.id)}', '${window.lodash.escape(v.name)}');">
                                 <td>${window.lodash.escape(v.name)}</td>
-                                <td>${window.lodash.escape(v.group_status.label)}</td>
+                                <td>${v.group_status ? window.lodash.escape(v.group_status.label) : ''}</td>
                                 <td class="last-update"><?php esc_html_e( "Updated", 'disciple_tools' ) ?>: ${window.lodash.escape(v.last_modified.formatted)}</td>
                             </tr>`;
 
@@ -629,6 +629,10 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                     break;
             }
 
+            jQuery('#add_new').on('click', function () {
+                window.get_group(0);
+            });
+
             /**
              * Submit group details
              */
@@ -874,12 +878,11 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                         </table>
                     </div>
                     <br>
-                </div>
 
-                <!-- ERROR MESSAGES -->
-                <span id="error" style="color: red;"></span>
-                <br>
-                <br>
+                    <button id="add_new" class="button select-button">
+                        <?php esc_html_e( "Add New", 'disciple_tools' ) ?>
+                    </button>
+                </div>
 
                 <h3><span id="group_name"></span>
                 </h3>
@@ -907,46 +910,14 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                 </div>
                 <br>
 
+                <!-- ERROR MESSAGES -->
+                <span id="error" style="color: red;"></span>
+                <br>
+                <br>
+
                 <!-- SUBMIT UPDATES -->
                 <button id="content_submit_but" style="display: none; min-width: 100%;" class="button select-button">
                     <?php esc_html_e( "Submit Update", 'disciple_tools' ) ?>
-                </button>
-            </div>
-        </div>
-        <div class="reveal" id="create-record-modal" data-reveal data-reset-on-close>
-
-            <h3><?php esc_html_e( 'Create Record', 'disciple_tools' )?></h3>
-
-            <form class="js-create-record hide-after-record-create">
-                <label for="title">
-                    <?php esc_html_e( "Name", "disciple_tools" ); ?>
-                </label>
-                <input name="title" type="text" placeholder="<?php echo esc_html__( "Name", 'disciple_tools' ); ?>" required aria-describedby="name-help-text">
-
-                <div>
-                    <button class="button loader js-create-record-button" type="submit"><?php echo esc_html__( "Create Record", 'disciple_tools' ); ?></button>
-                    <button class="button button-cancel clear hide-after-record-create" data-close aria-label="Close reveal" type="button">
-                        <?php echo esc_html__( 'Cancel', 'disciple_tools' )?>
-                    </button>
-                </div>
-                <p style="color: red" class="error-text"></p>
-            </form>
-
-            <p class="reveal-after-record-create" style="display: none"><?php esc_html_e( "Record Created", 'disciple_tools' ) ?>: <span id="new-record-link"></span></p>
-
-
-            <hr class="reveal-after-group-create" style="display: none">
-            <div class="grid-x">
-                <a class="button reveal-after-record-create" id="go-to-record" style="display: none">
-                    <?php esc_html_e( 'Edit New Record', 'disciple_tools' )?>
-                </a>
-                <button class="button reveal-after-record-create button-cancel clear" data-close type="button" id="create-record-return" style="display: none">
-                    <?php
-                    echo esc_html( sprintf( _x( "Back to %s", "back to record", 'disciple_tools' ), DT_Posts::get_label_for_post_type( get_post_type( get_the_ID() ), true ) ) );
-                    ?>
-                </button>
-                <button class="close-button" data-close aria-label="Close modal" type="button">
-                    <span aria-hidden="true">&times;</span>
                 </button>
             </div>
         </div>
@@ -972,7 +943,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
      */
     public function render_field_as_web_component( $field_key, $fields, $post, $show_extra_controls = false, $show_hidden = false, $field_id_prefix = '' ) {
         $disabled = 'disabled';
-        if ( isset( $post['post_type'] ) && isset( $post['ID'] ) ) {
+        if ( isset( $post['post_type'] ) && isset( $post['ID'] ) && $post['ID'] !== 0 ) {
             $can_update = DT_Posts::can_update( $post['post_type'], $post['ID'] );
         } else {
             $can_update = true;
@@ -1098,7 +1069,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                         'link' => $value['permalink'],
                         'status' => $value['status'],
                     ];
-                }, $post[$field_key]);
+                }, $post[$field_key] ?? []);
                 ?>
                 <dt-connection
                     <?php echo esc_html( $shared_attributes ) ?>
@@ -1115,7 +1086,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                         'id' => strval( $value['id'] ),
                         'label' => $value['label'],
                     ];
-                }, $post[$field_key]);
+                }, $post[$field_key] ?? []);
                 $filters = [
                 [
                     'id' => 'focus',
@@ -1239,7 +1210,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                     }
 
                     // If requested, display recent comments
-                    if ( $show_comments ) {
+                    if ( $show_comments && !empty( $post['ID'] ) ) {
                         ?>
                         <tr>
                             <input class="form_content_table_field_id" type="hidden" value="comments">
@@ -1426,7 +1397,14 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
 
         // Fetch corresponding groups post record
         $response = [];
-        $post     = DT_Posts::get_post( 'groups', $params['post_id'], false );
+        if ( $params['post_id'] > 0 ) {
+            $post = DT_Posts::get_post('groups', $params['post_id'], false);
+        } else {
+            $post = [
+                'ID' => 0,
+                'post_type' => 'groups',
+            ];
+        }
         if ( ! empty( $post ) && ! is_wp_error( $post ) ) {
             $post_settings = DT_Posts::get_post_settings( 'groups' );
             $fields = json_decode( json_encode( $link_obj->type_fields ), true );
@@ -1438,7 +1416,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
 
             $response['success']  = true;
             $response['post']     = $post;
-            $response['comments'] = DT_Posts::get_post_comments( 'groups', $params['post_id'], false, 'all', [ 'number' => $params['comment_count'] ] );
+            $response['comments'] = !empty( $params['post_id'] ) ? DT_Posts::get_post_comments( 'groups', $params['post_id'], false, 'all', [ 'number' => $params['comment_count'] ] ) : null;
         } else {
             $response['success'] = false;
         }
@@ -1608,7 +1586,12 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
         }
 
         // Update specified post record
-        $updated_post = DT_Posts::update_post( $params['post_type'], $params['post_id'], $updates, false, false );
+        if ( empty( $params['post_id'] ) ) {
+            // if ID is empty ("0", 0, or generally falsy)
+            $updated_post = DT_Posts::create_post( $params['post_type'], $updates, false, false );
+        } else {
+            $updated_post = DT_Posts::update_post( $params['post_type'], $params['post_id'], $updates, false, false );
+        }
         if ( empty( $updated_post ) || is_wp_error( $updated_post ) ) {
             if ( is_wp_error( $updated_post ) ) {
                 dt_write_log( $updated_post );
