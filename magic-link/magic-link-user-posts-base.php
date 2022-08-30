@@ -26,6 +26,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
     ]; // Order of translatable flags to be checked. Translate on first hit..!
 
     public function __construct() {
+        $this->sub_post_type_display = __( 'Posts', 'disciple_tools' );
         /**
          * As incoming requests could be for either valid wp users or contact
          * post records, ensure to adjust the $post_type accordingly; so as to
@@ -75,10 +76,9 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
          * user_app and module section
          */
         // add_filter( 'dt_settings_apps_list', [ $this, 'dt_settings_apps_list' ], 10, 1 );
-
     }
 
-    public function register_front_end( ) {
+    public function register_front_end() {
         add_action( 'rest_api_init', [ $this, 'add_endpoints' ] );
 
         /**
@@ -854,7 +854,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
             <hr>
             <div id="content">
                 <div id="assigned_posts_div" style="display: none;">
-                    <h3><?php esc_html_e( $this->sub_post_type_display, 'disciple_tools' ) ?> [ <span id="total">0</span> ]</h3>
+                    <h3><?php echo esc_html( $this->sub_post_type_display ) ?> [ <span id="total">0</span> ]</h3>
                     <hr>
                     <div class="grid-x api-content-div-style" id="api-content">
                         <table class="api-content-table">
