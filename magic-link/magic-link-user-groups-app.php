@@ -26,6 +26,8 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends Disciple_Tools_Ma
     public function __construct() {
         parent::__construct();
 
+        $this->sub_post_type_display = __( 'Groups', 'disciple_tools' );
+
         // Add this to list of magic link types
         add_filter( 'dt_settings_apps_list', [ $this, 'dt_settings_apps_list' ], 10, 1 );
 
