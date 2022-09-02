@@ -534,7 +534,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
             if ( ! empty( $sending_channel ) ) {
 
                 // Determine if user's magic link should be refreshed beforehand
-                if ( $link_obj->link_manage->links_refreshed_before_send || $link_obj->link_manage->links_never_expires || ( $link_obj->link_manage->links_expire_auto_refresh_enabled && self::has_links_expired( $link_obj->link_manage->links_never_expires, $user->links_expire_within_base_ts, $link_obj->link_manage->links_expire_within_amount, $link_obj->link_manage->links_expire_within_time_unit ) ) ) {
+                if ( $link_obj->schedule->links_refreshed_before_send || $link_obj->link_manage->links_never_expires || ( $link_obj->link_manage->links_expire_auto_refresh_enabled && self::has_links_expired( $link_obj->link_manage->links_never_expires, $user->links_expire_within_base_ts, $link_obj->link_manage->links_expire_within_amount, $link_obj->link_manage->links_expire_within_time_unit ) ) ) {
 
                     // Ensure to handle non-expiring links a little differently
                     if ( ! $link_obj->link_manage->links_never_expires ) {

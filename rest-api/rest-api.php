@@ -315,7 +315,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
                 $link_obj->link_manage->links_expire_within_amount        = $params['links_expire_within_amount'];
                 $link_obj->link_manage->links_expire_within_time_unit     = $params['links_expire_within_time_unit'];
                 $link_obj->link_manage->links_never_expires               = in_array( strtolower( $params['links_never_expires'] ), [ 'true' ] );
-                $link_obj->link_manage->links_refreshed_before_send       = in_array( strtolower( $params['links_refreshed_before_send'] ), [ 'true' ] );
+                $link_obj->schedule->links_refreshed_before_send       = in_array( strtolower( $params['links_refreshed_before_send'] ), [ 'true' ] );
                 $link_obj->link_manage->links_expire_auto_refresh_enabled = in_array( strtolower( $params['links_expire_auto_refresh_enabled'] ), [ 'true' ] );
 
                 /**

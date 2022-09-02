@@ -86,7 +86,6 @@ class Disciple_Tools_Bulk_Magic_Link_Sender {
             require_once( 'rest-api/rest-api.php' ); // adds starter rest api class
         }
 
-
         require_once( 'magic-link/magic-links-api.php' );
         require_once( 'magic-link/magic-link-templates.php' );
         require_once( 'magic-link/magic-link-user-app.php' );
@@ -94,6 +93,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender {
         require_once( 'magic-link/magic-link-user-groups-app.php' );
         require_once( 'magic-link/magic-links-cron.php' );
         require_once( 'magic-link/magic-links-default-filters.php' );
+        require_once( 'magic-link/link-object-migration.php' );
 
         if ( is_admin() ) {
             require_once( 'admin/admin-menu-and-tabs.php' ); // adds starter admin page and section for plugin

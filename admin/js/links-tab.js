@@ -50,10 +50,6 @@ jQuery(function ($) {
     toggle_never_expires_element_states(false);
   });
 
-  $(document).on('click', '#ml_main_col_link_manage_links_refreshed_before_send', function () {
-    toggle_refreshed_before_send_element_states();
-  });
-
   $(document).on('click', '#ml_main_col_schedules_enabled', function () {
     toggle_schedule_manage_element_states();
   });
@@ -107,7 +103,7 @@ jQuery(function ($) {
     });
 
     reset_section(display, $('#ml_main_col_link_manage'), function () {
-      reset_section_link_manage('3', 'days', false, true, false);
+      reset_section_link_manage('3', 'days', false, false);
     });
 
     reset_section(display, $('#ml_main_col_message'), function () {
@@ -117,7 +113,7 @@ jQuery(function ($) {
 
     reset_section(display, $('#ml_main_col_schedules'), function () {
       let default_send_channel_id = window.dt_magic_links.dt_default_send_channel_id;
-      reset_section_schedules(false, '1', 'hours', default_send_channel_id, moment().unix(), '', false);
+      reset_section_schedules(false, '1', 'hours', default_send_channel_id, moment().unix(), '', true, false);
     });
 
     $('#ml_main_col_update_msg').html('').fadeOut('fast');
@@ -193,14 +189,12 @@ jQuery(function ($) {
     toggle_assigned_user_links_manage_but_states();
   }
 
-  function reset_section_link_manage(links_expire_within_amount, links_expire_within_time_unit, links_never_expires, links_refreshed_before_send, links_expire_auto_refresh_enabled) {
+  function reset_section_link_manage(links_expire_within_amount, links_expire_within_time_unit, links_never_expires, links_expire_auto_refresh_enabled) {
     $('#ml_main_col_link_manage_links_expire_amount').val(links_expire_within_amount);
     $('#ml_main_col_link_manage_links_expire_time_unit').val(links_expire_within_time_unit);
     $('#ml_main_col_link_manage_links_expire_never').prop('checked', new String(links_never_expires).valueOf().toLowerCase() === 'true');
-    $('#ml_main_col_link_manage_links_refreshed_before_send').prop('checked', new String(links_refreshed_before_send).valueOf().toLowerCase() === 'true');
     $('#ml_main_col_link_manage_links_expire_auto_refresh_enabled').prop('checked', new String(links_expire_auto_refresh_enabled).valueOf().toLowerCase() === 'true');
 
-    toggle_refreshed_before_send_element_states();
     if ($('#ml_main_col_link_manage_links_expire_never').prop('checked')) {
       toggle_never_expires_element_states(false);
     }
@@ -210,7 +204,7 @@ jQuery(function ($) {
     $('#ml_main_col_msg_textarea').val(message);
   }
 
-  function reset_section_schedules(enabled, freq_amount, freq_time_unit, sending_channel, last_schedule_run, last_success_send, send_now) {
+  function reset_section_schedules(enabled, freq_amount, freq_time_unit, sending_channel, last_schedule_run, last_success_send, links_refreshed_before_send, send_now) {
     $('#ml_main_col_schedules_enabled').prop('checked', enabled);
     $('#ml_main_col_schedules_frequency_amount').val(freq_amount);
     $('#ml_main_col_schedules_frequency_time_unit').val(freq_time_unit);
@@ -229,6 +223,8 @@ jQuery(function ($) {
 
     $('#ml_main_col_schedules_last_schedule_run').val(last_schedule_run);
     $('#ml_main_col_schedules_last_success_send').val(last_success_send);
+
+    $('#ml_main_col_schedules_links_refreshed_before_send').prop('checked', new String(links_refreshed_before_send).valueOf().toLowerCase() === 'true');
 
     $('#ml_main_col_schedules_send_now_but').prop('disabled', !send_now);
   }
@@ -263,25 +259,14 @@ jQuery(function ($) {
       let disabled = $('#ml_main_col_link_manage_links_expire_never').prop('checked');
       $('#ml_main_col_link_manage_links_expire_amount').prop('disabled', disabled);
       $('#ml_main_col_link_manage_links_expire_time_unit').prop('disabled', disabled);
-      $('#ml_main_col_link_manage_links_refreshed_before_send').prop('disabled', disabled);
       $('#ml_main_col_link_manage_links_expire_auto_refresh_enabled').prop('disabled', disabled);
 
       // Uncheck relevant widgets accordingly
       if (disabled) {
-        $('#ml_main_col_link_manage_links_refreshed_before_send').prop('checked', false);
         $('#ml_main_col_link_manage_links_expire_auto_refresh_enabled').prop('checked', false);
       }
     }
 
-  }
-
-  function toggle_refreshed_before_send_element_states() {
-    let disabled = $('#ml_main_col_link_manage_links_refreshed_before_send').prop('checked');
-    $('#ml_main_col_link_manage_links_expire_auto_refresh_enabled').prop('disabled', disabled);
-
-    if (disabled) {
-      $('#ml_main_col_link_manage_links_expire_auto_refresh_enabled').prop('checked', false);
-    }
   }
 
   function toggle_assigned_user_links_manage_but_states() {
@@ -978,7 +963,7 @@ jQuery(function ($) {
     let links_expire_within_amount = $('#ml_main_col_link_manage_links_expire_amount').val();
     let links_expire_within_time_unit = $('#ml_main_col_link_manage_links_expire_time_unit').val();
     let links_never_expires = $('#ml_main_col_link_manage_links_expire_never').prop('checked');
-    let links_refreshed_before_send = $('#ml_main_col_link_manage_links_refreshed_before_send').prop('checked');
+    let links_refreshed_before_send = $('#ml_main_col_schedules_links_refreshed_before_send').prop('checked');
     let links_expire_auto_refresh_enabled = $('#ml_main_col_link_manage_links_expire_auto_refresh_enabled').prop('checked');
     let last_schedule_run = $('#ml_main_col_schedules_last_schedule_run').val();
     let last_success_send = $('#ml_main_col_schedules_last_success_send').val();
@@ -1018,6 +1003,7 @@ jQuery(function ($) {
 
       // Proceed with packaging values into json structure, ready for saving
       let link_obj = {
+        'version': '1.0',
         'id': id,
         'enabled': enabled,
         'name': name,
@@ -1034,7 +1020,6 @@ jQuery(function ($) {
           'links_expire_within_amount': links_expire_within_amount,
           'links_expire_within_time_unit': links_expire_within_time_unit,
           'links_never_expires': links_never_expires,
-          'links_refreshed_before_send': links_refreshed_before_send,
           'links_expire_auto_refresh_enabled': links_expire_auto_refresh_enabled
         },
 
@@ -1046,7 +1031,8 @@ jQuery(function ($) {
           'freq_time_unit': freq_time_unit,
           'sending_channel': sending_channel,
           'last_schedule_run': last_schedule_run,
-          'last_success_send': last_success_send
+          'last_success_send': last_success_send,
+          'links_refreshed_before_send': links_refreshed_before_send
         }
       };
       $('#ml_main_col_update_form_link_obj').val(JSON.stringify(link_obj));
@@ -1132,7 +1118,7 @@ jQuery(function ($) {
 
       reset_section(true, $('#ml_main_col_link_manage'), function () {
         if (link_obj['link_manage']) {
-          reset_section_link_manage(link_obj['link_manage']['links_expire_within_amount'], link_obj['link_manage']['links_expire_within_time_unit'], link_obj['link_manage']['links_never_expires'], link_obj['link_manage']['links_refreshed_before_send'], link_obj['link_manage']['links_expire_auto_refresh_enabled']);
+          reset_section_link_manage(link_obj['link_manage']['links_expire_within_amount'], link_obj['link_manage']['links_expire_within_time_unit'], link_obj['link_manage']['links_never_expires'], link_obj['link_manage']['links_expire_auto_refresh_enabled']);
         }
       });
 
@@ -1142,7 +1128,7 @@ jQuery(function ($) {
 
       reset_section(true, $('#ml_main_col_schedules'), function () {
         if (link_obj['schedule']) {
-          reset_section_schedules(link_obj['schedule']['enabled'], link_obj['schedule']['freq_amount'], link_obj['schedule']['freq_time_unit'], link_obj['schedule']['sending_channel'], link_obj['schedule']['last_schedule_run'], link_obj['schedule']['last_success_send'], true);
+          reset_section_schedules(link_obj['schedule']['enabled'], link_obj['schedule']['freq_amount'], link_obj['schedule']['freq_time_unit'], link_obj['schedule']['sending_channel'], link_obj['schedule']['last_schedule_run'], link_obj['schedule']['last_success_send'], link_obj['schedule']['links_refreshed_before_send'], true);
         }
       });
 
@@ -1177,7 +1163,7 @@ jQuery(function ($) {
       links_expire_within_amount: $('#ml_main_col_link_manage_links_expire_amount').val(),
       links_expire_within_time_unit: $('#ml_main_col_link_manage_links_expire_time_unit').val(),
       links_never_expires: $('#ml_main_col_link_manage_links_expire_never').prop('checked'),
-      links_refreshed_before_send: $('#ml_main_col_link_manage_links_refreshed_before_send').prop('checked'),
+      links_refreshed_before_send: $('#ml_main_col_schedules_links_refreshed_before_send').prop('checked'),
       links_expire_auto_refresh_enabled: $('#ml_main_col_link_manage_links_expire_auto_refresh_enabled').prop('checked'),
       message: $('#ml_main_col_msg_textarea').val()
     };

@@ -582,13 +582,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                                                                             data-content="ml_links_right_docs_links_expire_content">&#63;</a>]
                 </td>
                 <td style="vertical-align: middle;">
-                    <select style="min-width: 10%;" id="ml_main_col_link_manage_links_expire_amount">
-                        <?php
-                        for ( $x = 1; $x <= 12; $x ++ ) {
-                            echo '<option value="' . esc_attr( $x ) . '">' . esc_attr( $x ) . '</option>';
-                        }
-                        ?>
-                    </select>
+                    <input type="number" style="min-width: 10%;" id="ml_main_col_link_manage_links_expire_amount"/>
 
                     <select style="min-width: 10%;" id="ml_main_col_link_manage_links_expire_time_unit">
                         <option value="minutes">Minutes</option>
@@ -599,15 +593,6 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                     </select>
 
                     <input type="checkbox" id="ml_main_col_link_manage_links_expire_never" value=""/> Never Expires
-                </td>
-            </tr>
-            <tr>
-                <td style="vertical-align: middle;">Links Refreshed Before Sending [<a href="#" class="ml-links-docs"
-                                                                                            data-title="ml_links_right_docs_links_refreshed_before_send_title"
-                                                                                            data-content="ml_links_right_docs_links_refreshed_before_send_content">&#63;</a>]
-                </td>
-                <td>
-                    <input type="checkbox" id="ml_main_col_link_manage_links_refreshed_before_send" value=""/>
                 </td>
             </tr>
             <tr>
@@ -644,13 +629,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                                                                   data-content="ml_links_right_docs_frequency_content">&#63;</a>]
                 </td>
                 <td>
-                    <select style="min-width: 10%;" id="ml_main_col_schedules_frequency_amount">
-                        <?php
-                        for ( $x = 1; $x <= 12; $x ++ ) {
-                            echo '<option value="' . esc_attr( $x ) . '">' . esc_attr( $x ) . '</option>';
-                        }
-                        ?>
-                    </select>
+                    <input type="number" style="min-width: 10%;" id="ml_main_col_schedules_frequency_amount"/>
 
                     <select style="min-width: 10%;" id="ml_main_col_schedules_frequency_time_unit">
                         <option value="minutes">Minutes</option>
@@ -681,6 +660,15 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                         ?>
 
                     </select>
+                </td>
+            </tr>
+            <tr>
+                <td style="vertical-align: middle;">Links Refreshed Before Sending [<a href="#" class="ml-links-docs"
+                                                                                       data-title="ml_links_right_docs_links_refreshed_before_send_title"
+                                                                                       data-content="ml_links_right_docs_links_refreshed_before_send_content">&#63;</a>]
+                </td>
+                <td>
+                    <input type="checkbox" id="ml_main_col_schedules_links_refreshed_before_send" value=""/>
                 </td>
             </tr>
             <tr>
