@@ -333,7 +333,6 @@ class Disciple_Tools_Magic_Links_Object_Migration {
                 $element                   = json_decode( json_encode( $element ), true );
                 $element[ $element_index ] = $value;
             }
-
         } else {
 
             // Create element if needed.
