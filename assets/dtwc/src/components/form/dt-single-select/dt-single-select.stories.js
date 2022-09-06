@@ -1,4 +1,5 @@
 import { html } from 'lit';
+import { themes, themeCss, argTypes } from '../../../stories-theme.js';
 import './dt-single-select.js';
 
 const basicOptions = [
@@ -42,27 +43,33 @@ export default {
   component: 'dt-single-select',
   argTypes: {
     name: { control: 'text' },
+    theme: { control: 'select', options: Object.keys(themes), defaultValue: 'default' },
     placeholder: { control: 'text' },
     value: { control: 'text' },
     isLoading: { control: 'boolean' },
     isSaved: { control: 'boolean' },
+    ...argTypes,
   },
 };
 
-function Template({
-  name = 'my-input',
-  options,
-  placeholder,
-  value,
-  onChange,
-  isLoading,
-  isSaved,
-}) {
+function Template(args) {
+  const {
+    name = 'field-name',
+    label = 'Field Name',
+    options,
+    placeholder,
+    value,
+    icon = 'https://cdn-icons-png.flaticon.com/512/1077/1077114.png',
+    isPrivate,
+    privateLabel,
+    onChange,
+    isLoading,
+    isSaved,
+    slot,
+  } = args;
   return html`
     <style>
-      :root {
-        --primary-color: #3f729b;
-      }
+    ${themeCss(args)}
     </style>
     <script>
       function onChange(event) {
@@ -83,18 +90,29 @@ function Template({
     </script>
     <dt-single-select
       name="${name}"
+      label="${label}"
       placeholder="${placeholder}"
       options="${JSON.stringify(options)}"
       value="${value}"
+      icon="${icon}"
+      ?private=${isPrivate}
+      privateLabel="${privateLabel}"
       onchange="${onChange}"
       ?loading="${isLoading}"
       ?saved="${isSaved}"
     >
+    ${slot}
     </dt-single-select>
   `;
 }
 
 export const Empty = Template.bind({});
+
+export const SvgIcon = Template.bind({});
+SvgIcon.args = {
+  icon: null,
+  slot: html`<svg slot="icon-start" xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><linearGradient id="lg"><stop offset="0%" stop-color="#000000"/><stop offset="100%" stop-color="#c3c3c3"/></linearGradient><rect x="2" y="2" width="96" height="96" style="fill:url(#lg);stroke:#ffffff;stroke-width:2"/><text x="50%" y="50%" font-size="18" text-anchor="middle" alignment-baseline="middle" font-family="monospace, sans-serif" fill="#ffffff">icon</text></svg>`,
+};
 
 export const CustomOptions = Template.bind({});
 CustomOptions.args = {

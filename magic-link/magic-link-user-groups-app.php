@@ -151,7 +151,9 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
 
     private function enqueue_web_component( $name, $rel_path ) {
         $path = '../assets/dtwc/dist/' . $rel_path;
+        $css_path = '../assets/dtwc/src/styles/light.css';
 
+        wp_enqueue_style( 'dtwc-light-css', plugin_dir_url( __FILE__ ) . $css_path, null, filemtime( plugin_dir_path( __FILE__ ) . $css_path ) );
         wp_enqueue_script( 'dtwc-' . $name, plugin_dir_url( __FILE__ ) . $path, null, filemtime( plugin_dir_path( __FILE__ ) . $path ) );
     }
     public function wp_enqueue_scripts() {
@@ -170,8 +172,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
 
         wp_enqueue_style( 'material-font-icons-css', 'https://cdn.jsdelivr.net/npm/@mdi/font@6.6.96/css/materialdesignicons.min.css', [], '6.6.96' );
 
-        $this->enqueue_web_component( 'label', 'form/dt-label/dt-label.js' );
-        $this->enqueue_web_component( 'single-select', 'form/dt-single-select/dt-single-select.js' );
+        $this->enqueue_web_component( 'form-components', 'form/index.js' );
     }
 
     public function dt_magic_url_base_allowed_js( $allowed_js ) {
@@ -181,8 +182,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
         $allowed_js[] = 'mapbox-cookie';
         $allowed_js[] = 'mapbox-search-widget';
         $allowed_js[] = 'jquery-typeahead';
-        $allowed_js[] = 'dtwc-label';
-        $allowed_js[] = 'dtwc-single-select';
+        $allowed_js[] = 'dtwc-form-components';
 
         return $allowed_js;
     }
@@ -193,6 +193,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
         $allowed_css[] = 'mapbox-gl-css';
         $allowed_css[] = 'jquery-typeahead-css';
         $allowed_css[] = 'material-font-icons-css';
+        $allowed_css[] = 'dtwc-light-css';
 
         return $allowed_css;
     }
@@ -606,382 +607,9 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                             });
 
                             break;
-
-                        case 'multi_select':
-
-                            /**
-                             * Handle Selections
-                             */
-
-                            jQuery(tr).find('.dt_multi_select').on("click", function (evt) {
-                                let multi_select = jQuery(evt.currentTarget);
-                                if (multi_select.hasClass('empty-select-button')) {
-                                    multi_select.removeClass('empty-select-button');
-                                    multi_select.addClass('selected-select-button');
-                                } else {
-                                    multi_select.removeClass('selected-select-button');
-                                    multi_select.addClass('empty-select-button');
-                                }
-                            });
-
-                            break;
-
-                        case 'date':
-
-                            /**
-                             * Load Date Range Picker
-                             */
-
-                            let date_config = {
-                                singleDatePicker: true,
-                                timePicker: true,
-                                locale: {
-                                    format: 'MMMM D, YYYY'
-                                }
-                            };
-                            let post_date = jsObject['post'][field_id];
-                            if (post_date !== undefined) {
-                                date_config['startDate'] = moment.unix(post_date['timestamp']);
-                            }
-
-                            jQuery(tr).find('#' + field_id).daterangepicker(date_config, function (start, end, label) {
-                                if (start) {
-                                    field_meta.val(start.unix());
-                                }
-                            });
-
-                            // If post timestamp available, set default hidden meta field value
-                            if (post_date !== undefined) {
-                                field_meta.val(post_date['timestamp']);
-                            }
-
-                            /**
-                             * Clear Date
-                             */
-
-                            jQuery(tr).find('.clear-date-button').on('click', evt => {
-                                let input_id = jQuery(evt.currentTarget).data('inputid');
-
-                                if (input_id) {
-                                    jQuery(tr).find('#' + input_id).val('');
-                                    field_meta.val('');
-                                }
-                            });
-
-                            break;
-
-                        case 'tags':
-
-                            /**
-                             * Activate
-                             */
-
-                            // Hide new button and default to single entry
-                            jQuery(tr).find('.create-new-tag').hide();
-
-                            let typeahead_tags_field_input = '.js-typeahead-' + field_id;
-                            if (!window.Typeahead[typeahead_tags_field_input]) {
-                                jQuery(tr).find(typeahead_tags_field_input).typeahead({
-                                    input: typeahead_tags_field_input,
-                                    minLength: 0,
-                                    maxItem: 20,
-                                    searchOnFocus: true,
-                                    source: {
-                                        tags: {
-                                            display: ["name"],
-                                            ajax: {
-                                                url: jsObject['root'] + `dt-posts/v2/${jsObject['post']['post_type']}/multi-select-values`,
-                                                data: {
-                                                    s: "{{query}}",
-                                                    field: field_id
-                                                },
-                                                beforeSend: function (xhr) {
-                                                    xhr.setRequestHeader('X-WP-Nonce', jsObject['nonce']);
-                                                },
-                                                callback: {
-                                                    done: function (data) {
-                                                        return (data || []).map(tag => {
-                                                            return {name: tag}
-                                                        })
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    },
-                                    display: "name",
-                                    templateValue: "{{name}}",
-                                    emptyTemplate: function (query) {
-                                        const {addNewTagText, tagExistsText} = this.node[0].dataset
-                                        if (this.comparedItems.includes(query)) {
-                                            return tagExistsText.replace('%s', query)
-                                        }
-                                        const liItem = jQuery('<li>')
-                                        const button = jQuery('<button>', {
-                                            class: "button primary",
-                                            text: addNewTagText.replace('%s', query),
-                                        })
-                                        const tag = this.query
-                                        button.on("click", function () {
-                                            window.Typeahead[typeahead_tags_field_input].addMultiselectItemLayout({name: tag});
-                                        })
-                                        liItem.append(button);
-                                        return liItem;
-                                    },
-                                    dynamic: true,
-                                    multiselect: {
-                                        matchOn: ["name"],
-                                        data: function () {
-                                            return (jsObject['post'][field_id] || []).map(t => {
-                                                return {name: t}
-                                            })
-                                        },
-                                        callback: {
-                                            onCancel: function (node, item, event) {
-                                                // Keep a record of deleted tags
-                                                let deleted_items = (field_meta.val()) ? JSON.parse(field_meta.val()) : [];
-                                                deleted_items.push(item);
-                                                field_meta.val(JSON.stringify(deleted_items));
-                                            }
-                                        },
-                                        href: function (item) {
-                                        },
-                                    },
-                                    callback: {
-                                        onClick: function (node, a, item, event) {
-                                            event.preventDefault();
-                                            this.addMultiselectItemLayout({name: item.name});
-                                        },
-                                        onResult: function (node, query, result, resultCount) {
-                                            let text = TYPEAHEADS.typeaheadHelpText(resultCount, query, result)
-                                            jQuery(tr).find(`#${field_id}-result-container`).html(text);
-                                        },
-                                        onHideLayout: function () {
-                                            jQuery(tr).find(`#${field_id}-result-container`).html("");
-                                        },
-                                        onShowLayout() {
-                                        }
-                                    }
-                                });
-                            }
-
-                            /**
-                             * Load
-                             */
-
-                                // If available, load previous post record tags
-                            let typeahead_tags = window.Typeahead[typeahead_tags_field_input];
-                            let post_tags = jsObject['post'][field_id];
-                            if ((post_tags !== undefined) && typeahead_tags) {
-                                jQuery.each(post_tags, function (idx, tag) {
-                                    typeahead_tags.addMultiselectItemLayout({
-                                        name: window.lodash.escape(tag)
-                                    });
-                                });
-                            }
-
-                            break;
                     }
                 });
 
-                // General Typeaheads (from theme/dt-assets/js/new-record.js
-                $(".typeahead__query input").each((key, el)=>{
-                    let field_key = $(el).data('field')
-                    let post_type = $(el).data('post_type')
-                    let field_type = $(el).data('field_type')
-                    let field_meta = $(el).data('field_meta')
-                    typeaheadTotals = {}
-
-                    // Determine field class name to be used.
-                    let field_class = `.js-typeahead-${field_key}`;
-
-                    if (!window.Typeahead[field_class]) {
-
-                        if ( field_type === "connection"){
-
-                            $.typeahead({
-                                input: field_class,
-                                minLength: 0,
-                                accent: true,
-                                searchOnFocus: true,
-                                maxItem: 20,
-                                template: window.TYPEAHEADS.contactListRowTemplate,
-                                source: TYPEAHEADS.typeaheadPostsSource(post_type, field_key),
-                                display: ["name", "label"],
-                                templateValue: function() {
-                                    if (this.items[this.items.length - 1].label) {
-                                        return "{{label}}"
-                                    } else {
-                                        return "{{name}}"
-                                    }
-                                },
-                                dynamic: true,
-                                multiselect: {
-                                    matchOn: ["ID"],
-                                    data: function () {
-                                        return (jsObject.post[field_key] || [] ).map(g=>{
-                                            return {ID:g.ID, name:g.post_title, label: g.label}
-                                        })
-                                    },
-                                    callback: {
-                                        onCancel: function (node, item) {
-                                            // Keep a record of deleted options
-                                            let deleted_items = field_meta ? JSON.parse(field_meta) : [];
-                                            deleted_items.push(item);
-                                            $(el).data('field_meta', JSON.stringify(deleted_items));
-                                        }
-                                    }
-                                },
-                                callback: {
-                                    onResult: function (node, query, result, resultCount) {
-                                        let text = TYPEAHEADS.typeaheadHelpText(resultCount, query, result)
-                                        $(`#${field_key}-result-container`).html(text);
-                                    },
-                                    onHideLayout: function () {
-                                        $(`#${field_key}-result-container`).html("");
-                                    },
-                                    onClick: function (node, a, item, event ) {
-                                        /*if (!new_post[field_key]) {
-                                            new_post[field_key] = {values: []}
-                                        }
-                                        new_post[field_key].values.push({value: item.ID})*/
-
-                                        //get list from opening again
-                                        this.addMultiselectItemLayout(item)
-                                        event.preventDefault()
-                                        this.hideLayout();
-                                        this.resetInput();
-                                    }
-                                }
-                            });
-                        } else if ( field_type === "location" ){
-                            $.typeahead({
-                                input: field_class,
-                                minLength: 0,
-                                accent: true,
-                                searchOnFocus: true,
-                                maxItem: 20,
-                                dropdownFilter: [{
-                                    key: 'group',
-                                    value: 'focus',
-                                    template: window.lodash.escape(jsObject['translations']['regions_of_focus']),
-                                    all: window.lodash.escape(jsObject['translations']['all_locations'])
-                                }],
-                                source: {
-                                    focus: {
-                                        display: "name",
-                                        ajax: {
-                                            url: jsObject['root'] + 'dt/v1/mapping_module/search_location_grid_by_name',
-                                            data: {
-                                                s: "{{query}}",
-                                                filter: function () {
-                                                    return window.lodash.get(window.Typeahead[field_class].filters.dropdown, 'value', 'all')
-                                                }
-                                            },
-                                            beforeSend: function (xhr) {
-                                                xhr.setRequestHeader('X-WP-Nonce', window.wpApiShare.nonce);
-                                            },
-                                            callback: {
-                                                done: function (data) {
-                                                    return data.location_grid
-                                                }
-                                            }
-                                        }
-                                    }
-                                },
-                                display: "name",
-                                templateValue: "{{name}}",
-                                dynamic: true,
-                                multiselect: {
-                                    matchOn: ["ID"],
-                                    data: function () {
-                                        return (jsObject.post[field_key] || []).map(g => {
-                                            return {ID: g.id, name: g.label}
-                                        })
-                                    },
-                                    callback: {
-                                        onCancel: function (node, item) {
-                                            // Keep a record of deleted options
-                                            let deleted_items = field_meta ? JSON.parse(field_meta) : [];
-                                            deleted_items.push(item);
-                                            $(el).data('field_meta', JSON.stringify(deleted_items));
-                                        }
-                                    }
-                                },
-                                callback: {
-                                    onClick: function(node, a, item, event){
-                                    },
-                                    onReady(){
-                                        this.filters.dropdown = {key: "group", value: "focus", template: window.lodash.escape(jsObject['translations']['regions_of_focus'])}
-                                        this.container
-                                            .removeClass("filter")
-                                            .find("." + this.options.selector.filterButton)
-                                            .html(window.lodash.escape(jsObject['translations']['regions_of_focus']));
-                                    },
-                                    onResult: function (node, query, result, resultCount) {
-                                        resultCount = typeaheadTotals.location_grid
-                                        let text = TYPEAHEADS.typeaheadHelpText(resultCount, query, result)
-                                        $('#location_grid-result-container').html(text);
-                                    },
-                                    onHideLayout: function () {
-                                        $('#location_grid-result-container').html("");
-                                    }
-                                }
-                            });
-                        } else if ( field_type === "user_select" ){
-                            //todo: move init from above to here to mimic new-record.js
-                        }
-                    }
-                });
-
-                let connection_type = null
-                //new record off a typeahead
-                $('.create-new-record').on('click', function(){
-                    connection_type = $(this).data('connection-key');
-                    $('#create-record-modal').foundation('open');
-                    $('.js-create-record .error-text').empty();
-                    $(".js-create-record-button").attr("disabled", false).removeClass("alert")
-                    $(".reveal-after-record-create").hide()
-                    $(".hide-after-record-create").show()
-                    $(".js-create-record input[name=title]").val('')
-                    //create new record
-                })
-                $(".js-create-record").on("submit", function(e) {
-                    e.preventDefault();
-                    $(".js-create-record-button").attr("disabled", true).addClass("loading");
-                    let title = $(".js-create-record input[name=title]").val()
-                    if ( !connection_type){
-                        $(".js-create-record .error-text").text(
-                            "Something went wrong. Please refresh and try again"
-                        );
-                        return;
-                    }
-                    let update_field = connection_type;
-                    API.create_post( jsObject.field_settings[update_field].post_type, {
-                        title,
-                        additional_meta: {
-                            created_from: jsObject.parts.post_id,
-                            add_connection: connection_type
-                        }
-                    }).then((newRecord)=>{
-                        $(".js-create-record-button").attr("disabled", false).removeClass("loading");
-                        $(".reveal-after-record-create").show()
-                        $("#new-record-link").html(`<a href="${window.lodash.escape( newRecord.permalink )}">${window.lodash.escape( title )}</a>`)
-                        $(".hide-after-record-create").hide()
-                        $('#go-to-record').attr('href', window.lodash.escape( newRecord.permalink ));
-                        // $( document ).trigger( "dt-post-connection-created", [ post, update_field ] );
-                        if ( Typeahead[`.js-typeahead-${connection_type}`] ){
-                            Typeahead[`.js-typeahead-${connection_type}`].addMultiselectItemLayout({ID:newRecord.ID.toString(), name:title})
-                            // masonGrid.masonry('layout')
-                        }
-                    })
-                        .catch(function(error) {
-                            $(".js-create-record-button").removeClass("loading").addClass("alert");
-                            $(".js-create-record .error-text").text(
-                                window.lodash.get( error, "responseJSON.message", "Something went wrong. Please refresh and try again" )
-                            );
-                            console.error(error);
-                        });
-                })
             };
 
             /**
@@ -1043,10 +671,14 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                             case 'textarea':
                             case 'text':
                             case 'key_select':
+                            case 'date':
+                            case 'multi_select':
+                            case 'tags':
+                            case 'location':
                                 payload['fields'].push({
                                     id: field_id,
                                     type: field_type,
-                                    value: jQuery(tr).find(selector).val()
+                                    value: document.querySelector(selector).value,
                                 });
                                 break;
 
@@ -1066,18 +698,12 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                                 });
                                 break;
 
-                            case 'multi_select':
-                                let options = [];
-                                jQuery(tr).find('button').each(function () {
-                                    options.push({
-                                        'value': jQuery(this).attr('id'),
-                                        'delete': jQuery(this).hasClass('empty-select-button')
-                                    });
-                                });
+                            case 'connection':
                                 payload['fields'].push({
                                     id: field_id,
                                     type: field_type,
-                                    value: options
+                                    post_type: document.querySelector(selector).dataset.posttype,
+                                    value: document.querySelector(selector).value,
                                 });
                                 break;
 
@@ -1091,28 +717,6 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                                     value: current_val,
                                     changed: (initial_val !== current_val)
                                 });
-                                break;
-
-                            case 'date':
-                                payload['fields'].push({
-                                    id: field_id,
-                                    type: field_type,
-                                    value: field_meta.val()
-                                });
-                                break;
-
-                            case 'tags':
-                            case 'location':
-                            case 'connection':
-                                let typeahead = window.Typeahead['.js-typeahead-' + field_id];
-                                if (typeahead) {
-                                    payload['fields'].push({
-                                        id: field_id,
-                                        type: field_type,
-                                        value: typeahead.items,
-                                        deletions: field_meta_typeahead ? JSON.parse(field_meta_typeahead) : []
-                                    });
-                                }
                                 break;
 
                             case 'location_meta':
@@ -1159,6 +763,88 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                         jQuery('#content_submit_but').prop('disabled', false);
                     });
                 }
+            });
+
+            function loadOptions( detail, callback ) {
+                jQuery.ajax({
+                    type: "GET",
+                    data: {
+                        action: 'get',
+                        parts: jsObject.parts,
+                        lang: jsObject.lang,
+                        sys_type: jsObject.sys_type,
+                        field: detail.field,
+                        filter: detail.filter,
+                        query: detail.query,
+                        ts: moment().unix() // Alter url shape, so as to force cache refresh!
+                    },
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    url: jsObject.root + jsObject.parts.root + '/v1/' + jsObject.parts.type + '/field-options',
+                    beforeSend: function (xhr) {
+                        xhr.setRequestHeader('X-WP-Nonce', jsObject.nonce);
+                        xhr.setRequestHeader('Cache-Control', 'no-store');
+                    }
+
+                }).done(function (data) {
+                    callback(data);
+                }).fail(function (evt) {
+                    detail.onError(evt);
+                    console.log(evt);
+                    jQuery('#error').html(evt);
+                });
+            }
+            jQuery(document).on('load', 'dt-connection', function (e) {
+                function done(data) {
+                    // Was our post fetch request successful...?
+                    if (data['success'] && data['options']) {
+                        e.detail.onSuccess(data.options.posts.map(function (post) {
+                            return {
+                                id: post.ID.toString(),
+                                label: post.name,
+                                status: post.status,
+                            };
+                        }));
+                    } else {
+                        // TODO: Error Msg...!
+                        e.detail.onError();
+                    }
+                }
+                loadOptions(e.detail, done);
+            });
+            jQuery(document).on('load', 'dt-tags', function (e) {
+                function done(data) {
+                    // Was our post fetch request successful...?
+                    if (data['success'] && data['options']) {
+                        e.detail.onSuccess(data.options.map(function (tag) {
+                            return {
+                                id: tag,
+                                label: tag,
+                            };
+                        }));
+                    } else {
+                        // TODO: Error Msg...!
+                        e.detail.onError();
+                    }
+                }
+                loadOptions(e.detail, done);
+            });
+            jQuery(document).on('load', 'dt-location', function (e) {
+                function done(data) {
+                    // Was our post fetch request successful...?
+                    if (data['success'] && data['options']) {
+                        e.detail.onSuccess(data.options.location_grid.map(function (location) {
+                            return {
+                                id: location.grid_id,
+                                label: location.label,
+                            };
+                        }));
+                    } else {
+                        // TODO: Error Msg...!
+                        e.detail.onError();
+                    }
+                }
+                loadOptions(e.detail, done);
             });
         </script>
         <?php
@@ -1267,6 +953,14 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
         <?php
     }
 
+    public function render_icon_slot( $field ) {
+        if ( isset( $field['font-icon'] ) && !empty( $field['font-icon'] ) ): ?>
+            <span slot="icon-start">
+                <i class="dt-icon ' . esc_html( $field['font-icon'] ) . '"></i>
+            </span>
+        <?php endif;
+    }
+
     /**
      * Copied from theme to replace web component rendering. Can be removed if/when web-components are fully adopted in the theme.
      * @param $field_key
@@ -1304,45 +998,162 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
 
 
             ?>
-            <div class="section-subheader">
-                <dt-label
-                    <?php echo $is_private ? 'private' : null ?>
-                >
-                    <?php echo esc_html( $fields[$field_key]["name"] ); ?>
-                    <span slot="icon-start"><?php dt_render_field_icon( $fields[$field_key] );?></span>
-                    <span slot="private-tooltip"><?php _x( "Private Field: Only I can see it's content", 'disciple_tools' )?></span>
-                </dt-label>
-            </div>
             <?php
+            $icon = null;
+            if ( isset( $fields[$field_key]["icon"] ) && !empty( $fields[$field_key]["icon"] ) ) {
+                $icon = 'icon=' . esc_attr( $fields[$field_key]["icon"] );
+            }
+
+            $shared_attributes = '
+                  id=' . esc_attr( $display_field_id ) . '
+                  name=' . esc_attr( $field_key ) .'
+                  label=' . esc_attr( $fields[$field_key]["name"] ) . '
+                  ' . esc_html( $icon ) . '
+                  ' . esc_html( $required_tag ) . '
+                  ' . esc_html( $disabled ) . '
+                  ' . ( $is_private ? 'private privateLabel=' . esc_attr( _x( "Private Field: Only I can see it\'s content", 'disciple_tools' ) ) : null ) . '
+            ';
             if ( $field_type === "key_select" ) :
                 ?>
                 <dt-single-select class="select-field"
-                                  id="<?php echo esc_html( $display_field_id ); ?>"
-                                  name="<?php echo esc_html( $field_key ); ?>"
-                                  <?php echo esc_html( $required_tag ) ?>
-                                  <?php echo esc_html( $disabled ); ?>
+                                  <?php echo esc_html( $shared_attributes ) ?>
                                   value="<?php echo esc_attr( key_exists( $field_key, $post ) ? $post[$field_key]["key"] : null ) ?>"
                                   options="<?php echo esc_attr( json_encode( assoc_to_array( $fields[$field_key]["default"] ) ) ) ?>"
-                              ></dt-single-select>
+                              >
+                    <?php $this->render_icon_slot( $fields[$field_key] ) ?>
+                </dt-single-select>
+
+            <?php elseif ( $field_type === "tags" ) : ?>
+                <?php $value = array_map(function ( $value) {
+                    return [
+                        'id' => $value,
+                        'label' => $value,
+                    ];
+                }, $post[$field_key] ?? []);
+                ?>
+                <dt-tags
+                    <?php echo esc_html( $shared_attributes ) ?>
+                    value="<?php echo esc_attr( json_encode( $value ) ) ?>"
+                    placeholder="<?php echo esc_html( sprintf( _x( "Search %s", "Search 'something'", 'disciple_tools' ), $fields[$field_key]['name'] ) )?>"
+                    allowAdd
+                >
+                    <?php $this->render_icon_slot( $fields[$field_key] ) ?>
+                </dt-tags>
+
+            <?php elseif ( $field_type === "multi_select" ) : ?>
+                <?php $options = array_map(function ( $key, $value) {
+                    return [
+                        'id' => $key,
+                        'label' => $value['label'],
+                    ];
+                }, array_keys( $fields[$field_key]["default"] ), $fields[$field_key]["default"]);
+                $value = isset( $post[$field_key] ) ? $post[$field_key] : [];
+                ?>
+                <dt-multi-select
+                    <?php echo esc_html( $shared_attributes ) ?>
+                    value="<?php echo esc_attr( json_encode( $value ) ) ?>"
+                    options="<?php echo esc_attr( json_encode( $options ) ) ?>"
+                    placeholder="<?php echo esc_attr( sprintf( _x( "Search %s", "Search 'something'", 'disciple_tools' ), $fields[$field_key]['name'] ) )?>"
+                    display="<?php echo esc_attr( isset( $fields[$field_key]["display"] ) ? $fields[$field_key]["display"] : 'typeahead' ) ?>"
+                >
+                    <?php $this->render_icon_slot( $fields[$field_key] ) ?>
+                </dt-multi-select>
+
+            <?php elseif ( $field_type === "text" ) :?>
+                <dt-text
+                    <?php echo esc_html( $shared_attributes ) ?>
+                    value="<?php echo esc_html( $post[$field_key] ?? "" ) ?>"
+                >
+                    <?php $this->render_icon_slot( $fields[$field_key] ) ?>
+                </dt-text>
+            <?php elseif ( $field_type === "textarea" ) :?>
+                <dt-textarea
+                    <?php echo esc_html( $shared_attributes ) ?>
+                    value="<?php echo esc_html( $post[$field_key] ?? "" ) ?>"
+                >
+                    <?php $this->render_icon_slot( $fields[$field_key] ) ?>
+                </dt-textarea>
+            <?php elseif ( $field_type === "number" ) :?>
+                <dt-number
+                    <?php echo esc_html( $shared_attributes ) ?>
+                    value="<?php echo esc_html( $post[$field_key] ?? "" ) ?>" <?php echo esc_html( $disabled ); ?>
+                    <?php echo isset( $fields[$field_key]["min_option"] ) && is_numeric( $fields[$field_key]["min_option"] ) ? 'min="' . esc_html( $fields[$field_key]["min_option"] ?? "" ) . '"' : '' ?>
+                    <?php echo isset( $fields[$field_key]["max_option"] ) && is_numeric( $fields[$field_key]["max_option"] ) ? 'max="' . esc_html( $fields[$field_key]["max_option"] ?? "" ) . '"' : '' ?>
+                >
+                    <?php $this->render_icon_slot( $fields[$field_key] ) ?>
+                </dt-number>
+            <?php elseif ( $field_type === "date" ) :?>
+                <dt-date
+                    <?php echo esc_html( $shared_attributes ) ?>
+                    timestamp="<?php echo esc_html( $post[$field_key]["timestamp"] ?? '' ) ?>"
+                >
+                    <?php $this->render_icon_slot( $fields[$field_key] ) ?>
+                </dt-date>
+
+            <?php elseif ( $field_type === "connection" ) :?>
+                <?php $value = array_map(function ( $value) {
+                    return [
+                        'id' => $value['ID'],
+                        'label' => $value['post_title'],
+                        'link' => $value['permalink'],
+                        'status' => $value['status'],
+                    ];
+                }, $post[$field_key]);
+                ?>
+                <dt-connection
+                    <?php echo esc_html( $shared_attributes ) ?>
+                    value="<?php echo esc_attr( json_encode( $value ) ) ?>"
+                    data-posttype="<?php echo esc_attr( $fields[$field_key]["post_type"] ) ?>"
+                    allowAdd
+                >
+                    <?php $this->render_icon_slot( $fields[$field_key] ) ?>
+                </dt-connection>
+
+            <?php elseif ( $field_type === "location" ) :?>
+                <?php $value = array_map(function ( $value) {
+                    return [
+                        'id' => strval( $value['id'] ),
+                        'label' => $value['label'],
+                    ];
+                }, $post[$field_key]);
+                $filters = [
+                [
+                    'id' => 'focus',
+                    'label' => __( 'Regions of Focus', 'disciple_tools' ),
+                ],
+                [
+                    'id' => 'all',
+                    'label' => __( 'All Locations', 'disciple_tools' )
+                ]
+                ];
+                ?>
+                <dt-location
+                    <?php echo esc_html( $shared_attributes ) ?>
+                    value="<?php echo esc_attr( json_encode( $value ) ) ?>"
+                    filters="<?php echo esc_attr( json_encode( $filters ) ) ?>"
+                    placeholder="<?php echo esc_html( sprintf( _x( "Search %s", "Search 'something'", 'disciple_tools' ), $fields[$field_key]['name'] ) )?>"
+                >
+                    <?php $this->render_icon_slot( $fields[$field_key] ) ?>
+                </dt-location>
 
             <?php endif;
         }
     }
 
-    public function post_form( $post, $fields ) {
+    public function post_form( $post, $fields, $post_settings ) {
 
-        $post_settings = DT_Posts::get_post_settings( 'groups' );
+        $post_tiles = DT_Posts::get_post_tiles( 'groups' );
         $this->post_field_settings = $post_settings['fields'];
 
-        $wc_types = [ 'key_select' ];
+        $wc_types = [ 'key_select', 'tags', 'multi_select', 'text', 'textarea', 'number', 'date', 'connection', 'location' ];
         if ( !empty( $fields ) && !empty( $this->post_field_settings ) ) {
             // Sort fields based on tile settings
             foreach ( $fields as &$field ) {
                 $priority = 999;
-                if ( key_exists( $field['id'], $this->post_field_settings ) ) {
+                if ( !empty( $post_tiles ) && key_exists( $field['id'], $this->post_field_settings ) ) {
                     $field_setting = $this->post_field_settings[$field['id']];
-                    if ( !empty( $field_setting['tile'] ) && key_exists( $field_setting['tile'], $post_settings['tiles'] )) {
-                        $tile = $post_settings['tiles'][$field_setting['tile']];
+                    if ( !empty( $field_setting['tile'] ) && key_exists( $field_setting['tile'], $post_tiles )) {
+                        $tile = $post_tiles[$field_setting['tile']];
                         if ( !empty( $tile ) && isset( $tile['tile_priority'] ) && isset( $tile['order'] )) {
                             $field_order = array_search( $field['id'], $tile['order'] );
                             $priority = ( $tile['tile_priority'] * 10 ) + $field_order;
@@ -1522,6 +1333,25 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                 ],
             ]
         );
+        register_rest_route(
+            $namespace, '/' . $this->type . '/field-options', [
+                [
+                    'methods'             => "GET",
+                    'callback'            => [ $this, 'get_field_options' ],
+                    'permission_callback' => function ( WP_REST_Request $request ) {
+                        $magic = new DT_Magic_URL( $this->root );
+
+                        /**
+                         * Adjust global values accordingly, so as to accommodate both wp_user
+                         * and post requests.
+                         */
+                        $this->adjust_global_values_by_incoming_sys_type( $request->get_params()['sys_type'] );
+
+                        return $magic->verify_rest_endpoint_permissions_on_post( $request );
+                    },
+                ],
+            ]
+        );
     }
 
     public function endpoint_get( WP_REST_Request $request ) {
@@ -1542,15 +1372,19 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
             $original_user = wp_get_current_user();
             wp_set_current_user( $user_id );
 
-            // Fetch all assigned posts
-            $posts = DT_Posts::list_posts( 'groups', [
+            $options = [
                 'limit'  => 1000,
                 'fields' => [
                     [
                         'assigned_to' => [ 'me' ]
                     ],
                 ]
-            ] );
+            ];
+
+            $options = apply_filters( 'dt_bulk_magic_link_sender_user_groups_posts_query', $options );
+
+            // Fetch all assigned posts
+            $posts = DT_Posts::list_posts( 'groups', $options );
 
             $this->determine_language_locale( $params["parts"] );
 
@@ -1594,9 +1428,12 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
         $response = [];
         $post     = DT_Posts::get_post( 'groups', $params['post_id'], false );
         if ( ! empty( $post ) && ! is_wp_error( $post ) ) {
+            $post_settings = DT_Posts::get_post_settings( 'groups' );
+            $fields = json_decode( json_encode( $link_obj->type_fields ), true );
+
             // start output buffer to capture markup output
             ob_start();
-            $this->post_form( $post, json_decode( json_encode( $link_obj->type_fields ), true ) );
+            $this->post_form( $post, $fields, $post_settings );
             $response['form_html'] = ob_get_clean();
 
             $response['success']  = true;
@@ -1659,7 +1496,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                         $comm          = [];
                         $comm['value'] = $value['value'];
 
-                        if ( $value['key'] !== 'new' ) {
+                        if ( isset( $value['key'] ) && $value['key'] !== 'new' ) {
                             $comm['key'] = $value['key'];
                         }
 
@@ -1675,15 +1512,26 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                     }
                     break;
 
-                case 'multi_select':
+                case 'connection':
                     $options = [];
-                    foreach ( $field['value'] ?? [] as $option ) {
-                        $entry          = [];
-                        $entry['value'] = $option['value'];
-                        if ( $option['delete'] ) {
+                    foreach ( $field['value'] ?? [] as $connection ) {
+                        $entry = [];
+                        $entry['value'] = $connection['id'];
+                        if ( isset( $connection['delete'] ) ) {
                             $entry['delete'] = true;
                         }
-                        $options[] = $entry;
+                        // if this is a new post
+                        if ( empty( $entry['value'] ) ) {
+                            $new_post = DT_Posts::create_post( $field['post_type'], [
+                                'name' => $connection['label'],
+                            ], true );
+                            if ( !empty( $new_post ) && key_exists( 'ID', $new_post ) ) {
+                                $entry['value'] = $new_post['ID'];
+                            }
+                        }
+                        if ( !empty( $entry['value'] ) ) {
+                            $options[] = $entry;
+                        }
                     }
                     if ( ! empty( $options ) ) {
                         $updates[ $field['id'] ] = [
@@ -1692,27 +1540,20 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                     }
                     break;
 
-                case 'location':
-                case 'connection':
-                    $locations = [];
-                    foreach ( $field['value'] ?? [] as $location ) {
+                case 'multi_select':
+                    $options = [];
+                    foreach ( $field['value'] ?? [] as $option ) {
                         $entry          = [];
-                        $entry['value'] = $location['ID'];
-                        $locations[]    = $entry;
+                        $entry['value'] = $option;
+                        if ( strpos( $option, '-' ) === 0 ) {
+                            $entry['value'] = substr( $option, 1 );
+                            $entry['delete'] = true;
+                        }
+                        $options[] = $entry;
                     }
-
-                    // Capture any incoming deletions
-                    foreach ( $field['deletions'] ?? [] as $location ) {
-                        $entry           = [];
-                        $entry['value']  = $location['ID'];
-                        $entry['delete'] = true;
-                        $locations[]     = $entry;
-                    }
-
-                    // Package and append to global updates
-                    if ( ! empty( $locations ) ) {
+                    if ( ! empty( $options ) ) {
                         $updates[ $field['id'] ] = [
-                            'values' => $locations
+                            'values' => $options
                         ];
                     }
                     break;
@@ -1744,23 +1585,19 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                     }
                     break;
 
+                case 'location':
                 case 'tags':
                     $tags = [];
                     foreach ( $field['value'] ?? [] as $tag ) {
-                        $entry          = [];
-                        $entry['value'] = $tag['name'];
-                        $tags[]         = $entry;
+                        $entry = [];
+                        $entry['value'] = $tag['id'] ?: $tag['label'];
+                        if ( isset( $tag['delete'] ) ) {
+                            $entry['delete'] = true;
+                        }
+                        if ( !empty( $entry['value'] ) ) {
+                            $tags[] = $entry;
+                        }
                     }
-
-                    // Capture any incoming deletions
-                    foreach ( $field['deletions'] ?? [] as $tag ) {
-                        $entry           = [];
-                        $entry['value']  = $tag['name'];
-                        $entry['delete'] = true;
-                        $tags[]          = $entry;
-                    }
-
-                    // Package and append to global updates
                     if ( ! empty( $tags ) ) {
                         $updates[ $field['id'] ] = [
                             'values' => $tags
@@ -1802,6 +1639,56 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
             'success' => true,
             'message' => ''
         ];
+    }
+
+    public function get_field_options( WP_REST_Request $request ) {
+        $params = $request->get_params();
+        if ( ! isset( $params['parts'], $params['action'], $params['field'], $params['sys_type'] ) ) {
+            return new WP_Error( __METHOD__, "Missing parameters", [ 'status' => 400 ] );
+        }
+
+        // Sanitize and fetch user/post id
+        $params = dt_recursive_sanitize_array( $params );
+
+        // Update logged-in user state if required accordingly, based on their sys_type
+        if ( ! is_user_logged_in() ) {
+            $this->update_user_logged_in_state( $params['sys_type'], $params["parts"]["post_id"] );
+        }
+        $this->determine_language_locale( $params["parts"] );
+
+        $options = [];
+
+        // get available post options for current field
+        $field = $params['field'];
+        $query = isset( $params['query'] ) ? $params['query'] : "";
+        $post_settings = DT_Posts::get_post_settings( 'groups' );
+        if ( key_exists( $field, $post_settings['fields'] ) ) {
+            $field_settings = $post_settings['fields'][$field];
+
+            if ( $field_settings['type'] === 'connection' ) {
+                $options = DT_Posts::get_viewable_compact( $field_settings['post_type'], $query ?? "" );
+            } else if ( $field_settings['type'] === 'tags' ) {
+                $options = DT_Posts::get_multi_select_options( 'groups', $field, $query );
+            } else if ( $field_settings['type'] === 'location' ) {
+                $options = Disciple_Tools_Mapping_Queries::search_location_grid_by_name( [
+                    "search_query" => $query ?? "",
+                    "filter" => isset( $params['filter'] ) ? $params['filter'] : 'all',
+                ] );
+            }
+        // } else {
+            //can't find field
+        }
+
+        // Fetch corresponding groups post record
+        $response = [];
+        if ( !is_wp_error( $options ) ) {
+            $response['options'] = $options;
+            $response['success']  = true;
+        } else {
+            $response['success'] = false;
+        }
+
+        return $response;
     }
 
     public function update_user_logged_in_state( $sys_type, $user_id ) {

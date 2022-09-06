@@ -14,11 +14,10 @@ export class DtSpinner extends LitElement {
       }
       :host::before {
         content: '';
-        -webkit-animation: spin 1s linear infinite;
         animation: spin 1s linear infinite;
-        border: 0.25rem solid var(--dt-spinner-color, #919191);
+        border: 0.25rem solid var(--dt-spinner-color-1, #919191);
         border-radius: 50%;
-        border-top-color: #000;
+        border-top-color: var(--dt-spinner-color-2, #000);
         display: inline-block;
         height: 1rem;
         width: 1rem;

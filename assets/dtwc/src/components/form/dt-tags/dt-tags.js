@@ -1,4 +1,4 @@
-import { html } from 'lit';
+import { css, html } from 'lit';
 import { DtMultiSelect } from '../dt-multi-select/dt-multi-select.js';
 
 export class DtTags extends DtMultiSelect {
@@ -9,6 +9,18 @@ export class DtTags extends DtMultiSelect {
       onload: { type: String },
     };
   }
+  static get styles() {
+    return [
+      ...super.styles,
+      css`      
+      .selected-option a,
+      .selected-option a:active,
+      .selected-option a:visited {
+        text-decoration: none;
+        color: var(--primary-color, #3f729b);
+      }
+    `];
+  }
 
   firstUpdated() {
     this._filterOptions();
@@ -16,10 +28,14 @@ export class DtTags extends DtMultiSelect {
 
   _clickOption(e) {
     if (e.target && e.target.value) {
-      this._select({
-        id: e.target.value,
-        label: e.target.dataset?.label,
-      });
+      const id = e.target.value;
+      const option = this.filteredOptions.reduce((result, option) => {
+        if (!result && option.id === id) {
+          return option;
+        }
+        return result;
+      }, null);
+      this._select(option);
 
       this._filterOptions();
     }
@@ -30,6 +46,7 @@ export class DtTags extends DtMultiSelect {
       this._select({
         id: '',
         label: e.target.dataset?.label,
+        isNew: true,
       });
     }
   }
@@ -37,6 +54,14 @@ export class DtTags extends DtMultiSelect {
   _remove(e) {
     if (e.target && e.target.dataset && e.target.dataset.value) {
       this.value = (this.value || []).filter(i => i.id !== e.target.dataset.value);
+
+      // re-filter available options once option is de-selected
+      this._filterOptions();
+
+      // If option was de-selected while list was open, re-focus input
+      if (this.open) {
+        this.shadowRoot.querySelector('input').focus();
+      }
     }
   }
 
@@ -46,6 +71,7 @@ export class DtTags extends DtMultiSelect {
         this._select({
           id: '',
           label: this.query,
+          isNew: true,
         });
       } else {
         this._select(this.filteredOptions[this.activeIndex]);
@@ -99,7 +125,7 @@ export class DtTags extends DtMultiSelect {
             );
           },
           onError: error => {
-            console.log(error);
+            console.warn(error);
             self.loading = false;
           },
         },
@@ -120,10 +146,13 @@ export class DtTags extends DtMultiSelect {
         <button
           data-label="${this.query}"
           @click="${this._clickAddNew}"
+          @touchstart="${this._touchStart}"
+          @touchmove="${this._touchMove}"
+          @touchend="${this._touchEnd}"
           class="${this.activeIndex > -1 &&
           this.activeIndex >= this.filteredOptions.length
             ? 'active'
-            : null}"
+            : ''}"
         >
           Add "${this.query}"
         </button>
@@ -136,8 +165,8 @@ export class DtTags extends DtMultiSelect {
     return (this.value || []).map(
       opt => html`
         <div class="selected-option">
-          <span>${opt.label}</span>
-          <button @click="${this._remove}" data-value="${opt.id}">x</button>
+          <a href="${opt.link}" ?disabled="${this.disabled}" alt="${opt.status ? opt.status.label : opt.label}">${opt.label}</a>
+          <button @click="${this._remove}" ?disabled="${this.disabled}" data-value="${opt.id}">x</button>
         </div>
       `
     );

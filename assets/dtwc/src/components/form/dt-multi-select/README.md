@@ -11,8 +11,18 @@ Select field that allows multiple values to be selected.
 | `loading` | Show loading spinner | `boolean` | `false` | `<dt-tags loading>` |
 | `saved`   | Show saved checkmark | `boolean` | `false` | `<dt-tags saved>` |
 | `onchange` | Event triggered when value is changed. Makes available `event` variable that includes field name, old value, and new value in `event.details` | `event` | - | `onChange(event)` |
+| `label`   | Text to be displayed in label | `string` | - | - |
+| `icon`    | URL to an icon to be displayed before the label | `string` | - | - |
+| `private` | Whether field should be marked as private | `boolean` | `false` | '<dt-label private>` |
+| `privateLabel` | Customize tooltip text for private icon hover state. Pass in correct language content. | `string` | - | - |
+
+## Slots
+| Name | Description |
+| ---- | ----------- |
+| `icon-start` | Icon to be displayed before label. Use if you want to embed an SVG directly on the page without an `img` tag |
 
 ## Feature Status
+- [x] label
 - [x] value
 - [x] options
 - [x] filter options
@@ -22,6 +32,5 @@ Select field that allows multiple values to be selected.
 - [x] placeholder
 - [x] loading
 - [x] saved
-- [ ] disabled
-- [ ] option icon
+- [x] disabled
 

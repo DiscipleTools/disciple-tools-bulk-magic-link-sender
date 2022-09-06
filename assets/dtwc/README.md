@@ -50,6 +50,8 @@ npm run format
 
 ## Testing with Web Test Runner
 
+![Test Status](https://github.com/DiscipleTools/disciple-tools-web-components/actions/workflows/test.yml/badge.svg?event=push)
+
 To execute a single test run:
 
 ```bash
@@ -61,6 +63,12 @@ To run the tests in interactive watch mode run:
 ```bash
 npm run test:watch
 ```
+
+### Resources for writing tests
+- [@open-wc/testing](https://open-wc.org/docs/testing/testing-package/) - Overall testing framework
+- [@web/test-runner-commands](https://modern-web.dev/docs/test-runner/commands/) - simulating keyboard/mouse input
+- [ChaiJS](https://www.chaijs.com/api/bdd/) - Basic assertions
+- [Chai DOM](https://github.com/nathanboktae/chai-dom) - DOM assertions
 
 ## Tooling configs
 
