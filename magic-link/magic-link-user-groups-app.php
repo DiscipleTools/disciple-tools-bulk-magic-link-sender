@@ -936,6 +936,14 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
         <?php endif;
     }
 
+    public function render_icon_slot( $field ) {
+        if ( isset( $field['font-icon'] ) && !empty( $field['font-icon'] ) ): ?>
+            <span slot="icon-start">
+                <i class="dt-icon ' . esc_html( $field['font-icon'] ) . '"></i>
+            </span>
+        <?php endif;
+    }
+
     /**
      * Copied from theme to replace web component rendering. Can be removed if/when web-components are fully adopted in the theme.
      * @param $field_key
@@ -1294,6 +1302,25 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends DT_Magic_Url_Base
                 [
                     'methods'             => "GET",
                     'callback'            => [ $this, 'update_record' ],
+                    'permission_callback' => function ( WP_REST_Request $request ) {
+                        $magic = new DT_Magic_URL( $this->root );
+
+                        /**
+                         * Adjust global values accordingly, so as to accommodate both wp_user
+                         * and post requests.
+                         */
+                        $this->adjust_global_values_by_incoming_sys_type( $request->get_params()['sys_type'] );
+
+                        return $magic->verify_rest_endpoint_permissions_on_post( $request );
+                    },
+                ],
+            ]
+        );
+        register_rest_route(
+            $namespace, '/' . $this->type . '/field-options', [
+                [
+                    'methods'             => "GET",
+                    'callback'            => [ $this, 'get_field_options' ],
                     'permission_callback' => function ( WP_REST_Request $request ) {
                         $magic = new DT_Magic_URL( $this->root );
 
