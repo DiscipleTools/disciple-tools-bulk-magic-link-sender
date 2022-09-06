@@ -73,6 +73,12 @@ class Disciple_Tools_Magic_Links_Object_Migration {
                         'default' => ''
                     ],
                     [
+                        'type'    => self::$migration_schema_type_new,
+                        'from'    => '',
+                        'to'      => 'type_config',
+                        'default' => []
+                    ],
+                    [
                         'type'    => self::$migration_schema_type_map,
                         'from'    => 'assigned',
                         'to'      => 'assigned',
