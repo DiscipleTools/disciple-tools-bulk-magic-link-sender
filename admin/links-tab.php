@@ -447,6 +447,16 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
 
     private function main_column_ml_type_fields() {
         ?>
+        <table class="widefat striped" id="ml_main_col_ml_type_config_table" style="margin-bottom: 1rem;">
+            <tbody>
+                <tr class="supports_create">
+                    <input id="ml_main_col_ml_type_config_table_row_field_id" type="hidden" value="supports_create">
+                    <td><?php esc_html_e( "Support creating new items", 'disciple_tools' ) ?></td>
+                    <td><input id="ml_main_col_ml_type_config_table_row_field_enabled" type="checkbox"></td>
+
+                </tr>
+            </tbody>
+        </table>
         <table class="widefat striped" id="ml_main_col_ml_type_fields_table">
             <thead>
             <tr>
