@@ -53,17 +53,29 @@ class Disciple_Tools_Magic_Links_Magic_Link extends DT_Magic_Url_Base {
         add_action( 'dt_blank_body', [ $this, 'body' ] ); // body for no post key
         add_filter( 'dt_magic_url_base_allowed_css', [ $this, 'dt_magic_url_base_allowed_css' ], 10, 1 );
         add_filter( 'dt_magic_url_base_allowed_js', [ $this, 'dt_magic_url_base_allowed_js' ], 10, 1 );
+        add_action( 'wp_enqueue_scripts', [ $this, 'wp_enqueue_scripts' ], 100 );
 
     }
 
     public function dt_magic_url_base_allowed_js( $allowed_js ) {
         // @todo add or remove js files with this filter
+
+        $allowed_js[] = 'toastify-js';
+
         return $allowed_js;
     }
 
     public function dt_magic_url_base_allowed_css( $allowed_css ) {
         // @todo add or remove js files with this filter
+
+        $allowed_css[] = 'toastify-js-css';
+
         return $allowed_css;
+    }
+
+    public function wp_enqueue_scripts() {
+        wp_enqueue_style( 'toastify-js-css', 'https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.css', [], '1.12.0' );
+        wp_enqueue_script( 'toastify-js', 'https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.js', [ 'jquery' ] );
     }
 
     /**
@@ -148,6 +160,7 @@ class Disciple_Tools_Magic_Links_Magic_Link extends DT_Magic_Url_Base {
                 'translations' => [
                     'add' => __( 'Add Magic', 'disciple-tools-bulk-magic-link-sender' ),
                 ],
+                'submit_success_function' => Disciple_Tools_Bulk_Magic_Link_Sender_API::get_link_submission_success_js_code()
             ]) ?>][0]
 
             window.get_magic = () => {
@@ -213,7 +226,8 @@ class Disciple_Tools_Magic_Links_Magic_Link extends DT_Magic_Url_Base {
                 }
 
                 window.makeRequest( "POST", jsObject.parts.type, { parts: jsObject.parts, update }, jsObject.parts.root + '/v1/' ).done(function(data){
-                    window.location.reload()
+                    Function(jsObject.submit_success_function)();
+
                 })
                 .fail(function(e) {
                     console.log(e)

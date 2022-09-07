@@ -1169,4 +1169,18 @@ Thanks!';
         }
     }
 
+    public static function get_link_submission_success_js_code() {
+        return '
+            Toastify({
+                text: "' . __( 'Successfully Processed Updates!', 'disciple_tools' ) . '",
+                close: true,
+                gravity: "bottom",
+                callback: function() {
+                    window.location.reload();
+                }
+
+            }).showToast();
+        ';
+    }
+
 }
