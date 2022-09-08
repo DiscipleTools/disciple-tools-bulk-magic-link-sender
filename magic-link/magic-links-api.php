@@ -1172,7 +1172,7 @@ Thanks!';
     public static function get_link_submission_success_js_code() {
         return '
             Toastify({
-                text: "' . __( 'Successfully Processed Updates!', 'disciple_tools' ) . '",
+                text: "' . __( 'Update Successful!', 'disciple-tools-bulk-magic-link-sender' ) . '",
                 close: true,
                 gravity: "bottom",
                 callback: function() {
