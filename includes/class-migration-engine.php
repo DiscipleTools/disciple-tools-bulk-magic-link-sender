@@ -102,13 +102,12 @@ class Disciple_Tools_Bulk_Magic_Link_Migration_Engine {
             try {
                 $migration->up();
             } catch ( Throwable $e ) {
-                update_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_migration_error,
-                    array(
-                        'message' => $e->getMessage(),
-                        'code'    => $e->getCode(),
-                        'trace'   => $e->getTrace(),
-                        'time'    => time(),
-                    ) );
+                update_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_migration_error, [
+                    'message' => $e->getMessage(),
+                    'code'    => $e->getCode(),
+                    'trace'   => $e->getTrace(),
+                    'time'    => time(),
+                ] );
                 throw $e;
             }
             update_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_migration_number, (string) $activating_migration_number );
