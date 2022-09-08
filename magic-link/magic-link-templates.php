@@ -174,6 +174,9 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         wp_enqueue_script( 'jquery-typeahead', get_template_directory_uri() . $path_js, [ 'jquery' ], filemtime( get_template_directory() . $path_js ) );
         wp_enqueue_style( 'jquery-typeahead-css', get_template_directory_uri() . $path_css, [], filemtime( get_template_directory() . $path_css ) );
 
+        wp_enqueue_style( 'toastify-js-css', 'https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.css', [], '1.12.0' );
+        wp_enqueue_script( 'toastify-js', 'https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.js', [ 'jquery' ], '1.12.0' );
+
         wp_enqueue_style( 'material-font-icons-css', 'https://cdn.jsdelivr.net/npm/@mdi/font@6.6.96/css/materialdesignicons.min.css', [], '6.6.96' );
     }
 
@@ -184,6 +187,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         $allowed_js[] = 'mapbox-cookie';
         $allowed_js[] = 'mapbox-search-widget';
         $allowed_js[] = 'jquery-typeahead';
+        $allowed_js[] = 'toastify-js';
 
         return $allowed_js;
     }
@@ -194,6 +198,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         $allowed_css[] = 'mapbox-gl-css';
         $allowed_css[] = 'jquery-typeahead-css';
         $allowed_css[] = 'material-font-icons-css';
+        $allowed_css[] = 'toastify-js-css';
 
         return $allowed_css;
     }
@@ -300,8 +305,8 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                         'use'             => __( 'Use', 'disciple_tools' ),
                         'open_modal'      => __( 'Open Modal', 'disciple_tools' )
                     ]
-                ]
-
+                ],
+                'submit_success_function' => Disciple_Tools_Bulk_Magic_Link_Sender_API::get_link_submission_success_js_code()
             ] ) ?>][0]
 
             console.log(jsObject);
@@ -910,7 +915,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
 
                         // If successful, refresh page, otherwise; display error message
                         if (data['success']) {
-                            window.location.reload();
+                            Function(jsObject.submit_success_function)();
 
                         } else {
                             jQuery('#error').html(data['message']);
