@@ -1003,7 +1003,7 @@ jQuery(function ($) {
 
       // Proceed with packaging values into json structure, ready for saving
       let link_obj = {
-        'version': '1.0',
+        'version': 1,
         'id': id,
         'enabled': enabled,
         'name': name,

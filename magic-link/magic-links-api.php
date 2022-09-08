@@ -16,6 +16,9 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
     public static $option_dt_magic_links_local_time_zone = 'dt_magic_links_local_time_zone';
     public static $option_dt_magic_links_defaults_email = 'dt_magic_links_defaults_email';
     public static $option_dt_magic_links_templates = 'dt_magic_links_templates';
+    public static $option_dt_magic_links_migration_number = 'dt_magic_links_migration_number';
+    public static $option_dt_magic_links_migration_lock = 'dt_magic_links_migration_lock';
+    public static $option_dt_magic_links_migration_error = 'dt_magic_links_migration_error';
 
     public static $schedule_last_schedule_run = 'last_schedule_run';
     public static $schedule_last_success_send = 'last_success_send';

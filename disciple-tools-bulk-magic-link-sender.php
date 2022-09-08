@@ -93,20 +93,24 @@ class Disciple_Tools_Bulk_Magic_Link_Sender {
         require_once( 'magic-link/magic-link-user-groups-app.php' );
         require_once( 'magic-link/magic-links-cron.php' );
         require_once( 'magic-link/magic-links-default-filters.php' );
-        require_once( 'magic-link/link-object-migration.php' );
 
         if ( is_admin() ) {
             require_once( 'admin/admin-menu-and-tabs.php' ); // adds starter admin page and section for plugin
         }
 
-
         $this->i18n();
-
 
         if ( is_admin() ) { // adds links to the plugin description area in the plugin admin list.
             add_filter( 'plugin_row_meta', [ $this, 'plugin_description_links' ], 10, 4 );
         }
 
+        try {
+            require_once( plugin_dir_path( __FILE__ ) . '/includes/class-migration-engine.php' );
+            Disciple_Tools_Bulk_Magic_Link_Migration_Engine::migrate( Disciple_Tools_Bulk_Magic_Link_Migration_Engine::$migration_number );
+
+        } catch ( Throwable $e ) {
+            new WP_Error( 'migration_error', 'Migration engine failed to migrate.' );
+        }
     }
 
     /**
