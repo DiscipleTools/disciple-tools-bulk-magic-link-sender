@@ -436,6 +436,16 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
                            value=""/>
                 </td>
             </tr>
+            <tr>
+                <td style="vertical-align: middle;">Send Submission Notifications [<a href="#" class="ml-templates-docs"
+                                                                                      data-title="ml_templates_right_docs_send_submission_notifications_title"
+                                                                                      data-content="ml_templates_right_docs_send_submission_notifications_content">&#63;</a>]
+                </td>
+                <td>
+                    <input type="checkbox" id="ml_main_col_template_details_send_submission_notifications"
+                           value=""/>
+                </td>
+            </tr>
         </table>
         <?php
     }

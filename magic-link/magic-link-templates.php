@@ -42,7 +42,7 @@ class Disciple_Tools_Magic_Links_Templates_Loader {
     } // End instance()
 
     public function __construct() {
-        add_action( "after_setup_theme", function (){
+        add_action( "after_setup_theme", function () {
             self::load_templates();
         }, 200 );
     }
@@ -288,15 +288,17 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         ?>
         <script>
             let jsObject = [<?php echo json_encode( [
-                'root'         => esc_url_raw( rest_url() ),
-                'nonce'        => wp_create_nonce( 'wp_rest' ),
-                'parts'        => $this->parts,
-                'post'         => $this->post,
-                'translations' => [
-                    'regions_of_focus' => __( 'Regions of Focus', 'disciple_tools' ),
-                    'all_locations'    => __( 'All Locations', 'disciple_tools' )
+                'root'                    => esc_url_raw( rest_url() ),
+                'nonce'                   => wp_create_nonce( 'wp_rest' ),
+                'parts'                   => $this->parts,
+                'post'                    => $this->post,
+                'template'                => $this->template,
+                'translations'            => [
+                    'regions_of_focus'                => __( 'Regions of Focus', 'disciple_tools' ),
+                    'all_locations'                   => __( 'All Locations', 'disciple_tools' ),
+                    'submission_notification_comment' => sprintf( __( '%s Updates Submitted', 'disciple_tools' ), $this->template['name'] )
                 ],
-                'mapbox'       => [
+                'mapbox'                  => [
                     'map_key'        => DT_Mapbox_API::get_key(),
                     'google_map_key' => Disciple_Tools_Google_Geocode_API::get_key(),
                     'translations'   => [
@@ -773,6 +775,8 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                     let payload = {
                         'action': 'get',
                         'parts': jsObject.parts,
+                        'send_submission_notifications': jsObject.template['send_submission_notifications'] ?? true,
+                        'send_submission_notifications_comment': jsObject.translations['submission_notification_comment'],
                         'post_id': id,
                         'post_type': post_type,
                         'fields': {
@@ -1000,10 +1004,10 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                 if ( $field['enabled'] && $this->is_link_obj_field_enabled( $field['id'] ) ) {
 
                                     $post_field_type = '';
-                                    if ( $field['type'] === 'dt' && isset( $this->post_field_settings[$field['id']]['type'] ) ){
+                                    if ( $field['type'] === 'dt' && isset( $this->post_field_settings[ $field['id'] ]['type'] ) ) {
                                         $post_field_type = $this->post_field_settings[ $field['id'] ]['type'];
                                     }
-                                    if ( empty( $post_field_type ) ){
+                                    if ( empty( $post_field_type ) ) {
                                         continue;
                                     }
 
@@ -1126,7 +1130,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
 
         // Sanitize and fetch user id
         $params = dt_recursive_sanitize_array( $params );
-
+        dt_write_log( $params );
         // Update logged-in user state, if required
         if ( ! is_user_logged_in() ) {
             $this->update_user_logged_in_state();
@@ -1291,6 +1295,12 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                     ];
                 }
             }
+        }
+
+        // Next, dispatch submission notification, accordingly; always send by default.
+        if ( $params['send_submission_notifications'] && isset( $updated_post['assigned_to'], $updated_post['assigned_to']['id'], $updated_post['assigned_to']['display'] ) ) {
+            $submission_comment = '@[' . $updated_post['assigned_to']['display'] . '](' . $updated_post['assigned_to']['id'] . ') ' . $params['send_submission_notifications_comment'];
+            DT_Posts::add_post_comment( $updated_post['post_type'], $updated_post['ID'], $submission_comment, 'comment', [], false );
         }
 
         // Finally, return successful response
