@@ -1130,7 +1130,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
 
         // Sanitize and fetch user id
         $params = dt_recursive_sanitize_array( $params );
-        dt_write_log( $params );
+
         // Update logged-in user state, if required
         if ( ! is_user_logged_in() ) {
             $this->update_user_logged_in_state();
