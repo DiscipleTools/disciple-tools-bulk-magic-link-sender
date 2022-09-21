@@ -14,8 +14,7 @@
     Send Submission Notifications
 </div>
 <div id="ml_templates_right_docs_send_submission_notifications_content" style="display: none;">
-    On Template Magic Link form submissions, a comment will be added to corresponding record; mentioning assigned-to
-    user; if specified.
+    When the user submits the magic link, a comment will be added to corresponding record @mentioning the assigned-to user (if there is one).
 </div>
 <!-- Send Submission Notifications -->
 
