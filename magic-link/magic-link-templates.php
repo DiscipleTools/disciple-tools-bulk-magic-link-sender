@@ -294,9 +294,8 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                 'post'                    => $this->post,
                 'template'                => $this->template,
                 'translations'            => [
-                    'regions_of_focus'                => __( 'Regions of Focus', 'disciple_tools' ),
-                    'all_locations'                   => __( 'All Locations', 'disciple_tools' ),
-                    'submission_notification_comment' => sprintf( __( '%s Updates Submitted', 'disciple_tools' ), $this->template['name'] )
+                    'regions_of_focus' => __( 'Regions of Focus', 'disciple_tools' ),
+                    'all_locations'    => __( 'All Locations', 'disciple_tools' )
                 ],
                 'mapbox'                  => [
                     'map_key'        => DT_Mapbox_API::get_key(),
@@ -775,8 +774,8 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                     let payload = {
                         'action': 'get',
                         'parts': jsObject.parts,
+                        'template_name': jsObject.template['name'] ?? '',
                         'send_submission_notifications': jsObject.template['send_submission_notifications'] ?? true,
-                        'send_submission_notifications_comment': jsObject.translations['submission_notification_comment'],
                         'post_id': id,
                         'post_type': post_type,
                         'fields': {
@@ -1299,7 +1298,8 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
 
         // Next, dispatch submission notification, accordingly; always send by default.
         if ( $params['send_submission_notifications'] && isset( $updated_post['assigned_to'], $updated_post['assigned_to']['id'], $updated_post['assigned_to']['display'] ) ) {
-            $submission_comment = '@[' . $updated_post['assigned_to']['display'] . '](' . $updated_post['assigned_to']['id'] . ') ' . $params['send_submission_notifications_comment'];
+            $default_comment = sprintf( __( '%s Updates Submitted', 'disciple_tools' ), $params['template_name'] );
+            $submission_comment = '@[' . $updated_post['assigned_to']['display'] . '](' . $updated_post['assigned_to']['id'] . ') ' . $default_comment;
             DT_Posts::add_post_comment( $updated_post['post_type'], $updated_post['ID'], $submission_comment, 'comment', [], false );
         }
 
