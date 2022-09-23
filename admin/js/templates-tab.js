@@ -214,7 +214,8 @@ jQuery(function ($) {
     title: '',
     title_translations: {},
     custom_fields: '',
-    show_recent_comments: true
+    show_recent_comments: true,
+    send_submission_notifications: true
   }, callback = function () {
   }) {
     let view_template_details = $('#ml_main_col_template_details');
@@ -229,6 +230,7 @@ jQuery(function ($) {
         $('.template-title-translate-but-label').text(Object.keys(data.title_translations).length);
         $('#ml_main_col_template_details_custom_fields').val(data.custom_fields);
         $('#ml_main_col_template_details_show_recent_comments').prop('checked', data.show_recent_comments);
+        $('#ml_main_col_template_details_send_submission_notifications').prop('checked', data.send_submission_notifications);
         callback();
       });
 
@@ -241,6 +243,7 @@ jQuery(function ($) {
       $('.template-title-translate-but-label').text(Object.keys(data.title_translations).length);
       $('#ml_main_col_template_details_custom_fields').val(data.custom_fields);
       $('#ml_main_col_template_details_show_recent_comments').prop('checked', data.show_recent_comments);
+      $('#ml_main_col_template_details_send_submission_notifications').prop('checked', data.send_submission_notifications);
       view_template_details.fadeIn(fade_speed, function () {
         callback();
       });
@@ -360,7 +363,8 @@ jQuery(function ($) {
                 title: template['title'],
                 title_translations: template['title_translations'] ?? {},
                 custom_fields: '',
-                show_recent_comments: template['show_recent_comments']
+                show_recent_comments: template['show_recent_comments'],
+                send_submission_notifications: template['send_submission_notifications'] ?? true
               });
               template_views_selected_fields(false, 'slow', {fields: template['fields']});
               template_views_message(false, 'slow', {text: template['message']});
@@ -623,6 +627,7 @@ jQuery(function ($) {
     let title = $('#ml_main_col_template_details_title').val();
     let title_translations = JSON.parse(decodeURIComponent($('#ml_main_col_template_details_title_translate_but').data('field_translations')));
     let show_recent_comments = $('#ml_main_col_template_details_show_recent_comments').prop('checked');
+    let send_submission_notifications = $('#ml_main_col_template_details_send_submission_notifications').prop('checked');
     let message = $('#ml_main_col_msg_textarea').val();
     let fields = fetch_selected_fields();
 
@@ -660,6 +665,7 @@ jQuery(function ($) {
         'title': title,
         'title_translations': title_translations,
         'show_recent_comments': show_recent_comments,
+        'send_submission_notifications': send_submission_notifications,
         'message': message,
         'fields': fields
       };
