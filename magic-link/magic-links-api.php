@@ -16,10 +16,12 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
     public static $option_dt_magic_links_local_time_zone = 'dt_magic_links_local_time_zone';
     public static $option_dt_magic_links_defaults_email = 'dt_magic_links_defaults_email';
     public static $option_dt_magic_links_templates = 'dt_magic_links_templates';
+    public static $option_dt_magic_links_migration_number = 'dt_magic_links_migration_number';
+    public static $option_dt_magic_links_migration_lock = 'dt_magic_links_migration_lock';
+    public static $option_dt_magic_links_migration_error = 'dt_magic_links_migration_error';
 
     public static $schedule_last_schedule_run = 'last_schedule_run';
     public static $schedule_last_success_send = 'last_success_send';
-    public static $schedule_links_expire_base_ts = 'links_expire_within_base_ts';
 
     public static $channel_email_id = 'dt_channel_email';
     public static $channel_email_name = 'Email Sending Channel';
@@ -323,14 +325,6 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
 
             $link_objs = [];
             foreach ( json_decode( $option ) as $id => $link_obj ) {
-                $amt           = $link_obj->schedule->links_expire_within_amount;
-                $time_unit     = $link_obj->schedule->links_expire_within_time_unit;
-                $base_ts       = $link_obj->schedule->links_expire_within_base_ts;
-                $never_expires = $link_obj->schedule->links_never_expires;
-
-                $link_obj->schedule->links_expire_on_ts           = self::determine_links_expiry_point( $amt, $time_unit, $base_ts );
-                $link_obj->schedule->links_expire_on_ts_formatted = self::fetch_links_expired_formatted_date( $never_expires, $base_ts, $amt, $time_unit );
-
                 $link_objs[ $link_obj->id ] = $link_obj;
             }
 
@@ -542,6 +536,29 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
             $sending_channel = self::fetch_sending_channel( $link_obj->schedule->sending_channel );
             if ( ! empty( $sending_channel ) ) {
 
+                // Determine if user's magic link should be refreshed beforehand
+                if ( $link_obj->schedule->links_refreshed_before_send || $link_obj->link_manage->links_never_expires || ( $link_obj->link_manage->links_expire_auto_refresh_enabled && self::has_links_expired( $link_obj->link_manage->links_never_expires, $user->links_expire_within_base_ts, $link_obj->link_manage->links_expire_within_amount, $link_obj->link_manage->links_expire_within_time_unit ) ) ) {
+
+                    // Ensure to handle non-expiring links a little differently
+                    if ( ! $link_obj->link_manage->links_never_expires ) {
+                        self::update_magic_links( $link_obj, [ $user ], false );
+                        $user   = self::refresh_user_links_expiration_values( $user, time(), $link_obj->link_manage->links_expire_within_amount, $link_obj->link_manage->links_expire_within_time_unit, $link_obj->link_manage->links_never_expires );
+                        $logs[] = self::logging_create( 'Refreshed user [' . $user->name . '] magic link.' );
+
+                    } else {
+                        $user = self::refresh_user_links_expiration_values( $user, $user->links_expire_within_base_ts, $link_obj->link_manage->links_expire_within_amount, $link_obj->link_manage->links_expire_within_time_unit, $link_obj->link_manage->links_never_expires );
+                    }
+                } else if ( self::has_links_expired( $link_obj->link_manage->links_never_expires, $user->links_expire_within_base_ts, $link_obj->link_manage->links_expire_within_amount, $link_obj->link_manage->links_expire_within_time_unit ) ) {
+
+                    // Nuke any stale, expired magic links
+                    self::update_magic_links( $link_obj, [ $user ], true );
+                    $user->links_expire_within_base_ts  = '';
+                    $user->links_expire_on_ts           = '';
+                    $user->links_expire_on_ts_formatted = '';
+                    $logs[]                             = self::logging_create( 'Deleted user [' . $user->name . '] magic link.' );
+
+                }
+
                 // Construct message to be sent
                 $message = self::build_send_msg( $link_obj, $user, $magic_link_type['url_base'] );
                 if ( $message !== '' ) {
@@ -556,7 +573,13 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
                     if ( ! is_wp_error( $send_result ) && $send_result ) {
 
                         // Update last successful send timestamp
-                        self::update_schedule_settings( $link_obj->id, self::$schedule_last_success_send, time() );
+                        $updated_link_obj = self::update_schedule_settings( $link_obj->id, self::$schedule_last_success_send, time() );
+
+                        // Capture updated sections of interest
+                        if ( ! empty( $updated_link_obj ) ) {
+                            $link_obj->schedule = $updated_link_obj->schedule;
+                        }
+
                         $logs[] = self::logging_create( 'Last successful send timestamp updated.' );
 
                     } else {
@@ -576,6 +599,12 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
         } else {
             $logs[] = self::logging_create( 'Unable to fetch magic link type details for key: ' . $link_obj->type );
         }
+
+        // Echo back link object & user; which may have been updated
+        return [
+            'link_obj' => $link_obj,
+            'user'     => $user
+        ];
     }
 
     public static function determine_assigned_user_type( $user ): string {
@@ -622,19 +651,21 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
         if ( ! empty( $link_obj->message ) && ! empty( $link_url ) && $link_url !== '' ) {
 
             // Format expired date
-            $expire_on = self::fetch_links_expired_formatted_date( $link_obj->schedule->links_never_expires, $link_obj->schedule->links_expire_within_base_ts, $link_obj->schedule->links_expire_within_amount, $link_obj->schedule->links_expire_within_time_unit );
+            $expire_on = self::fetch_links_expired_formatted_date( $link_obj->link_manage->links_never_expires, $user->links_expire_within_base_ts, $link_obj->link_manage->links_expire_within_amount, $link_obj->link_manage->links_expire_within_time_unit );
 
             // Construct message, having replaced placeholders
             $msg = str_replace(
                 [
                     '{{name}}',
                     '{{link}}',
-                    '{{time}}'
+                    '{{time}}',
+                    '{{time_relative}}'
                 ],
                 [
                     self::determine_assigned_user_name( $user ),
                     $link_url,
-                    $expire_on
+                    $expire_on,
+                    self::determine_relative_date( self::determine_links_expiry_point( $link_obj->link_manage->links_expire_within_amount, $link_obj->link_manage->links_expire_within_time_unit, $user->links_expire_within_base_ts ) )
                 ],
                 $link_obj->message
             );
@@ -650,7 +681,7 @@ Please follow the link below and update records!
 
 {{link}}
 
-As a reminder, the above link will expire on {{time}}
+As a reminder, the above link will expire {{time_relative}} on {{time}}
 
 Thanks!';
     }
@@ -698,6 +729,8 @@ Thanks!';
             $link_obj->schedule->{$setting} = $value;
             self::update_option_link_obj( $link_obj );
         }
+
+        return $link_obj;
     }
 
     public static function has_obj_expired( $never_expires, $expiry_point ): bool {
@@ -713,7 +746,7 @@ Thanks!';
     }
 
     public static function has_links_expired( $never_expires, $base_ts, $amt, $time_unit ): bool {
-        if ( $never_expires === true ) {
+        if ( $never_expires === true || in_array( strtolower( $never_expires ), [ 'true' ] ) ) {
             return false;
         }
 
@@ -723,13 +756,101 @@ Thanks!';
     }
 
     public static function fetch_links_expired_formatted_date( $never_expires, $base_ts, $amt, $time_unit ): string {
-        if ( $never_expires === true ) {
+        if ( $never_expires === true || in_array( strtolower( $never_expires ), [ 'true' ] ) ) {
             return __( 'Never', 'disciple_tools' );
         }
 
         $expiry_point = self::determine_links_expiry_point( $amt, $time_unit, $base_ts );
 
         return self::format_timestamp_in_local_time_zone( $expiry_point );
+    }
+
+    public static function determine_relative_date( $ts ): string {
+        if ( ! ctype_digit( $ts ) ) {
+            $ts = strtotime( $ts );
+        }
+
+        $diff = time() - $ts;
+        if ( $diff == 0 ) {
+            return 'now';
+
+        } elseif ( $diff > 0 ) {
+            $day_diff = floor( $diff / 86400 );
+            if ( $day_diff == 0 ) {
+                if ( $diff < 60 ) {
+                    return 'just now';
+                }
+                if ( $diff < 120 ) {
+                    return '1 minute ago';
+                }
+                if ( $diff < 3600 ) {
+                    return floor( $diff / 60 ) . ' minutes ago';
+                }
+
+                // compare with current time to see if it was posted yesterday
+                if ( gmdate( 'H' ) < ( $diff / 3600 ) ) {
+                    return 'Yesterday';
+                }
+
+                // if today
+                if ( $diff < 7200 ) {
+                    return '1 hour ago';
+                }
+                if ( $diff < 86400 ) {
+                    return floor( $diff / 3600 ) . ' hours ago';
+                }
+            }
+            if ( $day_diff == 1 ) {
+                return 'Yesterday';
+            }
+            if ( $day_diff < 7 ) {
+                return $day_diff . ' days ago';
+            }
+            if ( $day_diff < 31 ) {
+                return ceil( $day_diff / 7 ) . ' weeks ago';
+            }
+            if ( $day_diff < 60 ) {
+                return 'last month';
+            }
+
+            return gmdate( 'F Y', $ts );
+
+        } else {
+
+            $diff     = abs( $diff );
+            $day_diff = floor( $diff / 86400 );
+            if ( $day_diff == 0 ) {
+                if ( $diff < 120 ) {
+                    return 'in a minute';
+                }
+                if ( $diff < 3600 ) {
+                    return 'in ' . floor( $diff / 60 ) . ' minutes';
+                }
+                if ( $diff < 7200 ) {
+                    return 'in an hour';
+                }
+                if ( $diff < 86400 ) {
+                    return 'in ' . floor( $diff / 3600 ) . ' hours';
+                }
+            }
+            if ( $day_diff == 1 ) {
+                return 'Tomorrow';
+            }
+            if ( $day_diff < 4 ) {
+                return gmdate( 'l', $ts );
+            }
+            if ( $day_diff < 7 + ( 7 - gmdate( 'w' ) ) ) {
+                return 'next week';
+            }
+            if ( ceil( $day_diff / 7 ) < 4 ) {
+                return 'in ' . ceil( $day_diff / 7 ) . ' weeks';
+            }
+            if ( intval( gmdate( 'n', $ts ) ) == ( intval( gmdate( 'n' ) ) + 1 ) ) {
+                return 'next month';
+            }
+
+            return gmdate( 'F Y', $ts );
+        }
     }
 
     public static function format_timestamp_in_local_time_zone( $timestamp ): string {
@@ -1183,4 +1304,11 @@ Thanks!';
         ';
     }
 
+    public static function refresh_user_links_expiration_values( $user, $base_ts, $amt, $time_unit, $never_expires ) {
+        $user->links_expire_within_base_ts  = $base_ts;
+        $user->links_expire_on_ts           = self::determine_links_expiry_point( $amt, $time_unit, $base_ts );
+        $user->links_expire_on_ts_formatted = self::fetch_links_expired_formatted_date( $never_expires, $base_ts, $amt, $time_unit );
+
+        return $user;
+    }
 }

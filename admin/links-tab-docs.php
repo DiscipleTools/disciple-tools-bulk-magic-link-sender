@@ -37,6 +37,38 @@
 </div>
 <!-- Assigned Users & Teams -->
 
+<!-- Links Expire Within -->
+<div id="ml_links_right_docs_links_expire_title" style="display: none;">
+    Links Expire Within
+</div>
+<div id="ml_links_right_docs_links_expire_content" style="display: none;">
+    Specify when actual DT user magic links will expire and are no longer accessible.
+    <br><br>
+    Alternatively, select the Never Expires options if DT user magic links are to be kept alive indefinitely.
+</div>
+<!-- Links Expire Within -->
+
+<!-- Links Refreshed Before Sending -->
+<div id="ml_links_right_docs_links_refreshed_before_send_title" style="display: none;">
+    Links Refreshed Before Sending
+</div>
+<div id="ml_links_right_docs_links_refreshed_before_send_content" style="display: none;">
+    If enabled, magic links will be refreshed before a message is sent.
+</div>
+<!-- Links Refreshed Before Sending -->
+
+<!-- Links Expiry Auto-Refresh Enabled -->
+<div id="ml_links_right_docs_auto_refresh_title" style="display: none;">
+    Links Expiry Auto-Refresh Enabled
+</div>
+<div id="ml_links_right_docs_auto_refresh_content" style="display: none;">
+    If DT user magic links have been scheduled to expire, then enabling auto-refresh will ensure new links are generated
+    on expiration.
+    <br><br>
+    Alternatively, disabling auto-refresh will ensure expired DT user magic links remain inaccessible.
+</div>
+<!-- Links Expiry Auto-Refresh Enabled -->
+
 <!-- Message -->
 <div id="ml_links_right_docs_message_title" style="display: none;">
     Message
@@ -49,7 +81,8 @@
 
     <b>{{name}}</b><br>Will be replaced with either user's display name, or D.T. post record title.<br><br>
     <b>{{link}}</b><br>Will be replaced with magic link.<br><br>
-    <b>{{time}}</b><br>Will be replaced with expiry time of magic link.
+    <b>{{time}}</b><br>Will be replaced with absolute expiry time of magic link. For Example: September 8, 2022 01:59:46 PM BST<br><br>
+    <b>{{time_relative}}</b><br>Will be replaced with relative expiry time of magic link. For Example: 3 Weeks<br><br>
 </div>
 <!-- Message -->
 
@@ -70,43 +103,3 @@
     Select sending channel to be used, in order to dispatch messages to assigned users and team members.
 </div>
 <!-- Sending Channel -->
-
-<!-- Links Expire Within -->
-<div id="ml_links_right_docs_links_expire_title" style="display: none;">
-    Links Expire Within
-</div>
-<div id="ml_links_right_docs_links_expire_content" style="display: none;">
-    Specify when actual DT user magic links will expire and are no longer accessible.
-    <br><br>
-    Alternatively, select the Never Expires options if DT user magic links are to be kept alive indefinitely.
-    <br><br>
-    This setting is relative to a base timestamp; which is updated during any of the following events:
-    <ul>
-        <li>1. When a link object is newly created.</li>
-        <li>2. When auto refresh is enabled and executed during a scheduled run.</li>
-        <li>3. When a manual refresh is triggered for all assigned user links.</li>
-        <li>4. When a Send Now request is triggered.</li>
-    </ul>
-</div>
-<!-- Links Expire Within -->
-
-<!-- Links Expire On -->
-<div id="ml_links_right_docs_links_expire_on_title" style="display: none;">
-    Links Expire On
-</div>
-<div id="ml_links_right_docs_links_expire_on_content" style="display: none;">
-    Anticipated date when current DT user magic links will expire and will no longer be accessible.
-</div>
-<!-- Links Expire On -->
-
-<!-- Links Expiry Auto-Refresh Enabled -->
-<div id="ml_links_right_docs_auto_refresh_title" style="display: none;">
-    Links Expiry Auto-Refresh Enabled
-</div>
-<div id="ml_links_right_docs_auto_refresh_content" style="display: none;">
-    If DT user magic links have been scheduled to expire, then enabling auto-refresh will ensure new links are generated
-    on expiration.
-    <br><br>
-    Alternatively, disabling auto-refresh will ensure expired DT user magic links remain inaccessible.
-</div>
-<!-- Links Expiry Auto-Refresh Enabled -->
