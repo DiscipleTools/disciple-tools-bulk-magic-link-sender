@@ -42,7 +42,7 @@ class Disciple_Tools_Magic_Links_Templates_Loader {
     } // End instance()
 
     public function __construct() {
-        add_action( "after_setup_theme", function (){
+        add_action( "after_setup_theme", function () {
             self::load_templates();
         }, 200 );
     }
@@ -174,6 +174,9 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         wp_enqueue_script( 'jquery-typeahead', get_template_directory_uri() . $path_js, [ 'jquery' ], filemtime( get_template_directory() . $path_js ) );
         wp_enqueue_style( 'jquery-typeahead-css', get_template_directory_uri() . $path_css, [], filemtime( get_template_directory() . $path_css ) );
 
+        wp_enqueue_style( 'toastify-js-css', 'https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.css', [], '1.12.0' );
+        wp_enqueue_script( 'toastify-js', 'https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.js', [ 'jquery' ], '1.12.0' );
+
         wp_enqueue_style( 'material-font-icons-css', 'https://cdn.jsdelivr.net/npm/@mdi/font@6.6.96/css/materialdesignicons.min.css', [], '6.6.96' );
     }
 
@@ -184,6 +187,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         $allowed_js[] = 'mapbox-cookie';
         $allowed_js[] = 'mapbox-search-widget';
         $allowed_js[] = 'jquery-typeahead';
+        $allowed_js[] = 'toastify-js';
 
         return $allowed_js;
     }
@@ -194,6 +198,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         $allowed_css[] = 'mapbox-gl-css';
         $allowed_css[] = 'jquery-typeahead-css';
         $allowed_css[] = 'material-font-icons-css';
+        $allowed_css[] = 'toastify-js-css';
 
         return $allowed_css;
     }
@@ -283,15 +288,16 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         ?>
         <script>
             let jsObject = [<?php echo json_encode( [
-                'root'         => esc_url_raw( rest_url() ),
-                'nonce'        => wp_create_nonce( 'wp_rest' ),
-                'parts'        => $this->parts,
-                'post'         => $this->post,
-                'translations' => [
+                'root'                    => esc_url_raw( rest_url() ),
+                'nonce'                   => wp_create_nonce( 'wp_rest' ),
+                'parts'                   => $this->parts,
+                'post'                    => $this->post,
+                'template'                => $this->template,
+                'translations'            => [
                     'regions_of_focus' => __( 'Regions of Focus', 'disciple_tools' ),
                     'all_locations'    => __( 'All Locations', 'disciple_tools' )
                 ],
-                'mapbox'       => [
+                'mapbox'                  => [
                     'map_key'        => DT_Mapbox_API::get_key(),
                     'google_map_key' => Disciple_Tools_Google_Geocode_API::get_key(),
                     'translations'   => [
@@ -300,8 +306,8 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                         'use'             => __( 'Use', 'disciple_tools' ),
                         'open_modal'      => __( 'Open Modal', 'disciple_tools' )
                     ]
-                ]
-
+                ],
+                'submit_success_function' => Disciple_Tools_Bulk_Magic_Link_Sender_API::get_link_submission_success_js_code()
             ] ) ?>][0]
 
             console.log(jsObject);
@@ -768,6 +774,8 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                     let payload = {
                         'action': 'get',
                         'parts': jsObject.parts,
+                        'template_name': jsObject.template['name'] ?? '',
+                        'send_submission_notifications': jsObject.template['send_submission_notifications'] ?? true,
                         'post_id': id,
                         'post_type': post_type,
                         'fields': {
@@ -910,7 +918,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
 
                         // If successful, refresh page, otherwise; display error message
                         if (data['success']) {
-                            window.location.reload();
+                            Function(jsObject.submit_success_function)();
 
                         } else {
                             jQuery('#error').html(data['message']);
@@ -995,10 +1003,10 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                 if ( $field['enabled'] && $this->is_link_obj_field_enabled( $field['id'] ) ) {
 
                                     $post_field_type = '';
-                                    if ( $field['type'] === 'dt' && isset( $this->post_field_settings[$field['id']]['type'] ) ){
+                                    if ( $field['type'] === 'dt' && isset( $this->post_field_settings[ $field['id'] ]['type'] ) ) {
                                         $post_field_type = $this->post_field_settings[ $field['id'] ]['type'];
                                     }
-                                    if ( empty( $post_field_type ) ){
+                                    if ( empty( $post_field_type ) ) {
                                         continue;
                                     }
 
@@ -1286,6 +1294,13 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                     ];
                 }
             }
+        }
+
+        // Next, dispatch submission notification, accordingly; always send by default.
+        if ( $params['send_submission_notifications'] && isset( $updated_post['assigned_to'], $updated_post['assigned_to']['id'], $updated_post['assigned_to']['display'] ) ) {
+            $default_comment = sprintf( __( '%s Updates Submitted', 'disciple_tools' ), $params['template_name'] );
+            $submission_comment = '@[' . $updated_post['assigned_to']['display'] . '](' . $updated_post['assigned_to']['id'] . ') ' . $default_comment;
+            DT_Posts::add_post_comment( $updated_post['post_type'], $updated_post['ID'], $submission_comment, 'comment', [], false );
         }
 
         // Finally, return successful response

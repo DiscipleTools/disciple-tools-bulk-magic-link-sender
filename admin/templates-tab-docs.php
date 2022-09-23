@@ -9,6 +9,15 @@
 </div>
 <!-- Custom Fields -->
 
+<!-- Send Submission Notifications -->
+<div id="ml_templates_right_docs_send_submission_notifications_title" style="display: none;">
+    Send Submission Notifications
+</div>
+<div id="ml_templates_right_docs_send_submission_notifications_content" style="display: none;">
+    When the user submits the magic link, a comment will be added to corresponding record @mentioning the assigned-to user (if there is one).
+</div>
+<!-- Send Submission Notifications -->
+
 <!-- Message -->
 <div id="ml_templates_right_docs_message_title" style="display: none;">
     Message

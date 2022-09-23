@@ -1290,6 +1290,20 @@ Thanks!';
         }
     }
 
+    public static function get_link_submission_success_js_code() {
+        return '
+            Toastify({
+                text: "' . __( 'Update Successful!', 'disciple-tools-bulk-magic-link-sender' ) . '",
+                close: true,
+                gravity: "bottom",
+                callback: function() {
+                    window.location.reload();
+                }
+
+            }).showToast();
+        ';
+    }
+
     public static function refresh_user_links_expiration_values( $user, $base_ts, $amt, $time_unit, $never_expires ) {
         $user->links_expire_within_base_ts  = $base_ts;
         $user->links_expire_on_ts           = self::determine_links_expiry_point( $amt, $time_unit, $base_ts );
@@ -1297,5 +1311,4 @@ Thanks!';
 
         return $user;
     }
-
 }
