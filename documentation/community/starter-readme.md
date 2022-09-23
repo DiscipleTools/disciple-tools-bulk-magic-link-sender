@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.com/DiscipleTools/disciple-tools-bulk-magic-link-sender.svg?branch=master)](https://travis-ci.com/DiscipleTools/disciple-tools-bulk-magic-link-sender)
 
-# Disciple Tools - Bulk Magic Link Sender
+# Disciple Tools - Magic Links
 
 __Kick start your Disciple.Tools plugin project with this template!__
 

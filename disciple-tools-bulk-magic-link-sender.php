@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: Disciple Tools - Bulk Magic Link Sender
+ * Plugin Name: Disciple Tools - Magic Links
  * Plugin URI: https://github.com/DiscipleTools/disciple-tools-bulk-magic-link-sender
- * Description: Disciple Tools - Bulk magic link sender for users, contacts, groups and teams assignment + schedule management for magic links dispatching over configured sending channels.
+ * Description: Disciple Tools - Magic Links for users, contacts, groups and teams assignment + schedule management for magic links dispatching over configured sending channels.
  * Text Domain: disciple-tools-bulk-magic-link-sender
  * Domain Path: /languages
  * Version:  1.7.8
@@ -225,7 +225,7 @@ if ( ! function_exists( 'disciple_tools_magic_links_hook_admin_notice' ) ) {
         global $disciple_tools_magic_links_required_dt_theme_version;
         $wp_theme        = wp_get_theme();
         $current_version = $wp_theme->version;
-        $message         = "'Disciple Tools - Bulk Magic Link Sender' plugin requires 'Disciple Tools' theme to work. Please activate 'Disciple Tools' theme or make sure it is latest version.";
+        $message         = "'Disciple Tools - Magic Links' plugin requires 'Disciple Tools' theme to work. Please activate 'Disciple Tools' theme or make sure it is latest version.";
         if ( $wp_theme->get_template() === "disciple-tools-theme" ) {
             $message .= ' ' . sprintf( esc_html( 'Current Disciple Tools version: %1$s, required version: %2$s' ), esc_html( $current_version ), esc_html( $disciple_tools_magic_links_required_dt_theme_version ) );
         }
@@ -333,7 +333,7 @@ add_action( 'tgmpa_register', function () {
         // Show admin notices or not.
         'dismissable'  => true,
         // If false, a user cannot dismiss the nag message.
-        'dismiss_msg'  => 'These are recommended plugins to complement your disciple tools bulk magic link sender plugin.',
+        'dismiss_msg'  => 'These are recommended plugins to complement your disciple tools Magic Links plugin.',
         // If 'dismissable' is false, this message will be output at top of nag.
         'is_automatic' => true,
         // Automatically activate plugins after installation or not.

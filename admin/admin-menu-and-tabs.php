@@ -47,7 +47,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Menu {
      * @since 0.1
      */
     public function register_menu() {
-        add_submenu_page( 'dt_extensions', 'Bulk Magic Link Sender', 'Bulk Magic Link Sender', 'manage_dt', $this->token, [
+        add_submenu_page( 'dt_extensions', 'Magic Links', 'Magic Links', 'manage_dt', $this->token, [
             $this,
             'content'
         ] );
@@ -79,7 +79,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Menu {
 
         ?>
         <div class="wrap">
-            <h2>DISCIPLE TOOLS : BULK MAGIC LINK SENDER</h2>
+            <h2>DISCIPLE TOOLS : Magic Links</h2>
             <h2 class="nav-tab-wrapper">
                 <a href="<?php echo esc_attr( $link ) . 'general' ?>"
                    class="nav-tab <?php echo esc_html( ( $tab == 'general' || ! isset( $tab ) ) ? 'nav-tab-active' : '' ); ?>">General</a>

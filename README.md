@@ -1,8 +1,8 @@
 [![Build Status](https://travis-ci.com/DiscipleTools/disciple-tools-bulk-magic-link-sender.svg?branch=master)](https://travis-ci.com/DiscipleTools/disciple-tools-bulk-magic-link-sender)
 
-# Disciple Tools - Bulk Magic link Sender
+# Disciple Tools - Magic Links
 
-Disciple Tools - Bulk magic link sender for users, contacts, groups and teams assignment + schedule management for magic links dispatching over configured sending channels.
+Disciple Tools - Magic Links for users, contacts, groups and teams assignment + schedule management for magic links dispatching over configured sending channels.
 
 ## Purpose
 
