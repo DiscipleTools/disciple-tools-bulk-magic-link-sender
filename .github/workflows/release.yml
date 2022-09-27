@@ -23,7 +23,7 @@ jobs:
       - name: Build project
         run: |
           mkdir disciple-tools-bulk-magic-link-sender
-          cp -r disciple-tools-bulk-magic-link-sender.php admin assets magic-link rest-api spinner.svg version-control.json LICENSE SECURITY.md disciple-tools-bulk-magic-link-sender/
+          cp -r disciple-tools-bulk-magic-link-sender.php admin assets includes languages magic-link rest-api spinner.svg version-control.json LICENSE SECURITY.md disciple-tools-bulk-magic-link-sender/
           zip -r disciple-tools-bulk-magic-link-sender.zip disciple-tools-bulk-magic-link-sender
       - name: Create Release
         id: create_release
