@@ -5,7 +5,7 @@
  * Description: Disciple Tools - Magic Links for users, contacts, groups and teams assignment + schedule management for magic links dispatching over configured sending channels.
  * Text Domain: disciple-tools-bulk-magic-link-sender
  * Domain Path: /languages
- * Version:  1.8
+ * Version:  1.8.1
  * Author URI: https://github.com/DiscipleTools
  * GitHub Plugin URI: https://github.com/DiscipleTools/disciple-tools-bulk-magic-link-sender
  * Requires at least: 4.7.0
@@ -105,7 +105,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender {
         }
 
         try {
-            require_once( plugin_dir_path( __FILE__ ) . '/includes/class-migration-engine.php' );
+            require_once( plugin_dir_path( __FILE__ ) . 'includes/class-migration-engine.php' );
             Disciple_Tools_Bulk_Magic_Link_Migration_Engine::migrate( Disciple_Tools_Bulk_Magic_Link_Migration_Engine::$migration_number );
 
         } catch ( Throwable $e ) {
