@@ -976,9 +976,9 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
             }
 
             $shared_attributes = '
-                  id=' . esc_attr( $display_field_id ) . '
-                  name=' . esc_attr( $field_key ) .'
-                  label=' . esc_attr( $fields[$field_key]["name"] ) . '
+                  id="' . esc_attr( $display_field_id ) . '"
+                  name="' . esc_attr( $field_key ) .'"
+                  label="' . esc_attr( $fields[$field_key]["name"] ) . '"
                   ' . esc_html( $icon ) . '
                   ' . esc_html( $required_tag ) . '
                   ' . esc_html( $disabled ) . '
@@ -987,7 +987,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
             if ( $field_type === "key_select" ) :
                 ?>
                 <dt-single-select class="select-field"
-                                  <?php echo esc_html( $shared_attributes ) ?>
+                                  <?php echo wp_kses_post( $shared_attributes ) ?>
                                   value="<?php echo esc_attr( key_exists( $field_key, $post ) ? $post[$field_key]["key"] : null ) ?>"
                                   options="<?php echo esc_attr( json_encode( $this->assoc_to_array( $fields[$field_key]["default"] ) ) ) ?>"
                               >
@@ -1003,7 +1003,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                 }, $post[$field_key] ?? []);
                 ?>
                 <dt-tags
-                    <?php echo esc_html( $shared_attributes ) ?>
+                    <?php echo wp_kses_post( $shared_attributes ) ?>
                     value="<?php echo esc_attr( json_encode( $value ) ) ?>"
                     placeholder="<?php echo esc_html( sprintf( _x( "Search %s", "Search 'something'", 'disciple_tools' ), $fields[$field_key]['name'] ) )?>"
                     allowAdd
@@ -1021,7 +1021,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                 $value = isset( $post[$field_key] ) ? $post[$field_key] : [];
                 ?>
                 <dt-multi-select
-                    <?php echo esc_html( $shared_attributes ) ?>
+                    <?php echo wp_kses_post( $shared_attributes ) ?>
                     value="<?php echo esc_attr( json_encode( $value ) ) ?>"
                     options="<?php echo esc_attr( json_encode( $options ) ) ?>"
                     placeholder="<?php echo esc_attr( sprintf( _x( "Search %s", "Search 'something'", 'disciple_tools' ), $fields[$field_key]['name'] ) )?>"
@@ -1032,21 +1032,21 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
 
             <?php elseif ( $field_type === "text" ) :?>
                 <dt-text
-                    <?php echo esc_html( $shared_attributes ) ?>
+                    <?php echo wp_kses_post( $shared_attributes ) ?>
                     value="<?php echo esc_html( $post[$field_key] ?? "" ) ?>"
                 >
                     <?php $this->render_icon_slot( $fields[$field_key] ) ?>
                 </dt-text>
             <?php elseif ( $field_type === "textarea" ) :?>
                 <dt-textarea
-                    <?php echo esc_html( $shared_attributes ) ?>
+                    <?php echo wp_kses_post( $shared_attributes ) ?>
                     value="<?php echo esc_html( $post[$field_key] ?? "" ) ?>"
                 >
                     <?php $this->render_icon_slot( $fields[$field_key] ) ?>
                 </dt-textarea>
             <?php elseif ( $field_type === "number" ) :?>
                 <dt-number
-                    <?php echo esc_html( $shared_attributes ) ?>
+                    <?php echo wp_kses_post( $shared_attributes ) ?>
                     value="<?php echo esc_html( $post[$field_key] ?? "" ) ?>" <?php echo esc_html( $disabled ); ?>
                     <?php echo isset( $fields[$field_key]["min_option"] ) && is_numeric( $fields[$field_key]["min_option"] ) ? 'min="' . esc_html( $fields[$field_key]["min_option"] ?? "" ) . '"' : '' ?>
                     <?php echo isset( $fields[$field_key]["max_option"] ) && is_numeric( $fields[$field_key]["max_option"] ) ? 'max="' . esc_html( $fields[$field_key]["max_option"] ?? "" ) . '"' : '' ?>
@@ -1055,7 +1055,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                 </dt-number>
             <?php elseif ( $field_type === "date" ) :?>
                 <dt-date
-                    <?php echo esc_html( $shared_attributes ) ?>
+                    <?php echo wp_kses_post( $shared_attributes ) ?>
                     timestamp="<?php echo esc_html( $post[$field_key]["timestamp"] ?? '' ) ?>"
                 >
                     <?php $this->render_icon_slot( $fields[$field_key] ) ?>
@@ -1072,7 +1072,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                 }, $post[$field_key] ?? []);
                 ?>
                 <dt-connection
-                    <?php echo esc_html( $shared_attributes ) ?>
+                    <?php echo wp_kses_post( $shared_attributes ) ?>
                     value="<?php echo esc_attr( json_encode( $value ) ) ?>"
                     data-posttype="<?php echo esc_attr( $fields[$field_key]["post_type"] ) ?>"
                     allowAdd
@@ -1099,7 +1099,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                 ];
                 ?>
                 <dt-location
-                    <?php echo esc_html( $shared_attributes ) ?>
+                    <?php echo wp_kses_post( $shared_attributes ) ?>
                     value="<?php echo esc_attr( json_encode( $value ) ) ?>"
                     filters="<?php echo esc_attr( json_encode( $filters ) ) ?>"
                     placeholder="<?php echo esc_html( sprintf( _x( "Search %s", "Search 'something'", 'disciple_tools' ), $fields[$field_key]['name'] ) )?>"
