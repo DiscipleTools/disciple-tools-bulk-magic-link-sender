@@ -68,6 +68,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
                                             'location',
                                             'connection',
                                         ];
+                                        $excluded_fields = [ 'last_modified', 'post_date' ];
                                         foreach ( $field_settings as $key => $value ) {
                                             // only allow supported field types
                                             if ( !in_array( $value['type'], $supported_types ) ) {
@@ -77,8 +78,8 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
                                             if ( isset( $value['hidden'] ) && $value['hidden'] ) {
                                                 continue;
                                             }
-                                            // ignore custom_display fields
-                                            if ( isset( $value['hidden'] ) && $value['hidden'] ) {
+                                            // ignore excluded system fields
+                                            if ( in_array( $key, $excluded_fields ) ) {
                                                 continue;
                                             }
                                             $refreshed_fields[] = [
