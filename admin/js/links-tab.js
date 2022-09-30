@@ -408,6 +408,17 @@ jQuery(function ($) {
             config_table.find('tr.supports_create input[type=checkbox]').prop('checked', checked);
           }
 
+          if (type_obj['meta']['supports_logo'] ) {
+            config_table.find('tr.display_logo').show();
+            let checked = false;
+            let link_obj = fetch_link_obj($('#ml_main_col_available_link_objs_select').val());
+            if (link_obj && link_obj['type_config'] && link_obj['type_config']['display_logo']) {
+              checked = true;
+              has_config = true;
+            }
+            config_table.find('tr.display_logo input[type=checkbox]').prop('checked', checked);
+          }
+
           if (has_config) {
             config_table.show();
           }
