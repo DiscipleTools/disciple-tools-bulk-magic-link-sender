@@ -61,15 +61,20 @@ jQuery(function ($) {
   $(document).on('click', '.ml-links-docs', function (evt) {
     handle_docs_request($(evt.currentTarget).data('title'), $(evt.currentTarget).data('content'));
   });
+
   $(document).on('click', '#ml_main_col_link_manage_links_but_refresh', function () {
     handle_assigned_user_links_management('refresh', function () {
     });
   });
+
   $(document).on('click', '#ml_main_col_link_manage_links_but_delete', function () {
     handle_assigned_user_links_management('delete', function () {
     });
   });
 
+  $(document).on('click', '.enable_connection_fields input:checkbox', function (evt) {
+    handle_enable_connection_fields_config_selection(evt.currentTarget);
+  });
 
   // Helper Functions
   function handle_delete_request() {
@@ -321,8 +326,9 @@ jQuery(function ($) {
     return (type_key && type_key.includes('templates_'));
   }
 
-  function build_magic_link_type_field_html(type_key, id, label) {
+  function build_magic_link_type_field_html(type_key, id, label, field_type) {
     return `<tr>
+              <input id="ml_main_col_ml_type_fields_table_row_field_type" type="hidden" value="${field_type}">
               <input id="ml_main_col_ml_type_fields_table_row_field_id" type="hidden" value="${id}">
               <td>${window.lodash.escape(label)}</td>
               <td><input id="ml_main_col_ml_type_fields_table_row_field_enabled" type="checkbox" ${is_magic_link_type_field_enabled(type_key, id, fetch_link_obj($('#ml_main_col_available_link_objs_select').val())) ? 'checked' : ''}></td>
@@ -338,7 +344,10 @@ jQuery(function ($) {
     fields_table.fadeOut('fast', function () {
       fields_table.find('tbody > tr').remove();
       config_table.show();
+
+      // Hide all, but ensure default configs still show
       config_table.find('tbody > tr').hide();
+      config_table.find('tbody > tr.default_config').show();
 
       // Distinguish between regular magic link types and templates
       if (is_template(type_key)) {
@@ -349,7 +358,7 @@ jQuery(function ($) {
           // Ignore disabled fields
           $.each(template['fields'], function (idx, field) {
             if (field['enabled']) {
-              fields_table.find('tbody:last').append(build_magic_link_type_field_html(type_key, field['id'], field['label']));
+              fields_table.find('tbody:last').append(build_magic_link_type_field_html(type_key, field['id'], field['label'], ''));
             }
           });
 
@@ -365,7 +374,7 @@ jQuery(function ($) {
           // Refresh fields list accordingly
           type_obj['meta']['fields'].forEach(function (field, field_idx) {
             if (field['id'] && field['label']) {
-              fields_table.find('tbody:last').append(build_magic_link_type_field_html(type_key, field['id'], field['label']));
+              fields_table.find('tbody:last').append(build_magic_link_type_field_html(type_key, field['id'], field['label'], field['field_type']));
             }
           });
 
@@ -374,10 +383,24 @@ jQuery(function ($) {
 
           // Show config settings
           let has_config = false;
-          if (type_obj['meta']['supports_create'] ) {
+          let link_obj = fetch_link_obj($('#ml_main_col_available_link_objs_select').val());
+
+          // enable_connection_fields
+          let enable_connection_fields_tr = config_table.find('tr.enable_connection_fields');
+          let enable_connection_fields_tr_checkbox = config_table.find('tr.enable_connection_fields input[type=checkbox]');
+          if (link_obj && link_obj['type_config']) {
+            has_config = true;
+            enable_connection_fields_tr.show();
+            enable_connection_fields_tr_checkbox.prop('checked', link_obj['type_config']['enable_connection_fields']);
+          }
+
+          // Adjust connection field enabled states accordingly
+          handle_enable_connection_fields_config_selection(enable_connection_fields_tr_checkbox);
+
+          // supports_create
+          if (type_obj['meta']['supports_create']) {
             config_table.find('tr.supports_create').show();
             let checked = false;
-            let link_obj = fetch_link_obj($('#ml_main_col_available_link_objs_select').val());
             if (link_obj && link_obj['type_config'] && link_obj['type_config']['supports_create']) {
               checked = true;
               has_config = true;
@@ -1058,10 +1081,12 @@ jQuery(function ($) {
     let type_fields = [];
     $('#ml_main_col_ml_type_fields_table').find('tbody > tr').each(function (idx, tr) {
       let id = $(tr).find('#ml_main_col_ml_type_fields_table_row_field_id').val();
+      let type = $(tr).find('#ml_main_col_ml_type_fields_table_row_field_type').val();
       let enabled = $(tr).find('#ml_main_col_ml_type_fields_table_row_field_enabled').prop('checked');
 
       type_fields.push({
         'id': id,
+        'type': type,
         'enabled': enabled
       });
     });
@@ -1335,5 +1360,16 @@ jQuery(function ($) {
     }
   }
 
+  function handle_enable_connection_fields_config_selection(config_checkbox) {
+    let enabled = $(config_checkbox).prop('checked');
+    $('#ml_main_col_ml_type_fields_table').find('tbody > tr').each(function (idx, tr) {
+      if ($(tr).find('#ml_main_col_ml_type_fields_table_row_field_type').val() == 'connection') {
+
+        // Adjust connection field enabled states accordingly
+        $(tr).find('#ml_main_col_ml_type_fields_table_row_field_enabled').prop('checked', enabled);
+        $(tr).find('#ml_main_col_ml_type_fields_table_row_field_enabled').prop('disabled', !enabled);
+      }
+    });
+  }
 
 });

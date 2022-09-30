@@ -82,8 +82,9 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
                                                 continue;
                                             }
                                             $refreshed_fields[] = [
-                                                'id' => $key,
-                                                'label' => $value['name'],
+                                                'id'         => $key,
+                                                'label'      => $value['name'],
+                                                'field_type' => $value['type'],
                                             ];
                                         }
                                     }
@@ -92,6 +93,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
                                     foreach ( $type['meta']['fields'] ?? [] as $field ) {
                                         if ( ! in_array( $field['id'], $type['meta']['fields_refresh']['ignore_ids'] ) ) {
                                             $field['label'] = $field_settings[ $field['id'] ]['name'];
+                                            $field['field_type'] = $field_settings[ $field['id'] ]['type'];
                                         }
                                         $refreshed_fields[] = $field;
                                     }

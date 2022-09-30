@@ -468,6 +468,11 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
         ?>
         <table class="widefat striped" id="ml_main_col_ml_type_config_table" style="margin-bottom: 1rem;">
             <tbody>
+                <tr class="enable_connection_fields default_config">
+                    <input id="ml_main_col_ml_type_config_table_row_field_id" type="hidden" value="enable_connection_fields">
+                    <td><?php esc_html_e( "Enable connection field types", 'disciple_tools' ) ?></td>
+                    <td><input id="ml_main_col_ml_type_config_table_row_field_enabled" type="checkbox"></td>
+                </tr>
                 <tr class="supports_create">
                     <input id="ml_main_col_ml_type_config_table_row_field_id" type="hidden" value="supports_create">
                     <td><?php esc_html_e( "Support creating new items", 'disciple_tools' ) ?></td>
