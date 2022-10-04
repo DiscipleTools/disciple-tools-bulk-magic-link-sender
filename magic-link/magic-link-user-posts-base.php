@@ -57,6 +57,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
             'post_type'      => $this->post_type,
             'contacts_only'  => false,
             'supports_create' => true,
+            'supports_logo'  => true,
             'fields'         => $fields,
             'fields_refresh' => [
                 'enabled'    => true,
@@ -228,6 +229,19 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
             body {
                 background-color: white;
                 padding: 1em;
+            }
+
+            header {
+                min-height: 30px;
+                position: relative;
+            }
+            header .logo {
+                max-height: 30px;
+                position: absolute;
+                left: 0;
+            }
+            header h2 {
+                text-align: center;
             }
 
             .api-content-div-style {
@@ -849,14 +863,22 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         // Revert back to dt translations
         $this->hard_switch_to_default_dt_text_domain();
         $link_obj = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $this->fetch_incoming_link_param( 'id' ) );
+
+        $display_logo = isset( $link_obj ) && property_exists( $link_obj, 'type_config' ) && property_exists( $link_obj->type_config, 'display_logo' ) && $link_obj->type_config->display_logo;
+        $logo_url = get_template_directory_uri() . '/dt-assets/images/disciple-tools-logo-white.png';
+        $custom_logo_url = get_option( 'custom_logo_url' );
+        if ( !empty( $custom_logo_url ) ) {
+            $logo_url = $custom_logo_url;
+        }
         ?>
         <div id="custom-style"></div>
         <div id="wrapper">
-            <div class="grid-x">
-                <div class="cell center">
-                    <h2 id="title"><b><?php esc_html_e( 'Updates Needed', 'disciple_tools' ) ?></b></h2>
-                </div>
-            </div>
+            <header>
+                <?php if ( $display_logo ): ?>
+                    <img src="<?php echo esc_attr( $logo_url ) ?>" class="logo" />
+                <?php endif; ?>
+                <h2 id="title"><b><?php esc_html_e( 'Updates Needed', 'disciple_tools' ) ?></b></h2>
+            </header>
             <hr>
             <div id="content">
                 <div id="assigned_posts_div" style="display: none;">
