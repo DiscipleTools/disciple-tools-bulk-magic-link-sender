@@ -465,12 +465,17 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
     }
 
     private function main_column_ml_type_fields() {
+        $logo_url = $dt_nav_tabs['admin']['site']['icon'] ?? get_template_directory_uri() . '/dt-assets/images/disciple-tools-logo-white.png';
+        $custom_logo_url = get_option( 'custom_logo_url' );
+        if ( !empty( $custom_logo_url ) ) {
+            $logo_url = $custom_logo_url;
+        }
         ?>
         <table class="widefat striped" id="ml_main_col_ml_type_config_table" style="margin-bottom: 1rem;">
             <tbody>
                 <tr class="display_logo">
                     <input id="ml_main_col_ml_type_config_table_row_field_id" type="hidden" value="display_logo">
-                    <td><?php esc_html_e( "Display Site Logo", 'disciple_tools' ) ?></td>
+                    <td><?php esc_html_e( "Display Site Logo", 'disciple_tools' ) ?><img style="height:15px; margin-inline-start: 5px" src="<?php echo esc_html( $logo_url ) ?>"/></td>
                     <td><input id="ml_main_col_ml_type_config_table_row_field_enabled" type="checkbox"></td>
                 </tr>
                 <tr class="supports_create">
