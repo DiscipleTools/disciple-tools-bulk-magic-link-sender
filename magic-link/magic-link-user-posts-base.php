@@ -171,6 +171,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
     public function dt_magic_url_base_allowed_js( $allowed_js ) {
         // @todo add or remove js files with this filter
         // example: $allowed_js[] = 'your-enqueue-handle';
+        $allowed_js[] = 'google-search-widget';
         $allowed_js[] = 'mapbox-gl';
         $allowed_js[] = 'mapbox-cookie';
         $allowed_js[] = 'mapbox-search-widget';

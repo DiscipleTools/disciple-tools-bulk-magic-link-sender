@@ -66,6 +66,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
                                             'multi_select',
                                             'tags',
                                             'location',
+                                            'location_meta',
                                             'connection',
                                         ];
                                         $excluded_fields = [ 'last_modified', 'post_date' ];
