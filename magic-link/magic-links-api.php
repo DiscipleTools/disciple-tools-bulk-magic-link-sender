@@ -326,7 +326,9 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
 
             $link_objs = [];
             foreach ( json_decode( $option ) as $id => $link_obj ) {
-                $link_objs[ $link_obj->id ] = $link_obj;
+                if ( isset( $link_obj->id ) ){
+                    $link_objs[ $link_obj->id ] = $link_obj;
+                }
             }
 
             return (object) $link_objs;
