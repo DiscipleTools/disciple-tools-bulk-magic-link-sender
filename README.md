@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/DiscipleTools/disciple-tools-bulk-magic-link-sender.svg?branch=master)](https://travis-ci.com/DiscipleTools/disciple-tools-bulk-magic-link-sender)
+![Build Status](https://github.com/DiscipleTools/disciple-tools-bulk-magic-link-sender/actions/workflows/ci.yml/badge.svg?branch=master)
 
 # Disciple Tools - Magic Links
 
