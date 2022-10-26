@@ -784,6 +784,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                         field: detail.field,
                         filter: detail.filter,
                         query: detail.query,
+                        link_obj_id: jsObject.link_obj_id['id'],
                         ts: moment().unix() // Alter url shape, so as to force cache refresh!
                     },
                     contentType: "application/json; charset=utf-8",
@@ -1645,7 +1646,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
 
     public function get_field_options( WP_REST_Request $request ) {
         $params = $request->get_params();
-        if ( ! isset( $params['parts'], $params['action'], $params['field'], $params['sys_type'] ) ) {
+        if ( ! isset( $params['parts'], $params['action'], $params['field'], $params['sys_type'], $params['link_obj_id'] ) ) {
             return new WP_Error( __METHOD__, "Missing parameters", [ 'status' => 400 ] );
         }
 
@@ -1658,16 +1659,18 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         }
         $this->determine_language_locale( $params["parts"] );
 
-        $options = [];
+        // Fetch parent link object.
+        $link_obj = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $params['link_obj_id'] );
 
         // get available post options for current field
+        $options = [];
         $field = $params['field'];
         $query = isset( $params['query'] ) ? $params['query'] : "";
         $post_settings = DT_Posts::get_post_settings( $this->sub_post_type );
         if ( key_exists( $field, $post_settings['fields'] ) ) {
             $field_settings = $post_settings['fields'][$field];
 
-            if ( $field_settings['type'] === 'connection' ) {
+            if ( ( $field_settings['type'] === 'connection' ) && ( isset( $link_obj->type_config->enable_connection_fields ) && $link_obj->type_config->enable_connection_fields ) ) {
                 $options = DT_Posts::get_viewable_compact( $field_settings['post_type'], $query ?? "" );
             } else if ( $field_settings['type'] === 'tags' ) {
                 $options = DT_Posts::get_multi_select_options( $this->sub_post_type, $field, $query );
