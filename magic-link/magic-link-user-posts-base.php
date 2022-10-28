@@ -318,7 +318,8 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                     dataType: "json",
                     url: jsObject.root + jsObject.parts.root + '/v1/' + jsObject.parts.type,
                     beforeSend: function (xhr) {
-                        xhr.setRequestHeader('X-WP-Nonce', jsObject.nonce)
+                        xhr.setRequestHeader('X-WP-Nonce', jsObject.nonce);
+                        xhr.setRequestHeader('Cache-Control', 'no-store');
                     }
                 })
                     .done(function (data) {
