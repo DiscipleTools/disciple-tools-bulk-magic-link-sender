@@ -347,7 +347,6 @@ jQuery(function ($) {
 
       // Hide all, but ensure default configs still show
       config_table.find('tbody > tr').hide();
-      config_table.find('tbody > tr.default_config').show();
 
       // Distinguish between regular magic link types and templates
       if (is_template(type_key)) {
@@ -425,10 +424,32 @@ jQuery(function ($) {
         }
       }
 
+      // Final config table setting adjustments.
+      adjust_config_table_settings();
+
       // Display fields table
       fields_table.fadeIn('fast');
 
     });
+  }
+
+  function adjust_config_table_settings() {
+    let config_table = $('#ml_main_col_ml_type_config_table');
+    let fields_table = $('#ml_main_col_ml_type_fields_table');
+
+    // Display all default config settings.
+    config_table.find('tbody > tr.default_config').show();
+
+    // Determine if enable_connection_fields config should be displayed - Are there any connection fields?
+    let display_config_enable_connection_fields = false;
+    fields_table.find('tbody > tr > #ml_main_col_ml_type_fields_table_row_field_type').each(function (idx, field_type) {
+      if ($(field_type).val() === 'connection') {
+        display_config_enable_connection_fields = true;
+      }
+    });
+    if (!display_config_enable_connection_fields) {
+      config_table.find('tbody > tr.enable_connection_fields').hide();
+    }
   }
 
   function adjust_assigned_selector_by_magic_link_type(contacts_only) {
@@ -1374,7 +1395,7 @@ jQuery(function ($) {
   function handle_enable_connection_fields_config_selection(config_checkbox) {
     let enabled = $(config_checkbox).prop('checked');
     $('#ml_main_col_ml_type_fields_table').find('tbody > tr').each(function (idx, tr) {
-      if ($(tr).find('#ml_main_col_ml_type_fields_table_row_field_type').val() == 'connection') {
+      if ($(tr).find('#ml_main_col_ml_type_fields_table_row_field_type').val() === 'connection') {
 
         // Adjust connection field enabled states accordingly
         $(tr).find('#ml_main_col_ml_type_fields_table_row_field_enabled').prop('checked', enabled);
