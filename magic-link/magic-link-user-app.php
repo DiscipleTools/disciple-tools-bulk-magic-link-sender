@@ -302,7 +302,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                 if (data['posts']) {
                     data['posts'].forEach(v => {
 
-                        let html = `<tr onclick="get_assigned_contact_details('${window.lodash.escape(v.id)}', '${window.lodash.escape(v.name)}');">
+                        let html = `<tr onclick="get_assigned_contact_details('${window.lodash.escape(v.id)}', '${window.lodash.escape(window.lodash.replace(v.name, "'", "&apos;"))}');">
                                 <td>${window.lodash.escape(v.name)}</td>
                             </tr>`;
 
