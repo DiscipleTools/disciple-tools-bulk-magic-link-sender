@@ -45,7 +45,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends Disciple_Tools_Ma
         ?>
         <script>
             window.format_post_row = (post) => {
-                return `<tr onclick="get_assigned_post_details('${window.lodash.escape(post.id)}', '${window.lodash.escape(post.name)}');">
+                return `<tr onclick="get_assigned_post_details('${window.lodash.escape(post.id)}', '${window.lodash.escape(window.lodash.replace(post.name, "'", "&apos;"))}');">
                     <td>${window.lodash.escape(post.name)}</td>
                     <td>${post.group_status ? window.lodash.escape(post.group_status.label) : ''}</td>
                     <td class="last-update"><?php esc_html_e( "Updated", 'disciple_tools' ) ?>: ${window.lodash.escape(post.last_modified.formatted)}</td>
