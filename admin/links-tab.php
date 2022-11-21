@@ -26,12 +26,18 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
         dt_theme_enqueue_script( 'typeahead-jquery', 'dt-core/dependencies/typeahead/dist/jquery.typeahead.min.js', array( 'jquery' ), true );
         dt_theme_enqueue_style( 'typeahead-jquery-css', 'dt-core/dependencies/typeahead/dist/jquery.typeahead.min.css', array() );
 
+        wp_register_style( 'jquery-ui', 'https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.css', [], '1.12.1' );
+        wp_enqueue_style( 'jquery-ui' );
+
         wp_enqueue_script( 'dt_magic_links_script', plugin_dir_url( __FILE__ ) . 'js/links-tab.js', [
             'jquery',
             'lodash',
             'moment',
             'daterangepicker-js',
-            'typeahead-jquery'
+            'typeahead-jquery',
+            'jquery-ui-core',
+            'jquery-ui-sortable',
+            'jquery-ui-dialog'
         ], filemtime( dirname( __FILE__ ) . '/js/links-tab.js' ), true );
 
         wp_localize_script(
@@ -570,6 +576,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
         Currently Assigned Users, Teams & Groups
         <hr>
 
+        <dialog id="ml_main_col_assign_users_teams_table_dialog"></dialog>
         <table class="widefat striped" id="ml_main_col_assign_users_teams_table">
             <thead>
             <tr>
@@ -579,7 +586,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                 <th>Email</th>
                 <th>Link</th>
                 <th>Expires</th>
-                <th></th>
+                <th>Options</th>
             </tr>
             </thead>
             <tbody>

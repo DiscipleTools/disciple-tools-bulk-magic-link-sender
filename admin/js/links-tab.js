@@ -22,8 +22,8 @@ jQuery(function ($) {
     });
   });
 
-  $(document).on('click', '.ml-main-col-assign-users-teams-table-row-remove-but', function (e) {
-    handle_remove_users_teams_request(e);
+  $(document).on('change', '.ml-main-col-assign-users-teams-table-row-options', function (e) {
+    handle_assigned_users_teams_table_row_options(e);
   });
 
   $(document).on('click', '#ml_main_col_update_but', function () {
@@ -865,7 +865,12 @@ jQuery(function ($) {
                   </td>
                   <td style="vertical-align: middle;">
                     <span style="float:right;">
-                        <button type="submit" class="button float-right ml-main-col-assign-users-teams-table-row-remove-but">Remove</button>
+                        <select class="ml-main-col-assign-users-teams-table-row-options">
+                            <option value="" selected>...</option>
+                            <option value="view">View</option>
+                            <option value="remove">Remove</option>
+                            <option value="extend">Extend</option>
+                        </select>
                     </span>
                   </td>
                 </tr>`;
@@ -926,11 +931,117 @@ jQuery(function ($) {
     return record;
   }
 
-  function handle_remove_users_teams_request(evt) {
-    let removed_rows = [];
+  function handle_assigned_users_teams_table_row_options(evt) {
 
-    // Obtain handle onto deleted row
+    // Obtain various handles.
     let row = evt.currentTarget.parentNode.parentNode.parentNode;
+    let options = $(evt.currentTarget);
+
+    // Determine suitable option action to be taken.
+    switch (options.val()) {
+      case 'view': {
+
+        // Attempt to get a handle onto existing link view button.
+        let link = $(row).find('#ml_main_col_assign_users_teams_table_row_td_link a[href != ""]');
+        if (link && $(link).attr('href')) {
+          window.open($(link).attr('href'), '_blank');
+        }
+        break;
+      }
+      case 'remove': {
+        if (confirm('Are you sure you wish to remove?')) {
+          handle_remove_users_teams_request(row);
+        }
+        break;
+      }
+      case 'extend': {
+        let dialog = $('#ml_main_col_assign_users_teams_table_dialog');
+
+        // Fetch existing timestamps.
+        let link_expires = $(row).find('#ml_main_col_assign_users_teams_table_row_td_link_expires');
+        let link_expires_base_ts = $(link_expires).find('#ml_main_col_assign_users_teams_table_row_td_link_expires_base_ts');
+        let link_expires_on_ts = $(link_expires).find('#ml_main_col_assign_users_teams_table_row_td_link_expires_on_ts');
+        let link_expires_on_ts_formatted = $(link_expires).find('#ml_main_col_assign_users_teams_table_row_td_link_expires_on_ts_formatted');
+
+        // Generate dialog html.
+        let html = `
+            <span>Select a new expiration date to be assigned to magic link.</span><br><br>
+            <input style="min-width: 100%;" type="text" id="ml_main_col_assign_users_teams_table_dialog_extend_date" value=""/>
+            <input type="hidden" id="ml_main_col_assign_users_teams_table_dialog_extend_date_ts" value=""/>`;
+
+        // Update dialog div
+        $(dialog).empty().append(html);
+
+        // Refresh dialog config
+        dialog.dialog({
+          modal: true,
+          autoOpen: false,
+          hide: 'fade',
+          show: 'fade',
+          height: 300,
+          width: 450,
+          resizable: true,
+          title: 'Extend Link Expiration Date',
+          buttons: [
+            {
+              text: 'Cancel',
+              icon: 'ui-icon-close',
+              click: function () {
+                $(this).dialog('close');
+              }
+            },
+            {
+              text: 'Extend',
+              icon: 'ui-icon-copy',
+              click: function () {
+
+                // Revise updated expiration timestamps.
+                let extend_date_ts = $('#ml_main_col_assign_users_teams_table_dialog_extend_date_ts').val();
+                if (extend_date_ts) {
+
+                  // First, adjust respective timestamps.
+                  let adjusted_timestamps = adjust_assigned_users_links_expire_timestamps(moment().unix(), extend_date_ts, '---');
+                  $(link_expires_base_ts).val(adjusted_timestamps['base_ts']);
+                  $(link_expires_on_ts).val(adjusted_timestamps['expires_on_ts']);
+                  $(link_expires_on_ts_formatted).html(adjusted_timestamps['expires_on_ts_formatted']);
+                }
+                $(this).dialog('close');
+              }
+            }
+          ],
+          open: function (event, ui) {
+
+            // Activate expiration extension date widget.
+            $('#ml_main_col_assign_users_teams_table_dialog_extend_date').daterangepicker({
+              singleDatePicker: true,
+              timePicker: true,
+              startDate: (link_expires_on_ts && link_expires_on_ts.val()) ? moment.unix(link_expires_on_ts.val()) : moment(),
+              locale: {
+                format: 'YYYY-MM-DD hh:mm A'
+              }
+            }, function (start, end, label) {
+              // As we are in single date picker mode, just focus on start date and convert to epoch timestamp.
+              if (start) {
+                $('#ml_main_col_assign_users_teams_table_dialog_extend_date_ts').val(start.unix());
+              }
+            });
+          }
+        });
+
+        // Display updated dialog
+        dialog.dialog('open');
+
+        break;
+      }
+
+    }
+
+    // Reset options select element
+    options.val('');
+  }
+
+  function handle_remove_users_teams_request(row) {
+    let removed_rows = [];
 
     // Fetch required row values and remove accordingly, based on type
     let type = String($(row).find('#ml_main_col_assign_users_teams_table_row_type').val()).trim().toLowerCase();
@@ -1139,6 +1250,9 @@ jQuery(function ($) {
       let link_expires_on_ts = $(tr).find('#ml_main_col_assign_users_teams_table_row_td_link_expires_on_ts').val();
       let link_expires_on_ts_formatted = $(tr).find('#ml_main_col_assign_users_teams_table_row_td_link_expires_on_ts_formatted').html();
 
+      // Ensure to adjust respective timestamps.
+      let adjusted_timestamps = adjust_assigned_users_links_expire_timestamps(link_expires_base_ts, link_expires_on_ts, link_expires_on_ts_formatted);
+
       assigned.push({
         'id': id,
         'dt_id': dt_id,
@@ -1146,13 +1260,32 @@ jQuery(function ($) {
         'name': name,
         'sys_type': sys_type,
         'post_type': post_type,
-        'links_expire_within_base_ts': link_expires_base_ts,
-        'links_expire_on_ts': link_expires_on_ts,
-        'links_expire_on_ts_formatted': link_expires_on_ts_formatted
+        'links_expire_within_base_ts': adjusted_timestamps['base_ts'],
+        'links_expire_on_ts': adjusted_timestamps['expires_on_ts'],
+        'links_expire_on_ts_formatted': adjusted_timestamps['expires_on_ts_formatted']
       });
     });
 
     return assigned;
+  }
+
+  function adjust_assigned_users_links_expire_timestamps(link_expires_base_ts, link_expires_on_ts, link_expires_on_ts_formatted) {
+    let adjusted_timestamps = {
+      'base_ts': link_expires_base_ts,
+      'expires_on_ts': link_expires_on_ts,
+      'expires_on_ts_formatted': link_expires_on_ts_formatted
+    };
+
+    // Adjust link expire timestamps accordingly, based on existing expire_within settings.
+    let links_expire_within_amount = $('#ml_main_col_link_manage_links_expire_amount').val();
+    let links_expire_within_time_unit = $('#ml_main_col_link_manage_links_expire_time_unit').val();
+    if (links_expire_within_amount && links_expire_within_time_unit && link_expires_on_ts) {
+      adjusted_timestamps['base_ts'] = moment.unix(link_expires_on_ts).subtract(links_expire_within_amount, links_expire_within_time_unit).unix();
+      adjusted_timestamps['expires_on_ts'] = parseInt(link_expires_on_ts);
+      adjusted_timestamps['expires_on_ts_formatted'] = moment.unix(link_expires_on_ts).format('MMMM DD, YYYY hh:mm:ss A');
+    }
+
+    return adjusted_timestamps;
   }
 
   function handle_load_link_obj_request() {
