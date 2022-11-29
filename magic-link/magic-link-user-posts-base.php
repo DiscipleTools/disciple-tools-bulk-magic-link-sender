@@ -885,6 +885,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
             <div id="content">
                 <div id="assigned_posts_div" style="display: none;">
                     <h3><?php echo esc_html( $this->sub_post_type_display ) ?> [ <span id="total">0</span> ]</h3>
+                    <?php do_action( 'dt_magic_link_sender_after_heading', [ 'type' => $this->type ] ) ?>
                     <hr>
                     <div class="grid-x api-content-div-style" id="api-content">
                         <table class="api-content-table">
@@ -1373,7 +1374,12 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                 ]
             ];
 
+            // deprecated: prefer passing type as an arg
             $options = apply_filters( 'dt_bulk_magic_link_sender_' . $this->type . '_posts_query', $options );
+            $options = apply_filters( 'dt_bulk_magic_link_sender_posts_query', $options, [
+                'type' => $this->type,
+                'params' => $params,
+            ] );
 
             // Fetch all assigned posts
             $posts = DT_Posts::list_posts( $this->sub_post_type, $options );
