@@ -5,6 +5,9 @@ Display list of communication channels (e.g. phone, email, social links, etc.)
 | Attribute | Description | Type | Default Value | Example Value | 
 | --------- | ----------- | ---- | ------------- | ------------- |
 
+## CSS Custom Properties
+| Custom Properties   | Default Value   |
+|---------------------|-----------------|
 ## Feature Status
 - [ ] value
 - [ ] add new

@@ -22,6 +22,13 @@ Dropdown list that allows selection of a single value.
 | ---- | ----------- |
 | `icon-start` | Icon to be displayed before label. Use if you want to embed an SVG directly on the page without an `img` tag |
 
+## CSS Custom Properties
+| Custom Properties   | Default Value   |
+|---------------------|-----------------|
+| `--dt-single-select-text-color`  | `#0a0a0a`  |
+| `--dt-single-select-text-color-inverse`   | `#fff`  |
+| `--dt-form-background-color`  | `#fff` |
+
 ## Features
 - [x] label
 - [x] value
@@ -30,7 +37,7 @@ Dropdown list that allows selection of a single value.
 - [x] placeholder
 - [x] loading
 - [x] saved
-- [ ] disabled
+- [x] disabled
 - [ ] required
 - [x] color
 - [ ] options.hidden

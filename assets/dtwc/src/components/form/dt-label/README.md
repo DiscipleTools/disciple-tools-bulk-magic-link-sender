@@ -14,6 +14,17 @@ Form label to be displayed above input field
 | Default | Label to be displayed |
 | `icon-start` | Icon to be displayed before label. Use if you want to embed an SVG directly on the page without an `img` tag |
 
+
+## CSS Custom Properties
+| Custom Properties   | Default Value   |
+|---------------------|-----------------|
+| `--dt-label-font-size` | `14px`   |
+| `--dt-label-font-weight`  | `700`   |
+| `--dt-label-color`  | `#000`  |
+| `--dt-label-font-size` |  `14px` |
+| `--dt-label-tooltip-color`  |  `#666`   |
+| `--dt-label-tooltip-background` | `#eee`  |
+
 ## Features
 - [x] label text
 - [x] icon

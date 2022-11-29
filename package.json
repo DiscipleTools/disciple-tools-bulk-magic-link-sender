@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "postinstall": "rm -rf ./assets/dtwc && cp -R ./node_modules/@disciple.tools/web-components ./assets/dtwc"
+  },
+  "dependencies": {
+    "@disciple.tools/web-components": "^0.2.4"
+  }
+}

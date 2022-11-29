@@ -5,7 +5,7 @@ Select field that allows multiple values to be selected.
 | Attribute | Description | Type | Default Value | Example Value | 
 | --------- | ----------- | ---- | ------------- | ------------- |
 | `name`    | Name of the field. Passed to `change` event to identify source of event. | `string` | - | - |
-| `value`   | Selected values. Should be an array of option IDs converted to JSON string. <br> **Note:** This value is updated on the component when internal value changes. | `{id:string, label:string}[]` | | `JSON.stringify(['1','2'])` |
+| `value`   | Selected values. Should be an array of option IDs converted to JSON string. If an option is removed, it will be prefixed with a hyphen ("-"). <br> **Note:** This value is updated on the component when internal value changes. | `{id:string, label:string}[]` | | `JSON.stringify(['1','2'])` |
 | `placeholder` | Placeholder text when no selection is made | `string` | - | - |
 | `options` | Array of options to choose. If not set, `onLoad` will be triggered to fetch via API. | `{id:string, label:string}[]` | - | `JSON.stringify([{id:'1',label:'Option 1'},{id:'2',label:'Option 2'}])` |
 | `loading` | Show loading spinner | `boolean` | `false` | `<dt-tags loading>` |
@@ -21,6 +21,19 @@ Select field that allows multiple values to be selected.
 | ---- | ----------- |
 | `icon-start` | Icon to be displayed before label. Use if you want to embed an SVG directly on the page without an `img` tag |
 
+## CSS Custom Properties
+| Custom Properties   | Default Value   |
+|---------------------|-----------------|
+| `--dt-multi-select-text-color` | `#0a0a0a`  |
+| `--dt-multi-select-background-color` | `#fefefe`  |
+| `--dt-multi-select-text-color` | `#0a0a0a`  |
+| `--dt-multi-select-tag-border-color`  | `#c2e0ff`   |
+| `--dt-multi-select-option-hover-background`  | `#f5f5f5`  |
+
+| `--dt-form-border-color`| `#cacaca`   |
+| `--dt-form-background-color`  | `#fff`  |
+| `--dt-form-text-color` | `#000`  |
+
 ## Feature Status
 - [x] label
 - [x] value
@@ -33,4 +46,5 @@ Select field that allows multiple values to be selected.
 - [x] loading
 - [x] saved
 - [x] disabled
+- [x] track deleted options
 

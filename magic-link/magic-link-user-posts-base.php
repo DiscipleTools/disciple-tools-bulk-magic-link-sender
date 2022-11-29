@@ -165,7 +165,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         wp_enqueue_style( 'toastify-js-css', 'https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.css', [], '1.12.0' );
         wp_enqueue_script( 'toastify-js', 'https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.js', [ 'jquery' ], '1.12.0' );
 
-        $this->enqueue_web_component( 'form-components', 'form/index.js' );
+        $this->enqueue_web_component( 'form-components', 'index.js' );
     }
 
     public function dt_magic_url_base_allowed_js( $allowed_js ) {

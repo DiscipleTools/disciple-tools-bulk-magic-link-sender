@@ -19,6 +19,19 @@ Basic date input
 | ---- | ----------- |
 | `icon-start` | Icon to be displayed before label. Use if you want to embed an SVG directly on the page without an `img` tag |
 
+## CSS Custom Properties
+| Custom Properties   | Default Value   |
+|---------------------|-----------------|
+| `--dt-form-text-color`  | `#000`  |
+| `--dt-form-background-color`  | `#cecece` |
+| `--dt-form-border-color`  | `#cacaca`   |
+| `--dt-form-input-box-shadow`  | `inset 0 1px 2px hsl(0deg 0% 4% / 10%)`   |
+| `--dt-form-padding`   | `0.5333333333rem`   |
+| `--dt-form-transition` | `box-shadow .5s,border-color .25s ease-in-out`   |
+| `--dt-form-disabled-background-color`   | `#e6e6e6`   |
+| `--alert-color`   | `#cc4b37`   |
+| `--text-color-inverse`|  `#fefefe`  |
+
 ## Features
 - [x] label
 - [x] value
@@ -28,6 +41,6 @@ Basic date input
 - [x] placeholder
 - [ ] loading
 - [ ] saved
-- [ ] disabled
+- [x] disabled
 - [ ] required
-- [ ] i18n dates
+- [x] i18n dates (Firefox uses browser language for datepicker. Tested 2022/10/06)
