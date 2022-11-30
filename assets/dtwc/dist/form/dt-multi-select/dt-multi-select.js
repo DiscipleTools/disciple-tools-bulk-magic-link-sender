@@ -1,4 +1,4 @@
-import{x as t,i as e,y as i}from"../../lit-element-3e2a69ab.js";import{e as o,i as r,t as s}from"../../directive-de55b00a.js";import{m as n}from"../../dt-base.js";import{D as a}from"../dt-form-base.js";import"../../icons/dt-spinner.js";import"../../icons/dt-checkmark.js";import"../dt-label/dt-label.js";
+import{x as t,i as e,y as i}from"../../lit-element-2409d5fe.js";import{e as o,i as r,t as s}from"../../directive-de55b00a.js";import{m as n}from"../../lit-localize-763e4978.js";import{D as a}from"../dt-form-base.js";import"../../icons/dt-spinner.js";import"../../icons/dt-checkmark.js";import"../../dt-base.js";import"../dt-label/dt-label.js";
 /**
  * @license
  * Copyright 2018 Google LLC
