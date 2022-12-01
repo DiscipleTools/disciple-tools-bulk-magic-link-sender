@@ -1136,10 +1136,11 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         }
     }
 
-    public function post_form( $post, $fields, $post_settings ) {
+    public function post_form( $post, $fields, $post_settings, $link_obj ) {
 
         $post_tiles = DT_Posts::get_post_tiles( $this->sub_post_type );
         $this->post_field_settings = $post_settings['fields'];
+        $connections_enabled = isset( $link_obj->type_config->enable_connection_fields ) && $link_obj->type_config->enable_connection_fields;
 
         $wc_types = [ 'key_select', 'tags', 'multi_select', 'text', 'textarea', 'number', 'date', 'connection', 'location' ];
         if ( !empty( $fields ) && !empty( $this->post_field_settings ) ) {
@@ -1191,6 +1192,11 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
 
                     // Display selected fields
                     foreach ( $fields as $field ) {
+                        // Skip this field if it is a connection field but connection fields are disabled
+                        if ( $field['type'] === 'connection' && !$connections_enabled ) {
+                            continue;
+                        }
+
                         $show_comments = $show_comments || ( $field['id'] === 'comments' && $field['enabled'] );
                         if ( $field['enabled'] && !in_array( $field['id'], $excluded_fields ) ) {
 
@@ -1438,7 +1444,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
 
             // start output buffer to capture markup output
             ob_start();
-            $this->post_form( $post, $fields, $post_settings );
+            $this->post_form( $post, $fields, $post_settings, $link_obj );
             $response['form_html'] = ob_get_clean();
 
             $response['success']  = true;
