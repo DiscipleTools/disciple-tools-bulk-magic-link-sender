@@ -454,8 +454,11 @@ export class DtMultiSelect extends DtFormBase {
         this.shadowRoot.children &&
         this.shadowRoot.children.length
       ) {
-        this.containerHeight =
-          this.shadowRoot.querySelector('.input-group').offsetHeight;
+        const inputGroup = this.shadowRoot.querySelector('.input-group');
+        if (inputGroup) {
+          this.containerHeight =
+            inputGroup.offsetHeight;
+        }
       }
     }
   }
