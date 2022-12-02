@@ -165,7 +165,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         wp_enqueue_style( 'toastify-js-css', 'https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.css', [], '1.12.0' );
         wp_enqueue_script( 'toastify-js', 'https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.js', [ 'jquery' ], '1.12.0' );
 
-        $this->enqueue_web_component( 'form-components', 'form/index.js' );
+        $this->enqueue_web_component( 'form-components', 'index.js' );
     }
 
     public function dt_magic_url_base_allowed_js( $allowed_js ) {
@@ -885,6 +885,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
             <div id="content">
                 <div id="assigned_posts_div" style="display: none;">
                     <h3><?php echo esc_html( $this->sub_post_type_display ) ?> [ <span id="total">0</span> ]</h3>
+                    <?php do_action( 'dt_magic_link_sender_after_heading', [ 'type' => $this->type ] ) ?>
                     <hr>
                     <div class="grid-x api-content-div-style" id="api-content">
                         <table class="api-content-table">
@@ -1135,10 +1136,11 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         }
     }
 
-    public function post_form( $post, $fields, $post_settings ) {
+    public function post_form( $post, $fields, $post_settings, $link_obj ) {
 
         $post_tiles = DT_Posts::get_post_tiles( $this->sub_post_type );
         $this->post_field_settings = $post_settings['fields'];
+        $connections_enabled = isset( $link_obj->type_config->enable_connection_fields ) && $link_obj->type_config->enable_connection_fields;
 
         $wc_types = [ 'key_select', 'tags', 'multi_select', 'text', 'textarea', 'number', 'date', 'connection', 'location' ];
         if ( !empty( $fields ) && !empty( $this->post_field_settings ) ) {
@@ -1190,6 +1192,11 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
 
                     // Display selected fields
                     foreach ( $fields as $field ) {
+                        // Skip this field if it is a connection field but connection fields are disabled
+                        if ( $field['type'] === 'connection' && !$connections_enabled ) {
+                            continue;
+                        }
+
                         $show_comments = $show_comments || ( $field['id'] === 'comments' && $field['enabled'] );
                         if ( $field['enabled'] && !in_array( $field['id'], $excluded_fields ) ) {
 
@@ -1373,7 +1380,12 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                 ]
             ];
 
+            // deprecated: prefer passing type as an arg
             $options = apply_filters( 'dt_bulk_magic_link_sender_' . $this->type . '_posts_query', $options );
+            $options = apply_filters( 'dt_bulk_magic_link_sender_posts_query', $options, [
+                'type' => $this->type,
+                'params' => $params,
+            ] );
 
             // Fetch all assigned posts
             $posts = DT_Posts::list_posts( $this->sub_post_type, $options );
@@ -1432,7 +1444,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
 
             // start output buffer to capture markup output
             ob_start();
-            $this->post_form( $post, $fields, $post_settings );
+            $this->post_form( $post, $fields, $post_settings, $link_obj );
             $response['form_html'] = ob_get_clean();
 
             $response['success']  = true;

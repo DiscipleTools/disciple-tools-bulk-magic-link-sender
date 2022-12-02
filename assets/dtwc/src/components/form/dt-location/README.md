@@ -5,7 +5,7 @@ Implementation of the Tags field that adds a filter dropdown to specify types of
 | Attribute | Description | Type | Default Value | Example Value | 
 | --------- | ----------- | ---- | ------------- | ------------- |
 | `name`    | Name of the field. Passed to `change` event to identify source of event. | `string` | - | - |
-| `value`   | Selected values. Should be an array of option objects converted to JSON string. <br> **Note:** This value is updated on the component when internal value changes. | `{id:string, label:string}[]` | | `JSON.stringify([{id:'1',label:'Option 1'},{id:'2',label:'Option 2'}])` |
+| `value`   | Selected values. Should be an array of option objects converted to JSON string. If an option is removed, it will have a `delete` property. <br> **Note:** This value is updated on the component when internal value changes. | `{id:string, label:string}[]` | | `JSON.stringify([{id:'1',label:'Option 1'},{id:'2',label:'Option 2'}])` |
 | `placeholder` | Placeholder text when no selection is made | `string` | - | - |
 | `options` | Array of options to choose. If not set, `onLoad` will be triggered to fetch via API. | `{id:string, label:string, link:string}[]` | - | `JSON.stringify([{id:'1',label:'Option 1',link:'/#opt1'},{id:'2',label:'Option 2',link:'/#opt2'}])` |
 | `filters` | Array of filters for dropdown. | `{id:string, label:string}[]` | - | `JSON.stringify([{id:'focus',label:'Regions of Focus'},{id:'all',label:'All Locations'}])` |
@@ -24,6 +24,12 @@ Implementation of the Tags field that adds a filter dropdown to specify types of
 | ---- | ----------- |
 | `icon-start` | Icon to be displayed before label. Use if you want to embed an SVG directly on the page without an `img` tag |
 
+## CSS Custom Properties
+| Custom Properties   | Default Value   |
+|---------------------|-----------------|
+| `--dt-form-border-color` | `#cacaca`   |
+
+
 ## Feature Status
 - [x] label
 - [x] value
@@ -40,4 +46,5 @@ Implementation of the Tags field that adds a filter dropdown to specify types of
 - [x] saved
 - [x] filter dropdown
 - [x] disabled
+- [x] track deleted options
 

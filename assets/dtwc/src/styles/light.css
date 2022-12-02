@@ -76,6 +76,10 @@
     --dt-tile-shadow: var(--shadow-0);
     --dt-tile-header-color: var(--primary-color);
 
+    --dt-list-header-background-color: var(--dt-tile-background-color, #fefefe)
+    --dt-list-header-background-color-hover: var(--dt-list-hover-background-color, #ecf5fc)
+      --dt-list-sort-arrow-color: #808080
+
     --dt-alert-text-color-light: #fff;
     --dt-alert-text-color-dark: #000;
     --dt-alert-font-family: var(--font-family);

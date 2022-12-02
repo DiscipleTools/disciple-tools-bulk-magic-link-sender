@@ -5,6 +5,10 @@ Dropdown list that allows selection of a single user.
 | Attribute | Description | Type | Default Value | Example Value | 
 | --------- | ----------- | ---- | ------------- | ------------- |
 
+## CSS Custom Properties
+| Custom Properties   | Default Value   |
+|---------------------|-----------------|
+
 ## Features
 - [ ] value
 - [ ] options (static)
