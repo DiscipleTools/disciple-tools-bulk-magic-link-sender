@@ -133,7 +133,12 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
                 if ( ! empty( $hash ) ) {
                     $magic_link_type = self::fetch_magic_link_type( $link_obj->type );
                     if ( ! empty( $magic_link_type ) ) {
-                        $links[ self::generate_magic_link_type_key( $link_obj ) ][] = trailingslashit( trailingslashit( site_url() ) . $magic_link_type['url_base'] ) . $hash;
+
+                        // Package both url and identified expiry details.
+                        $links[self::generate_magic_link_type_key( $link_obj )] = [
+                            'url' => trailingslashit( trailingslashit( site_url() ) . $magic_link_type['url_base'] ) . $hash,
+                            'expires' => self::capture_configured_expiry_details( $link_obj, $user_id )
+                        ];
                     }
                 }
             }
@@ -157,13 +162,38 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
                             $magic_link_url_base = str_replace( '_magic_key', '', $magic_link_url_base );
                         }
 
-                        $links[ self::generate_magic_link_type_key( $link_obj ) ][] = trailingslashit( trailingslashit( site_url() ) . $magic_link_url_base ) . $hash;
+                        // Package both url and identified expiry details.
+                        $links[self::generate_magic_link_type_key( $link_obj )] = [
+                            'url' => trailingslashit( trailingslashit( site_url() ) . $magic_link_url_base ) . $hash,
+                            'expires' => self::capture_configured_expiry_details( $link_obj, $post_id )
+                        ];
                     }
                 }
             }
         }
 
         return $links;
+    }
+
+    public static function capture_configured_expiry_details( $link_obj, $id ): array{
+        $expires = [
+            'ts' => '',
+            'ts_formatted' => '---',
+            'ts_base' => ''
+        ];
+        if ( !empty( $link_obj ) ){
+            foreach ( $link_obj->assigned ?? [] as $assigned ){
+                if ( isset( $assigned->dt_id ) && $assigned->dt_id == $id ){
+                    $expires = [
+                        'ts' => $assigned->links_expire_on_ts ?? '',
+                        'ts_formatted' => $assigned->links_expire_on_ts_formatted ?? '---',
+                        'ts_base' => $assigned->links_expire_within_base_ts ?? ''
+                    ];
+                }
+            }
+        }
+
+        return $expires;
     }
 
     public static function fetch_dt_users(): array {
