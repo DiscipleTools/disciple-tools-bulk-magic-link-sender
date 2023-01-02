@@ -8,3 +8,7 @@ assets/dtwc/**/*.md
 assets/dtwc/.*
 
 node_modules
+
+documentation/**/audio*.txt
+documentation/**/*.mp3
+documentation/**/*.mp4
