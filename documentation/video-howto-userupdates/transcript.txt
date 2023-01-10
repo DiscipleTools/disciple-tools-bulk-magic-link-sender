@@ -1,0 +1,25 @@
+The magic links plugin makes it easy to create links for your users to update all of the contacts or groups that are assigned to them without needing to login.
+
+After installing the magic links plugin, go to the admin section for the plugin.
+
+Click the Links tab and add a new link.
+
+Enter a name that will help you remember the purpose of the link, and then choose a Magic Link Type. You can choose either User Contact Updates or User Group Updates, depending on whether you want your user to update contacts or groups.
+
+After selecting the link type, the options in the fields box below will be updated to show the options you can select.
+
+For group updates, you can choose if you want your site's logo to appear at the top of the page that your users will see. You can also choose to enable or disable connection fields. Enabling these fields can pose security issues because it opens up an API that is able to list all of the contacts in your system. After that, you can choose if you want your users to be able to add new groups. If this is not selected, they can only edit existing groups.
+
+After these options, you will see a list of all of the group fields in your system. Select the fields that you want your user to be able to change. Any fields that are not selected are not shown to your user, so you can allow them to change certain fields and not others.
+
+After this, select the users that you want to receive this kind of link. Each user will receive a link specific to them so that each user can access only the groups they are allowed. You can then select how soon the links should expire. For example, you can have them expire after 1 week so that they have time to make their updates but then their access is not allowed until you refresh their link again. This can keep access to your system secure.
+
+Finally, choose if you want these links to be sent out automatically on a schedule. This can save you work as an admin if you need to request updates every month, quarter, year, or any other interval. When the scheduled time arrives, users will be sent the message that you can update so they understand what they are supposed to do.
+
+After you save this link, you can scroll up to the users section to get the links for each user. If you don't schedule the links to be sent automatically, you can copy the URL from each View button and share them with your users. You can also view it yourself to make sure it is right.
+
+When users go to their link, they will first see a list of all of the groups that are assigned to them. Once they click on one, the group information will appear below. Your user can edit any of the fields and then submit their changes to be saved in the system.
+
+Using the magic links plugin, you can easily create short-lived links for your users so that they don't have to remember passwords and only have access when you permit them to. It is an easy way to get updates into your system from users who are less tech savvy or who rarely need to make updates and will forget their access details.
+
+
