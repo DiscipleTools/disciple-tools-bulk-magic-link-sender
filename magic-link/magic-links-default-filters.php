@@ -95,7 +95,7 @@ function dt_email_sending_channel_send( $params ) {
                     }
 
                     // Dispatch email notification
-                    wp_mail( $email_to, $email_subject, $email_body, $email_headers );
+                    wp_queue()->push( new ML_Send_Email_Job( $email_to, $email_subject, $email_body, $email_headers ) );
 
                 } catch ( Exception $e ) {
                     return new WP_Error( __FUNCTION__, $e->getMessage(), [ 'status' => $e->getCode() ] );
@@ -131,6 +131,43 @@ function dt_email_sending_channel_send_smtp_email( $phpmailer ) {
 
         $phpmailer->isSMTP();
         // phpcs:enable
+    }
+}
+
+/**
+ * Send emails that have been put in the email queue
+ */
+
+use WP_Queue\Job;
+
+class ML_Send_Email_Job extends Job{
+
+    public $email_to;
+    public $email_subject;
+    public $email_body;
+    public $email_headers;
+
+    /**
+     * ML_Send_Email_Job constructor.
+     *
+     * @param $email_to
+     * @param $email_subject
+     * @param $email_body
+     * @param $email_headers
+     *
+     */
+    public function __construct( $email_to, $email_subject, $email_body, $email_headers ){
+        $this->email_to = $email_to;
+        $this->email_subject = $email_subject;
+        $this->email_body = $email_body;
+        $this->email_headers = $email_headers;
+    }
+
+    /**
+     * Handle job logic.
+     */
+    public function handle(){
+        wp_mail( $this->email_to, $this->email_subject, $this->email_body, $this->email_headers );
     }
 }
 
