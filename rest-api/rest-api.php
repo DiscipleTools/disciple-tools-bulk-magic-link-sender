@@ -217,7 +217,14 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
 
                             // Capture newly created magic link in url form
                             $magic_link_type = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_magic_link_type( $link_obj->type );
-                            $response['ml_links'][ Disciple_Tools_Bulk_Magic_Link_Sender_API::generate_magic_link_type_key( $link_obj ) ][] = Disciple_Tools_Bulk_Magic_Link_Sender_API::build_magic_link_url( $link_obj, $record, $magic_link_type['url_base'], false );
+                            $response['ml_links'][Disciple_Tools_Bulk_Magic_Link_Sender_API::generate_magic_link_type_key( $link_obj )] = [
+                                'url' => Disciple_Tools_Bulk_Magic_Link_Sender_API::build_magic_link_url( $link_obj, $record, $magic_link_type['url_base'], false ),
+                                'expires' => [
+                                    'ts' => $record->links_expire_on_ts ?? '',
+                                    'ts_formatted' => $record->links_expire_on_ts_formatted ?? '---',
+                                    'ts_base' => $record->links_expire_within_base_ts ?? ''
+                                ]
+                            ];
                         }
 
                         // Add record to the collective

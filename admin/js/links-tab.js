@@ -22,8 +22,8 @@ jQuery(function ($) {
     });
   });
 
-  $(document).on('click', '.ml-main-col-assign-users-teams-table-row-remove-but', function (e) {
-    handle_remove_users_teams_request(e);
+  $(document).on('change', '.ml-main-col-assign-users-teams-table-row-options', function (e) {
+    handle_assigned_users_teams_table_row_options(e);
   });
 
   $(document).on('click', '#ml_main_col_update_but', function () {
@@ -711,7 +711,7 @@ jQuery(function ($) {
     let record = fetch_users_teams_record(id);
     if (record) {
       let sys_type = 'wp_user';
-      return build_row_html(auto_update, id, id.split('+')[1], 'User', record['name'], sys_type, 'user', build_comms_html(record, 'phone'), build_comms_html(record, 'email'), build_link_html(record['links'], sys_type));
+      return build_row_html(auto_update, id, id.split('+')[1], 'User', record['name'], sys_type, 'user', build_comms_html(record, 'phone'), build_comms_html(record, 'email'), extract_link_parts(record['links'], sys_type));
     }
     return null;
   }
@@ -720,7 +720,7 @@ jQuery(function ($) {
     let post = fetch_users_teams_record(id);
     if (post) {
       let sys_type = 'post';
-      return build_row_html(auto_update, id, id.split('+')[1], 'Contact', post['name'], sys_type, post['post_type'], build_comms_html(post, 'contact_phone'), build_comms_html(post, 'contact_email'), build_link_html(post['ml_links'], sys_type));
+      return build_row_html(auto_update, id, id.split('+')[1], 'Contact', post['name'], sys_type, post['post_type'], build_comms_html(post, 'contact_phone'), build_comms_html(post, 'contact_email'), extract_link_parts(post['ml_links'], sys_type));
     }
     return null;
   }
@@ -730,7 +730,7 @@ jQuery(function ($) {
     get_post_record_request('contacts', post_id, function (post) {
       if (post && post['ID']) {
         let sys_type = 'post';
-        let async_html = build_row_html(auto_update, id, post_id, 'Contact', post['name'], sys_type, post['post_type'], build_comms_html(post, 'contact_phone'), build_comms_html(post, 'contact_email'), build_link_html(post['ml_links'], sys_type));
+        let async_html = build_row_html(auto_update, id, post_id, 'Contact', post['name'], sys_type, post['post_type'], build_comms_html(post, 'contact_phone'), build_comms_html(post, 'contact_email'), extract_link_parts(post['ml_links'], sys_type));
 
         // If we have a valid html structure, then append to table listing
         if (async_html) {
@@ -761,7 +761,7 @@ jQuery(function ($) {
         // Capture team members accordingly, based on flags!
         if (inc_default_members && record['members'] && record['members'].length > 0) {
           record['members'].forEach(function (member, idx) {
-            html += build_row_html(auto_update, id + "+" + member['type_id'], member['type_id'], 'Member', member['post_title'], member['type'], member['post_type'], build_comms_html(member, 'phone'), build_comms_html(member, 'email'), build_link_html(member['links'], member['type']));
+            html += build_row_html(auto_update, id + "+" + member['type_id'], member['type_id'], 'Member', member['post_title'], member['type'], member['post_type'], build_comms_html(member, 'phone'), build_comms_html(member, 'email'), extract_link_parts(member['links'], member['type']));
           });
         }
 
@@ -769,7 +769,7 @@ jQuery(function ($) {
 
         let member = fetch_member_record(record['members'], tokens[2]);
         if (member) {
-          html = build_row_html(auto_update, id, member['type_id'], 'Member', member['post_title'], member['type'], member['post_type'], build_comms_html(member, 'phone'), build_comms_html(member, 'email'), build_link_html(member['links'], member['type']));
+          html = build_row_html(auto_update, id, member['type_id'], 'Member', member['post_title'], member['type'], member['post_type'], build_comms_html(member, 'phone'), build_comms_html(member, 'email'), extract_link_parts(member['links'], member['type']));
         }
       }
     }
@@ -818,19 +818,39 @@ jQuery(function ($) {
     return new RegExp('^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$').test(window.lodash.escape(email));
   }
 
-  function build_link_html(links, sys_type) {
+  function extract_link_parts(links, sys_type) {
+
     // Ensure the correct link is used for given link object and selected magic link type.
     let link_obj_id = $('#ml_main_col_link_objs_manage_id').val();
     let ml_type = $('#ml_main_col_link_objs_manage_type').val();
+    let link_key = ml_type + '_' + link_obj_id;
 
-    if (links && links[ml_type + '_' + link_obj_id]) {
-      let link = links[ml_type + '_' + link_obj_id];
+    // Determine link html.
+    let link_html = '---';
+    if (($(links).length > 0) && links && links[link_key] && links[link_key]['url']) {
+      let link = links[link_key]['url'];
       if (link && $.trim(link).length > 0) {
-        return `<a class="button" href="${append_magic_link_params(link, sys_type)}" target="_blank">View</a>`;
+        link_html = `<a class="button" href="${append_magic_link_params(link, sys_type)}" target="_blank">View</a>`;
       }
     }
 
-    return '---';
+    // Extract expiry parts.
+    let expiry_parts = {
+      ts: '',
+      ts_formatted: '---',
+      ts_base: ''
+    };
+    if (($(links).length > 0) && links && links[link_key] && links[link_key]['expires']) {
+      let expires = links[link_key]['expires'];
+      expiry_parts['ts'] = expires['ts'];
+      expiry_parts['ts_formatted'] = expires['ts_formatted'];
+      expiry_parts['ts_base'] = expires['ts_base'];
+    }
+
+    return {
+      'html': link_html,
+      'expires': expiry_parts
+    };
   }
 
   function append_magic_link_params(link, sys_type) {
@@ -857,15 +877,20 @@ jQuery(function ($) {
                   <td style="vertical-align: middle;">${window.lodash.escape(name)}</td>
                   <td style="vertical-align: middle;">${phone}</td>
                   <td style="vertical-align: middle;">${email}</td>
-                  <td style="vertical-align: middle;" id="ml_main_col_assign_users_teams_table_row_td_link">${link}</td>
+                  <td style="vertical-align: middle;" id="ml_main_col_assign_users_teams_table_row_td_link">${(link['html']) ? link['html']:'---'}</td>
                   <td style="vertical-align: middle;" id="ml_main_col_assign_users_teams_table_row_td_link_expires">
-                    <input id="ml_main_col_assign_users_teams_table_row_td_link_expires_base_ts" type="hidden" value=""/>
-                    <input id="ml_main_col_assign_users_teams_table_row_td_link_expires_on_ts" type="hidden" value=""/>
-                    <span id="ml_main_col_assign_users_teams_table_row_td_link_expires_on_ts_formatted">---</span>
+                    <input id="ml_main_col_assign_users_teams_table_row_td_link_expires_base_ts" type="hidden" value="${(link['expires'] && link['expires']['ts_base']) ? link['expires']['ts_base']:''}"/>
+                    <input id="ml_main_col_assign_users_teams_table_row_td_link_expires_on_ts" type="hidden" value="${(link['expires'] && link['expires']['ts']) ? link['expires']['ts']:''}"/>
+                    <span id="ml_main_col_assign_users_teams_table_row_td_link_expires_on_ts_formatted">${(link['expires'] && link['expires']['ts_formatted']) ? link['expires']['ts_formatted']:'---'}</span>
                   </td>
                   <td style="vertical-align: middle;">
                     <span style="float:right;">
-                        <button type="submit" class="button float-right ml-main-col-assign-users-teams-table-row-remove-but">Remove</button>
+                        <select class="ml-main-col-assign-users-teams-table-row-options">
+                            <option value="" selected>...</option>
+                            <option value="view">View</option>
+                            <option value="remove">Remove</option>
+                            <option value="extend">Extend</option>
+                        </select>
                     </span>
                   </td>
                 </tr>`;
@@ -926,11 +951,117 @@ jQuery(function ($) {
     return record;
   }
 
-  function handle_remove_users_teams_request(evt) {
-    let removed_rows = [];
+  function handle_assigned_users_teams_table_row_options(evt) {
 
-    // Obtain handle onto deleted row
+    // Obtain various handles.
     let row = evt.currentTarget.parentNode.parentNode.parentNode;
+    let options = $(evt.currentTarget);
+
+    // Determine suitable option action to be taken.
+    switch (options.val()) {
+      case 'view': {
+
+        // Attempt to get a handle onto existing link view button.
+        let link = $(row).find('#ml_main_col_assign_users_teams_table_row_td_link a[href != ""]');
+        if (link && $(link).attr('href')) {
+          window.open($(link).attr('href'), '_blank');
+        }
+        break;
+      }
+      case 'remove': {
+        if (confirm('Are you sure you wish to remove?')) {
+          handle_remove_users_teams_request(row);
+        }
+        break;
+      }
+      case 'extend': {
+        let dialog = $('#ml_main_col_assign_users_teams_table_dialog');
+
+        // Fetch existing timestamps.
+        let link_expires = $(row).find('#ml_main_col_assign_users_teams_table_row_td_link_expires');
+        let link_expires_base_ts = $(link_expires).find('#ml_main_col_assign_users_teams_table_row_td_link_expires_base_ts');
+        let link_expires_on_ts = $(link_expires).find('#ml_main_col_assign_users_teams_table_row_td_link_expires_on_ts');
+        let link_expires_on_ts_formatted = $(link_expires).find('#ml_main_col_assign_users_teams_table_row_td_link_expires_on_ts_formatted');
+
+        // Generate dialog html.
+        let html = `
+            <span>Select a new expiration date to be assigned to magic link.</span><br><br>
+            <input style="min-width: 100%;" type="text" id="ml_main_col_assign_users_teams_table_dialog_extend_date" value=""/>
+            <input type="hidden" id="ml_main_col_assign_users_teams_table_dialog_extend_date_ts" value=""/>`;
+
+        // Update dialog div
+        $(dialog).empty().append(html);
+
+        // Refresh dialog config
+        dialog.dialog({
+          modal: true,
+          autoOpen: false,
+          hide: 'fade',
+          show: 'fade',
+          height: 300,
+          width: 450,
+          resizable: true,
+          title: 'Extend Link Expiration Date',
+          buttons: [
+            {
+              text: 'Cancel',
+              icon: 'ui-icon-close',
+              click: function () {
+                $(this).dialog('close');
+              }
+            },
+            {
+              text: 'Extend',
+              icon: 'ui-icon-copy',
+              click: function () {
+
+                // Revise updated expiration timestamps.
+                let extend_date_ts = $('#ml_main_col_assign_users_teams_table_dialog_extend_date_ts').val();
+                if (extend_date_ts) {
+
+                  // First, adjust respective timestamps.
+                  let adjusted_timestamps = adjust_assigned_users_links_expire_timestamps(moment().unix(), extend_date_ts, '---');
+                  $(link_expires_base_ts).val(adjusted_timestamps['base_ts']);
+                  $(link_expires_on_ts).val(adjusted_timestamps['expires_on_ts']);
+                  $(link_expires_on_ts_formatted).html(adjusted_timestamps['expires_on_ts_formatted']);
+                }
+                $(this).dialog('close');
+              }
+            }
+          ],
+          open: function (event, ui) {
+
+            // Activate expiration extension date widget.
+            $('#ml_main_col_assign_users_teams_table_dialog_extend_date').daterangepicker({
+              singleDatePicker: true,
+              timePicker: true,
+              startDate: (link_expires_on_ts && link_expires_on_ts.val()) ? moment.unix(link_expires_on_ts.val()) : moment(),
+              locale: {
+                format: 'YYYY-MM-DD hh:mm A'
+              }
+            }, function (start, end, label) {
+              // As we are in single date picker mode, just focus on start date and convert to epoch timestamp.
+              if (start) {
+                $('#ml_main_col_assign_users_teams_table_dialog_extend_date_ts').val(start.unix());
+              }
+            });
+          }
+        });
+
+        // Display updated dialog
+        dialog.dialog('open');
+
+        break;
+      }
+
+    }
+
+    // Reset options select element
+    options.val('');
+  }
+
+  function handle_remove_users_teams_request(row) {
+    let removed_rows = [];
 
     // Fetch required row values and remove accordingly, based on type
     let type = String($(row).find('#ml_main_col_assign_users_teams_table_row_type').val()).trim().toLowerCase();
@@ -1139,6 +1270,9 @@ jQuery(function ($) {
       let link_expires_on_ts = $(tr).find('#ml_main_col_assign_users_teams_table_row_td_link_expires_on_ts').val();
       let link_expires_on_ts_formatted = $(tr).find('#ml_main_col_assign_users_teams_table_row_td_link_expires_on_ts_formatted').html();
 
+      // Ensure to adjust respective timestamps.
+      let adjusted_timestamps = adjust_assigned_users_links_expire_timestamps(link_expires_base_ts, link_expires_on_ts, link_expires_on_ts_formatted);
+
       assigned.push({
         'id': id,
         'dt_id': dt_id,
@@ -1146,13 +1280,32 @@ jQuery(function ($) {
         'name': name,
         'sys_type': sys_type,
         'post_type': post_type,
-        'links_expire_within_base_ts': link_expires_base_ts,
-        'links_expire_on_ts': link_expires_on_ts,
-        'links_expire_on_ts_formatted': link_expires_on_ts_formatted
+        'links_expire_within_base_ts': adjusted_timestamps['base_ts'],
+        'links_expire_on_ts': adjusted_timestamps['expires_on_ts'],
+        'links_expire_on_ts_formatted': adjusted_timestamps['expires_on_ts_formatted']
       });
     });
 
     return assigned;
+  }
+
+  function adjust_assigned_users_links_expire_timestamps(link_expires_base_ts, link_expires_on_ts, link_expires_on_ts_formatted) {
+    let adjusted_timestamps = {
+      'base_ts': link_expires_base_ts,
+      'expires_on_ts': link_expires_on_ts,
+      'expires_on_ts_formatted': link_expires_on_ts_formatted
+    };
+
+    // Adjust link expire timestamps accordingly, based on existing expire_within settings.
+    let links_expire_within_amount = $('#ml_main_col_link_manage_links_expire_amount').val();
+    let links_expire_within_time_unit = $('#ml_main_col_link_manage_links_expire_time_unit').val();
+    if (links_expire_within_amount && links_expire_within_time_unit && link_expires_on_ts) {
+      adjusted_timestamps['base_ts'] = moment.unix(link_expires_on_ts).subtract(links_expire_within_amount, links_expire_within_time_unit).unix();
+      adjusted_timestamps['expires_on_ts'] = parseInt(link_expires_on_ts);
+      adjusted_timestamps['expires_on_ts_formatted'] = moment.unix(link_expires_on_ts).format('MMMM DD, YYYY hh:mm:ss A');
+    }
+
+    return adjusted_timestamps;
   }
 
   function handle_load_link_obj_request() {
@@ -1380,7 +1533,7 @@ jQuery(function ($) {
 
       // Should only expect to have a single hit...!
       if (hit && hit.size() > 0) {
-        $(hit[0]).find('#ml_main_col_assign_users_teams_table_row_td_link').html(build_link_html(links, record['sys_type']));
+        $(hit[0]).find('#ml_main_col_assign_users_teams_table_row_td_link').html(extract_link_parts(links, record['sys_type'])['html']);
 
         // Retrospectively update link expiration details
         if (record['links_expire_within_base_ts'] && record['links_expire_on_ts'] && record['links_expire_on_ts_formatted']) {
