@@ -1328,11 +1328,30 @@ Thanks!';
     public static function get_link_submission_success_js_code() {
         return '
             Toastify({
-                text: "' . __( 'Update Successful!', 'disciple-tools-bulk-magic-link-sender' ) . '",
+                text: message,
                 close: true,
                 gravity: "bottom",
                 callback: function() {
-                    window.location.reload();
+                    success_callback_func();
+                }
+
+            }).showToast();
+        ';
+    }
+
+    public static function get_link_submission_error_js_code() {
+        return '
+            Toastify({
+                text: error,
+                close: true,
+                gravity: "bottom",
+                position: "center",
+                duration: 6000,
+                style: {
+                    background: "#d25e5e"
+                },
+                callback: function() {
+                    error_callback_func();
                 }
 
             }).showToast();

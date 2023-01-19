@@ -295,7 +295,8 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                 'template'                => $this->template,
                 'translations'            => [
                     'regions_of_focus' => __( 'Regions of Focus', 'disciple_tools' ),
-                    'all_locations'    => __( 'All Locations', 'disciple_tools' )
+                    'all_locations'    => __( 'All Locations', 'disciple_tools' ),
+                    'update_success' => __( 'Update Successful!', 'disciple_tools' )
                 ],
                 'mapbox'                  => [
                     'map_key'        => DT_Mapbox_API::get_key(),
@@ -307,7 +308,8 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                         'open_modal'      => __( 'Open Modal', 'disciple_tools' )
                     ]
                 ],
-                'submit_success_function' => Disciple_Tools_Bulk_Magic_Link_Sender_API::get_link_submission_success_js_code()
+                'submit_success_function' => Disciple_Tools_Bulk_Magic_Link_Sender_API::get_link_submission_success_js_code(),
+                'submit_error_function' => Disciple_Tools_Bulk_Magic_Link_Sender_API::get_link_submission_error_js_code()
             ] ) ?>][0]
 
             console.log(jsObject);
@@ -918,17 +920,24 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
 
                         // If successful, refresh page, otherwise; display error message
                         if (data['success']) {
-                            Function(jsObject.submit_success_function)();
+                            Function('message', 'success_callback_func', jsObject.submit_success_function)(jsObject.translations.update_success, function () {
+                                window.location.reload();
+                            });
 
                         } else {
-                            jQuery('#error').html(data['message']);
-                            jQuery('#content_submit_but').prop('disabled', false);
+                            Function('error', 'error_callback_func', jsObject.submit_error_function)(data['message'], function() {
+                                console.log(data);
+                                jQuery('#error').html('');
+                                jQuery('#content_submit_but').prop('disabled', false);
+                            });
                         }
 
                     }).fail(function (e) {
-                        console.log(e);
-                        jQuery('#error').html(e);
-                        jQuery('#content_submit_but').prop('disabled', false);
+                        Function('error', 'error_callback_func', jsObject.submit_error_function)(e['responseText'], function() {
+                            console.log(e);
+                            jQuery('#error').html('');
+                            jQuery('#content_submit_but').prop('disabled', false);
+                        });
                     });
                 }
             });
