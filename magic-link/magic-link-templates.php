@@ -933,7 +933,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                         }
 
                     }).fail(function (e) {
-                        Function('error', 'error_callback_func', jsObject.submit_error_function)(e['responseText'], function() {
+                        Function('error', 'error_callback_func', jsObject.submit_error_function)(e['responseJSON']['message'], function() {
                             console.log(e);
                             jQuery('#error').html('');
                             jQuery('#content_submit_but').prop('disabled', false);
