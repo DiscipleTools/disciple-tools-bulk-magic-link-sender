@@ -74,6 +74,7 @@
     Message
 </div>
 <div id="ml_links_right_docs_message_content" style="display: none;">
+    Specify subject to be used when sending messages. For example, if you are using the Email Sending Channel, then specified message subject will overwrite global email subject.<br><br>
     Specify text to be used when sending messages. <br><br>
     The message content can support free-form plain text, with the use of placeholders; which will be replaced during
     message dispatch. <br><br>The following placeholders are currently supported:<br>

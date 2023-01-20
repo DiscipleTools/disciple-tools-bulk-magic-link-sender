@@ -329,6 +329,10 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
                  * If present, capture latest message text.
                  */
 
+                if ( ! empty( $params['message_subject'] ) ) {
+                    $link_obj->message_subject = $params['message_subject'];
+                }
+
                 if ( ! empty( $params['message'] ) ) {
                     $link_obj->message = $params['message'];
                 }
