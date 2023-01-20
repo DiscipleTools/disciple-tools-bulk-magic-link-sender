@@ -159,8 +159,10 @@ class Disciple_Tools_Magic_Links_Magic_Link extends DT_Magic_Url_Base {
                 'parts' => $this->parts,
                 'translations' => [
                     'add' => __( 'Add Magic', 'disciple-tools-bulk-magic-link-sender' ),
+                    'update_success' => __( 'Update Successful!', 'disciple-tools-bulk-magic-link-sender' )
                 ],
-                'submit_success_function' => Disciple_Tools_Bulk_Magic_Link_Sender_API::get_link_submission_success_js_code()
+                'submit_success_function' => Disciple_Tools_Bulk_Magic_Link_Sender_API::get_link_submission_success_js_code(),
+                'submit_error_function' => Disciple_Tools_Bulk_Magic_Link_Sender_API::get_link_submission_error_js_code()
             ]) ?>][0]
 
             window.get_magic = () => {
@@ -226,13 +228,16 @@ class Disciple_Tools_Magic_Links_Magic_Link extends DT_Magic_Url_Base {
                 }
 
                 window.makeRequest( "POST", jsObject.parts.type, { parts: jsObject.parts, update }, jsObject.parts.root + '/v1/' ).done(function(data){
-                    Function(jsObject.submit_success_function)();
-
+                    Function('message', 'success_callback_func', jsObject.submit_success_function)(jsObject.translations.update_success, function () {
+                        window.location.reload();
+                    });
                 })
                 .fail(function(e) {
-                    console.log(e)
-                    jQuery('#error').html(e)
-                })
+                    Function('error', 'error_callback_func', jsObject.submit_error_function)(e['responseJSON']['message'], function() {
+                        console.log(e);
+                        jQuery('#error').html('');
+                    });
+                });
             })
         </script>
         <?php
