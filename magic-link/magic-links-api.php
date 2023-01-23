@@ -601,6 +601,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
                     // Dispatch message using specified sending channel
                     $send_result = call_user_func( $sending_channel['send'], [
                         'user'    => $user,
+                        'message_subject' => $link_obj->message_subject,
                         'message' => $message
                     ] );
 

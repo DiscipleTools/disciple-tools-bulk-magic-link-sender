@@ -112,8 +112,9 @@ jQuery(function ($) {
     });
 
     reset_section(display, $('#ml_main_col_message'), function () {
+      let default_msg_subject = window.dt_magic_links.dt_default_message_subject;
       let default_msg = window.dt_magic_links.dt_default_message;
-      reset_section_message(default_msg);
+      reset_section_message(default_msg_subject, default_msg);
     });
 
     reset_section(display, $('#ml_main_col_schedules'), function () {
@@ -205,7 +206,8 @@ jQuery(function ($) {
     }
   }
 
-  function reset_section_message(message) {
+  function reset_section_message(subject, message) {
+    $('#ml_main_col_msg_textarea_subject').val(subject);
     $('#ml_main_col_msg_textarea').val(message);
   }
 
@@ -1140,6 +1142,7 @@ jQuery(function ($) {
 
     let assigned_users_teams = fetch_assigned_users_teams();
 
+    let message_subject = $('#ml_main_col_msg_textarea_subject').val().trim();
     let message = $('#ml_main_col_msg_textarea').val().trim();
 
     let scheduling_enabled = $('#ml_main_col_schedules_enabled').prop('checked');
@@ -1209,6 +1212,7 @@ jQuery(function ($) {
           'links_expire_auto_refresh_enabled': links_expire_auto_refresh_enabled
         },
 
+        'message_subject': message_subject,
         'message': message,
 
         'schedule': {
@@ -1333,7 +1337,7 @@ jQuery(function ($) {
       });
 
       reset_section(true, $('#ml_main_col_message'), function () {
-        reset_section_message(link_obj['message']);
+        reset_section_message(link_obj['message_subject'], link_obj['message']);
       });
 
       reset_section(true, $('#ml_main_col_schedules'), function () {
@@ -1375,6 +1379,7 @@ jQuery(function ($) {
       links_never_expires: $('#ml_main_col_link_manage_links_expire_never').prop('checked'),
       links_refreshed_before_send: $('#ml_main_col_schedules_links_refreshed_before_send').prop('checked'),
       links_expire_auto_refresh_enabled: $('#ml_main_col_link_manage_links_expire_auto_refresh_enabled').prop('checked'),
+      message_subject: $('#ml_main_col_msg_textarea_subject').val(),
       message: $('#ml_main_col_msg_textarea').val()
     };
 

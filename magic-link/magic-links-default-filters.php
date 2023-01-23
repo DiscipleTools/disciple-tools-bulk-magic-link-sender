@@ -87,7 +87,7 @@ function dt_email_sending_channel_send( $params ) {
 
                     // Build and dispatch notification email!
                     $email_to        = $email;
-                    $email_subject   = $email_obj['subject'] ?? Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_default_email_subject();
+                    $email_subject = !empty( $params['message_subject'] ) ? $params['message_subject'] : ( $email_obj['subject'] ?? Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_default_email_subject() );
                     $email_body      = $params['message'];
                     $email_headers[] = 'Content-Type: text/plain; charset=UTF-8';
                     if ( ! empty( $email_obj['from_name'] ) && ! empty( $email_obj['from_email'] ) ) {

@@ -52,6 +52,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                 'dt_endpoint_user_links_manage' => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_endpoint_user_links_manage_url(),
                 'dt_endpoint_assigned_manage'   => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_endpoint_assigned_manage_url(),
                 'dt_endpoint_get_post_record'   => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_endpoint_get_post_record_url(),
+                'dt_default_message_subject'    => '',
                 'dt_default_message'            => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_default_send_msg(),
                 'dt_default_send_channel_id'    => Disciple_Tools_Bulk_Magic_Link_Sender_API::$channel_email_id,
                 'dt_base_url'                   => rest_url(),
@@ -634,6 +635,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
 
     private function main_column_message() {
         ?>
+        <input style="min-width: 100%;" type="text" id="ml_main_col_msg_textarea_subject" value="" placeholder="Message Subject"/><br>
         <textarea style="min-width: 100%;" id="ml_main_col_msg_textarea" rows="10"></textarea>
         <?php
     }
