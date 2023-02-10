@@ -167,6 +167,7 @@ jQuery(function ($) {
     $('#ml_main_col_assign_users_teams_table').find('tbody > tr').remove();
 
     if (assigned_users_teams && assigned_users_teams.length > 0) {
+      assigned_users_teams = window.lodash.sortBy( assigned_users_teams, ['name'] );
       assigned_users_teams.forEach(function (element, idx) {
         handle_add_users_teams_request(false, element['id'], false, true, function () {
 
