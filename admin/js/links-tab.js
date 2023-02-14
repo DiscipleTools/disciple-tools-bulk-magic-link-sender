@@ -19,6 +19,7 @@ jQuery(function ($) {
 
   $(document).on('click', '#ml_main_col_assign_users_teams_add', function () {
     handle_add_users_teams_request(true, determine_assignment_user_select_id(), true, false, function () {
+      sort_assign_users_teams_table();
     });
   });
 
@@ -77,6 +78,17 @@ jQuery(function ($) {
   });
 
   // Helper Functions
+  function sort_assign_users_teams_table() {
+    let assigned_table = $('#ml_main_col_assign_users_teams_table');
+    let sorted = assigned_table.find('tbody > tr').sort(function (a, b) {
+      return $(a).find('#ml_main_col_assign_users_teams_table_row_name').val().toLowerCase().localeCompare($(b).find('#ml_main_col_assign_users_teams_table_row_name').val().toLowerCase());
+    });
+
+    // Refresh table with sorted rows.
+    assigned_table.find('tbody > tr').remove();
+    assigned_table.find('tbody').append(sorted);
+  }
+
   function handle_delete_request() {
     let id = $('#ml_main_col_link_objs_manage_id').val();
     let name = $('#ml_main_col_link_objs_manage_name').val();
