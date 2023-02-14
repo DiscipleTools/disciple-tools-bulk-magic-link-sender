@@ -1,0 +1,15 @@
+#. Plugin Name of the plugin
+msgid "Disciple Tools - Magic Links"
+msgstr ""
+
+#. Description of the plugin
+msgid "Disciple Tools - Magic Links for users, contacts, groups and teams assignment + schedule management for magic links dispatching over configured sending channels."
+msgstr ""
+
+# Author URI of the plugin
+msgid "https://github.com/DiscipleTools"
+msgstr ""
+
+#. Plugin URI of the plugin
+msgid "https://github.com/DiscipleTools/disciple-tools-bulk-magic-link-sender"
+msgstr ""

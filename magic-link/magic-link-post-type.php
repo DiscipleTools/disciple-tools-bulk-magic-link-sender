@@ -158,7 +158,6 @@ class Disciple_Tools_Magic_Links_Magic_Link extends DT_Magic_Url_Base {
                 'nonce' => wp_create_nonce( 'wp_rest' ),
                 'parts' => $this->parts,
                 'translations' => [
-                    'add' => __( 'Add Magic', 'disciple-tools-bulk-magic-link-sender' ),
                     'update_success' => __( 'Update Successful!', 'disciple-tools-bulk-magic-link-sender' )
                 ],
                 'submit_success_function' => Disciple_Tools_Bulk_Magic_Link_Sender_API::get_link_submission_success_js_code(),
