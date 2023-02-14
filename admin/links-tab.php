@@ -528,7 +528,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                         $dt_users = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_users();
                         if ( ! empty( $dt_users ) ) {
                             usort( $dt_users, function ( $a, $b ){
-                                return strcmp( $a['name'], $b['name'] );
+                                return strcmp( strtolower( $a['name'] ), strtolower( $b['name'] ) );
                             } );
 
                             echo '<option disabled>-- users --</option>';
@@ -544,7 +544,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                         $dt_teams = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_teams();
                         if ( ! empty( $dt_teams ) ) {
                             usort( $dt_teams, function ( $a, $b ){
-                                return strcmp( $a['name'], $b['name'] );
+                                return strcmp( strtolower( $a['name'] ), strtolower( $b['name'] ) );
                             } );
 
                             echo '<option disabled>-- teams --</option>';
@@ -560,7 +560,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                         $dt_groups = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_groups();
                         if ( ! empty( $dt_groups ) ) {
                             usort( $dt_groups, function ( $a, $b ){
-                                return strcmp( $a['name'], $b['name'] );
+                                return strcmp( strtolower( $a['name'] ), strtolower( $b['name'] ) );
                             } );
 
                             echo '<option disabled>-- groups --</option>';
