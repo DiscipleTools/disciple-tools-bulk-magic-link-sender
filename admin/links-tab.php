@@ -527,6 +527,10 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                         // Source available dt users
                         $dt_users = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_users();
                         if ( ! empty( $dt_users ) ) {
+                            usort( $dt_users, function ( $a, $b ){
+                                return strcmp( strtolower( $a['name'] ), strtolower( $b['name'] ) );
+                            } );
+
                             echo '<option disabled>-- users --</option>';
                             foreach ( $dt_users as $user ) {
                                 $value = 'users+' . $user['user_id'];
@@ -539,6 +543,10 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                         // Source available dt teams
                         $dt_teams = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_teams();
                         if ( ! empty( $dt_teams ) ) {
+                            usort( $dt_teams, function ( $a, $b ){
+                                return strcmp( strtolower( $a['name'] ), strtolower( $b['name'] ) );
+                            } );
+
                             echo '<option disabled>-- teams --</option>';
                             foreach ( $dt_teams as $team ) {
                                 $value = 'teams+' . $team['id'];
@@ -551,6 +559,10 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                         // Source available dt groups
                         $dt_groups = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_groups();
                         if ( ! empty( $dt_groups ) ) {
+                            usort( $dt_groups, function ( $a, $b ){
+                                return strcmp( strtolower( $a['name'] ), strtolower( $b['name'] ) );
+                            } );
+
                             echo '<option disabled>-- groups --</option>';
                             foreach ( $dt_groups as $group ) {
                                 $value = 'groups+' . $group['id'];
