@@ -438,8 +438,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
                     $response['dt_groups'] = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_groups();
                     break;
             }
-
-        } else{
+        } else {
             $response['success'] = false;
             $response['message'] = 'Unable to execute action, due to missing parameters.';
         }
