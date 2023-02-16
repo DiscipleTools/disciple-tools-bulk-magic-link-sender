@@ -27,15 +27,11 @@ jQuery(function ($) {
     handle_assigned_users_teams_table_row_options(e);
   });
 
-  $(document).on('click', '#ml_main_col_update_but', function () {
-    handle_update_request();
-  });
-
   $(document).on('click', '#ml_main_col_delete_but', function () {
     handle_delete_request();
   });
 
-  $(document).on('click', '#ml_main_col_link_manage_update_but', function () {
+  $(document).on('click', '.ml-links-update-but', function () {
     handle_update_request();
   });
 
@@ -137,7 +133,6 @@ jQuery(function ($) {
     $('#ml_main_col_update_msg').html('').fadeOut('fast');
 
     if (display) {
-      $('#ml_main_col_update_but').fadeIn('fast');
       $('#ml_main_col_delete_but').fadeIn('fast');
     }
   }
@@ -902,9 +897,10 @@ jQuery(function ($) {
                     <span style="float:right;">
                         <select class="ml-main-col-assign-users-teams-table-row-options">
                             <option value="" selected>...</option>
-                            <option value="view">View</option>
+                            ${((String(type).trim().toLowerCase()!=='group') && (String(type).trim().toLowerCase()!=='team')) ? '<option value="view">View</option>':''}
                             <option value="remove">Remove</option>
-                            <option value="extend">Extend</option>
+                            ${((String(type).trim().toLowerCase()!=='group') && (String(type).trim().toLowerCase()!=='team')) ? '<option value="extend">Extend</option>':''}
+                            ${((String(type).trim().toLowerCase()==='group') || (String(type).trim().toLowerCase()==='team')) ? '<option value="refresh">Refresh</option>':''}
                         </select>
                     </span>
                   </td>
@@ -984,8 +980,10 @@ jQuery(function ($) {
         break;
       }
       case 'remove': {
-        if (confirm('Are you sure you wish to remove?')) {
-          handle_remove_users_teams_request(row);
+        let name = $(row).find('#ml_main_col_assign_users_teams_table_row_name').val();
+        if (confirm('Are you sure you wish to remove ' + name + '?')) {
+          handle_remove_users_teams_request(row, function () {
+          });
         }
         break;
       }
@@ -1067,6 +1065,38 @@ jQuery(function ($) {
         dialog.dialog('open');
 
         break;
+
+      }
+      case 'refresh': {
+
+        // Ensure we are dealing with either a group or team row type.
+        let type = $(row).find('#ml_main_col_assign_users_teams_table_row_type').val();
+        if (type==='group' || type==='team') {
+          let name = $(row).find('#ml_main_col_assign_users_teams_table_row_name').val();
+          if (confirm('Are you sure you wish to refresh ' + name + '?')) {
+
+            // First, remove all group members.....
+            handle_remove_users_teams_request(row, function () {
+
+              // ....then, refresh all global variable references....
+              handle_references_management('refresh', function () {
+
+                // ....then, re-assign; detecting recently removed/added members.
+                let id = $(row).find('#ml_main_col_assign_users_teams_table_row_id').val();
+                handle_add_users_teams_request(true, id, true, false, function () {
+
+                  // Not forgetting to re-sort refreshed table entries.
+                  sort_assign_users_teams_table();
+
+                });
+              });
+            });
+          }
+
+        } else {
+          alert('Unable to detect parent Group or Team row!');
+        }
+        break;
       }
 
     }
@@ -1075,7 +1105,7 @@ jQuery(function ($) {
     options.val('');
   }
 
-  function handle_remove_users_teams_request(row) {
+  function handle_remove_users_teams_request(row, callback) {
     let removed_rows = [];
 
     // Fetch required row values and remove accordingly, based on type
@@ -1139,6 +1169,8 @@ jQuery(function ($) {
 
     // Toggle management button states accordingly based on assigned table shape!
     toggle_assigned_user_links_manage_but_states();
+
+    callback();
   }
 
   function handle_update_request() {
@@ -1360,7 +1392,6 @@ jQuery(function ($) {
       });
 
       $('#ml_main_col_update_msg').html('').fadeOut('fast');
-      $('#ml_main_col_update_but').fadeIn('fast');
       $('#ml_main_col_delete_but').fadeIn('fast');
     }
   }
@@ -1468,17 +1499,9 @@ jQuery(function ($) {
         if (data && data['success']) {
 
           // Update global variables accordingly
-          if (data['dt_users'] && data['dt_users'].length > 0) {
-            window.dt_magic_links.dt_users = data['dt_users'];
-          }
-          if (data['dt_teams'] && data['dt_teams'].length > 0) {
-            window.dt_magic_links.dt_teams = data['dt_teams'];
-          }
-          if (data['dt_groups'] && data['dt_groups'].length > 0) {
-            window.dt_magic_links.dt_groups = data['dt_groups'];
-          }
+          update_global_variables(data);
 
-          // Refresh assigned table so as to display updated user link states!
+          // Refresh assigned table, to display updated user link states!
           reset_section_assign_users_teams(data['assigned'], function () {
             // Automatically save updates....
             handle_update_request();
@@ -1505,6 +1528,50 @@ jQuery(function ($) {
       }
     });
 
+  }
+
+  function update_global_variables(data) {
+    if (data['dt_users'] && data['dt_users'].length > 0) {
+      window.dt_magic_links.dt_users = data['dt_users'];
+    }
+    if (data['dt_teams'] && data['dt_teams'].length > 0) {
+      window.dt_magic_links.dt_teams = data['dt_teams'];
+    }
+    if (data['dt_groups'] && data['dt_groups'].length > 0) {
+      window.dt_magic_links.dt_groups = data['dt_groups'];
+    }
+  }
+
+  function handle_references_management(action, callback) {
+
+    let payload = {
+      action: action
+    };
+
+    $.ajax({
+      url: window.dt_magic_links.dt_endpoint_references,
+      method: 'POST',
+      data: payload,
+      beforeSend: (xhr) => {
+        xhr.setRequestHeader("X-WP-Nonce", window.dt_admin_scripts.nonce);
+      },
+      success: function (data) {
+        if (data && data['success']) {
+
+          // Update global variables accordingly
+          update_global_variables(data);
+
+        } else {
+          console.log(data);
+        }
+
+        // Execute callback
+        callback();
+      },
+      error: function (data) {
+        console.log(data);
+      }
+    });
   }
 
   function handle_assigned_general_management(action, record) {
