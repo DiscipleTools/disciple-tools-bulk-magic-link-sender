@@ -67,6 +67,15 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
                 }
             ]
         );
+        register_rest_route(
+            $namespace, '/references', [
+                'methods'             => WP_REST_Server::CREATABLE,
+                'callback'            => [ $this, 'references' ],
+                'permission_callback' => function ( WP_REST_Request $request ) {
+                    return $this->has_permission();
+                }
+            ]
+        );
     }
 
     public function get_post_record( WP_REST_Request $request ): array {
@@ -406,6 +415,32 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
             $response['success'] = $success;
             $response['message'] = $success ? 'Loaded data for report id: ' . $id : 'Unable to load data for report id: ' . $id;
             $response['report']  = $success ? $report : null;
+        }
+
+        return $response;
+    }
+
+    public function references( WP_REST_Request $request ): array{
+
+        // Prepare response payload
+        $response = [];
+
+        $params = $request->get_params();
+        if ( isset( $params['action'] ) ){
+
+            // Execute accordingly, based on specified action
+            switch ($params['action']){
+                case 'refresh':
+                    $response['success'] = true;
+                    $response['message'] = 'References action[' . $params['action'] . '] successfully executed.';
+                    $response['dt_users'] = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_users();
+                    $response['dt_teams'] = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_teams();
+                    $response['dt_groups'] = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_groups();
+                    break;
+            }
+        } else {
+            $response['success'] = false;
+            $response['message'] = 'Unable to execute action, due to missing parameters.';
         }
 
         return $response;

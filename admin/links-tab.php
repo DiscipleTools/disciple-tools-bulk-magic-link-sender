@@ -52,6 +52,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                 'dt_endpoint_user_links_manage' => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_endpoint_user_links_manage_url(),
                 'dt_endpoint_assigned_manage'   => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_endpoint_assigned_manage_url(),
                 'dt_endpoint_get_post_record'   => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_endpoint_get_post_record_url(),
+                'dt_endpoint_references'        => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_endpoint_references(),
                 'dt_default_message_subject'    => '',
                 'dt_default_message'            => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_default_send_msg(),
                 'dt_default_send_channel_id'    => Disciple_Tools_Bulk_Magic_Link_Sender_API::$channel_email_id,
@@ -204,6 +205,16 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                 </td>
             </tr>
             </tbody>
+            <tfoot>
+            <tr>
+                <td>
+                    <span style="float:right;">
+                        <button type="submit" id="ml_main_col_link_objs_manage_update_but"
+                                class="button float-right ml-links-update-but"><?php esc_html_e( "Update", 'disciple_tools' ) ?></button>
+                    </span>
+                </td>
+            </tr>
+            </tfoot>
         </table>
         <br>
         <!-- End Box -->
@@ -222,6 +233,16 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                 </td>
             </tr>
             </tbody>
+            <tfoot>
+            <tr>
+                <td>
+                    <span style="float:right;">
+                        <button type="submit" id="ml_main_col_ml_type_fields_update_but"
+                                class="button float-right ml-links-update-but"><?php esc_html_e( "Update", 'disciple_tools' ) ?></button>
+                    </span>
+                </td>
+            </tr>
+            </tfoot>
         </table>
         <br>
         <!-- End Box -->
@@ -244,6 +265,16 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                 </td>
             </tr>
             </tbody>
+            <tfoot>
+            <tr>
+                <td colspan="2">
+                    <span style="float:right;">
+                        <button type="submit" id="ml_main_col_assign_users_teams_update_but"
+                                class="button float-right ml-links-update-but"><?php esc_html_e( "Update", 'disciple_tools' ) ?></button>
+                    </span>
+                </td>
+            </tr>
+            </tfoot>
         </table>
         <br>
         <!-- End Box -->
@@ -277,7 +308,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                 <td>
                     <span style="float:right;">
                         <button type="submit" id="ml_main_col_link_manage_update_but"
-                                class="button float-right"><?php esc_html_e( "Update", 'disciple_tools' ) ?></button>
+                                class="button float-right ml-links-update-but"><?php esc_html_e( "Update", 'disciple_tools' ) ?></button>
                     </span>
                 </td>
             </tr>
@@ -303,6 +334,16 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                 </td>
             </tr>
             </tbody>
+            <tfoot>
+            <tr>
+                <td>
+                    <span style="float:right;">
+                        <button type="submit" id="ml_main_col_message_update_but"
+                                class="button float-right ml-links-update-but"><?php esc_html_e( "Update", 'disciple_tools' ) ?></button>
+                    </span>
+                </td>
+            </tr>
+            </tfoot>
         </table>
         <br>
         <!-- End Box -->
@@ -321,6 +362,16 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                 </td>
             </tr>
             </tbody>
+            <tfoot>
+            <tr>
+                <td>
+                    <span style="float:right;">
+                        <button type="submit" id="ml_main_col_update_but"
+                                class="button float-right ml-links-update-but"><?php esc_html_e( "Update", 'disciple_tools' ) ?></button>
+                    </span>
+                </td>
+            </tr>
+            </tfoot>
         </table>
         <br>
         <!-- End Box -->
@@ -335,11 +386,6 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
         </form>
 
         <span style="float:left; display: none; font-weight: bold;" id="ml_main_col_update_msg"></span>
-
-        <span style="float:right;">
-            <button style="display: none;" type="submit" id="ml_main_col_update_but"
-                    class="button float-right"><?php esc_html_e( "Update", 'disciple_tools' ) ?></button>
-        </span>
         <?php
     }
 
