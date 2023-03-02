@@ -1331,7 +1331,8 @@ Thanks!';
     }
 
     public static function get_link_submission_success_js_code() {
-        return '
+        ob_start();
+        ?>
             Toastify({
                 text: message,
                 close: true,
@@ -1341,11 +1342,13 @@ Thanks!';
                 }
 
             }).showToast();
-        ';
+        <?php
+        return ob_get_clean();
     }
 
     public static function get_link_submission_error_js_code() {
-        return '
+        ob_start();
+        ?>
             Toastify({
                 text: error,
                 close: true,
@@ -1360,7 +1363,44 @@ Thanks!';
                 }
 
             }).showToast();
-        ';
+        <?php
+        return ob_get_clean();
+    }
+
+    public static function get_link_submission_field_validation_js_code() {
+        ob_start();
+        ?>
+            let validated = {
+                'success': true,
+                'message': ''
+            };
+
+            jQuery.each( fields, function( idx, field ) {
+                switch ( field[ keys['type'] ] ) {
+                    case 'number': {
+                        if ( field_settings[ field[ keys['id'] ] ] ) {
+                            let field_setting = field_settings[ field[ keys['id'] ] ];
+
+                            // Ensure submitted field value is within min/max range.
+                            if ( field[ keys['value'] ] && field_setting['min_option'] && field_setting['max_option'] ) {
+                                let value = parseInt( field[ keys['value'] ] );
+                                let min = parseInt( field_setting['min_option'] );
+                                let max = parseInt( field_setting['max_option'] );
+
+                                if ( ( value < min ) || ( value > max ) ) {
+                                    validated['success'] = false;
+                                    validated['message'] = field_setting['name'] + ': <?php echo esc_attr( __( 'Value out of range!', 'disciple_tools' ) ) ?>';
+                                }
+                            }
+                        }
+                        break;
+                    }
+                }
+            });
+
+            return validated;
+        <?php
+        return ob_get_clean();
     }
 
     public static function refresh_user_links_expiration_values( $user, $base_ts, $amt, $time_unit, $never_expires ) {
