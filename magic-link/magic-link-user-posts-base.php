@@ -294,15 +294,18 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                 'nonce'          => wp_create_nonce( 'wp_rest' ),
                 'parts'          => $this->parts,
                 'lang'           => $this->fetch_incoming_link_param( 'lang' ),
-                'field_settings' => DT_Posts::get_post_field_settings( $this->sub_post_type ),
+                'field_settings' => DT_Posts::get_post_field_settings( $this->sub_post_type, false ),
                 'link_obj_id'    => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $this->fetch_incoming_link_param( 'id' ) ),
                 'sys_type'       => $this->fetch_incoming_link_param( 'type' ),
                 'translations'   => [
                     'update_success' => __( 'Update Successful!', 'disciple-tools-bulk-magic-link-sender' )
                 ],
                 'submit_success_function' => Disciple_Tools_Bulk_Magic_Link_Sender_API::get_link_submission_success_js_code(),
-                'submit_error_function' => Disciple_Tools_Bulk_Magic_Link_Sender_API::get_link_submission_error_js_code()
+                'submit_error_function' => Disciple_Tools_Bulk_Magic_Link_Sender_API::get_link_submission_error_js_code(),
+                'submit_field_validation_function' => Disciple_Tools_Bulk_Magic_Link_Sender_API::get_link_submission_field_validation_js_code()
             ] ) ?>][0];
+
+            console.log(jsObject);
 
             /**
              * Fetch assigned groups
@@ -743,42 +746,56 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                         }
                     });
 
-                    // Submit data for post update
+                    // Disable submission button during this process.
                     jQuery('#content_submit_but').prop('disabled', true);
 
-                    jQuery.ajax({
-                        type: "POST",
-                        data: JSON.stringify(payload),
-                        contentType: "application/json; charset=utf-8",
-                        dataType: "json",
-                        url: jsObject.root + jsObject.parts.root + '/v1/' + jsObject.parts.type + '/update',
-                        beforeSend: function (xhr) {
-                            xhr.setRequestHeader('X-WP-Nonce', jsObject.nonce)
-                        }
+                    // Final sanity check of submitted payload fields.
+                    let validated = Function('field_settings', 'fields', 'keys', jsObject.submit_field_validation_function)(jsObject.field_settings, payload['fields'], {
+                        'id': 'id',
+                        'type': 'type',
+                        'value': 'value'
+                    });
+                    if (validated && !validated['success']) {
+                        Function('error', 'error_callback_func', jsObject.submit_error_function)(validated['message'], function () {
+                            jQuery('#content_submit_but').prop('disabled', false);
+                        });
+                    } else {
 
-                    }).done(function (data) {
+                        // Submit data for post update
+                        jQuery.ajax({
+                            type: "POST",
+                            data: JSON.stringify(payload),
+                            contentType: "application/json; charset=utf-8",
+                            dataType: "json",
+                            url: jsObject.root + jsObject.parts.root + '/v1/' + jsObject.parts.type + '/update',
+                            beforeSend: function (xhr) {
+                                xhr.setRequestHeader('X-WP-Nonce', jsObject.nonce)
+                            }
 
-                        // If successful, refresh page, otherwise; display error message
-                        if (data['success']) {
-                            Function('message', 'success_callback_func', jsObject.submit_success_function)(jsObject.translations.update_success, function () {
-                                window.location.reload();
-                            });
+                        }).done(function (data) {
 
-                        } else {
-                            Function('error', 'error_callback_func', jsObject.submit_error_function)(data['message'], function() {
-                                console.log(data);
+                            // If successful, refresh page, otherwise; display error message
+                            if (data['success']) {
+                                Function('message', 'success_callback_func', jsObject.submit_success_function)(jsObject.translations.update_success, function () {
+                                    window.location.reload();
+                                });
+
+                            } else {
+                                Function('error', 'error_callback_func', jsObject.submit_error_function)(data['message'], function () {
+                                    console.log(data);
+                                    jQuery('#error').html('');
+                                    jQuery('#content_submit_but').prop('disabled', false);
+                                });
+                            }
+
+                        }).fail(function (e) {
+                            Function('error', 'error_callback_func', jsObject.submit_error_function)(e['responseJSON']['message'], function () {
+                                console.log(e);
                                 jQuery('#error').html('');
                                 jQuery('#content_submit_but').prop('disabled', false);
                             });
-                        }
-
-                    }).fail(function (e) {
-                        Function('error', 'error_callback_func', jsObject.submit_error_function)(e['responseJSON']['message'], function() {
-                            console.log(e);
-                            jQuery('#error').html('');
-                            jQuery('#content_submit_but').prop('disabled', false);
                         });
-                    });
+                    }
                 }
             });
 
