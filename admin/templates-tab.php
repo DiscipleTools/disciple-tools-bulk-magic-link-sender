@@ -41,11 +41,11 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
         ], filemtime( dirname( __FILE__ ) . '/js/templates-tab.js' ), true );
 
         wp_localize_script(
-            "dt_magic_links_script", "dt_magic_links", array(
+            'dt_magic_links_script', 'dt_magic_links', array(
                 'dt_post_types'                => $this->fetch_post_types(),
                 'dt_magic_links_templates'     => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_templates ),
                 'dt_previous_updated_template' => $this->fetch_previous_updated_template(),
-                'dt_languages_icon'            => esc_html( get_template_directory_uri() . "/dt-assets/images/languages.svg" )
+                'dt_languages_icon'            => esc_html( get_template_directory_uri() . '/dt-assets/images/languages.svg' )
             )
         );
     }
@@ -189,10 +189,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
         <!-- End Box -->
 
         <!-- Template Deletion -->
-        <span style="float:right; margin-bottom: 15px;">
-            <button style="display: none;" type="submit" id="ml_main_col_delete_but"
-                    class="button float-right"><?php esc_html_e( "Delete", 'disciple_tools' ) ?></button>
-        </span>
+
         <form method="post" id="ml_main_col_delete_form">
             <input type="hidden" id="ml_main_col_delete_form_nonce" name="ml_main_col_delete_form_nonce"
                    value="<?php echo esc_attr( wp_create_nonce( 'ml_main_col_delete_form_nonce' ) ) ?>"/>
@@ -216,67 +213,76 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
             <tr>
                 <td>
                     <?php $this->main_column_template_details(); ?>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-        <br>
-        <!-- End Box -->
+                    <br>
+                    <span style='float:right; margin-bottom: 15px;'>
+                        <button style="display: none;" type='submit' id='ml_main_col_delete_but'
+                                class='button float-right'><?php esc_html_e( 'Delete Template', 'disciple_tools' ) ?></button>
+                    </span>
 
-        <!-- Box -->
-        <table style="display: none;" class="widefat striped" id="ml_main_col_selected_fields">
-            <thead>
-            <tr>
-                <th>Selected Fields</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-                <td>
-                    <?php $this->main_column_selected_fields(); ?>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-        <br>
-        <!-- End Box -->
 
-        <!-- Box -->
-        <table style="display: none;" class="widefat striped" id="ml_main_col_message">
-            <thead>
-            <tr>
-                <th>Message [<a href="#" class="ml-templates-docs"
-                                data-title="ml_templates_right_docs_message_title"
-                                data-content="ml_templates_right_docs_message_content">&#63;</a>]
-                </th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-                <td>
-                    <?php $this->main_column_message(); ?>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-        <br>
-        <!-- End Box -->
+                    <!-- Box -->
+                    <table style='display: none;' class='widefat striped' id='ml_main_col_selected_fields'>
+                        <thead>
+                        <tr>
+                            <th>Selected Fields</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>
+                                <?php $this->main_column_selected_fields(); ?>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <br>
+                    <!-- End Box -->
 
-        <!-- [Submission Form] -->
-        <form method="post" id="ml_main_col_update_form">
-            <input type="hidden" id="ml_main_col_update_form_nonce" name="ml_main_col_update_form_nonce"
-                   value="<?php echo esc_attr( wp_create_nonce( 'ml_main_col_update_form_nonce' ) ) ?>"/>
+                    <!-- Box -->
+                    <table style="display: none;" class="widefat striped" id="ml_main_col_message">
+                        <thead>
+                        <tr>
+                            <th>Form Header Message [<a href="#" class="ml-templates-docs"
+                                            data-title="ml_templates_right_docs_message_title"
+                                            data-content="ml_templates_right_docs_message_content">&#63;</a>]
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>
+                                <?php $this->main_column_message(); ?>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <br>
+                    <!-- End Box -->
 
-            <input type="hidden" id="ml_main_col_update_form_template"
-                   name="ml_main_col_update_form_template" value=""/>
-        </form>
+                    <!-- [Submission Form] -->
+                    <form method="post" id="ml_main_col_update_form">
+                        <input type="hidden" id="ml_main_col_update_form_nonce" name="ml_main_col_update_form_nonce"
+                               value="<?php echo esc_attr( wp_create_nonce( 'ml_main_col_update_form_nonce' ) ) ?>"/>
 
-        <span style="float:left; display: none; font-weight: bold;" id="ml_main_col_update_msg"></span>
+                        <input type="hidden" id="ml_main_col_update_form_template"
+                               name="ml_main_col_update_form_template" value=""/>
+                    </form>
 
-        <span style="float:right;">
+                    <span style="float:left; display: none; font-weight: bold;" id="ml_main_col_update_msg"></span>
+
+                    <span style="float:right;">
             <button style="display: none;" type="submit" id="ml_main_col_update_but"
-                    class="button float-right"><?php esc_html_e( "Update", 'disciple_tools' ) ?></button>
+                    class="button float-right"><?php esc_html_e( 'Update', 'disciple_tools' ) ?></button>
         </span>
+                </td>
+            </tr>
+
+            </tbody>
+        </table>
+        <br>
+        <!-- End Box -->
+
+
         <?php
     }
 
@@ -305,7 +311,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
 
     private function main_column_available_post_types() {
         ?>
-        <table style="min-width: 100%; border: 0;" id="available_post_types_section_buttons_table">
+        <table id="available_post_types_section_buttons_table">
             <tbody>
             <tr>
                 <td style="vertical-align: middle;">For which post type?</td>
@@ -339,10 +345,10 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
             <tbody>
             <tr>
                 <td>
-                        <span style="float:right;">
-                            <a id="templates_management_section_new_but"
-                               class="button float-left"><?php esc_html_e( "New Template", 'disciple_tools' ) ?></a>
-                        </span>
+
+                    <a id="templates_management_section_new_but"
+                       class="button float-left"><?php esc_html_e( 'New Template', 'disciple_tools' ) ?></a>
+
                 </td>
             </tr>
             <tr>
@@ -375,14 +381,14 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
                 </td>
             </tr>
             <tr>
-                <td style="vertical-align: middle;">Template Name</td>
+                <td style="vertical-align: middle;">Template Name (for you to remember it by)</td>
                 <td>
                     <input style="min-width: 100%;" type="text" id="ml_main_col_template_details_name"
                            value=""/>
                 </td>
             </tr>
             <tr>
-                <td style="vertical-align: middle;">Template Title</td>
+                <td style="vertical-align: middle;">Template Title (top of the form)</td>
                 <td>
                     <input style="min-width: 80%;" type="text" id="ml_main_col_template_details_title"
                            value=""/>
@@ -393,14 +399,14 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
                                 class="button float-right template-title-translate-but"
                                 data-field_translations="<?php echo esc_html( rawurlencode( '{}' ) ); ?>">
                             <img style="height: 15px; width: 20px !important; vertical-align: middle;"
-                                 src="<?php echo esc_html( get_template_directory_uri() . "/dt-assets/images/languages.svg" ); ?>"/>
+                                 src="<?php echo esc_html( get_template_directory_uri() . '/dt-assets/images/languages.svg' ); ?>"/>
                             (<span class="template-title-translate-but-label">0</span>)
                         </button>
                     </span>
                 </td>
             </tr>
             <tr>
-                <td style="vertical-align: middle;">Post Type Fields</td>
+                <td style="vertical-align: middle;">Add a D.T field to the form</td>
                 <td>
                     <select style="min-width: 80%;" id="ml_main_col_template_details_fields">
                         <option disabled selected value>-- select field --</option>
@@ -409,23 +415,23 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
                     <span style="float:right;">
                         <button id="ml_main_col_template_details_fields_add" type="submit"
                                 style="width: 62px !important;"
-                                class="button float-right"><?php esc_html_e( "Add", 'disciple_tools' ) ?></button>
+                                class="button float-right"><?php esc_html_e( 'Add', 'disciple_tools' ) ?></button>
                     </span>
                 </td>
             </tr>
             <tr>
-                <td style="vertical-align: middle;">Custom Text Fields [<a href="#" class="ml-templates-docs"
+                <td style="vertical-align: middle;">Add a custom Text Field [<a href="#" class="ml-templates-docs"
                                                                            data-title="ml_templates_right_docs_custom_fields_title"
                                                                            data-content="ml_templates_right_docs_custom_fields_content">&#63;</a>]
                 </td>
                 <td>
                     <input style="min-width: 80%;" type="text" id="ml_main_col_template_details_custom_fields"
-                           value=""/>
+                           placeholder="Text Field Label"/>
 
                     <span style="float:right;">
                         <button id="ml_main_col_template_details_custom_fields_add" type="submit"
                                 style="width: 62px !important;"
-                                class="button float-right"><?php esc_html_e( "Add", 'disciple_tools' ) ?></button>
+                                class="button float-right"><?php esc_html_e( 'Add', 'disciple_tools' ) ?></button>
                     </span>
                 </td>
             </tr>
