@@ -300,7 +300,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
                 <td>
                     <a href='https://disciple.tools/user-docs/magic-links/magic-link-form-templates/'
                                       target='_blank'>
-                        Magic Link Form Templates Decumentation
+                        Magic Link Form Templates Documentation
                         <img style='height: 20px' class='dt-icon'
                              src="<?php echo esc_html( get_template_directory_uri() . '/dt-assets/images/help.svg' ) ?>"/>
                     </a>
