@@ -169,6 +169,15 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
             <tbody>
             <tr>
                 <td>
+                    Documentation: <a href="https://disciple.tools/user-docs/magic-links/magic-link-scheduling/" target="_blank">
+                        Magic Link Scheduling
+                        <img style='height: 20px' class='dt-icon'
+                             src="<?php echo esc_html( get_template_directory_uri() . '/dt-assets/images/help.svg' ) ?>"/>
+                    </a>
+                </td>
+            </tr>
+            <tr>
+                <td>
                     <?php $this->main_column_available_link_objs(); ?>
                 </td>
             </tr>

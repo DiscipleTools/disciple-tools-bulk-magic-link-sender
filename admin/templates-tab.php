@@ -289,6 +289,26 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
     public function right_column() {
         ?>
         <!-- Box -->
+        <table class="widefat striped">
+            <thead>
+            <tr>
+                <th id="Help">Help</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>
+                    <a href='https://disciple.tools/user-docs/magic-links/magic-link-form-templates/'
+                                      target='_blank'>
+                        Magic Link Form Templates Decumentation
+                        <img style='height: 20px' class='dt-icon'
+                             src="<?php echo esc_html( get_template_directory_uri() . '/dt-assets/images/help.svg' ) ?>"/>
+                    </a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <br>
         <table style="display: none;" id="ml_templates_right_docs_section" class="widefat striped">
             <thead>
             <tr>

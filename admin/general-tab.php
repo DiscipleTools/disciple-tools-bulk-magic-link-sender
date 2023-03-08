@@ -144,6 +144,14 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_General {
         ?>
         <table class="widefat striped">
             <tr>
+                <td>
+                    Magic Link Documentation
+                </td>
+                <td>
+                    <a href='https://disciple.tools/user-docs/magic-links/' target='_blank'>Magic Links <img style="height: 20px" class="dt-icon" src="<?php echo esc_html( get_template_directory_uri() . '/dt-assets/images/help.svg' ) ?>"/></a>
+                </td>
+            </tr>
+            <tr>
                 <td style="vertical-align: middle;">All Scheduling Enabled [<a href="#" class="ml-general-docs"
                                                                                data-title="ml_general_right_docs_all_scheduling_enabled_title"
                                                                                data-content="ml_general_right_docs_all_scheduling_enabled_content">&#63;</a>]
