@@ -25,7 +25,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_General {
         ], filemtime( dirname( __FILE__ ) . '/js/general-tab.js' ), true );
 
         wp_localize_script(
-            "dt_magic_links_general_script", "dt_magic_links", array(
+            'dt_magic_links_general_script', 'dt_magic_links', array(
                 'dt_xyz' => ''
             )
         );
@@ -220,7 +220,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_General {
         <br>
         <span style="float:right;">
             <button type="submit" id="ml_general_main_col_general_update_but"
-                    class="button float-right"><?php esc_html_e( "Update", 'disciple_tools' ) ?></button>
+                    class="button float-right"><?php esc_html_e( 'Update', 'disciple_tools' ) ?></button>
         </span>
         <?php
     }

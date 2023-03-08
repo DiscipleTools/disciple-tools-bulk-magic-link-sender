@@ -10,7 +10,7 @@ class Disciple_Tools_Magic_Links_Magic_Link extends DT_Magic_Url_Base {
     public $magic = false;
     public $parts = false;
     public $page_title = 'Magic';
-    public $root = "magic_app"; // @todo define the root of the url {yoursite}/root/type/key/action
+    public $root = 'magic_app'; // @todo define the root of the url {yoursite}/root/type/key/action
     public $type = 'magic_type'; // @todo define the type
     public $post_type = 'magic_links'; // @todo set the post type this magic link connects with.
     private $meta_key = '';
@@ -81,11 +81,11 @@ class Disciple_Tools_Magic_Links_Magic_Link extends DT_Magic_Url_Base {
     /**
      * Post Type Tile Examples
      */
-    public function dt_details_additional_tiles( $tiles, $post_type = "" ) {
+    public function dt_details_additional_tiles( $tiles, $post_type = '' ) {
         if ( $post_type === $this->post_type ){
-            $tiles["dt_starters_magic_url"] = [
-                "label" => __( "Magic Url", 'disciple-tools-bulk-magic-link-sender' ),
-                "description" => "The Magic URL sets up a page accessible without authentication, only the link is needed. Useful for small applications liked to this record, like quick surveys or updates."
+            $tiles['dt_starters_magic_url'] = [
+                'label' => __( 'Magic Url', 'disciple-tools-bulk-magic-link-sender' ),
+                'description' => 'The Magic URL sets up a page accessible without authentication, only the link is needed. Useful for small applications liked to this record, like quick surveys or updates.'
             ];
         }
         return $tiles;
@@ -95,7 +95,7 @@ class Disciple_Tools_Magic_Links_Magic_Link extends DT_Magic_Url_Base {
         if ( $post_type === $this->post_type ) {
             if ( 'dt_starters_magic_url' === $section ) {
                 $record = DT_Posts::get_post( $post_type, get_the_ID() );
-                if ( isset( $record[$this->meta_key] )) {
+                if ( isset( $record[$this->meta_key] ) ) {
                     $key = $record[$this->meta_key];
                 } else {
                     $key = dt_create_unique_key();
@@ -266,7 +266,7 @@ class Disciple_Tools_Magic_Links_Magic_Link extends DT_Magic_Url_Base {
                 <h3>Form</h3>
                 <div class="grid-x" id="form-content">
                     <?php
-                    $post_id = $this->parts["post_id"];
+                    $post_id = $this->parts['post_id'];
 
                     // get the past. Make sure to only display the needed pieces on the front end as this link does net require auth
                     $post = DT_Posts::get_post( $this->post_type, $post_id, true, false );
@@ -274,7 +274,7 @@ class Disciple_Tools_Magic_Links_Magic_Link extends DT_Magic_Url_Base {
                         return;
                     }
                     $fields = DT_Posts::get_post_field_settings( $this->post_type );
-                    render_field_for_display( "start_date", $fields, $post );
+                    render_field_for_display( 'start_date', $fields, $post );
                     ?>
 
                     <label style="width: 100%">
@@ -299,7 +299,7 @@ class Disciple_Tools_Magic_Links_Magic_Link extends DT_Magic_Url_Base {
         register_rest_route(
             $namespace, '/'.$this->type, [
                 [
-                    'methods'  => "GET",
+                    'methods'  => 'GET',
                     'callback' => [ $this, 'endpoint_get' ],
                     'permission_callback' => function( WP_REST_Request $request ){
                         $magic = new DT_Magic_URL( $this->root );
@@ -311,7 +311,7 @@ class Disciple_Tools_Magic_Links_Magic_Link extends DT_Magic_Url_Base {
         register_rest_route(
             $namespace, '/'.$this->type, [
                 [
-                    'methods'  => "POST",
+                    'methods'  => 'POST',
                     'callback' => [ $this, 'update_record' ],
                     'permission_callback' => function( WP_REST_Request $request ){
                         $magic = new DT_Magic_URL( $this->root );
@@ -326,26 +326,26 @@ class Disciple_Tools_Magic_Links_Magic_Link extends DT_Magic_Url_Base {
         $params = $request->get_params();
         $params = dt_recursive_sanitize_array( $params );
 
-        $post_id = $params["parts"]["post_id"]; //has been verified in verify_rest_endpoint_permissions_on_post()
+        $post_id = $params['parts']['post_id']; //has been verified in verify_rest_endpoint_permissions_on_post()
 
         $args = [];
         if ( !is_user_logged_in() ){
-            $args["comment_author"] = "Magic Link Submission";
+            $args['comment_author'] = 'Magic Link Submission';
             wp_set_current_user( 0 );
             $current_user = wp_get_current_user();
-            $current_user->add_cap( "magic_link" );
-            $current_user->display_name = "Magic Link Submission";
+            $current_user->add_cap( 'magic_link' );
+            $current_user->display_name = 'Magic Link Submission';
         }
 
-        if ( isset( $params["update"]["comment"] ) && !empty( $params["update"]["comment"] ) ){
-            $update = DT_Posts::add_post_comment( $this->post_type, $post_id, $params["update"]["comment"], "comment", $args, false );
+        if ( isset( $params['update']['comment'] ) && !empty( $params['update']['comment'] ) ){
+            $update = DT_Posts::add_post_comment( $this->post_type, $post_id, $params['update']['comment'], 'comment', $args, false );
             if ( is_wp_error( $update ) ){
                 return $update;
             }
         }
 
-        if ( isset( $params["update"]["start_date"] ) && !empty( $params["update"]["start_date"] ) ){
-            $update = DT_Posts::update_post( $this->post_type, $post_id, [ "start_date" => $params["update"]["start_date"] ], false, false );
+        if ( isset( $params['update']['start_date'] ) && !empty( $params['update']['start_date'] ) ){
+            $update = DT_Posts::update_post( $this->post_type, $post_id, [ 'start_date' => $params['update']['start_date'] ], false, false );
             if ( is_wp_error( $update ) ){
                 return $update;
             }
@@ -357,7 +357,7 @@ class Disciple_Tools_Magic_Links_Magic_Link extends DT_Magic_Url_Base {
     public function endpoint_get( WP_REST_Request $request ) {
         $params = $request->get_params();
         if ( ! isset( $params['parts'], $params['action'] ) ) {
-            return new WP_Error( __METHOD__, "Missing parameters", [ 'status' => 400 ] );
+            return new WP_Error( __METHOD__, 'Missing parameters', [ 'status' => 400 ] );
         }
 
         $data = [];

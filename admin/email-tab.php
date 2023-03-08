@@ -25,7 +25,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Email {
         ], filemtime( dirname( __FILE__ ) . '/js/email-tab.js' ), true );
 
         wp_localize_script(
-            "dt_magic_links_email_script", "dt_magic_links", array(
+            'dt_magic_links_email_script', 'dt_magic_links', array(
                 'dt_magic_link_default_email_obj' => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_defaults_email ),
                 'dt_default_email_subject'        => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_default_email_subject()
             )
@@ -104,7 +104,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Email {
         <span id="ml_email_main_col_update_msg" style="font-weight: bold; color: red;"></span>
         <span style="float:right;">
             <button type="submit" id="ml_email_main_col_update_but"
-                    class="button float-right"><?php esc_html_e( "Update", 'disciple_tools' ) ?></button>
+                    class="button float-right"><?php esc_html_e( 'Update', 'disciple_tools' ) ?></button>
         </span>
         <?php
     }

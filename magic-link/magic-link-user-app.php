@@ -11,7 +11,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
 
     public $page_title = 'User Contact Updates';
     public $page_description = 'An update summary of assigned contacts.';
-    public $root = "smart_links"; // @todo define the root of the url {yoursite}/root/type/key/action
+    public $root = 'smart_links'; // @todo define the root of the url {yoursite}/root/type/key/action
     public $type = 'user_contacts_updates'; // @todo define the type
     public $post_type = 'user';
     private $meta_key = '';
@@ -645,7 +645,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
             <hr>
             <div id="content">
                 <div id="assigned_contacts_div" style="display: none;">
-                    <h3><?php esc_html_e( "Contacts", 'disciple_tools' ) ?> [ <span id="total">0</span> ]</h3>
+                    <h3><?php esc_html_e( 'Contacts', 'disciple_tools' ) ?> [ <span id="total">0</span> ]</h3>
                     <hr>
                     <div class="grid-x api-content-div-style" id="api-content">
                         <table class="api-content-table">
@@ -698,7 +698,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                         </tr>
                         <tr id="form_content_comments_tr">
                             <td style="vertical-align: top;">
-                                <b><?php esc_html_e( "Comments", 'disciple_tools' ) ?></b>
+                                <b><?php esc_html_e( 'Comments', 'disciple_tools' ) ?></b>
                             </td>
                             <td id="form_content_comments_td"></td>
                         </tr>
@@ -709,7 +709,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
 
                 <!-- SUBMIT UPDATES -->
                 <button id="content_submit_but" style="display: none; min-width: 100%;" class="button select-button">
-                    <?php esc_html_e( "Submit Update", 'disciple_tools' ) ?>
+                    <?php esc_html_e( 'Submit Update', 'disciple_tools' ) ?>
                 </button>
             </div>
         </div>
@@ -725,7 +725,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
         register_rest_route(
             $namespace, '/' . $this->type, [
                 [
-                    'methods'             => "GET",
+                    'methods'             => 'GET',
                     'callback'            => [ $this, 'endpoint_get' ],
                     'permission_callback' => function ( WP_REST_Request $request ) {
                         $magic = new DT_Magic_URL( $this->root );
@@ -738,7 +738,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
         register_rest_route(
             $namespace, '/' . $this->type . '/post', [
                 [
-                    'methods'             => "GET",
+                    'methods'             => 'GET',
                     'callback'            => [ $this, 'get_post' ],
                     'permission_callback' => function ( WP_REST_Request $request ) {
                         $magic = new DT_Magic_URL( $this->root );
@@ -757,7 +757,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
         register_rest_route(
             $namespace, '/' . $this->type . '/update', [
                 [
-                    'methods'             => "GET",
+                    'methods'             => 'GET',
                     'callback'            => [ $this, 'update_record' ],
                     'permission_callback' => function ( WP_REST_Request $request ) {
                         $magic = new DT_Magic_URL( $this->root );
@@ -778,12 +778,12 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
     public function endpoint_get( WP_REST_Request $request ) {
         $params = $request->get_params();
         if ( ! isset( $params['parts'], $params['action'] ) ) {
-            return new WP_Error( __METHOD__, "Missing parameters", [ 'status' => 400 ] );
+            return new WP_Error( __METHOD__, 'Missing parameters', [ 'status' => 400 ] );
         }
 
         // Sanitize and fetch user id
         $params  = dt_recursive_sanitize_array( $params );
-        $user_id = $params["parts"]["post_id"];
+        $user_id = $params['parts']['post_id'];
 
         // Fetch all assigned posts
         $data = [];
@@ -799,13 +799,13 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                 'fields' => [
                     [
                         'assigned_to' => [ 'me' ],
-                        "subassigned" => [ 'me' ]
+                        'subassigned' => [ 'me' ]
                     ],
-                    "overall_status" => [
-                        "new",
-                        "unassigned",
-                        "assigned",
-                        "active"
+                    'overall_status' => [
+                        'new',
+                        'unassigned',
+                        'assigned',
+                        'active'
                     ]
                 ]
             ] );
@@ -833,7 +833,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
     public function get_post( WP_REST_Request $request ) {
         $params = $request->get_params();
         if ( ! isset( $params['post_id'], $params['parts'], $params['action'], $params['comment_count'], $params['sys_type'] ) ) {
-            return new WP_Error( __METHOD__, "Missing parameters", [ 'status' => 400 ] );
+            return new WP_Error( __METHOD__, 'Missing parameters', [ 'status' => 400 ] );
         }
 
         // Sanitize and fetch user/post id
@@ -841,7 +841,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
 
         // Update logged-in user state if required accordingly, based on their sys_type
         if ( ! is_user_logged_in() ) {
-            $this->update_user_logged_in_state( $params['sys_type'], $params["parts"]["post_id"] );
+            $this->update_user_logged_in_state( $params['sys_type'], $params['parts']['post_id'] );
         }
 
         // Fetch corresponding contacts post record
@@ -861,7 +861,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
     public function update_record( WP_REST_Request $request ) {
         $params = $request->get_params();
         if ( ! isset( $params['post_id'], $params['parts'], $params['action'], $params['sys_type'] ) ) {
-            return new WP_Error( __METHOD__, "Missing core parameters", [ 'status' => 400 ] );
+            return new WP_Error( __METHOD__, 'Missing core parameters', [ 'status' => 400 ] );
         }
 
         // Sanitize and fetch user id
@@ -869,7 +869,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
 
         // Update logged-in user state if required accordingly, based on their sys_type
         if ( ! is_user_logged_in() ) {
-            $this->update_user_logged_in_state( $params['sys_type'], $params["parts"]["post_id"] );
+            $this->update_user_logged_in_state( $params['sys_type'], $params['parts']['post_id'] );
         }
 
         // Capture name, if present
@@ -938,7 +938,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
             case 'post':
                 wp_set_current_user( 0 );
                 $current_user = wp_get_current_user();
-                $current_user->add_cap( "magic_link" );
+                $current_user->add_cap( 'magic_link' );
                 $current_user->display_name = __( 'Smart Link Submission', 'disciple_tools' );
                 break;
             default: // wp_user

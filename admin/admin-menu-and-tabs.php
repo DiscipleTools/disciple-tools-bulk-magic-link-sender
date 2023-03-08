@@ -37,7 +37,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Menu {
      */
     public function __construct() {
 
-        add_action( "admin_menu", array( $this, "register_menu" ) );
+        add_action( 'admin_menu', array( $this, 'register_menu' ) );
 
     } // End __construct()
 
@@ -69,8 +69,8 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Menu {
             wp_die( 'You do not have sufficient permissions to access this page.' );
         }
 
-        if ( isset( $_GET["tab"] ) ) {
-            $tab = sanitize_key( wp_unslash( $_GET["tab"] ) );
+        if ( isset( $_GET['tab'] ) ) {
+            $tab = sanitize_key( wp_unslash( $_GET['tab'] ) );
         } else {
             $tab = 'general';
         }
@@ -97,32 +97,32 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Menu {
 
             <?php
             switch ( $tab ) {
-                case "general":
+                case 'general':
                     require( 'general-tab.php' );
                     $object = new Disciple_Tools_Bulk_Magic_Link_Sender_Tab_General();
                     $object->content();
                     break;
-                case "links":
+                case 'links':
                     require( 'links-tab.php' );
                     $object = new Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links();
                     $object->content();
                     break;
-                case "templates":
+                case 'templates':
                     require( 'templates-tab.php' );
                     $object = new Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates();
                     $object->content();
                     break;
-                case "email":
+                case 'email':
                     require( 'email-tab.php' );
                     $object = new Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Email();
                     $object->content();
                     break;
-                case "logging":
+                case 'logging':
                     require( 'logging-tab.php' );
                     $object = new Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Logging();
                     $object->content();
                     break;
-                case "reporting":
+                case 'reporting':
                     require( 'reporting-tab.php' );
                     $object = new Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Reporting();
                     $object->content();

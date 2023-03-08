@@ -10,7 +10,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
 
     public $page_title = 'User Post Updates';
     public $page_description = 'An update summary of assigned posts.';
-    public $root = "smart_links"; // @todo define the root of the url {yoursite}/root/type/key/action
+    public $root = 'smart_links'; // @todo define the root of the url {yoursite}/root/type/key/action
     public $type = 'user_posts_updates'; // @todo define the type
     public $post_type = 'user';
     public $sub_post_type = 'posts';
@@ -117,7 +117,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         return $script;
     }
 
-    public function add_type_attribute( $tag, $handle) {
+    public function add_type_attribute( $tag, $handle ) {
         if ( !str_contains( $handle, 'dtwc' ) ) {
             return $tag;
         }
@@ -922,7 +922,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
 
                     <?php if ( isset( $link_obj ) && property_exists( $link_obj, 'type_config' ) && property_exists( $link_obj->type_config, 'supports_create' ) && $link_obj->type_config->supports_create ): ?>
                         <button id="add_new" class="button select-button">
-                            <?php esc_html_e( "Add New", 'disciple_tools' ) ?>
+                            <?php esc_html_e( 'Add New', 'disciple_tools' ) ?>
                         </button>
                     <?php endif; ?>
                 </div>
@@ -944,7 +944,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                         </tr>
                         <tr id="form_content_comments_tr">
                             <td style="vertical-align: top;">
-                                <b><?php esc_html_e( "Comments", 'disciple_tools' ) ?></b>
+                                <b><?php esc_html_e( 'Comments', 'disciple_tools' ) ?></b>
                             </td>
                             <td id="form_content_comments_td"></td>
                         </tr>
@@ -960,7 +960,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
 
                 <!-- SUBMIT UPDATES -->
                 <button id="content_submit_but" style="display: none; min-width: 100%;" class="button select-button">
-                    <?php esc_html_e( "Submit Update", 'disciple_tools' ) ?>
+                    <?php esc_html_e( 'Submit Update', 'disciple_tools' ) ?>
                 </button>
             </div>
         </div>
@@ -975,9 +975,9 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         <?php endif;
     }
 
-    private function assoc_to_array( $options) {
+    private function assoc_to_array( $options ) {
         $keys = array_keys( $options );
-        return array_map(function ( $key) use ( $options) {
+        return array_map(function ( $key ) use ( $options ) {
             $options[$key]['id'] = $key;
             return $options[$key];
         }, $keys);
@@ -998,17 +998,17 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         } else {
             $can_update = true;
         }
-        if ( $can_update || isset( $post["assigned_to"]["id"] ) && $post["assigned_to"]["id"] == get_current_user_id() ) {
+        if ( $can_update || isset( $post['assigned_to']['id'] ) && $post['assigned_to']['id'] == get_current_user_id() ) {
             $disabled = '';
         }
-        $required_tag = ( isset( $fields[$field_key]["required"] ) && $fields[$field_key]["required"] === true ) ? 'required' : '';
-        $field_type = isset( $fields[$field_key]["type"] ) ? $fields[$field_key]["type"] : null;
-        $is_private = isset( $fields[$field_key]["private"] ) && $fields[$field_key]["private"] === true;
+        $required_tag = ( isset( $fields[$field_key]['required'] ) && $fields[$field_key]['required'] === true ) ? 'required' : '';
+        $field_type = isset( $fields[$field_key]['type'] ) ? $fields[$field_key]['type'] : null;
+        $is_private = isset( $fields[$field_key]['private'] ) && $fields[$field_key]['private'] === true;
         $display_field_id = $field_key;
         if ( !empty( $field_id_prefix ) ) {
             $display_field_id = $field_id_prefix . $field_key;
         }
-        if ( isset( $fields[$field_key]["type"] ) && empty( $fields[$field_key]["hidden"] ) ) {
+        if ( isset( $fields[$field_key]['type'] ) && empty( $fields[$field_key]['hidden'] ) ) {
             $allowed_types = apply_filters( 'dt_render_field_for_display_allowed_types', [ 'key_select', 'multi_select', 'date', 'datetime', 'text', 'textarea', 'number', 'connection', 'location', 'location_meta', 'communication_channel', 'tags', 'user_select' ] );
             if ( !in_array( $field_type, $allowed_types ) ){
                 return;
@@ -1021,31 +1021,31 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
             ?>
             <?php
             $icon = null;
-            if ( isset( $fields[$field_key]["icon"] ) && !empty( $fields[$field_key]["icon"] ) ) {
-                $icon = 'icon=' . esc_attr( $fields[$field_key]["icon"] );
+            if ( isset( $fields[$field_key]['icon'] ) && !empty( $fields[$field_key]['icon'] ) ) {
+                $icon = 'icon=' . esc_attr( $fields[$field_key]['icon'] );
             }
 
             $shared_attributes = '
                   id="' . esc_attr( $display_field_id ) . '"
                   name="' . esc_attr( $field_key ) .'"
-                  label="' . esc_attr( $fields[$field_key]["name"] ) . '"
+                  label="' . esc_attr( $fields[$field_key]['name'] ) . '"
                   ' . esc_html( $icon ) . '
                   ' . esc_html( $required_tag ) . '
                   ' . esc_html( $disabled ) . '
                   ' . ( $is_private ? 'private privateLabel=' . esc_attr( _x( "Private Field: Only I can see it\'s content", 'disciple_tools' ) ) : null ) . '
             ';
-            if ( $field_type === "key_select" ) :
+            if ( $field_type === 'key_select' ) :
                 ?>
                 <dt-single-select class="select-field"
                                   <?php echo wp_kses_post( $shared_attributes ) ?>
-                                  value="<?php echo esc_attr( key_exists( $field_key, $post ) ? $post[$field_key]["key"] : null ) ?>"
-                                  options="<?php echo esc_attr( json_encode( $this->assoc_to_array( $fields[$field_key]["default"] ) ) ) ?>"
+                                  value="<?php echo esc_attr( key_exists( $field_key, $post ) ? $post[$field_key]['key'] : null ) ?>"
+                                  options="<?php echo esc_attr( json_encode( $this->assoc_to_array( $fields[$field_key]['default'] ) ) ) ?>"
                               >
                     <?php $this->render_icon_slot( $fields[$field_key] ) ?>
                 </dt-single-select>
 
-            <?php elseif ( $field_type === "tags" ) : ?>
-                <?php $value = array_map(function ( $value) {
+            <?php elseif ( $field_type === 'tags' ) : ?>
+                <?php $value = array_map(function ( $value ) {
                     return [
                         'id' => $value,
                         'label' => $value,
@@ -1055,64 +1055,64 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                 <dt-tags
                     <?php echo wp_kses_post( $shared_attributes ) ?>
                     value="<?php echo esc_attr( json_encode( $value ) ) ?>"
-                    placeholder="<?php echo esc_html( sprintf( _x( "Search %s", "Search 'something'", 'disciple_tools' ), $fields[$field_key]['name'] ) )?>"
+                    placeholder="<?php echo esc_html( sprintf( _x( 'Search %s', "Search 'something'", 'disciple_tools' ), $fields[$field_key]['name'] ) )?>"
                     allowAdd
                 >
                     <?php $this->render_icon_slot( $fields[$field_key] ) ?>
                 </dt-tags>
 
-            <?php elseif ( $field_type === "multi_select" ) : ?>
-                <?php $options = array_map(function ( $key, $value) {
+            <?php elseif ( $field_type === 'multi_select' ) : ?>
+                <?php $options = array_map(function ( $key, $value ) {
                     return [
                         'id' => $key,
                         'label' => $value['label'],
                     ];
-                }, array_keys( $fields[$field_key]["default"] ), $fields[$field_key]["default"]);
+                }, array_keys( $fields[$field_key]['default'] ), $fields[$field_key]['default']);
                 $value = isset( $post[$field_key] ) ? $post[$field_key] : [];
                 ?>
                 <dt-multi-select
                     <?php echo wp_kses_post( $shared_attributes ) ?>
                     value="<?php echo esc_attr( json_encode( $value ) ) ?>"
                     options="<?php echo esc_attr( json_encode( $options ) ) ?>"
-                    placeholder="<?php echo esc_attr( sprintf( _x( "Search %s", "Search 'something'", 'disciple_tools' ), $fields[$field_key]['name'] ) )?>"
-                    display="<?php echo esc_attr( isset( $fields[$field_key]["display"] ) ? $fields[$field_key]["display"] : 'typeahead' ) ?>"
+                    placeholder="<?php echo esc_attr( sprintf( _x( 'Search %s', "Search 'something'", 'disciple_tools' ), $fields[$field_key]['name'] ) )?>"
+                    display="<?php echo esc_attr( isset( $fields[$field_key]['display'] ) ? $fields[$field_key]['display'] : 'typeahead' ) ?>"
                 >
                     <?php $this->render_icon_slot( $fields[$field_key] ) ?>
                 </dt-multi-select>
 
-            <?php elseif ( $field_type === "text" ) :?>
+            <?php elseif ( $field_type === 'text' ) :?>
                 <dt-text
                     <?php echo wp_kses_post( $shared_attributes ) ?>
-                    value="<?php echo esc_html( $post[$field_key] ?? "" ) ?>"
+                    value="<?php echo esc_html( $post[$field_key] ?? '' ) ?>"
                 >
                     <?php $this->render_icon_slot( $fields[$field_key] ) ?>
                 </dt-text>
-            <?php elseif ( $field_type === "textarea" ) :?>
+            <?php elseif ( $field_type === 'textarea' ) :?>
                 <dt-textarea
                     <?php echo wp_kses_post( $shared_attributes ) ?>
-                    value="<?php echo esc_html( $post[$field_key] ?? "" ) ?>"
+                    value="<?php echo esc_html( $post[$field_key] ?? '' ) ?>"
                 >
                     <?php $this->render_icon_slot( $fields[$field_key] ) ?>
                 </dt-textarea>
-            <?php elseif ( $field_type === "number" ) :?>
+            <?php elseif ( $field_type === 'number' ) :?>
                 <dt-number
                     <?php echo wp_kses_post( $shared_attributes ) ?>
-                    value="<?php echo esc_html( $post[$field_key] ?? "" ) ?>" <?php echo esc_html( $disabled ); ?>
-                    <?php echo isset( $fields[$field_key]["min_option"] ) && is_numeric( $fields[$field_key]["min_option"] ) ? 'min="' . esc_html( $fields[$field_key]["min_option"] ?? "" ) . '"' : '' ?>
-                    <?php echo isset( $fields[$field_key]["max_option"] ) && is_numeric( $fields[$field_key]["max_option"] ) ? 'max="' . esc_html( $fields[$field_key]["max_option"] ?? "" ) . '"' : '' ?>
+                    value="<?php echo esc_html( $post[$field_key] ?? '' ) ?>" <?php echo esc_html( $disabled ); ?>
+                    <?php echo isset( $fields[$field_key]['min_option'] ) && is_numeric( $fields[$field_key]['min_option'] ) ? 'min="' . esc_html( $fields[$field_key]['min_option'] ?? '' ) . '"' : '' ?>
+                    <?php echo isset( $fields[$field_key]['max_option'] ) && is_numeric( $fields[$field_key]['max_option'] ) ? 'max="' . esc_html( $fields[$field_key]['max_option'] ?? '' ) . '"' : '' ?>
                 >
                     <?php $this->render_icon_slot( $fields[$field_key] ) ?>
                 </dt-number>
-            <?php elseif ( $field_type === "date" ) :?>
+            <?php elseif ( $field_type === 'date' ) :?>
                 <dt-date
                     <?php echo wp_kses_post( $shared_attributes ) ?>
-                    timestamp="<?php echo esc_html( $post[$field_key]["timestamp"] ?? '' ) ?>"
+                    timestamp="<?php echo esc_html( $post[$field_key]['timestamp'] ?? '' ) ?>"
                 >
                     <?php $this->render_icon_slot( $fields[$field_key] ) ?>
                 </dt-date>
 
-            <?php elseif ( $field_type === "connection" ) :?>
-                <?php $value = array_map(function ( $value) {
+            <?php elseif ( $field_type === 'connection' ) :?>
+                <?php $value = array_map(function ( $value ) {
                     return [
                         'id' => $value['ID'],
                         'label' => $value['post_title'],
@@ -1124,14 +1124,14 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                 <dt-connection
                     <?php echo wp_kses_post( $shared_attributes ) ?>
                     value="<?php echo esc_attr( json_encode( $value ) ) ?>"
-                    data-posttype="<?php echo esc_attr( $fields[$field_key]["post_type"] ) ?>"
+                    data-posttype="<?php echo esc_attr( $fields[$field_key]['post_type'] ) ?>"
                     allowAdd
                 >
                     <?php $this->render_icon_slot( $fields[$field_key] ) ?>
                 </dt-connection>
 
-            <?php elseif ( $field_type === "location" ) :?>
-                <?php $value = array_map(function ( $value) {
+            <?php elseif ( $field_type === 'location' ) :?>
+                <?php $value = array_map(function ( $value ) {
                     return [
                         'id' => strval( $value['id'] ),
                         'label' => $value['label'],
@@ -1152,7 +1152,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                     <?php echo wp_kses_post( $shared_attributes ) ?>
                     value="<?php echo esc_attr( json_encode( $value ) ) ?>"
                     filters="<?php echo esc_attr( json_encode( $filters ) ) ?>"
-                    placeholder="<?php echo esc_html( sprintf( _x( "Search %s", "Search 'something'", 'disciple_tools' ), $fields[$field_key]['name'] ) )?>"
+                    placeholder="<?php echo esc_html( sprintf( _x( 'Search %s', "Search 'something'", 'disciple_tools' ), $fields[$field_key]['name'] ) )?>"
                 >
                     <?php $this->render_icon_slot( $fields[$field_key] ) ?>
                 </dt-location>
@@ -1174,9 +1174,9 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                 $priority = 999;
                 if ( !empty( $post_tiles ) && key_exists( $field['id'], $this->post_field_settings ) ) {
                     $field_setting = $this->post_field_settings[$field['id']];
-                    if ( !empty( $field_setting['tile'] ) && key_exists( $field_setting['tile'], $post_tiles )) {
+                    if ( !empty( $field_setting['tile'] ) && key_exists( $field_setting['tile'], $post_tiles ) ) {
                         $tile = $post_tiles[$field_setting['tile']];
-                        if ( !empty( $tile ) && isset( $tile['tile_priority'] ) && isset( $tile['order'] )) {
+                        if ( !empty( $tile ) && isset( $tile['tile_priority'] ) && isset( $tile['order'] ) ) {
                             $field_order = array_search( $field['id'], $tile['order'] );
                             $priority = ( $tile['tile_priority'] * 10 ) + $field_order;
                         }
@@ -1186,7 +1186,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
             }
             unset( $field ); // https://stackoverflow.com/questions/7158741/why-php-iteration-by-reference-returns-a-duplicate-last-record
 
-            usort( $fields, function( $a, $b) {
+            usort( $fields, function( $a, $b ) {
                 return $a['priority'] - $b['priority'];
             });
         }
@@ -1235,7 +1235,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
 
                             // Capture rendered field html
                             ob_start();
-                            if (in_array( $post_field_type, $wc_types ) ) {
+                            if ( in_array( $post_field_type, $wc_types ) ) {
                                 $this->render_field_as_web_component( $field['id'], $this->post_field_settings, $post, true );
                             } else {
                                 render_field_for_display( $field['id'], $this->post_field_settings, $post, true );
@@ -1273,7 +1273,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                             <input class="form_content_table_field_type" type="hidden" value="textarea">
                             <input class="form_content_table_field_meta" type="hidden" value="">
                             <td>
-                                <div class="section-subheader"><?php esc_html_e( "Comments", 'disciple_tools' ) ?></div>
+                                <div class="section-subheader"><?php esc_html_e( 'Comments', 'disciple_tools' ) ?></div>
                                 <textarea id="comments"></textarea>
                             </td>
                         </tr>
@@ -1309,7 +1309,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         register_rest_route(
             $namespace, '/' . $this->type, [
                 [
-                    'methods'             => "GET",
+                    'methods'             => 'GET',
                     'callback'            => [ $this, 'endpoint_get' ],
                     'permission_callback' => function ( WP_REST_Request $request ) {
                         $magic = new DT_Magic_URL( $this->root );
@@ -1322,7 +1322,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         register_rest_route(
             $namespace, '/' . $this->type . '/post', [
                 [
-                    'methods'             => "GET",
+                    'methods'             => 'GET',
                     'callback'            => [ $this, 'get_post' ],
                     'permission_callback' => function ( WP_REST_Request $request ) {
                         $magic = new DT_Magic_URL( $this->root );
@@ -1341,7 +1341,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         register_rest_route(
             $namespace, '/' . $this->type . '/update', [
                 [
-                    'methods'             => "POST",
+                    'methods'             => 'POST',
                     'callback'            => [ $this, 'update_record' ],
                     'permission_callback' => function ( WP_REST_Request $request ) {
                         $magic = new DT_Magic_URL( $this->root );
@@ -1360,7 +1360,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         register_rest_route(
             $namespace, '/' . $this->type . '/field-options', [
                 [
-                    'methods'             => "GET",
+                    'methods'             => 'GET',
                     'callback'            => [ $this, 'get_field_options' ],
                     'permission_callback' => function ( WP_REST_Request $request ) {
                         $magic = new DT_Magic_URL( $this->root );
@@ -1381,12 +1381,12 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
     public function endpoint_get( WP_REST_Request $request ) {
         $params = $request->get_params();
         if ( ! isset( $params['parts'], $params['action'] ) ) {
-            return new WP_Error( __METHOD__, "Missing parameters", [ 'status' => 400 ] );
+            return new WP_Error( __METHOD__, 'Missing parameters', [ 'status' => 400 ] );
         }
 
         // Sanitize and fetch user id
         $params  = dt_recursive_sanitize_array( $params );
-        $user_id = $params["parts"]["post_id"];
+        $user_id = $params['parts']['post_id'];
 
         // Fetch all assigned posts
         $data = [];
@@ -1415,7 +1415,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
             // Fetch all assigned posts
             $posts = DT_Posts::list_posts( $this->sub_post_type, $options );
 
-            $this->determine_language_locale( $params["parts"] );
+            $this->determine_language_locale( $params['parts'] );
 
             // Revert to original user
             if ( ! empty( $original_user ) && isset( $original_user->ID ) ) {
@@ -1439,7 +1439,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
     public function get_post( WP_REST_Request $request ) {
         $params = $request->get_params();
         if ( ! isset( $params['post_id'], $params['parts'], $params['action'], $params['comment_count'], $params['sys_type'] ) ) {
-            return new WP_Error( __METHOD__, "Missing parameters", [ 'status' => 400 ] );
+            return new WP_Error( __METHOD__, 'Missing parameters', [ 'status' => 400 ] );
         }
 
         // Sanitize and fetch user/post id
@@ -1447,11 +1447,11 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
 
         // Update logged-in user state if required accordingly, based on their sys_type
         if ( ! is_user_logged_in() ) {
-            $this->update_user_logged_in_state( $params['sys_type'], $params["parts"]["post_id"] );
+            $this->update_user_logged_in_state( $params['sys_type'], $params['parts']['post_id'] );
         }
-        $this->determine_language_locale( $params["parts"] );
+        $this->determine_language_locale( $params['parts'] );
 
-        $link_obj = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $params["parts"]["instance_id"] );
+        $link_obj = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $params['parts']['instance_id'] );
 
         // Fetch corresponding groups post record
         $response = [];
@@ -1485,7 +1485,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
     public function update_record( WP_REST_Request $request ) {
         $params = $request->get_params();
         if ( ! isset( $params['post_id'], $params['parts'], $params['action'], $params['sys_type'] ) ) {
-            return new WP_Error( __METHOD__, "Missing core parameters", [ 'status' => 400 ] );
+            return new WP_Error( __METHOD__, 'Missing core parameters', [ 'status' => 400 ] );
         }
 
         // Sanitize and fetch user id
@@ -1493,7 +1493,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
 
         // Update logged-in user state if required accordingly, based on their sys_type
         if ( ! is_user_logged_in() ) {
-            $this->update_user_logged_in_state( $params['sys_type'], $params["parts"]["post_id"] );
+            $this->update_user_logged_in_state( $params['sys_type'], $params['parts']['post_id'] );
         }
 
         $updates = [];
@@ -1502,7 +1502,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         // First, capture and package incoming DT field values
         foreach ( $params['fields'] ?? [] as $field ) {
             // Comments are handled separately, so pull them out and handle later
-            if ( $field['id'] == 'comments') {
+            if ( $field['id'] == 'comments' ) {
                 $comments[] = $field['value'];
                 continue;
             }
@@ -1665,7 +1665,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
             foreach ( $comments as $comment ) {
                 if ( !empty( $comment ) ) {
                     $updated_comment = DT_Posts::add_post_comment( $updated_post['post_type'], $updated_post['ID'], $comment, 'comment', [], false );
-                    if (empty( $updated_comment ) || is_wp_error( $updated_comment )) {
+                    if ( empty( $updated_comment ) || is_wp_error( $updated_comment ) ) {
                         return [
                             'success' => false,
                             'message' => 'Unable to add comment to record details!'
@@ -1685,7 +1685,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
     public function get_field_options( WP_REST_Request $request ) {
         $params = $request->get_params();
         if ( ! isset( $params['parts'], $params['action'], $params['field'], $params['sys_type'], $params['link_obj_id'] ) ) {
-            return new WP_Error( __METHOD__, "Missing parameters", [ 'status' => 400 ] );
+            return new WP_Error( __METHOD__, 'Missing parameters', [ 'status' => 400 ] );
         }
 
         // Sanitize and fetch user/post id
@@ -1693,9 +1693,9 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
 
         // Update logged-in user state if required accordingly, based on their sys_type
         if ( ! is_user_logged_in() ) {
-            $this->update_user_logged_in_state( $params['sys_type'], $params["parts"]["post_id"] );
+            $this->update_user_logged_in_state( $params['sys_type'], $params['parts']['post_id'] );
         }
-        $this->determine_language_locale( $params["parts"] );
+        $this->determine_language_locale( $params['parts'] );
 
         // Fetch parent link object.
         $link_obj = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $params['link_obj_id'] );
@@ -1703,19 +1703,19 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         // get available post options for current field
         $options = [];
         $field = $params['field'];
-        $query = isset( $params['query'] ) ? $params['query'] : "";
+        $query = isset( $params['query'] ) ? $params['query'] : '';
         $post_settings = DT_Posts::get_post_settings( $this->sub_post_type );
         if ( key_exists( $field, $post_settings['fields'] ) ) {
             $field_settings = $post_settings['fields'][$field];
 
             if ( ( $field_settings['type'] === 'connection' ) && ( isset( $link_obj->type_config->enable_connection_fields ) && $link_obj->type_config->enable_connection_fields ) ) {
-                $options = DT_Posts::get_viewable_compact( $field_settings['post_type'], $query ?? "" );
+                $options = DT_Posts::get_viewable_compact( $field_settings['post_type'], $query ?? '' );
             } else if ( $field_settings['type'] === 'tags' ) {
                 $options = DT_Posts::get_multi_select_options( $this->sub_post_type, $field, $query );
             } else if ( $field_settings['type'] === 'location' ) {
                 $options = Disciple_Tools_Mapping_Queries::search_location_grid_by_name( [
-                    "search_query" => $query ?? "",
-                    "filter" => isset( $params['filter'] ) ? $params['filter'] : 'all',
+                    'search_query' => $query ?? '',
+                    'filter' => isset( $params['filter'] ) ? $params['filter'] : 'all',
                 ] );
             }
         // } else {
@@ -1739,7 +1739,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
             case 'post':
                 wp_set_current_user( 0 );
                 $current_user = wp_get_current_user();
-                $current_user->add_cap( "magic_link" );
+                $current_user->add_cap( 'magic_link' );
                 $current_user->display_name = __( 'Smart Link Submission', 'disciple_tools' );
                 break;
             default: // wp_user

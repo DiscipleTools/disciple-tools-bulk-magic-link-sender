@@ -161,7 +161,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
 
             // Ensure current user has sufficient capabilities/roles for the tasks ahead!
             $current_user = wp_get_current_user();
-            if ( ! empty( $current_user ) && ! is_wp_error( $current_user ) && ! current_user_can( "access_contacts" ) ) {
+            if ( ! empty( $current_user ) && ! is_wp_error( $current_user ) && ! current_user_can( 'access_contacts' ) ) {
                 $current_user->add_role( 'access_contacts' );
             }
 
@@ -429,7 +429,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
         if ( isset( $params['action'] ) ){
 
             // Execute accordingly, based on specified action
-            switch ($params['action']){
+            switch ( $params['action'] ){
                 case 'refresh':
                     $response['success'] = true;
                     $response['message'] = 'References action[' . $params['action'] . '] successfully executed.';

@@ -41,7 +41,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
         ], filemtime( dirname( __FILE__ ) . '/js/links-tab.js' ), true );
 
         wp_localize_script(
-            "dt_magic_links_script", "dt_magic_links", array(
+            'dt_magic_links_script', 'dt_magic_links', array(
                 'dt_magic_link_types'           => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_magic_link_types(),
                 'dt_magic_link_templates'       => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_templates ),
                 'dt_users'                      => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_users(),
@@ -180,7 +180,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
         <!-- Links Object Deletion -->
         <span style="float:right; margin-bottom: 15px;">
             <button style="display: none;" type="submit" id="ml_main_col_delete_but"
-                    class="button float-right"><?php esc_html_e( "Delete", 'disciple_tools' ) ?></button>
+                    class="button float-right"><?php esc_html_e( 'Delete', 'disciple_tools' ) ?></button>
         </span>
         <form method="post" id="ml_main_col_delete_form">
             <input type="hidden" id="ml_main_col_delete_form_nonce" name="ml_main_col_delete_form_nonce"
@@ -210,7 +210,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                 <td>
                     <span style="float:right;">
                         <button type="submit" id="ml_main_col_link_objs_manage_update_but"
-                                class="button float-right ml-links-update-but"><?php esc_html_e( "Update", 'disciple_tools' ) ?></button>
+                                class="button float-right ml-links-update-but"><?php esc_html_e( 'Update', 'disciple_tools' ) ?></button>
                     </span>
                 </td>
             </tr>
@@ -238,7 +238,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                 <td>
                     <span style="float:right;">
                         <button type="submit" id="ml_main_col_ml_type_fields_update_but"
-                                class="button float-right ml-links-update-but"><?php esc_html_e( "Update", 'disciple_tools' ) ?></button>
+                                class="button float-right ml-links-update-but"><?php esc_html_e( 'Update', 'disciple_tools' ) ?></button>
                     </span>
                 </td>
             </tr>
@@ -270,7 +270,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                 <td colspan="2">
                     <span style="float:right;">
                         <button type="submit" id="ml_main_col_assign_users_teams_update_but"
-                                class="button float-right ml-links-update-but"><?php esc_html_e( "Update", 'disciple_tools' ) ?></button>
+                                class="button float-right ml-links-update-but"><?php esc_html_e( 'Update', 'disciple_tools' ) ?></button>
                     </span>
                 </td>
             </tr>
@@ -299,16 +299,16 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                 <td>
                     <button disabled style="max-width: 100%;" type="submit"
                             id="ml_main_col_link_manage_links_but_refresh"
-                            class="button float-right"><?php esc_html_e( "Refresh All Links", 'disciple_tools' ) ?></button>
+                            class="button float-right"><?php esc_html_e( 'Refresh All Links', 'disciple_tools' ) ?></button>
 
                     <button disabled style="max-width: 100%;" type="submit"
                             id="ml_main_col_link_manage_links_but_delete"
-                            class="button float-right"><?php esc_html_e( "Delete All Links", 'disciple_tools' ) ?></button>
+                            class="button float-right"><?php esc_html_e( 'Delete All Links', 'disciple_tools' ) ?></button>
                 </td>
                 <td>
                     <span style="float:right;">
                         <button type="submit" id="ml_main_col_link_manage_update_but"
-                                class="button float-right ml-links-update-but"><?php esc_html_e( "Update", 'disciple_tools' ) ?></button>
+                                class="button float-right ml-links-update-but"><?php esc_html_e( 'Update', 'disciple_tools' ) ?></button>
                     </span>
                 </td>
             </tr>
@@ -339,7 +339,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                 <td>
                     <span style="float:right;">
                         <button type="submit" id="ml_main_col_message_update_but"
-                                class="button float-right ml-links-update-but"><?php esc_html_e( "Update", 'disciple_tools' ) ?></button>
+                                class="button float-right ml-links-update-but"><?php esc_html_e( 'Update', 'disciple_tools' ) ?></button>
                     </span>
                 </td>
             </tr>
@@ -367,7 +367,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                 <td>
                     <span style="float:right;">
                         <button type="submit" id="ml_main_col_update_but"
-                                class="button float-right ml-links-update-but"><?php esc_html_e( "Update", 'disciple_tools' ) ?></button>
+                                class="button float-right ml-links-update-but"><?php esc_html_e( 'Update', 'disciple_tools' ) ?></button>
                     </span>
                 </td>
             </tr>
@@ -428,7 +428,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
 
         <span style="float:right;">
             <button id="ml_main_col_available_link_objs_new" type="submit"
-                    class="button float-right"><?php esc_html_e( "New", 'disciple_tools' ) ?></button>
+                    class="button float-right"><?php esc_html_e( 'New', 'disciple_tools' ) ?></button>
         </span>
         <?php
     }
@@ -528,20 +528,20 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
             <tbody>
                 <tr class="display_logo">
                     <input id="ml_main_col_ml_type_config_table_row_field_id" type="hidden" value="display_logo">
-                    <td><?php esc_html_e( "Display Site Logo", 'disciple_tools' ) ?><img style="height:15px; margin-inline-start: 5px" src="<?php echo esc_html( $logo_url ) ?>"/></td>
+                    <td><?php esc_html_e( 'Display Site Logo', 'disciple_tools' ) ?><img style="height:15px; margin-inline-start: 5px" src="<?php echo esc_html( $logo_url ) ?>"/></td>
                     <td><input id="ml_main_col_ml_type_config_table_row_field_enabled" type="checkbox"></td>
                 </tr>
                 <tr class="enable_connection_fields default_config">
                     <input id="ml_main_col_ml_type_config_table_row_field_id" type="hidden" value="enable_connection_fields">
                     <td>
-                        <?php esc_html_e( "Enable connection field types", 'disciple_tools' ) ?><br>
-                        <span style="color: grey; font-size: 10px;"><?php esc_html_e( "This allows listing out all the records (contacts, groups, etc) that the user has access to.", 'disciple_tools' ) ?></span>
+                        <?php esc_html_e( 'Enable connection field types', 'disciple_tools' ) ?><br>
+                        <span style="color: grey; font-size: 10px;"><?php esc_html_e( 'This allows listing out all the records (contacts, groups, etc) that the user has access to.', 'disciple_tools' ) ?></span>
                     </td>
                     <td><input id="ml_main_col_ml_type_config_table_row_field_enabled" type="checkbox"></td>
                 </tr>
                 <tr class="supports_create">
                     <input id="ml_main_col_ml_type_config_table_row_field_id" type="hidden" value="supports_create">
-                    <td><?php esc_html_e( "Support creating new items", 'disciple_tools' ) ?></td>
+                    <td><?php esc_html_e( 'Support creating new items', 'disciple_tools' ) ?></td>
                     <td><input id="ml_main_col_ml_type_config_table_row_field_enabled" type="checkbox"></td>
                 </tr>
             </tbody>
@@ -624,7 +624,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                 <th>
                     <span style="float:right;">
                         <button id="ml_main_col_assign_users_teams_add" type="submit"
-                                class="button float-right"><?php esc_html_e( "Add", 'disciple_tools' ) ?></button>
+                                class="button float-right"><?php esc_html_e( 'Add', 'disciple_tools' ) ?></button>
                     </span>
                 </th>
             </tr>
@@ -761,7 +761,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                     <input type="hidden" id="ml_main_col_schedules_last_success_send" value=""/>
 
                     <button disabled style="min-width: 100%;" type="submit" id="ml_main_col_schedules_send_now_but"
-                            class="button float-right"><?php esc_html_e( "Send Now", 'disciple_tools' ) ?></button>
+                            class="button float-right"><?php esc_html_e( 'Send Now', 'disciple_tools' ) ?></button>
                 </td>
             </tr>
         </table>

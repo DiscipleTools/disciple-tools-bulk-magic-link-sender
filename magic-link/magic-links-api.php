@@ -306,7 +306,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
             foreach ( $members['members'] as $key => $member ) {
 
                 // Fetch corresponding wp-user/contact ids for members; which currently default to post ids!
-                $corresponds_to_user_id = get_post_meta( $member['ID'], "corresponds_to_user", true );
+                $corresponds_to_user_id = get_post_meta( $member['ID'], 'corresponds_to_user', true );
                 $has_wp_user            = ( ! empty( $corresponds_to_user_id ) );
 
                 $members['members'][ $key ]['type']    = $has_wp_user ? 'wp_user' : 'post';
@@ -988,13 +988,13 @@ Thanks!';
                             'fields' => [
                                 [
                                     'assigned_to' => [ 'me' ],
-                                    "subassigned" => [ 'me' ]
+                                    'subassigned' => [ 'me' ]
                                 ],
-                                "overall_status" => [
-                                    "new",
-                                    "unassigned",
-                                    "assigned",
-                                    "active"
+                                'overall_status' => [
+                                    'new',
+                                    'unassigned',
+                                    'assigned',
+                                    'active'
                                 ]
                             ]
                         ] );
@@ -1301,7 +1301,7 @@ Thanks!';
     }
 
     public static function get_contact_id_by_user_id( $user_id ) {
-        $contact_id = get_user_option( "corresponds_to_contact", $user_id );
+        $contact_id = get_user_option( 'corresponds_to_contact', $user_id );
 
         if ( ! empty( $contact_id ) && get_post( $contact_id ) ) {
             return (int) $contact_id;
@@ -1311,18 +1311,18 @@ Thanks!';
             'relation'   => 'AND',
             'meta_query' => [
                 [
-                    'key'   => "corresponds_to_user",
-                    "value" => $user_id
+                    'key'   => 'corresponds_to_user',
+                    'value' => $user_id
                 ],
                 [
-                    'key'   => "type",
-                    "value" => "user"
+                    'key'   => 'type',
+                    'value' => 'user'
                 ],
             ],
         ];
         $contacts = new WP_Query( $args );
         if ( isset( $contacts->post->ID ) ) {
-            update_user_option( $user_id, "corresponds_to_contact", $contacts->post->ID );
+            update_user_option( $user_id, 'corresponds_to_contact', $contacts->post->ID );
 
             return $contacts->post->ID;
         } else {

@@ -42,7 +42,7 @@ class Disciple_Tools_Magic_Links_Templates_Loader {
     } // End instance()
 
     public function __construct() {
-        add_action( "after_setup_theme", function () {
+        add_action( 'after_setup_theme', function () {
             self::load_templates();
         }, 200 );
     }
@@ -63,7 +63,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
 
     public $page_title = 'Template Title';
     public $page_description = 'Template Title Description';
-    public $root = "templates"; // @todo define the root of the url {yoursite}/root/type/key/action
+    public $root = 'templates'; // @todo define the root of the url {yoursite}/root/type/key/action
     public $type = 'template_id'; // Placeholder to be replaced with actual template ids
     public $type_name = '';
     public $post_type = 'contacts'; // Support ML contacts (which can be any one of the DT post types) by default!
@@ -1118,7 +1118,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                 <button id="content_submit_but"
                         style="<?php echo( ! empty( $this->post ) ? '' : 'display: none;' ) ?> min-width: 100%;"
                         class="button select-button">
-                    <?php esc_html_e( "Submit Update", 'disciple_tools' ) ?>
+                    <?php esc_html_e( 'Submit Update', 'disciple_tools' ) ?>
                 </button>
             </div>
         </div>
@@ -1134,7 +1134,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         register_rest_route(
             $namespace, '/' . $this->type . '/update', [
                 [
-                    'methods'             => "POST",
+                    'methods'             => 'POST',
                     'callback'            => [ $this, 'update_record' ],
                     'permission_callback' => function ( WP_REST_Request $request ) {
                         $magic = new DT_Magic_URL( $this->root );
@@ -1149,7 +1149,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
     public function update_record( WP_REST_Request $request ) {
         $params = $request->get_params();
         if ( ! isset( $params['post_id'], $params['post_type'], $params['parts'], $params['action'], $params['fields'] ) ) {
-            return new WP_Error( __METHOD__, "Missing core parameters", [ 'status' => 400 ] );
+            return new WP_Error( __METHOD__, 'Missing core parameters', [ 'status' => 400 ] );
         }
 
         // Sanitize and fetch user id
@@ -1338,7 +1338,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
     public function update_user_logged_in_state() {
         wp_set_current_user( 0 );
         $current_user = wp_get_current_user();
-        $current_user->add_cap( "magic_link" );
+        $current_user->add_cap( 'magic_link' );
         $current_user->display_name = __( 'Smart Link Submission', 'disciple_tools' );
     }
 }
