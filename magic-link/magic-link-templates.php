@@ -1047,6 +1047,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
 
                                             // Capture rendered field html
                                             ob_start();
+                                            $this->post_field_settings[$field['id']]['custom_display'] = false;
                                             render_field_for_display( $field['id'], $this->post_field_settings, $this->post, true );
                                             $rendered_field_html = ob_get_contents();
                                             ob_end_clean();
