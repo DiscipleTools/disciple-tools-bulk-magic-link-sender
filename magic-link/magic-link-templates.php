@@ -1031,7 +1031,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                     if ( $field['type'] === 'dt' && isset( $this->post_field_settings[ $field['id'] ]['type'] ) ) {
                                         $post_field_type = $this->post_field_settings[ $field['id'] ]['type'];
                                     }
-                                    if ( empty( $post_field_type ) ) {
+                                    if ( $field['type'] === 'dt' && empty( $post_field_type ) ) {
                                         continue;
                                     }
 
