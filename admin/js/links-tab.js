@@ -404,7 +404,7 @@ jQuery(function ($) {
           }
 
           // Adjust connection field enabled states accordingly
-          handle_enable_connection_fields_config_selection(enable_connection_fields_tr_checkbox);
+          handle_enable_connection_fields_config_selection(enable_connection_fields_tr_checkbox, (link_obj && link_obj['type_fields']) ? link_obj['type_fields']:[]);
 
           // supports_create
           if (type_obj['meta']['supports_create']) {
@@ -1630,13 +1630,21 @@ jQuery(function ($) {
     }
   }
 
-  function handle_enable_connection_fields_config_selection(config_checkbox) {
+  function handle_enable_connection_fields_config_selection(config_checkbox, fields = []) {
     let enabled = $(config_checkbox).prop('checked');
     $('#ml_main_col_ml_type_fields_table').find('tbody > tr').each(function (idx, tr) {
       if ($(tr).find('#ml_main_col_ml_type_fields_table_row_field_type').val() === 'connection') {
 
+        // Determine fields checked state.
+        let checked = enabled;
+        let field_id = $(tr).find('#ml_main_col_ml_type_fields_table_row_field_id').val();
+        let field = fields.find(x => x.id === field_id);
+        if (field) {
+          checked = enabled && field.enabled;
+        }
+
         // Adjust connection field enabled states accordingly
-        $(tr).find('#ml_main_col_ml_type_fields_table_row_field_enabled').prop('checked', enabled);
+        $(tr).find('#ml_main_col_ml_type_fields_table_row_field_enabled').prop('checked', checked);
         $(tr).find('#ml_main_col_ml_type_fields_table_row_field_enabled').prop('disabled', !enabled);
       }
     });
