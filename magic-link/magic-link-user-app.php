@@ -141,6 +141,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
         // @todo add or remove js files with this filter
 
         $allowed_js[] = 'toastify-js';
+        $allowed_js[] = Disciple_Tools_Bulk_Magic_Link_Sender_API::get_magic_link_utilities_script_handle();
 
         return $allowed_js;
     }
@@ -156,6 +157,8 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
     public function wp_enqueue_scripts() {
         wp_enqueue_style( 'toastify-js-css', 'https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.css', [], '1.12.0' );
         wp_enqueue_script( 'toastify-js', 'https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.js', [ 'jquery' ], '1.12.0' );
+
+        Disciple_Tools_Bulk_Magic_Link_Sender_API::enqueue_magic_link_utilities_script();
     }
 
     /**
@@ -253,9 +256,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                 'sys_type'                => $this->fetch_incoming_link_param( 'type' ),
                 'translations'            => [
                     'update_success' => __( 'Update Successful!', 'disciple-tools-bulk-magic-link-sender' )
-                ],
-                'submit_success_function' => Disciple_Tools_Bulk_Magic_Link_Sender_API::get_link_submission_success_js_code(),
-                'submit_error_function' => Disciple_Tools_Bulk_Magic_Link_Sender_API::get_link_submission_error_js_code()
+                ]
             ] ) ?>][0]
 
             /**
@@ -605,24 +606,40 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
 
                         // If successful, refresh page, otherwise; display error message
                         if (data['success']) {
-                            Function('message', 'success_callback_func', jsObject.submit_success_function)(jsObject.translations.update_success, function () {
+                            if (typeof window.ml_utility_submit_success_function === "function") {
+                                window.ml_utility_submit_success_function(jsObject.translations.update_success, function () {
+                                    window.location.reload();
+                                });
+                            } else {
                                 window.location.reload();
-                            });
+                            }
 
                         } else {
-                            Function('error', 'error_callback_func', jsObject.submit_error_function)(data['message'], function() {
+                            if (typeof window.ml_utility_submit_error_function === "function") {
+                                window.ml_utility_submit_error_function(data['message'], function () {
+                                    console.log(data);
+                                    jQuery('#error').html('');
+                                    jQuery('#content_submit_but').prop('disabled', false);
+                                });
+                            } else {
                                 console.log(data);
                                 jQuery('#error').html('');
                                 jQuery('#content_submit_but').prop('disabled', false);
-                            });
+                            }
                         }
 
                     }).fail(function (e) {
-                        Function('error', 'error_callback_func', jsObject.submit_error_function)(e['responseJSON']['message'], function() {
+                        if (typeof window.ml_utility_submit_error_function === "function") {
+                            window.ml_utility_submit_error_function(e['responseJSON']['message'], function () {
+                                console.log(e);
+                                jQuery('#error').html('');
+                                jQuery('#content_submit_but').prop('disabled', false);
+                            });
+                        } else {
                             console.log(e);
                             jQuery('#error').html('');
                             jQuery('#content_submit_but').prop('disabled', false);
-                        });
+                        }
                     });
                 }
             });

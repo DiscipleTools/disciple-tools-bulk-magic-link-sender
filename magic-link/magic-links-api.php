@@ -1330,77 +1330,34 @@ Thanks!';
         }
     }
 
-    public static function get_link_submission_success_js_code() {
-        ob_start();
-        ?>
-            Toastify({
-                text: message,
-                close: true,
-                gravity: "bottom",
-                callback: function() {
-                    success_callback_func();
-                }
-
-            }).showToast();
-        <?php
-        return ob_get_clean();
+    public static function get_magic_link_utilities_script_handle(){
+        return 'ml_utilities';
     }
 
-    public static function get_link_submission_error_js_code() {
-        ob_start();
-        ?>
-            Toastify({
-                text: error,
-                close: true,
-                gravity: "bottom",
-                position: "center",
-                duration: 6000,
-                style: {
-                    background: "#d25e5e"
-                },
-                callback: function() {
-                    error_callback_func();
-                }
+    public static function enqueue_magic_link_utilities_script(){
+        $ml_utilities_obj = 'ml_utilities_obj';
+        $ml_utilities_file = 'magic-link-utilities.js';
+        $ml_utilities_path = '/dt-core/dependencies/magic-link/';
+        $ml_utilities_file_uri = get_template_directory_uri() . $ml_utilities_path . $ml_utilities_file;
+        $ml_utilities_file_path = get_template_directory() . $ml_utilities_path . $ml_utilities_file;
 
-            }).showToast();
-        <?php
-        return ob_get_clean();
-    }
-
-    public static function get_link_submission_field_validation_js_code() {
-        ob_start();
-        ?>
-            let validated = {
-                'success': true,
-                'message': ''
-            };
-
-            jQuery.each( fields, function( idx, field ) {
-                switch ( field[ keys['type'] ] ) {
-                    case 'number': {
-                        if ( field_settings[ field[ keys['id'] ] ] ) {
-                            let field_setting = field_settings[ field[ keys['id'] ] ];
-
-                            // Ensure submitted field value is within min/max range.
-                            if ( field[ keys['value'] ] && field_setting['min_option'] && field_setting['max_option'] ) {
-                                let value = parseInt( field[ keys['value'] ] );
-                                let min = parseInt( field_setting['min_option'] );
-                                let max = parseInt( field_setting['max_option'] );
-
-                                if ( ( value < min ) || ( value > max ) ) {
-                                    validated['success'] = false;
-                                    validated['message'] = field_setting['name'] + ': <?php echo esc_attr( __( 'Value out of range!', 'disciple_tools' ) ) ?>';
-                                }
-                            }
-                        }
-                        break;
-                    }
-                }
-            });
-
-            return validated;
-        <?php
-        return ob_get_clean();
+        if ( file_exists( $ml_utilities_file_path ) ){
+            wp_enqueue_script(
+                self::get_magic_link_utilities_script_handle(),
+                $ml_utilities_file_uri,
+                [
+                    'jquery',
+                    'lodash',
+                    'toastify-js'
+                ],
+                filemtime( $ml_utilities_file_path )
+            );
+            wp_localize_script(
+                self::get_magic_link_utilities_script_handle(),
+                $ml_utilities_obj,
+                []
+            );
+        }
     }
 
     public static function refresh_user_links_expiration_values( $user, $base_ts, $amt, $time_unit, $never_expires ) {

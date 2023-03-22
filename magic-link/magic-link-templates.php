@@ -178,6 +178,8 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         wp_enqueue_script( 'toastify-js', 'https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.js', [ 'jquery' ], '1.12.0' );
 
         wp_enqueue_style( 'material-font-icons-css', 'https://cdn.jsdelivr.net/npm/@mdi/font@6.6.96/css/materialdesignicons.min.css', [], '6.6.96' );
+
+        Disciple_Tools_Bulk_Magic_Link_Sender_API::enqueue_magic_link_utilities_script();
     }
 
     public function dt_magic_url_base_allowed_js( $allowed_js ) {
@@ -188,6 +190,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         $allowed_js[] = 'mapbox-search-widget';
         $allowed_js[] = 'jquery-typeahead';
         $allowed_js[] = 'toastify-js';
+        $allowed_js[] = Disciple_Tools_Bulk_Magic_Link_Sender_API::get_magic_link_utilities_script_handle();
 
         return $allowed_js;
     }
@@ -297,7 +300,12 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                 'translations'            => [
                     'regions_of_focus' => __( 'Regions of Focus', 'disciple_tools' ),
                     'all_locations'    => __( 'All Locations', 'disciple_tools' ),
-                    'update_success' => __( 'Update Successful!', 'disciple_tools' )
+                    'update_success' => __( 'Update Successful!', 'disciple_tools' ),
+                    'validation' => [
+                        'number' => [
+                            'out_of_range' => __( 'Value out of range!', 'disciple_tools' )
+                        ]
+                    ]
                 ],
                 'mapbox'                  => [
                     'map_key'        => DT_Mapbox_API::get_key(),
@@ -308,10 +316,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                         'use'             => __( 'Use', 'disciple_tools' ),
                         'open_modal'      => __( 'Open Modal', 'disciple_tools' )
                     ]
-                ],
-                'submit_success_function' => Disciple_Tools_Bulk_Magic_Link_Sender_API::get_link_submission_success_js_code(),
-                'submit_error_function' => Disciple_Tools_Bulk_Magic_Link_Sender_API::get_link_submission_error_js_code(),
-                'submit_field_validation_function' => Disciple_Tools_Bulk_Magic_Link_Sender_API::get_link_submission_field_validation_js_code()
+                ]
             ] ) ?>][0]
 
             console.log(jsObject);
@@ -909,15 +914,23 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                     jQuery('#content_submit_but').prop('disabled', true);
 
                     // Final sanity check of submitted payload fields.
-                    let validated = Function('field_settings', 'fields', 'keys', jsObject.submit_field_validation_function)(jsObject.field_settings, payload['fields']['dt'], {
-                        'id': 'id',
-                        'type': 'dt_type',
-                        'value': 'value'
-                    });
+                    let validated = null;
+                    if (typeof window.ml_utility_submit_field_validation_function === "function") {
+                        validated = window.ml_utility_submit_field_validation_function(jsObject.field_settings, payload['fields']['dt'], {
+                                'id': 'id',
+                                'type': 'dt_type',
+                                'value': 'value'
+                            },
+                            jsObject.translations.validation);
+                    }
                     if (validated && !validated['success']) {
-                        Function('error', 'error_callback_func', jsObject.submit_error_function)(validated['message'], function () {
+                        if (typeof window.ml_utility_submit_error_function === "function") {
+                            window.ml_utility_submit_error_function(validated['message'], function () {
+                                jQuery('#content_submit_but').prop('disabled', false);
+                            });
+                        } else {
                             jQuery('#content_submit_but').prop('disabled', false);
-                        });
+                        }
                     } else {
 
                         // Submit data for post update.
@@ -935,24 +948,40 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
 
                             // If successful, refresh page, otherwise; display error message
                             if (data['success']) {
-                                Function('message', 'success_callback_func', jsObject.submit_success_function)(jsObject.translations.update_success, function () {
+                                if (typeof window.ml_utility_submit_success_function === "function") {
+                                    window.ml_utility_submit_success_function(jsObject.translations.update_success, function () {
+                                        window.location.reload();
+                                    });
+                                } else {
                                     window.location.reload();
-                                });
+                                }
 
                             } else {
-                                Function('error', 'error_callback_func', jsObject.submit_error_function)(data['message'], function() {
+                                if (typeof window.ml_utility_submit_error_function === "function") {
+                                    window.ml_utility_submit_error_function(data['message'], function () {
+                                        console.log(data);
+                                        jQuery('#error').html('');
+                                        jQuery('#content_submit_but').prop('disabled', false);
+                                    });
+                                } else {
                                     console.log(data);
                                     jQuery('#error').html('');
                                     jQuery('#content_submit_but').prop('disabled', false);
-                                });
+                                }
                             }
 
                         }).fail(function (e) {
-                            Function('error', 'error_callback_func', jsObject.submit_error_function)(e['responseJSON']['message'], function() {
+                            if (typeof window.ml_utility_submit_error_function === "function") {
+                                window.ml_utility_submit_error_function(e['responseJSON']['message'], function () {
+                                    console.log(e);
+                                    jQuery('#error').html('');
+                                    jQuery('#content_submit_but').prop('disabled', false);
+                                });
+                            } else {
                                 console.log(e);
                                 jQuery('#error').html('');
                                 jQuery('#content_submit_but').prop('disabled', false);
-                            });
+                            }
                         });
                     }
                 }
