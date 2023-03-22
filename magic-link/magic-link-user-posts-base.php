@@ -165,6 +165,8 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         wp_enqueue_style( 'toastify-js-css', 'https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.css', [], '1.12.0' );
         wp_enqueue_script( 'toastify-js', 'https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.js', [ 'jquery' ], '1.12.0' );
 
+        Disciple_Tools_Bulk_Magic_Link_Sender_API::enqueue_magic_link_utilities_script();
+
         $this->enqueue_web_component( 'form-components', 'index.js' );
     }
 
@@ -177,6 +179,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         $allowed_js[] = 'jquery-typeahead';
         $allowed_js[] = 'dtwc-form-components';
         $allowed_js[] = 'toastify-js';
+        $allowed_js[] = Disciple_Tools_Bulk_Magic_Link_Sender_API::get_magic_link_utilities_script_handle();
 
         return $allowed_js;
     }
@@ -298,11 +301,13 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                 'link_obj_id'    => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $this->fetch_incoming_link_param( 'id' ) ),
                 'sys_type'       => $this->fetch_incoming_link_param( 'type' ),
                 'translations'   => [
-                    'update_success' => __( 'Update Successful!', 'disciple-tools-bulk-magic-link-sender' )
-                ],
-                'submit_success_function' => Disciple_Tools_Bulk_Magic_Link_Sender_API::get_link_submission_success_js_code(),
-                'submit_error_function' => Disciple_Tools_Bulk_Magic_Link_Sender_API::get_link_submission_error_js_code(),
-                'submit_field_validation_function' => Disciple_Tools_Bulk_Magic_Link_Sender_API::get_link_submission_field_validation_js_code()
+                    'update_success' => __( 'Update Successful!', 'disciple-tools-bulk-magic-link-sender' ),
+                    'validation' => [
+                        'number' => [
+                            'out_of_range' => __( 'Value out of range!', 'disciple_tools' )
+                        ]
+                    ]
+                ]
             ] ) ?>][0];
 
             console.log(jsObject);
@@ -750,15 +755,23 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                     jQuery('#content_submit_but').prop('disabled', true);
 
                     // Final sanity check of submitted payload fields.
-                    let validated = Function('field_settings', 'fields', 'keys', jsObject.submit_field_validation_function)(jsObject.field_settings, payload['fields'], {
-                        'id': 'id',
-                        'type': 'type',
-                        'value': 'value'
-                    });
+                    let validated = null;
+                    if (typeof window.ml_utility_submit_field_validation_function === "function") {
+                        validated = window.ml_utility_submit_field_validation_function(jsObject.field_settings, payload['fields'], {
+                                'id': 'id',
+                                'type': 'type',
+                                'value': 'value'
+                            },
+                            jsObject.translations.validation);
+                    }
                     if (validated && !validated['success']) {
-                        Function('error', 'error_callback_func', jsObject.submit_error_function)(validated['message'], function () {
+                        if (typeof window.ml_utility_submit_error_function === "function") {
+                            window.ml_utility_submit_error_function(validated['message'], function () {
+                                jQuery('#content_submit_but').prop('disabled', false);
+                            });
+                        } else {
                             jQuery('#content_submit_but').prop('disabled', false);
-                        });
+                        }
                     } else {
 
                         // Submit data for post update
@@ -776,24 +789,40 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
 
                             // If successful, refresh page, otherwise; display error message
                             if (data['success']) {
-                                Function('message', 'success_callback_func', jsObject.submit_success_function)(jsObject.translations.update_success, function () {
+                                if (typeof window.ml_utility_submit_success_function === "function") {
+                                    window.ml_utility_submit_success_function(jsObject.translations.update_success, function () {
+                                        window.location.reload();
+                                    });
+                                } else {
                                     window.location.reload();
-                                });
+                                }
 
                             } else {
-                                Function('error', 'error_callback_func', jsObject.submit_error_function)(data['message'], function () {
+                                if (typeof window.ml_utility_submit_error_function === "function") {
+                                    window.ml_utility_submit_error_function(data['message'], function () {
+                                        console.log(data);
+                                        jQuery('#error').html('');
+                                        jQuery('#content_submit_but').prop('disabled', false);
+                                    });
+                                } else {
                                     console.log(data);
                                     jQuery('#error').html('');
                                     jQuery('#content_submit_but').prop('disabled', false);
-                                });
+                                }
                             }
 
                         }).fail(function (e) {
-                            Function('error', 'error_callback_func', jsObject.submit_error_function)(e['responseJSON']['message'], function () {
+                            if (typeof window.ml_utility_submit_error_function === "function") {
+                                window.ml_utility_submit_error_function(e['responseJSON']['message'], function () {
+                                    console.log(e);
+                                    jQuery('#error').html('');
+                                    jQuery('#content_submit_but').prop('disabled', false);
+                                });
+                            } else {
                                 console.log(e);
                                 jQuery('#error').html('');
                                 jQuery('#content_submit_but').prop('disabled', false);
-                            });
+                            }
                         });
                     }
                 }
