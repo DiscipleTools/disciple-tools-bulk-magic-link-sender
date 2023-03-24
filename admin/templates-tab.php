@@ -472,6 +472,16 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
                            value=""/>
                 </td>
             </tr>
+            <tr>
+                <td style="vertical-align: middle;">List Sub-Assigned Contacts [<a href="#" class="ml-templates-docs"
+                                                                                      data-title="ml_templates_right_docs_list_sub_assigned_contacts_title"
+                                                                                      data-content="ml_templates_right_docs_list_sub_assigned_contacts_content">&#63;</a>]
+                </td>
+                <td>
+                    <input type="checkbox" id="ml_main_col_template_details_list_sub_assigned_contacts"
+                           value=""/>
+                </td>
+            </tr>
         </table>
         <?php
     }

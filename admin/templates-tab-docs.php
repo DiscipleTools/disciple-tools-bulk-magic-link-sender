@@ -18,6 +18,15 @@
 </div>
 <!-- Send Submission Notifications -->
 
+<!-- List Sub-Assigned Contacts -->
+<div id="ml_templates_right_docs_list_sub_assigned_contacts_title" style="display: none;">
+    List Sub-Assigned Contacts
+</div>
+<div id="ml_templates_right_docs_list_sub_assigned_contacts_content" style="display: none;">
+    If link form recipient is also sub-assigned on other records, then a list of sub-assignments will be displayed.
+</div>
+<!-- List Sub-Assigned Contacts -->
+
 <!-- Message -->
 <div id="ml_templates_right_docs_message_title" style="display: none;">
     Message
