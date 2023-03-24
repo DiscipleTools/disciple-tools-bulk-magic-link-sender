@@ -1306,7 +1306,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                         <!-- LIST SUB-ASSIGNED CONTACTS -->
                         <div id="assigned_contacts_div">
                             <h3><?php esc_html_e( 'Assigned', 'disciple_tools' ) ?> [ <span
-                                    id="total"><?php esc_attr_e( count( $assigned_posts['posts'] ), 'disciple_tools' ); ?></span>
+                                    id="total"><?php echo esc_html( count( $assigned_posts['posts'] ) ); ?></span>
                                 ]</h3>
                             <hr>
                             <div class="grid-x api-content-div-style" id="api-content">
@@ -1315,7 +1315,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                     <?php
                                     foreach ( $assigned_posts['posts'] as $assigned ){
                                         ?>
-                                        <tr onclick="get_assigned_details('<?php esc_attr_e( $assigned['post_type'] ); ?>','<?php esc_attr_e( $assigned['ID'] ); ?>','<?php esc_attr_e( str_replace( "'", '&apos;', $assigned['name'] ) ); ?>')">
+                                        <tr onclick="get_assigned_details('<?php echo esc_html( $assigned['post_type'] ); ?>','<?php echo esc_html( $assigned['ID'] ); ?>','<?php echo esc_html( str_replace( "'", '&apos;', $assigned['name'] ) ); ?>')">
                                             <td><?php echo esc_html( $assigned['name'] ) ?></td>
                                         </tr>
                                         <?php
@@ -1521,7 +1521,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
             $response['success'] = true;
             $response['post'] = $post;
             $response['comments'] = DT_Posts::get_post_comments( $params['post_type'], $params['post_id'], false, 'all', [ 'number' => $params['comment_count'] ] );
-        } else{
+        } else {
             $response['success'] = false;
         }
 
