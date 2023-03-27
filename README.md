@@ -4,6 +4,10 @@
 
 Disciple Tools - Magic Links for users, contacts, groups and teams assignment + schedule management for magic links dispatching over configured sending channels.
 
+[<img src="https://img.youtube.com/vi/A9tVT1OyhD4/maxresdefault.jpg" width="50%">](https://youtu.be/A9tVT1OyhD4)
+
+
+
 ## Purpose
 
 Provide the ability to create link objects; which enable the assignment of individual D.T. users and team members; who are notified via sending channels such as Twilio, of the latest magic links.
