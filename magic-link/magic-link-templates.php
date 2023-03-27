@@ -1286,12 +1286,6 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                             [
                                 'assigned_to' => [ $this->post['ID'] ],
                                 'subassigned' => [ $this->post['ID'] ]
-                            ],
-                            'overall_status' => [
-                                'new',
-                                'unassigned',
-                                'assigned',
-                                'active'
                             ]
                         ]
                     ] );
