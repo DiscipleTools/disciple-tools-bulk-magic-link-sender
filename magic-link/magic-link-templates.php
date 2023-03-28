@@ -836,9 +836,12 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                     switch (field_type) {
                                         case 'number':
                                         case 'textarea':
-                                        case 'text':
-                                        case 'key_select': {
+                                        case 'text': {
                                             jQuery(tr).find(selector).val(post[field_id] ? post[field_id]:'');
+                                            break;
+                                        }
+                                        case 'key_select': {
+                                            jQuery(tr).find(selector).val((post[field_id] && post[field_id]['key']) ? post[field_id]['key']:'');
                                             break;
                                         }
                                         case 'communication_channel': {
