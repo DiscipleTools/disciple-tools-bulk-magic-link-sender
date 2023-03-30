@@ -215,7 +215,8 @@ jQuery(function ($) {
     title_translations: {},
     custom_fields: '',
     show_recent_comments: true,
-    send_submission_notifications: true
+    send_submission_notifications: true,
+    list_sub_assigned_contacts: false
   }, callback = function () {
   }) {
     let view_template_details = $('#ml_main_col_template_details');
@@ -231,6 +232,7 @@ jQuery(function ($) {
         $('#ml_main_col_template_details_custom_fields').val(data.custom_fields);
         $('#ml_main_col_template_details_show_recent_comments').prop('checked', data.show_recent_comments);
         $('#ml_main_col_template_details_send_submission_notifications').prop('checked', data.send_submission_notifications);
+        $('#ml_main_col_template_details_list_sub_assigned_contacts').prop('checked', data.list_sub_assigned_contacts);
         callback();
       });
 
@@ -244,6 +246,7 @@ jQuery(function ($) {
       $('#ml_main_col_template_details_custom_fields').val(data.custom_fields);
       $('#ml_main_col_template_details_show_recent_comments').prop('checked', data.show_recent_comments);
       $('#ml_main_col_template_details_send_submission_notifications').prop('checked', data.send_submission_notifications);
+      $('#ml_main_col_template_details_list_sub_assigned_contacts').prop('checked', data.list_sub_assigned_contacts);
       view_template_details.fadeIn(fade_speed, function () {
         callback();
       });
@@ -364,7 +367,8 @@ jQuery(function ($) {
                 title_translations: template['title_translations'] ?? {},
                 custom_fields: '',
                 show_recent_comments: template['show_recent_comments'],
-                send_submission_notifications: template['send_submission_notifications'] ?? true
+                send_submission_notifications: template['send_submission_notifications'] ?? true,
+                list_sub_assigned_contacts: template['list_sub_assigned_contacts'] ?? false
               });
               template_views_selected_fields(false, 'slow', {fields: template['fields']});
               template_views_message(false, 'slow', {text: template['message']});
@@ -628,6 +632,7 @@ jQuery(function ($) {
     let title_translations = JSON.parse(decodeURIComponent($('#ml_main_col_template_details_title_translate_but').data('field_translations')));
     let show_recent_comments = $('#ml_main_col_template_details_show_recent_comments').prop('checked');
     let send_submission_notifications = $('#ml_main_col_template_details_send_submission_notifications').prop('checked');
+    let list_sub_assigned_contacts = $('#ml_main_col_template_details_list_sub_assigned_contacts').prop('checked');
     let message = $('#ml_main_col_msg_textarea').val();
     let fields = fetch_selected_fields();
 
@@ -666,6 +671,7 @@ jQuery(function ($) {
         'title_translations': title_translations,
         'show_recent_comments': show_recent_comments,
         'send_submission_notifications': send_submission_notifications,
+        'list_sub_assigned_contacts': list_sub_assigned_contacts,
         'message': message,
         'fields': fields
       };

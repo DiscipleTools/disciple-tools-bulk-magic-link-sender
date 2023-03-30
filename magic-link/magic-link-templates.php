@@ -249,7 +249,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
             }
 
             .api-content-div-style {
-                height: 300px;
+                height: 150px;
                 overflow-x: hidden;
                 overflow-y: scroll;
                 text-align: left;
@@ -358,7 +358,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                  * Remove
                                  */
 
-                                jQuery(document).on('click', '.channel-delete-button', evt => {
+                                jQuery(tr).on('click', '.channel-delete-button', evt => {
                                     let field = jQuery(evt.currentTarget).data('field');
                                     let key = jQuery(evt.currentTarget).data('key');
 
@@ -552,6 +552,15 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                         },
                                         callback: {
                                             onClick: function (node, a, item, event) {
+                                                // If present, remove from deleted meta list.
+                                                let deleted_items = (field_meta.val()) ? JSON.parse(field_meta.val()) : [];
+                                                if (deleted_items.find(e => e.ID.toString() === item.ID.toString())) {
+                                                    let idx = deleted_items.findIndex(e => e.ID.toString() === item.ID.toString());
+                                                    if (idx > -1) {
+                                                        deleted_items.splice(idx, 1);
+                                                        field_meta.val(JSON.stringify(deleted_items));
+                                                    }
+                                                }
                                             },
                                             onReady() {
                                                 this.filters.dropdown = {
@@ -725,6 +734,16 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                             onClick: function (node, a, item, event) {
                                                 event.preventDefault();
                                                 this.addMultiselectItemLayout({name: item.name});
+
+                                                // If present, remove from deleted meta list.
+                                                let deleted_items = (field_meta.val()) ? JSON.parse(field_meta.val()) : [];
+                                                if (deleted_items.find(e => e.name === item.name)) {
+                                                    let idx = deleted_items.findIndex(e => e.name === item.name);
+                                                    if (idx > -1) {
+                                                        deleted_items.splice(idx, 1);
+                                                        field_meta.val(JSON.stringify(deleted_items));
+                                                    }
+                                                }
                                             },
                                             onResult: function (node, query, result, resultCount) {
                                                 let text = TYPEAHEADS.typeaheadHelpText(resultCount, query, result)
@@ -760,6 +779,245 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                 });
             };
             window.activate_field_controls();
+
+            /**
+             * Handle fetch request for assigned details
+             */
+
+            window.get_assigned_details = (post_type, post_id, post_name) => {
+                let contact_name = jQuery('#contact_name');
+
+                // Update contact name
+                contact_name.html(post_name);
+
+                // Fetch requested assigned details
+                window.get_assigned_post(post_type, post_id);
+            };
+
+            /**
+             * Fetch requested assigned details
+             */
+
+            window.get_assigned_post = (post_type, post_id) => {
+                let comment_count = 2;
+                let form_content_table = jQuery('.form-content-table');
+                form_content_table.fadeOut('fast', function () {
+                    jQuery.ajax({
+                        type: "GET",
+                        data: {
+                            action: 'get',
+                            parts: jsObject.parts,
+                            post_type: post_type,
+                            post_id: post_id,
+                            comment_count: comment_count,
+                            ts: moment().unix() // Alter url shape, to force cache refresh!
+                        },
+                        contentType: "application/json; charset=utf-8",
+                        dataType: "json",
+                        url: jsObject.root + jsObject.parts.root + '/v1/' + jsObject.parts.type + '/post',
+                        beforeSend: function (xhr) {
+                            xhr.setRequestHeader('X-WP-Nonce', jsObject.nonce);
+                            xhr.setRequestHeader('Cache-Control', 'no-store');
+                        }
+
+                    }).done(function (data) {
+                        if (data['success'] && data['post']) {
+                            let post = data['post'];
+
+                            // Iterate over form fields, updating values accordingly based on returned post shape.
+                            jQuery('.form-content-table > tbody > tr').each(function (idx, tr) {
+                                let field_id = jQuery(tr).find('#form_content_table_field_id').val();
+                                let field_type = jQuery(tr).find('#form_content_table_field_type').val();
+                                let field_template_type = jQuery(tr).find('#form_content_table_field_template_type').val();
+                                let field_meta = jQuery(tr).find('#form_content_table_field_meta');
+
+                                let selector = '#' + field_id;
+                                if (field_template_type === 'dt') {
+                                    switch (field_type) {
+                                        case 'number':
+                                        case 'textarea':
+                                        case 'text': {
+                                            jQuery(tr).find(selector).val(post[field_id] ? post[field_id]:'');
+                                            break;
+                                        }
+                                        case 'key_select': {
+                                            jQuery(tr).find(selector).val((post[field_id] && post[field_id]['key']) ? post[field_id]['key']:'');
+                                            break;
+                                        }
+                                        case 'communication_channel': {
+
+                                            // Remove any stale communication_channel fields, without delete metadata update.
+                                            jQuery(tr).find('.channel-delete-button[data-field="' + field_id + '"]').each(function (idx, del_button) {
+                                                jQuery(del_button).parent().parent().remove();
+                                            });
+
+                                            // Display any new post communication_channel fields.
+                                            if (post[field_id]) {
+                                                post[field_id].forEach(function (option) {
+                                                    jQuery(tr).find('button.add-button').trigger('click');
+
+                                                    // Insert field value and update key.
+                                                    jQuery(tr).find('.input-group').last().find('input').val(option['value']);
+                                                    if (option['key']) {
+                                                        jQuery(tr).find('.input-group').last().find('button').attr('data-key', window.lodash.escape(option['key']));
+                                                    }
+                                                });
+                                            }
+
+                                            // Reset row meta field!
+                                            field_meta.val('');
+
+                                            break;
+                                        }
+                                        case 'multi_select': {
+                                            jQuery(tr).find('button').each(function () {
+                                                jQuery(this).addClass('empty-select-button');
+                                                jQuery(this).removeClass('selected-select-button');
+
+                                                if (post[field_id] && (jQuery(this).data('field-key') === field_id) && post[field_id].includes(jQuery(this).attr('id'))) {
+                                                    jQuery(this).removeClass('empty-select-button');
+                                                    jQuery(this).addClass('selected-select-button');
+                                                }
+                                            });
+                                            break;
+                                        }
+                                        case 'boolean': {
+                                            jQuery(tr).find(selector).prop('checked', post[field_id]);
+                                            break;
+                                        }
+                                        case 'date': {
+                                            if (post[field_id] && post[field_id]['timestamp']) {
+                                                let timestamp = post[field_id]['timestamp'];
+                                                jQuery(tr).find(selector).data('daterangepicker').setStartDate(moment.unix(timestamp));
+                                                field_meta.val(timestamp);
+
+                                            } else {
+                                                jQuery(tr).find(selector).data('daterangepicker').setStartDate(moment());
+                                                field_meta.val('');
+                                            }
+                                            break;
+                                        }
+                                        case 'tags': {
+                                            jQuery(tr).find('span.typeahead__cancel-button').trigger('click');
+                                            let typeahead_tags_field_input = '.js-typeahead-' + field_id;
+                                            let typeahead_tags = window.Typeahead[typeahead_tags_field_input];
+
+                                            typeahead_tags.items = [];
+                                            typeahead_tags.comparedItems = [];
+                                            typeahead_tags.label.container.empty();
+
+                                            if (post[field_id] && typeahead_tags) {
+                                                post[field_id].forEach(function (tag) {
+                                                    typeahead_tags.addMultiselectItemLayout({
+                                                        name: window.lodash.escape(tag)
+                                                    });
+                                                    typeahead_tags.adjustInputSize();
+                                                });
+                                            }
+
+                                            // Reset meta field!
+                                            field_meta.val('');
+
+                                            break;
+                                        }
+                                        case 'location': {
+                                            jQuery(tr).find('span.typeahead__cancel-button').trigger('click');
+                                            let typeahead_location_field_input = '.js-typeahead-' + field_id;
+                                            let typeahead_location = window.Typeahead[typeahead_location_field_input];
+
+                                            typeahead_location.items = [];
+                                            typeahead_location.comparedItems = [];
+                                            typeahead_location.label.container.empty();
+
+                                            if (post[field_id] && typeahead_location) {
+                                                post[field_id].forEach(function (location) {
+                                                    typeahead_location.addMultiselectItemLayout({
+                                                        ID: location['id'],
+                                                        name: window.lodash.escape(location['label'])
+                                                    });
+                                                    typeahead_location.adjustInputSize();
+                                                });
+                                            }
+
+                                            // Reset meta field!
+                                            field_meta.val('');
+
+                                            break;
+                                        }
+                                        case 'location_meta': {
+                                            jQuery(tr).find('.mapbox-delete-button').trigger('click');
+
+                                            // Display previously saved locations
+                                            let lgm_results = jQuery(tr).find('#location-grid-meta-results');
+                                            if (post[field_id] !== undefined && post[field_id].length !== 0) {
+                                                jQuery.each(post[field_id], function (i, v) {
+                                                    if (v.grid_meta_id) {
+                                                        lgm_results.append(`<div class="input-group">
+                                                            <input type="text" class="active-location input-group-field" id="location-${window.lodash.escape(v.grid_meta_id)}" dir="auto" value="${window.lodash.escape(v.label)}" readonly />
+                                                            <div class="input-group-button">
+                                                              <button type="button" class="button success delete-button-style open-mapping-grid-modal" title="${window.lodash.escape(jsObject['mapbox']['translations']['open_modal'])}" data-id="${window.lodash.escape(v.grid_meta_id)}"><i class="fi-map"></i></button>
+                                                              <button type="button" class="button alert delete-button-style delete-button mapbox-delete-button" title="${window.lodash.escape(jsObject['mapbox']['translations']['delete_location'])}" data-id="${window.lodash.escape(v.grid_meta_id)}">&times;</button>
+                                                            </div>
+                                                          </div>`);
+                                                    } else {
+                                                        lgm_results.append(`<div class="input-group">
+                                                            <input type="text" class="dt-communication-channel input-group-field" id="${window.lodash.escape(v.key)}" value="${window.lodash.escape(v.label)}" dir="auto" data-field="contact_address" />
+                                                            <div class="input-group-button">
+                                                              <button type="button" class="button success delete-button-style open-mapping-address-modal"
+                                                                  title="${window.lodash.escape(jsObject['mapbox']['translation']['open_modal'])}"
+                                                                  data-id="${window.lodash.escape(v.key)}"
+                                                                  data-field="contact_address"
+                                                                  data-key="${window.lodash.escape(v.key)}">
+                                                                  <i class="fi-pencil"></i>
+                                                              </button>
+                                                              <button type="button" class="button alert input-height delete-button-style channel-delete-button delete-button" title="${window.lodash.escape(jsObject['mapbox']['translations']['delete_location'])}" data-id="${window.lodash.escape(v.key)}" data-field="contact_address" data-key="${window.lodash.escape(v.key)}">&times;</button>
+                                                            </div>
+                                                          </div>`);
+                                                    }
+                                                })
+                                            }
+
+                                            // Reset meta field!
+                                            field_meta.val('');
+
+                                            break;
+                                        }
+                                        default:
+                                            break;
+                                    }
+                                } else if (field_template_type === 'custom') {
+                                    jQuery(tr).find(selector).val('');
+                                }
+                            });
+
+                            // Update Comments -> First, removing any previous comments.
+                            form_content_table.find('.dt-comment-tr').each(function (idx, tr) {
+                                jQuery(tr).find('.dt-comment-subheader').html('');
+                                jQuery(tr).find('.dt-comment-content').html('');
+
+                                // Capture any new comments.
+                                if (data['comments'] && data['comments']['comments'] && (data['comments']['comments'].length > 0) && data['comments']['comments'][idx]) {
+                                    let comment = data['comments']['comments'][idx];
+                                    jQuery(tr).find('.dt-comment-subheader').html(window.lodash.escape(`${comment['comment_author']} @ ${comment['comment_date']}`));
+                                    jQuery(tr).find('.dt-comment-content').html(window.lodash.escape(`${comment['comment_content']}`));
+                                }
+                            });
+
+                            // Final Updates -> Capture new post id, type & object
+                            jQuery('#post_id').val(post['ID']);
+                            jQuery('#post_type').val(post['post_type']);
+                            jsObject.post = post;
+
+                            // Display updated form fields.
+                            form_content_table.fadeIn('fast');
+                        }
+
+                    }).fail(function (e) {
+                        console.log(e);
+                        jQuery('#error').html(e);
+                    });
+                });
+            };
 
             /**
              * Submit contact details
@@ -1020,6 +1278,56 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                     <?php echo nl2br( esc_html( ! empty( $this->template ) && isset( $this->template['message'] ) ? $this->template['message'] : '' ) ); ?>
                 </p>
 
+                <?php
+                // Display list of assigned contacts.
+                if ( isset( $this->template['list_sub_assigned_contacts'] ) && $this->template['list_sub_assigned_contacts'] && !empty( $this->post ) ){
+
+                    // Fetch all assigned posts
+                    $assigned_posts = DT_Posts::list_posts( $this->post['post_type'], [
+                        'limit' => 1000,
+                        'fields' => [
+                            [
+                                'assigned_to' => [ $this->post['ID'] ],
+                                'subassigned' => [ $this->post['ID'] ]
+                            ]
+                        ]
+                    ] );
+
+                    // Display only if there are valid hits!
+                    if ( isset( $assigned_posts['posts'] ) && count( $assigned_posts['posts'] ) > 0 ){
+
+                        // Add primary recipient post as first element.
+                        array_unshift( $assigned_posts['posts'], $this->post );
+
+                        ?>
+                        <!-- LIST SUB-ASSIGNED CONTACTS -->
+                        <div id="assigned_contacts_div">
+                            <h3><?php esc_html_e( 'Assigned', 'disciple_tools' ) ?> [ <span
+                                    id="total"><?php echo esc_html( count( $assigned_posts['posts'] ) ); ?></span>
+                                ]</h3>
+                            <hr>
+                            <div class="grid-x api-content-div-style" id="api-content">
+                                <table class="api-content-table">
+                                    <tbody>
+                                    <?php
+                                    foreach ( $assigned_posts['posts'] as $assigned ){
+                                        ?>
+                                        <tr onclick="get_assigned_details('<?php echo esc_html( $assigned['post_type'] ); ?>','<?php echo esc_html( $assigned['ID'] ); ?>','<?php echo esc_html( str_replace( "'", '&apos;', $assigned['name'] ) ); ?>')">
+                                            <td><?php echo esc_html( $assigned['name'] ) ?></td>
+                                        </tr>
+                                        <?php
+                                    }
+                                    ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <br>
+                        </div>
+                        <?php
+                    }
+                }
+                ?>
+
                 <!-- ERROR MESSAGES -->
                 <span id="error" style="color: red;"></span>
                 <br>
@@ -1126,12 +1434,12 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                 $recent_comments = DT_Posts::get_post_comments( $this->post['post_type'], $this->post['ID'], false, 'all', [ 'number' => 2 ] );
                                 foreach ( $recent_comments['comments'] ?? [] as $comment ) {
                                     ?>
-                                    <tr>
+                                    <tr class="dt-comment-tr">
                                         <td>
-                                            <div class="section-subheader">
+                                            <div class="section-subheader dt-comment-subheader">
                                                 <?php echo esc_html( $comment['comment_author'] . ' @ ' . $comment['comment_date'] ); ?>
                                             </div>
-                                            <?php echo esc_html( $comment['comment_content'] ); ?>
+                                            <span class="dt-comment-content"><?php echo esc_html( $comment['comment_content'] ); ?></span>
                                         </td>
                                     </tr>
                                     <?php
@@ -1162,6 +1470,19 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
     public function add_endpoints() {
         $namespace = $this->root . '/v1';
         register_rest_route(
+            $namespace, '/' . $this->type . '/post', [
+                [
+                    'methods'             => 'GET',
+                    'callback'            => [ $this, 'get_post' ],
+                    'permission_callback' => function ( WP_REST_Request $request ) {
+                        $magic = new DT_Magic_URL( $this->root );
+
+                        return $magic->verify_rest_endpoint_permissions_on_post( $request );
+                    },
+                ],
+            ]
+        );
+        register_rest_route(
             $namespace, '/' . $this->type . '/update', [
                 [
                     'methods'             => 'POST',
@@ -1174,6 +1495,34 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                 ],
             ]
         );
+    }
+
+    public function get_post( WP_REST_Request $request ){
+        $params = $request->get_params();
+        if ( !isset( $params['post_type'], $params['post_id'], $params['parts'], $params['action'], $params['comment_count'] ) ){
+            return new WP_Error( __METHOD__, 'Missing parameters', [ 'status' => 400 ] );
+        }
+
+        // Sanitize and fetch user/post id
+        $params = dt_recursive_sanitize_array( $params );
+
+        // Update logged-in user state if required accordingly, based on their sys_type
+        if ( !is_user_logged_in() ){
+            $this->update_user_logged_in_state();
+        }
+
+        // Fetch corresponding post record
+        $response = [];
+        $post = DT_Posts::get_post( $params['post_type'], $params['post_id'], false, false );
+        if ( !empty( $post ) && !is_wp_error( $post ) ){
+            $response['success'] = true;
+            $response['post'] = $post;
+            $response['comments'] = DT_Posts::get_post_comments( $params['post_type'], $params['post_id'], false, 'all', [ 'number' => $params['comment_count'] ] );
+        } else {
+            $response['success'] = false;
+        }
+
+        return $response;
     }
 
     public function update_record( WP_REST_Request $request ) {
