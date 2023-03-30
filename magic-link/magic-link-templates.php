@@ -408,7 +408,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                                 <input type="text" class="dt-communication-channel input-group-field" id="${window.lodash.escape(v.key)}" value="${window.lodash.escape(v.label)}" dir="auto" data-field="contact_address" />
                                                 <div class="input-group-button">
                                                   <button type="button" class="button success delete-button-style open-mapping-address-modal"
-                                                      title="${window.lodash.escape(jsObject['mapbox']['translation']['open_modal'])}"
+                                                      title="${window.lodash.escape(jsObject['mapbox']['translations']['open_modal'])}"
                                                       data-id="${window.lodash.escape(v.key)}"
                                                       data-field="contact_address"
                                                       data-key="${window.lodash.escape(v.key)}">
@@ -762,7 +762,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                  * Load
                                  */
 
-                                    // If available, load previous post record tags
+                                // If available, load previous post record tags
                                 let typeahead_tags = window.Typeahead[typeahead_tags_field_input];
                                 let post_tags = jsObject['post'][field_id];
                                 if ((post_tags !== undefined) && typeahead_tags) {
@@ -774,6 +774,112 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                 }
 
                                 break;
+
+                            case 'connection': {
+
+                                /**
+                                 * Activate
+                                 */
+
+                                let typeahead_connection_field_input = '.js-typeahead-' + field_id;
+                                if (!window.Typeahead[typeahead_connection_field_input]) {
+                                    jQuery(tr).find(typeahead_connection_field_input).typeahead({
+                                        input: typeahead_connection_field_input,
+                                        minLength: 0,
+                                        accent: true,
+                                        searchOnFocus: true,
+                                        maxItem: 20,
+                                        template: "<span>{{name}}</span>",
+                                        source: {
+                                            connections: {
+                                                display: ["name", "ID"],
+                                                template: "<span>{{name}}</span>",
+                                                ajax: {
+                                                    url: jsObject.root + 'dt-posts/v2/' + jsObject.post['post_type'] + '/compact?field_key=' + field_id,
+                                                    data: {
+                                                        s: '{{query}}'
+                                                    },
+                                                    beforeSend: function (xhr) {
+                                                        xhr.setRequestHeader("X-WP-Nonce", jsObject.nonce);
+                                                    },
+                                                    callback: {
+                                                        done: function (response) {
+                                                            return (response['posts']) ? response['posts']:[];
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        display: ["name", "label"],
+                                        templateValue: "{{name}}",
+                                        dynamic: true,
+                                        multiselect: {
+                                            matchOn: ["ID"],
+                                            data: [],
+                                            callback: {
+                                                onCancel: function (node, item, event) {
+
+                                                    // Keep a record of deleted connections.
+                                                    let deleted_items = (field_meta.val()) ? JSON.parse(field_meta.val()):[];
+                                                    deleted_items.push({
+                                                        'ID': item.ID,
+                                                        'name': window.lodash.escape(item.name)
+                                                    });
+                                                    field_meta.val(JSON.stringify(deleted_items));
+                                                }
+                                            },
+                                            href: function (item) {
+                                            },
+                                        },
+                                        callback: {
+                                            onResult: function (node, query, result, resultCount) {
+                                                let text = TYPEAHEADS.typeaheadHelpText(resultCount, query, result)
+                                                jQuery(tr).find(`#${field_id}-result-container`).html(text);
+                                            },
+                                            onHideLayout: function () {
+                                                jQuery(tr).find(`#${field_id}-result-container`).html("");
+                                            },
+                                            onClick: function (node, a, item, event) {
+                                                event.preventDefault();
+
+                                                // Capture selected item, hide dropdown and adjust input size.
+                                                this.addMultiselectItemLayout(item);
+                                                this.hideLayout();
+                                                this.resetInput();
+
+                                                // If present, remove from deleted meta list.
+                                                let deleted_items = (field_meta.val()) ? JSON.parse(field_meta.val()):[];
+                                                if (deleted_items.find(e => e.ID === item.ID)) {
+                                                    let idx = deleted_items.findIndex(e => e.ID===item.ID);
+                                                    if (idx > -1) {
+                                                        deleted_items.splice(idx, 1);
+                                                        field_meta.val(JSON.stringify(deleted_items));
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    });
+                                }
+
+                                /**
+                                 * Load
+                                 */
+
+                                // If available, load previous post record connections
+                                let typeahead_connections = window.Typeahead[typeahead_connection_field_input];
+                                let post_connections = jsObject.post[field_id];
+                                if ((post_connections !== undefined) && typeahead_connections) {
+                                    jQuery.each(post_connections, function (idx, connection) {
+                                        typeahead_connections.addMultiselectItemLayout({
+                                            'ID': connection.ID,
+                                            'name': window.lodash.escape(connection.post_title)
+                                        });
+                                        typeahead_connections.resetInput();
+                                    });
+                                }
+
+                                break;
+                            }
                         }
                     }
                 });
@@ -897,45 +1003,37 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                             }
                                             break;
                                         }
-                                        case 'tags': {
+                                        case 'tags':
+                                        case 'location':
+                                        case 'connection': {
                                             jQuery(tr).find('span.typeahead__cancel-button').trigger('click');
-                                            let typeahead_tags_field_input = '.js-typeahead-' + field_id;
-                                            let typeahead_tags = window.Typeahead[typeahead_tags_field_input];
+                                            let typeahead_field_input = '.js-typeahead-' + field_id;
+                                            let typeahead = window.Typeahead[typeahead_field_input];
 
-                                            typeahead_tags.items = [];
-                                            typeahead_tags.comparedItems = [];
-                                            typeahead_tags.label.container.empty();
+                                            if (post[field_id] && typeahead) {
+                                                typeahead.items = [];
+                                                typeahead.comparedItems = [];
+                                                typeahead.label.container.empty();
 
-                                            if (post[field_id] && typeahead_tags) {
-                                                post[field_id].forEach(function (tag) {
-                                                    typeahead_tags.addMultiselectItemLayout({
-                                                        name: window.lodash.escape(tag)
-                                                    });
-                                                    typeahead_tags.adjustInputSize();
-                                                });
-                                            }
+                                                post[field_id].forEach(function (option) {
 
-                                            // Reset meta field!
-                                            field_meta.val('');
+                                                    // Package typeahead item accordingly, based on field type.
+                                                    let item = {};
+                                                    if (field_type === 'tags') {
+                                                        item.name = window.lodash.escape(option);
 
-                                            break;
-                                        }
-                                        case 'location': {
-                                            jQuery(tr).find('span.typeahead__cancel-button').trigger('click');
-                                            let typeahead_location_field_input = '.js-typeahead-' + field_id;
-                                            let typeahead_location = window.Typeahead[typeahead_location_field_input];
+                                                    } else if (field_type === 'location') {
+                                                        item.ID = option['id'];
+                                                        item.name = window.lodash.escape(option['label']);
 
-                                            typeahead_location.items = [];
-                                            typeahead_location.comparedItems = [];
-                                            typeahead_location.label.container.empty();
+                                                    } else if (field_type === 'connection') {
+                                                        item.ID = option['ID'];
+                                                        item.name = window.lodash.escape(option['post_title']);
+                                                    }
 
-                                            if (post[field_id] && typeahead_location) {
-                                                post[field_id].forEach(function (location) {
-                                                    typeahead_location.addMultiselectItemLayout({
-                                                        ID: location['id'],
-                                                        name: window.lodash.escape(location['label'])
-                                                    });
-                                                    typeahead_location.adjustInputSize();
+                                                    // Capture identified option and adjust input size.
+                                                    typeahead.addMultiselectItemLayout(item);
+                                                    typeahead.resetInput();
                                                 });
                                             }
 
@@ -964,7 +1062,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                                             <input type="text" class="dt-communication-channel input-group-field" id="${window.lodash.escape(v.key)}" value="${window.lodash.escape(v.label)}" dir="auto" data-field="contact_address" />
                                                             <div class="input-group-button">
                                                               <button type="button" class="button success delete-button-style open-mapping-address-modal"
-                                                                  title="${window.lodash.escape(jsObject['mapbox']['translation']['open_modal'])}"
+                                                                  title="${window.lodash.escape(jsObject['mapbox']['translations']['open_modal'])}"
                                                                   data-id="${window.lodash.escape(v.key)}"
                                                                   data-field="contact_address"
                                                                   data-key="${window.lodash.escape(v.key)}">
@@ -1132,6 +1230,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
 
                                 case 'tags':
                                 case 'location':
+                                case 'connection':
                                     let typeahead = window.Typeahead['.js-typeahead-' + field_id];
                                     if (typeahead) {
                                         payload['fields']['dt'].push({
@@ -1672,6 +1771,30 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                     if ( ! empty( $tags ) ) {
                         $updates[ $field['id'] ] = [
                             'values' => $tags
+                        ];
+                    }
+                    break;
+
+                case 'connection':
+                    $connections = [];
+                    foreach ( $field['value'] ?? [] as $connection ){
+                        $entry = [];
+                        $entry['value'] = $connection['ID'];
+                        $connections[] = $entry;
+                    }
+
+                    // Capture any incoming deletions
+                    foreach ( $field['deletions'] ?? [] as $connection ){
+                        $entry = [];
+                        $entry['value'] = $connection['ID'];
+                        $entry['delete'] = true;
+                        $connections[] = $entry;
+                    }
+
+                    // Package and append to global updates
+                    if ( ! empty( $connections ) ) {
+                        $updates[ $field['id'] ] = [
+                            'values' => $connections
                         ];
                     }
                     break;
