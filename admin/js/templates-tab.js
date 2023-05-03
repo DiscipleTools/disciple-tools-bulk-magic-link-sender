@@ -192,7 +192,7 @@ jQuery(function ($) {
 
       // Reload previously selected fields
       $.each(data['fields'], function (idx, field) {
-        $('.connected-sortable-fields').append(build_new_selected_field_html(field['id'], field['label'], field['type'], field['enabled'], (field['translations'] !== undefined) ? field['translations'] : {}));
+        $('.connected-sortable-fields').append(build_new_selected_field_html(field['id'], field['label'], field['type'], field['enabled'], (field['translations'] !== undefined) ? field['translations'] : {}, (field['custom_form_field_type'] !== undefined) ? field['custom_form_field_type'] : 'textfield'));
       });
 
       // Instantiate sortable fields capabilities
@@ -566,13 +566,23 @@ jQuery(function ($) {
     return already_selected;
   }
 
-  function build_new_selected_field_html(field_id, field_label, field_type, field_enabled, field_translations) {
+  function build_new_selected_field_html(field_id, field_label, field_type, field_enabled, field_translations, field_custom_form_type = 'textfield') {
 
-    // Ensure default field labels are disabled and cannot be overwritten
+    // Ensure default field labels are disabled and cannot be overwritten, along with any other field type specific settings.
     let label_disabled_html = '';
+    let final_form_custom_field_type_html = '';
     switch (field_type) {
       case 'dt' : {
         label_disabled_html = 'disabled';
+        break;
+      }
+      case 'custom' : {
+        final_form_custom_field_type_html = `
+            <select id="ml_main_col_selected_fields_sortable_form_custom_field_type">
+                <option value="textfield" ${(field_custom_form_type === 'textfield') ? 'selected':''}>Textfield</option>
+                <option value="textarea" ${(field_custom_form_type === 'textarea') ? 'selected':''}>Textarea</option>
+            </select>
+        `;
         break;
       }
     }
@@ -595,6 +605,7 @@ jQuery(function ($) {
                                type="text" value="${field_label}" ${label_disabled_html}/>
                     </td>
                     <td style="text-align: right;">
+                        ${final_form_custom_field_type_html}
                         ${build_translation_button_html(field_id, field_label, field_type, field_translations, label_disabled_html)}
                         <button type="submit" class="button float-right connected-sortable-fields-remove-but">
                             Remove
@@ -636,7 +647,7 @@ jQuery(function ($) {
     let message = $('#ml_main_col_msg_textarea').val();
     let fields = fetch_selected_fields();
 
-    // Validate values so as to ensure all is present and correct within that department! ;)
+    // Validate values, to ensure all is present and correct within that department! ;)
     let update_msg = null;
     let update_msg_ele = $('#ml_main_col_update_msg');
     update_msg_ele.fadeOut('fast');
@@ -693,13 +704,15 @@ jQuery(function ($) {
       let enabled = $(field_div).find('#ml_main_col_selected_fields_sortable_field_enabled').prop('checked');
       let label = $(field_div).find('#ml_main_col_selected_fields_sortable_field_label').val();
       let translations = (type === 'dt') ? {} : JSON.parse(decodeURIComponent($(field_div).find('.connected-sortable-fields-translate-but').data('field_translations')));
+      let custom_form_field_type = (type === 'custom') ? $(field_div).find('#ml_main_col_selected_fields_sortable_form_custom_field_type').val() : '';
 
       fields.push({
         'id': id,
         'type': type,
         'enabled': enabled,
         'label': label,
-        'translations': translations
+        'translations': translations,
+        'custom_form_field_type': custom_form_field_type
       });
     });
 

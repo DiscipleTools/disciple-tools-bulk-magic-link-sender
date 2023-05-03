@@ -225,9 +225,18 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
             // Support custom field label translations; or simply default to initial label entry.
             $label = ( ! empty( $field['translations'] ) && isset( $field['translations'][ determine_locale() ] ) ) ? $field['translations'][ determine_locale() ]['translation'] : $field['label'];
 
-            echo esc_html( $label ); ?></div>
-        <input id="<?php echo esc_html( $field['id'] ); ?>" type="text" class="text-input" value="">
+            echo esc_html( $label ); ?>
+        </div>
         <?php
+        if ( isset( $field['custom_form_field_type'] ) && $field['custom_form_field_type'] == 'textarea' ){
+            ?>
+            <textarea id="<?php echo esc_html( $field['id'] ); ?>"></textarea>
+            <?php
+        } else {
+            ?>
+            <input id="<?php echo esc_html( $field['id'] ); ?>" type="text" class="text-input" value="">
+            <?php
+        }
     }
 
     private function adjust_template_title_translation( $title, $title_translations ) {
