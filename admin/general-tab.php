@@ -256,9 +256,14 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_General {
                         $last_scheduled_run = ! empty( $link_obj->schedule->last_schedule_run ) ? Disciple_Tools_Bulk_Magic_Link_Sender_API::format_timestamp_in_local_time_zone( $link_obj->schedule->last_schedule_run ) : '---';
                         $last_success_send  = ! empty( $link_obj->schedule->last_success_send ) ? Disciple_Tools_Bulk_Magic_Link_Sender_API::format_timestamp_in_local_time_zone( $link_obj->schedule->last_success_send ) : '---';
                         $next_scheduled_run = '---';
-                        if ( ! empty( $link_obj->schedule->freq_amount ) && ! empty( $link_obj->schedule->freq_time_unit ) && ! empty( $link_obj->schedule->last_schedule_run ) ) {
-                            $next_run           = strtotime( '+' . $link_obj->schedule->freq_amount . ' ' . $link_obj->schedule->freq_time_unit, $link_obj->schedule->last_schedule_run );
-                            $next_scheduled_run = Disciple_Tools_Bulk_Magic_Link_Sender_API::format_timestamp_in_local_time_zone( $next_run );
+
+                        if ( ( isset( $link_obj->schedule->enabled ) && $link_obj->schedule->enabled ) && ! empty( $link_obj->schedule->freq_amount ) && ! empty( $link_obj->schedule->freq_time_unit ) && ! empty( $link_obj->schedule->last_schedule_run ) ){
+                            $next_run = strtotime( '+' . $link_obj->schedule->freq_amount . ' ' . $link_obj->schedule->freq_time_unit, $link_obj->schedule->last_schedule_run );
+
+                            // Ensure next run is in the future.
+                            if ( $next_run > time() ){
+                                $next_scheduled_run = Disciple_Tools_Bulk_Magic_Link_Sender_API::format_timestamp_in_local_time_zone( $next_run );
+                            }
                         }
 
                         ?>

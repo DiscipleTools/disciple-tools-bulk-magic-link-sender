@@ -1388,6 +1388,7 @@ jQuery(function ($) {
       reset_section(true, $('#ml_main_col_schedules'), function () {
         if (link_obj['schedule']) {
           reset_section_schedules(link_obj['schedule']['enabled'], link_obj['schedule']['freq_amount'], link_obj['schedule']['freq_time_unit'], link_obj['schedule']['sending_channel'], link_obj['schedule']['last_schedule_run'], link_obj['schedule']['last_success_send'], link_obj['schedule']['links_refreshed_before_send'], true);
+          handle_next_scheduled_run_request();
         }
       });
 
@@ -1454,6 +1455,31 @@ jQuery(function ($) {
 
       }
     });
+  }
+
+  function handle_next_scheduled_run_request() {
+
+    // Create request payload
+    let payload = {
+      link_obj_id: $('#ml_main_col_link_objs_manage_id').val()
+    };
+
+    // Dispatch next scheduled run request.
+    $.ajax({
+      url: window.dt_magic_links.dt_endpoint_next_scheduled_run,
+      method: 'POST',
+      data: payload,
+      beforeSend: (xhr) => {
+        xhr.setRequestHeader("X-WP-Nonce", window.dt_admin_scripts.nonce);
+      },
+      success: function (data) {
+        $('#ml_main_col_schedules_last_schedule_run_td').html((data['success'] && (data['next_run_ts'] > 0)) ? data['next_run_label'] + ' - [ ' + data['next_run_relative'] + ' ]' : '---');
+      },
+      error: function (data) {
+        console.log(data);
+      }
+    });
+
   }
 
   function handle_docs_request(title_div, content_div) {
