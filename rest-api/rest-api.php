@@ -59,6 +59,15 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
             ]
         );
         register_rest_route(
+            $namespace, '/next_scheduled_run', [
+                'methods'             => WP_REST_Server::CREATABLE,
+                'callback'            => [ $this, 'next_scheduled_run' ],
+                'permission_callback' => function ( WP_REST_Request $request ) {
+                    return $this->has_permission();
+                }
+            ]
+        );
+        register_rest_route(
             $namespace, '/report', [
                 'methods'             => WP_REST_Server::READABLE,
                 'callback'            => [ $this, 'get_report' ],
@@ -392,6 +401,40 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
         } else {
             $response['success'] = false;
             $response['message'] = 'Unable to send any messages, due to unrecognizable parameters.';
+        }
+
+        return $response;
+    }
+
+    public function next_scheduled_run( WP_REST_Request $request ): array{
+
+        // Prepare response payload
+        $response = [];
+        $response['success'] = false;
+
+        $params = $request->get_params();
+        if ( !isset( $params['link_obj_id'] ) ){
+            $response['message'] = 'Unable to detect required link object id!';
+
+        } else {
+            $response['message'] = '';
+            $response['next_run_ts'] = 0;
+            $response['next_run_label'] = '---';
+            $response['next_run_relative'] = '---';
+
+            $link_obj = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $params['link_obj_id'] );
+            if ( !empty( $link_obj ) && $link_obj->enabled ){
+                if ( ( isset( $link_obj->schedule->enabled ) && $link_obj->schedule->enabled ) && !empty( $link_obj->schedule->freq_amount ) && !empty( $link_obj->schedule->freq_time_unit ) && !empty( $link_obj->schedule->last_schedule_run ) ){
+                    $next_run = strtotime( '+' . $link_obj->schedule->freq_amount . ' ' . $link_obj->schedule->freq_time_unit, $link_obj->schedule->last_schedule_run );
+                    $next_scheduled_run = Disciple_Tools_Bulk_Magic_Link_Sender_API::format_timestamp_in_local_time_zone( $next_run );
+                    $next_scheduled_run_relative = Disciple_Tools_Bulk_Magic_Link_Sender_API::determine_relative_date( $next_run );
+
+                    $response['success'] = true;
+                    $response['next_run_ts'] = ( $next_run > time() ) ? $next_run : 0;
+                    $response['next_run_label'] = ( $next_run > time() ) ? $next_scheduled_run : '---';
+                    $response['next_run_relative'] = ( $next_run > time() ) ? $next_scheduled_run_relative : '---';
+                }
+            }
         }
 
         return $response;

@@ -49,6 +49,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                 'dt_groups'                     => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_groups(),
                 'dt_magic_link_objects'         => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_objs(),
                 'dt_endpoint_send_now'          => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_endpoint_send_now_url(),
+                'dt_endpoint_next_scheduled_run'          => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_endpoint_next_scheduled_run_url(),
                 'dt_endpoint_user_links_manage' => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_endpoint_user_links_manage_url(),
                 'dt_endpoint_assigned_manage'   => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_endpoint_assigned_manage_url(),
                 'dt_endpoint_get_post_record'   => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_endpoint_get_post_record_url(),
@@ -276,7 +277,11 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
             </tbody>
             <tfoot>
             <tr>
-                <td colspan="2">
+                <td>
+                    <button disabled style="min-width: 100%;" type="submit" id="ml_main_col_schedules_send_now_but"
+                            class="button float-right"><?php esc_html_e( 'Send Now To All Assigned Users', 'disciple_tools' ) ?></button>
+                </td>
+                <td>
                     <span style="float:right;">
                         <button type="submit" id="ml_main_col_assign_users_teams_update_but"
                                 class="button float-right ml-links-update-but"><?php esc_html_e( 'Update', 'disciple_tools' ) ?></button>
@@ -765,13 +770,12 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                 </td>
             </tr>
             <tr>
-                <td style="vertical-align: middle;" colspan="2">
+                <td style="vertical-align: middle;">
                     <input type="hidden" id="ml_main_col_schedules_last_schedule_run" value=""/>
                     <input type="hidden" id="ml_main_col_schedules_last_success_send" value=""/>
-
-                    <button disabled style="min-width: 100%;" type="submit" id="ml_main_col_schedules_send_now_but"
-                            class="button float-right"><?php esc_html_e( 'Send Now', 'disciple_tools' ) ?></button>
+                    Next Scheduled Run
                 </td>
+                <td id="ml_main_col_schedules_last_schedule_run_td">---</td>
             </tr>
         </table>
         <?php
