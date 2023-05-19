@@ -1288,8 +1288,8 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                 </p>
 
                 <?php
-                // Display list of assigned contacts.
-                if ( isset( $this->template['list_sub_assigned_contacts'] ) && $this->template['list_sub_assigned_contacts'] && !empty( $this->post ) ){
+                // Determine if template type list of assigned contacts is to be displayed.
+                if ( isset( $this->template['type'] ) && ( $this->template['type'] == 'list-sub-assigned-contacts' ) && !empty( $this->post ) ){
 
                     // Fetch all assigned posts
                     $assigned_posts = DT_Posts::list_posts( $this->post['post_type'], [

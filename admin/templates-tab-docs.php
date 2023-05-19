@@ -1,3 +1,16 @@
+<!-- Template Type -->
+<div id="ml_templates_right_docs_template_type_title" style="display: none;">
+    Template Type
+</div>
+<div id="ml_templates_right_docs_template_type_content" style="display: none;">
+    Specify how this template will function when form is displayed to end users.<br><br>
+    <hr>
+
+    <b>Single Record</b><br>Only assigned user's record will be updated.<br><br>
+    <b>List Sub-Assigned Contacts</b><br>If link form recipient is also sub-assigned on other records, then a list of sub-assignments will be displayed.<br><br>
+</div>
+<!-- Template Type -->
+
 <!-- Custom Fields -->
 <div id="ml_templates_right_docs_custom_fields_title" style="display: none;">
     Custom Fields
@@ -17,15 +30,6 @@
     When the user submits the magic link, a comment will be added to corresponding record @mentioning the assigned-to user (if there is one).
 </div>
 <!-- Send Submission Notifications -->
-
-<!-- List Sub-Assigned Contacts -->
-<div id="ml_templates_right_docs_list_sub_assigned_contacts_title" style="display: none;">
-    List Sub-Assigned Contacts
-</div>
-<div id="ml_templates_right_docs_list_sub_assigned_contacts_content" style="display: none;">
-    If link form recipient is also sub-assigned on other records, then a list of sub-assignments will be displayed.
-</div>
-<!-- List Sub-Assigned Contacts -->
 
 <!-- Message -->
 <div id="ml_templates_right_docs_message_title" style="display: none;">

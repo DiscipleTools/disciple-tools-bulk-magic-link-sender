@@ -426,6 +426,18 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
                 </td>
             </tr>
             <tr>
+                <td style="vertical-align: middle;">Template Type [<a href="#" class="ml-templates-docs"
+                                                                                   data-title="ml_templates_right_docs_template_type_title"
+                                                                                   data-content="ml_templates_right_docs_template_type_content">&#63;</a>]
+                </td>
+                <td>
+                    <select style="min-width: 100%;" id="ml_main_col_template_details_type">
+                        <option selected value="single-record">Single Record</option>
+                        <option value="list-sub-assigned-contacts">List Sub-Assigned Contacts</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
                 <td style="vertical-align: middle;">Add a D.T field to the form</td>
                 <td>
                     <select style="min-width: 80%;" id="ml_main_col_template_details_fields">
@@ -469,16 +481,6 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
                 </td>
                 <td>
                     <input type="checkbox" id="ml_main_col_template_details_send_submission_notifications"
-                           value=""/>
-                </td>
-            </tr>
-            <tr>
-                <td style="vertical-align: middle;">List Sub-Assigned Contacts [<a href="#" class="ml-templates-docs"
-                                                                                      data-title="ml_templates_right_docs_list_sub_assigned_contacts_title"
-                                                                                      data-content="ml_templates_right_docs_list_sub_assigned_contacts_content">&#63;</a>]
-                </td>
-                <td>
-                    <input type="checkbox" id="ml_main_col_template_details_list_sub_assigned_contacts"
                            value=""/>
                 </td>
             </tr>
