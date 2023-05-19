@@ -213,10 +213,10 @@ jQuery(function ($) {
     name: '',
     title: '',
     title_translations: {},
+    type: 'single-record',
     custom_fields: '',
     show_recent_comments: true,
-    send_submission_notifications: true,
-    list_sub_assigned_contacts: false
+    send_submission_notifications: true
   }, callback = function () {
   }) {
     let view_template_details = $('#ml_main_col_template_details');
@@ -228,11 +228,11 @@ jQuery(function ($) {
         $('#ml_main_col_template_details_name').val(data.name);
         $('#ml_main_col_template_details_title').val(data.title);
         $('#ml_main_col_template_details_title_translate_but').data('field_translations', encodeURIComponent(JSON.stringify(data.title_translations)));
+        $('#ml_main_col_template_details_type').val(data.type);
         $('.template-title-translate-but-label').text(Object.keys(data.title_translations).length);
         $('#ml_main_col_template_details_custom_fields').val(data.custom_fields);
         $('#ml_main_col_template_details_show_recent_comments').prop('checked', data.show_recent_comments);
         $('#ml_main_col_template_details_send_submission_notifications').prop('checked', data.send_submission_notifications);
-        $('#ml_main_col_template_details_list_sub_assigned_contacts').prop('checked', data.list_sub_assigned_contacts);
         callback();
       });
 
@@ -242,11 +242,11 @@ jQuery(function ($) {
       $('#ml_main_col_template_details_name').val(data.name);
       $('#ml_main_col_template_details_title').val(data.title);
       $('#ml_main_col_template_details_title_translate_but').data('field_translations', encodeURIComponent(JSON.stringify(data.title_translations)));
+      $('#ml_main_col_template_details_type').val(data.type);
       $('.template-title-translate-but-label').text(Object.keys(data.title_translations).length);
       $('#ml_main_col_template_details_custom_fields').val(data.custom_fields);
       $('#ml_main_col_template_details_show_recent_comments').prop('checked', data.show_recent_comments);
       $('#ml_main_col_template_details_send_submission_notifications').prop('checked', data.send_submission_notifications);
-      $('#ml_main_col_template_details_list_sub_assigned_contacts').prop('checked', data.list_sub_assigned_contacts);
       view_template_details.fadeIn(fade_speed, function () {
         callback();
       });
@@ -365,10 +365,10 @@ jQuery(function ($) {
                 name: template['name'],
                 title: template['title'],
                 title_translations: template['title_translations'] ?? {},
+                type: template['type'] ?? 'single-record',
                 custom_fields: '',
                 show_recent_comments: template['show_recent_comments'],
-                send_submission_notifications: template['send_submission_notifications'] ?? true,
-                list_sub_assigned_contacts: template['list_sub_assigned_contacts'] ?? false
+                send_submission_notifications: template['send_submission_notifications'] ?? true
               });
               template_views_selected_fields(false, 'slow', {fields: template['fields']});
               template_views_message(false, 'slow', {text: template['message']});
@@ -641,9 +641,9 @@ jQuery(function ($) {
     let name = $('#ml_main_col_template_details_name').val();
     let title = $('#ml_main_col_template_details_title').val();
     let title_translations = JSON.parse(decodeURIComponent($('#ml_main_col_template_details_title_translate_but').data('field_translations')));
+    let type = $('#ml_main_col_template_details_type').val();
     let show_recent_comments = $('#ml_main_col_template_details_show_recent_comments').prop('checked');
     let send_submission_notifications = $('#ml_main_col_template_details_send_submission_notifications').prop('checked');
-    let list_sub_assigned_contacts = $('#ml_main_col_template_details_list_sub_assigned_contacts').prop('checked');
     let message = $('#ml_main_col_msg_textarea').val();
     let fields = fetch_selected_fields();
 
@@ -680,9 +680,9 @@ jQuery(function ($) {
         'name': name,
         'title': title,
         'title_translations': title_translations,
+        'type': type,
         'show_recent_comments': show_recent_comments,
         'send_submission_notifications': send_submission_notifications,
-        'list_sub_assigned_contacts': list_sub_assigned_contacts,
         'message': message,
         'fields': fields
       };
