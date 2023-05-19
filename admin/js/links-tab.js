@@ -249,7 +249,7 @@ jQuery(function ($) {
       timePicker: true,
       minDate: moment(),
       locale: {
-        format: 'dddd, MMMM Do YYYY, h:mm A'
+        format: 'dddd, MMMM Do YYYY, h:mm A Z'
       }
     }, function (start, end, label) {
 
