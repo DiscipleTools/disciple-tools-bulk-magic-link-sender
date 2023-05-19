@@ -253,7 +253,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_General {
                     if ( $link_obj->enabled ) {
 
                         $last_cron_run      = Disciple_Tools_Bulk_Magic_Link_Sender_API::format_timestamp_in_local_time_zone( Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_last_cron_run ) );
-                        $last_scheduled_run = ! empty( $link_obj->schedule->last_schedule_run ) ? Disciple_Tools_Bulk_Magic_Link_Sender_API::format_timestamp_in_local_time_zone( $link_obj->schedule->last_schedule_run ) : '---';
+                        $last_scheduled_run = !empty( $link_obj->schedule->last_schedule_run ) ? ( ( $link_obj->schedule->last_schedule_run > time() ) ? 'Manual Scheduling Detected' : Disciple_Tools_Bulk_Magic_Link_Sender_API::format_timestamp_in_local_time_zone( $link_obj->schedule->last_schedule_run ) ) : '---';
                         $last_success_send  = ! empty( $link_obj->schedule->last_success_send ) ? Disciple_Tools_Bulk_Magic_Link_Sender_API::format_timestamp_in_local_time_zone( $link_obj->schedule->last_success_send ) : '---';
                         $next_scheduled_run = '---';
 

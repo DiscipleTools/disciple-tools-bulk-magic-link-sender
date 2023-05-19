@@ -242,6 +242,28 @@ jQuery(function ($) {
     $('#ml_main_col_schedules_links_refreshed_before_send').prop('checked', new String(links_refreshed_before_send).valueOf().toLowerCase() === 'true');
 
     $('#ml_main_col_schedules_send_now_but').prop('disabled', !send_now);
+
+    // Activate next schedule run date picker.
+    $('#ml_main_col_schedules_next_schedule_run_date_picker').daterangepicker({
+      singleDatePicker: true,
+      timePicker: true,
+      minDate: moment(),
+      locale: {
+        format: 'dddd, MMMM Do YYYY, h:mm A'
+      }
+    }, function (start, end, label) {
+
+      // Adjust last schedule run, in order to accommodate manually specified next schedule runs!
+      let freq_amount = $('#ml_main_col_schedules_frequency_amount').val();
+      let freq_time_unit = $('#ml_main_col_schedules_frequency_time_unit').val();
+      let adjusted_last_schedule_run = start.subtract(freq_amount, freq_time_unit);
+      if (adjusted_last_schedule_run) {
+        $('#ml_main_col_schedules_last_schedule_run').val(adjusted_last_schedule_run.unix());
+      }
+
+      // Clear relative time info; as next scheduled date has been manually adjusted!
+      $('#ml_main_col_schedules_next_schedule_run_relative_time').html('');
+    });
   }
 
   function reset_section(display, section, reset_element_func) {
@@ -262,6 +284,8 @@ jQuery(function ($) {
 
     $('#ml_main_col_schedules_frequency_amount').prop('disabled', !checked);
     $('#ml_main_col_schedules_frequency_time_unit').prop('disabled', !checked);
+    $('#ml_main_col_schedules_next_schedule_run_date_picker').prop('disabled', !checked);
+    $('#ml_main_col_schedules_next_schedule_run_relative_time').html('');
   }
 
   function toggle_never_expires_element_states(is_obj_level) {
@@ -1202,7 +1226,13 @@ jQuery(function ($) {
     let last_schedule_run = $('#ml_main_col_schedules_last_schedule_run').val();
     let last_success_send = $('#ml_main_col_schedules_last_success_send').val();
 
-    // Validate values so as to ensure all is present and correct within that department! ;)
+    // If scheduling is coming out of a disabled state, ensure last scheduled run is reset to now.
+    let old_link_obj = fetch_link_obj(id);
+    if (old_link_obj && scheduling_enabled && !old_link_obj['schedule']['enabled']) {
+      last_schedule_run = moment().unix();
+    }
+
+    // Validate values, to ensure all is present and correct within that department! ;)
     let update_msg = null;
     let update_msg_ele = $('#ml_main_col_update_msg');
     update_msg_ele.fadeOut('fast');
@@ -1473,7 +1503,15 @@ jQuery(function ($) {
         xhr.setRequestHeader("X-WP-Nonce", window.dt_admin_scripts.nonce);
       },
       success: function (data) {
-        $('#ml_main_col_schedules_last_schedule_run_td').html((data['success'] && (data['next_run_ts'] > 0)) ? data['next_run_label'] + ' - [ ' + data['next_run_relative'] + ' ]' : '---');
+
+        // If needed, update date range picker to the projected next scheduled run.
+        if (data && data['success'] && data['next_run_ts']) {
+          $('#ml_main_col_schedules_next_schedule_run_date_picker').data('daterangepicker').setStartDate(moment.unix(data['next_run_ts']));
+        }
+
+        // Update relative time accordingly.
+        $('#ml_main_col_schedules_next_schedule_run_relative_time').html((data && data['success'] && data['next_run_relative']) ? '<br>' + window.lodash.escape(data['next_run_relative']):'');
+
       },
       error: function (data) {
         console.log(data);

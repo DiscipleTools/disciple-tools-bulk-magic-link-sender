@@ -739,6 +739,17 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                 </td>
             </tr>
             <tr>
+                <td style="vertical-align: middle;">
+                    <input type="hidden" id="ml_main_col_schedules_last_schedule_run" value=""/>
+                    <input type="hidden" id="ml_main_col_schedules_last_success_send" value=""/>
+                    Next Scheduled Run
+                </td>
+                <td>
+                    <input type="text" id="ml_main_col_schedules_next_schedule_run_date_picker" style="min-width: 100%;" />
+                    <span id="ml_main_col_schedules_next_schedule_run_relative_time" style="color: grey; font-size: 12px;"></span>
+                </td>
+            </tr>
+            <tr>
                 <td style="vertical-align: middle;">Sending Channel [<a href="#" class="ml-links-docs"
                                                                         data-title="ml_links_right_docs_send_channel_title"
                                                                         data-content="ml_links_right_docs_send_channel_content">&#63;</a>]
@@ -768,14 +779,6 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                 <td>
                     <input type="checkbox" id="ml_main_col_schedules_links_refreshed_before_send" value=""/>
                 </td>
-            </tr>
-            <tr>
-                <td style="vertical-align: middle;">
-                    <input type="hidden" id="ml_main_col_schedules_last_schedule_run" value=""/>
-                    <input type="hidden" id="ml_main_col_schedules_last_success_send" value=""/>
-                    Next Scheduled Run
-                </td>
-                <td id="ml_main_col_schedules_last_schedule_run_td">---</td>
             </tr>
         </table>
         <?php
