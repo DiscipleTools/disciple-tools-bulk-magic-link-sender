@@ -219,8 +219,41 @@ jQuery(function ($) {
     send_submission_notifications: true
   }, callback = function () {
   }) {
-    let view_template_details = $('#ml_main_col_template_details');
 
+    // Adjust available type options based on selected post type.
+    let type_option_adjustments = {
+      'contacts': [
+        {
+          'value': 'single-record',
+          'text': 'Single Record'
+        },
+        {
+          'value': 'list-sub-assigned-contacts',
+          'text': 'List Sub-Assigned Contacts'
+        }
+      ],
+      'default-options': [
+        {
+          'value': 'single-record',
+          'text': 'Single Record'
+        }
+      ]
+    };
+
+    let post_type = $('#templates_management_section_selected_post_type').val();
+    let template_details_type_select = $('#ml_main_col_template_details_type');
+    $(template_details_type_select).find('option').remove();
+
+    let type_options = (post_type && type_option_adjustments[post_type]) ? type_option_adjustments[post_type] : type_option_adjustments['default-options'];
+    $.each(type_options, function (idx, option) {
+      $(template_details_type_select).append($('<option>', {
+        value: option['value'],
+        text: option['text']
+      }));
+    });
+
+    // Proceed with updating template details accordingly.
+    let view_template_details = $('#ml_main_col_template_details');
     if (fade_out) {
       view_template_details.fadeOut(fade_speed, function () {
         $('#ml_main_col_template_details_id').val(data.id);
