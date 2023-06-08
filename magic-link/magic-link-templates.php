@@ -417,7 +417,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                                 <input type="text" class="dt-communication-channel input-group-field" id="${window.lodash.escape(v.key)}" value="${window.lodash.escape(v.label)}" dir="auto" data-field="contact_address" />
                                                 <div class="input-group-button">
                                                   <button type="button" class="button success delete-button-style open-mapping-address-modal"
-                                                      title="${window.lodash.escape(jsObject['mapbox']['translation']['open_modal'])}"
+                                                      title="${window.lodash.escape(jsObject['mapbox']['translations']['open_modal'])}"
                                                       data-id="${window.lodash.escape(v.key)}"
                                                       data-field="contact_address"
                                                       data-key="${window.lodash.escape(v.key)}">
@@ -973,7 +973,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                                             <input type="text" class="dt-communication-channel input-group-field" id="${window.lodash.escape(v.key)}" value="${window.lodash.escape(v.label)}" dir="auto" data-field="contact_address" />
                                                             <div class="input-group-button">
                                                               <button type="button" class="button success delete-button-style open-mapping-address-modal"
-                                                                  title="${window.lodash.escape(jsObject['mapbox']['translation']['open_modal'])}"
+                                                                  title="${window.lodash.escape(jsObject['mapbox']['translations']['open_modal'])}"
                                                                   data-id="${window.lodash.escape(v.key)}"
                                                                   data-field="contact_address"
                                                                   data-key="${window.lodash.escape(v.key)}">
@@ -999,18 +999,24 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                 }
                             });
 
-                            // Update Comments -> First, removing any previous comments.
-                            form_content_table.find('.dt-comment-tr').each(function (idx, tr) {
-                                jQuery(tr).find('.dt-comment-subheader').html('');
-                                jQuery(tr).find('.dt-comment-content').html('');
+                            // Update Comments -> First, removing any previous comments, before capturing new ones!
+                            form_content_table.find('.dt-comment-tr').remove();
+                            if (data['comments'] && data['comments']['comments'] && (data['comments']['comments'].length > 0)) {
+                                $.each(data['comments']['comments'], function (idx, comment) {
+                                    let comment_tr_html = `
+                                    <tr class="dt-comment-tr">
+                                        <td>
+                                            <div class="section-subheader dt-comment-subheader">
+                                                ${window.lodash.escape(comment['comment_author'])} @ ${window.lodash.escape(comment['comment_date'])}
+                                            </div>
+                                            <span class="dt-comment-content">${window.lodash.escape(comment['comment_content'])}</span>
+                                        </td>
+                                    </tr>
+                                    `;
 
-                                // Capture any new comments.
-                                if (data['comments'] && data['comments']['comments'] && (data['comments']['comments'].length > 0) && data['comments']['comments'][idx]) {
-                                    let comment = data['comments']['comments'][idx];
-                                    jQuery(tr).find('.dt-comment-subheader').html(window.lodash.escape(`${comment['comment_author']} @ ${comment['comment_date']}`));
-                                    jQuery(tr).find('.dt-comment-content').html(window.lodash.escape(`${comment['comment_content']}`));
-                                }
-                            });
+                                    form_content_table.find('tbody').append(comment_tr_html);
+                                });
+                            }
 
                             // Final Updates -> Capture new post id, type & object
                             jQuery('#post_id').val(post['ID']);
@@ -1311,7 +1317,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                         ?>
                         <!-- LIST SUB-ASSIGNED CONTACTS -->
                         <div id="assigned_contacts_div">
-                            <h3><?php esc_html_e( 'Assigned', 'disciple_tools' ) ?> [ <span
+                            <h3><?php esc_html_e( 'Subassigned', 'disciple_tools' ) ?> [ <span
                                     id="total"><?php echo esc_html( count( $assigned_posts['posts'] ) ); ?></span>
                                 ]</h3>
                             <hr>
