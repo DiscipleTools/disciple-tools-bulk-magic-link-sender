@@ -431,10 +431,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
                                                                                    data-content="ml_templates_right_docs_template_type_content">&#63;</a>]
                 </td>
                 <td>
-                    <select style="min-width: 100%;" id="ml_main_col_template_details_type">
-                        <option selected value="single-record">Single Record</option>
-                        <option value="list-sub-assigned-contacts">List Sub-Assigned Contacts</option>
-                    </select>
+                    <select style="min-width: 100%;" id="ml_main_col_template_details_type"></select>
                 </td>
             </tr>
             <tr>
