@@ -1387,15 +1387,18 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                         continue;
                                     }
                                     // Field types to be ignored.
-                                    if ( $field['type'] === 'dt' && in_array( $post_field_type, [
-                                            'array',
-                                            'task',
-                                            'post_user_meta',
-                                            'datetime_series',
-                                            'hash',
-                                            'user_select',
-                                            'connection',
-                                            'tags'
+                                    if ( $field['type'] === 'dt' && ! in_array( $post_field_type, [
+                                            'text',
+                                            'textarea',
+                                            'date',
+                                            'boolean',
+                                            'key_select',
+                                            'multi_select',
+                                            'number',
+                                            'link',
+                                            'communication_channel',
+                                            'location',
+                                            'location_meta'
                                     ] ) ) {
                                         continue;
                                     }
