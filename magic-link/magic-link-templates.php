@@ -771,7 +771,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                  * Load
                                  */
 
-                                    // If available, load previous post record tags
+                                // If available, load previous post record tags
                                 let typeahead_tags = window.Typeahead[typeahead_tags_field_input];
                                 let post_tags = jsObject['post'][field_id];
                                 if ((post_tags !== undefined) && typeahead_tags) {
@@ -1306,7 +1306,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                 'subassigned' => [ $this->post['ID'] ]
                             ]
                         ]
-                    ] );
+                    ], false );
 
                     // Display only if there are valid hits!
                     if ( isset( $assigned_posts['posts'] ) && count( $assigned_posts['posts'] ) > 0 ){
@@ -1384,6 +1384,19 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                         $post_field_type = $this->post_field_settings[ $field['id'] ]['type'];
                                     }
                                     if ( $field['type'] === 'dt' && empty( $post_field_type ) ) {
+                                        continue;
+                                    }
+                                    // Field types to be ignored.
+                                    if ( $field['type'] === 'dt' && in_array( $post_field_type, [
+                                            'array',
+                                            'task',
+                                            'post_user_meta',
+                                            'datetime_series',
+                                            'hash',
+                                            'user_select',
+                                            'connection',
+                                            'tags'
+                                    ] ) ) {
                                         continue;
                                     }
 

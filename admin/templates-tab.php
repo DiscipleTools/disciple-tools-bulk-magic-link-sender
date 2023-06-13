@@ -526,7 +526,8 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
             'datetime_series',
             'hash',
             'user_select',
-            'connection'
+            'connection',
+            'tags'
         ];
     }
 
