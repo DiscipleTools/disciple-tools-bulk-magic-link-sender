@@ -1386,7 +1386,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                     if ( $field['type'] === 'dt' && empty( $post_field_type ) ) {
                                         continue;
                                     }
-                                    // Field types to be ignored.
+                                    // Field types to be supported.
                                     if ( $field['type'] === 'dt' && ! in_array( $post_field_type, [
                                             'text',
                                             'textarea',
