@@ -518,15 +518,19 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
         <?php
     }
 
-    private function ignore_field_types(): array {
+    private function supported_field_types(): array {
         return [
-            'array',
-            'task',
-            'post_user_meta',
-            'datetime_series',
-            'hash',
-            'user_select',
-            'connection'
+            'text',
+            'textarea',
+            'date',
+            'boolean',
+            'key_select',
+            'multi_select',
+            'number',
+            'link',
+            'communication_channel',
+            'location',
+            'location_meta'
         ];
     }
 
@@ -537,7 +541,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
         $dt_post_types = DT_Posts::get_post_types();
         if ( ! empty( $dt_post_types ) ) {
 
-            $field_types_to_ignore = $this->ignore_field_types();
+            $supported_field_types = $this->supported_field_types();
 
             foreach ( $dt_post_types as $dt_post_type ) {
                 $dt_post_type_settings = DT_Posts::get_post_settings( $dt_post_type );
@@ -545,7 +549,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
                 $fields = [];
                 foreach ( $dt_post_type_settings['fields'] as $key => $dt_field ) {
 
-                    if ( ! in_array( $dt_field['type'], $field_types_to_ignore ) && ! ( $dt_field['hidden'] ?? false ) && ! ( $dt_field['private'] ?? false ) && ! isset( $dt_field['section'] ) ) {
+                    if ( in_array( $dt_field['type'], $supported_field_types ) && ! ( $dt_field['hidden'] ?? false ) && ! ( $dt_field['private'] ?? false ) && ! isset( $dt_field['section'] ) ) {
                         $fields[] = [
                             'id'        => $key,
                             'name'      => $dt_field['name'],
