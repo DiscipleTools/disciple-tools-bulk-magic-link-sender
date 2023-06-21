@@ -315,6 +315,18 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
             };
 
             /**
+             * Format comment @mentions.
+             */
+
+            let comments = jQuery('.dt-comment-content');
+            if (comments) {
+                jQuery.each(comments, function (idx, comment) {
+                    let formatted_comment = window.SHAREDFUNCTIONS.formatComment(window.lodash.escape(jQuery(comment).html()));
+                    jQuery(comment).html(formatted_comment);
+                });
+            }
+
+            /**
              * Fetch requested contact details
              */
             window.get_contact = (post_id) => {
@@ -464,7 +476,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                                     data['comments']['comments'].forEach(comment => {
                                         if (counter++ < comment_count) { // Enforce comment count limit..!
                                             html_comments += `<b>${window.lodash.escape(comment['comment_author'])} @ ${window.lodash.escape(comment['comment_date'])}</b><br>`;
-                                            html_comments += `${window.lodash.escape(comment['comment_content'])}<hr>`;
+                                            html_comments += `${window.SHAREDFUNCTIONS.formatComment(window.lodash.escape(comment['comment_content']))}<hr>`;
                                         }
                                     });
                                 }

@@ -804,6 +804,18 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
             };
 
             /**
+             * Format comment @mentions.
+             */
+
+            let comments = jQuery('.dt-comment-content');
+            if (comments) {
+                jQuery.each(comments, function (idx, comment) {
+                    let formatted_comment = window.SHAREDFUNCTIONS.formatComment(window.lodash.escape(jQuery(comment).html()));
+                    jQuery(comment).html(formatted_comment);
+                });
+            }
+
+            /**
              * Fetch requested assigned details
              */
 
@@ -1009,7 +1021,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                             <div class="section-subheader dt-comment-subheader">
                                                 ${window.lodash.escape(comment['comment_author'])} @ ${window.lodash.escape(comment['comment_date'])}
                                             </div>
-                                            <span class="dt-comment-content">${window.lodash.escape(comment['comment_content'])}</span>
+                                            <span class="dt-comment-content">${window.SHAREDFUNCTIONS.formatComment(window.lodash.escape(comment['comment_content']))}</span>
                                         </td>
                                     </tr>
                                     `;

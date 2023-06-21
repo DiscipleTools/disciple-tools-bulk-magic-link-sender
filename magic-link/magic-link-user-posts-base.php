@@ -411,6 +411,16 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                             jQuery('.form-content-table').fadeIn('fast', function () {
                                 window.activate_field_controls();
                             });
+
+                            // Format comment mentions.
+                            let comments = jQuery('.dt-comment-content');
+                            if (comments) {
+                                jQuery.each(comments, function (idx, comment) {
+                                    let formatted_comment = window.SHAREDFUNCTIONS.formatComment(window.lodash.escape(jQuery(comment).html()));
+                                    jQuery(comment).html(formatted_comment);
+                                });
+                            }
+
                         } else {
                             // TODO: Error Msg...!
                         }
@@ -1310,12 +1320,12 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                         $recent_comments = DT_Posts::get_post_comments( $post['post_type'], $post['ID'], false, 'all', [ 'number' => 2 ] );
                         foreach ( $recent_comments['comments'] ?? [] as $comment ) {
                             ?>
-                            <tr>
+                            <tr class="dt-comment-tr">
                                 <td>
-                                    <div class="section-subheader">
+                                    <div class="section-subheader dt-comment-subheader">
                                         <?php echo esc_html( $comment['comment_author'] . ' @ ' . $comment['comment_date'] ); ?>
                                     </div>
-                                    <?php echo esc_html( $comment['comment_content'] ); ?>
+                                    <span class="dt-comment-content"><?php echo esc_html( $comment['comment_content'] ); ?></span>
                                 </td>
                             </tr>
                             <?php
