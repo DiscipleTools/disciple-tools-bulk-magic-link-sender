@@ -366,31 +366,6 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
             };
 
             /**
-             * Format comment @mentions.
-             */
-
-            window.format_comment_mentions = (comment) => {
-                let mentioned = [];
-                let mentions = /\[.*?\]\(\d*\)/g.exec(comment);
-                if (mentions) {
-                    jQuery.each(mentions, function (idx, mention) {
-                        let user = /\[.*?\]/.exec(mention)[0].replaceAll('[', '').replaceAll(']', '');
-                        mentioned.push({
-                            'mention': mention,
-                            'group': user
-                        });
-                    });
-                }
-
-                // Format comment accordingly.
-                jQuery.each(mentioned, function (idx, mention) {
-                    comment = comment.replaceAll(mention['mention'], `<a dir="auto">@${mention['group']}</a>`);
-                });
-
-                return comment;
-            };
-
-            /**
              * Fetch requested group details
              */
             window.get_post = (post_id) => {
@@ -441,7 +416,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                             let comments = jQuery('.dt-comment-content');
                             if (comments) {
                                 jQuery.each(comments, function (idx, comment) {
-                                    let formatted_comment = format_comment_mentions(window.lodash.escape(jQuery(comment).html()));
+                                    let formatted_comment = window.SHAREDFUNCTIONS.formatComment(window.lodash.escape(jQuery(comment).html()));
                                     jQuery(comment).html(formatted_comment);
                                 });
                             }
