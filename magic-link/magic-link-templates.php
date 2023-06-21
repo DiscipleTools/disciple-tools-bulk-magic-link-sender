@@ -804,6 +804,38 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
             };
 
             /**
+             * Format comment @mentions.
+             */
+
+            window.format_comment_mentions = (comment) => {
+                let mentioned = [];
+                let mentions = /@\[.*?\]\(\d*\)/g.exec(comment);
+                if (mentions) {
+                    jQuery.each(mentions, function (idx, mention) {
+                        let user = /\[.*?\]/.exec(mention)[0].replaceAll('[', '').replaceAll(']', '');
+                        mentioned.push({
+                            'mention': mention,
+                            'user': user
+                        });
+                    });
+                }
+
+                // Format comment accordingly.
+                jQuery.each(mentioned, function (idx, mention) {
+                    comment = comment.replaceAll(mention['mention'], `<a dir="auto">@${mention['user']}</a>`);
+                });
+
+                return comment;
+            };
+            let comments = jQuery('.dt-comment-content');
+            if (comments) {
+                jQuery.each(comments, function (idx, comment) {
+                    let formatted_comment = format_comment_mentions(window.lodash.escape(jQuery(comment).html()));
+                    jQuery(comment).html(formatted_comment);
+                });
+            }
+
+            /**
              * Fetch requested assigned details
              */
 
@@ -1009,7 +1041,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                             <div class="section-subheader dt-comment-subheader">
                                                 ${window.lodash.escape(comment['comment_author'])} @ ${window.lodash.escape(comment['comment_date'])}
                                             </div>
-                                            <span class="dt-comment-content">${window.lodash.escape(comment['comment_content'])}</span>
+                                            <span class="dt-comment-content">${format_comment_mentions(window.lodash.escape(comment['comment_content']))}</span>
                                         </td>
                                     </tr>
                                     `;
