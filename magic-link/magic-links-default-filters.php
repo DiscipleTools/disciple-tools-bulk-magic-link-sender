@@ -180,8 +180,10 @@ class ML_Send_Email_Job extends Job{
  * LINK EXPIRY CHECKER
  */
 
-add_filter( 'dt_ml_obj_link_expired', 'dt_obj_link_expiry_checker', 10, 2 );
-function dt_obj_link_expiry_checker( $link_obj_id, $post_id ){
+add_filter( 'dt_magic_link_continue', 'dt_magic_link_continue', 10, 1 );
+function dt_magic_link_continue( $args ){
+    $link_obj_id = $args['instance_id'];
+    $post_id = $args['post_id'];
     if ( isset( $link_obj_id, $post_id ) ){
         $link_obj = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $link_obj_id );
         if ( !empty( $link_obj ) ){
@@ -202,11 +204,11 @@ function dt_obj_link_expiry_checker( $link_obj_id, $post_id ){
                 }
             }
 
-            return $has_expired;
+            return !$has_expired;
         }
     }
 
-    return false;
+    return true;
 }
 
 /**
