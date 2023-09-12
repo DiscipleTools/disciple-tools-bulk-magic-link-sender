@@ -180,15 +180,15 @@ class ML_Send_Email_Job extends Job{
  * LINK EXPIRY CHECKER
  */
 
-add_filter( 'dt_magic_link_continue', 'dt_magic_link_continue', 10, 1 );
-function dt_magic_link_continue( $args ){
+add_filter( 'dt_magic_link_continue', 'dt_magic_link_continue', 10, 2 );
+function dt_magic_link_continue( bool $response, array $args ){
     $link_obj_id = $args['instance_id'];
     $post_id = $args['post_id'];
     if ( isset( $link_obj_id, $post_id ) ){
         $link_obj = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $link_obj_id );
         if ( !empty( $link_obj ) ){
             if ( ( $link_obj->enabled === false ) || Disciple_Tools_Bulk_Magic_Link_Sender_API::has_obj_expired( $link_obj->never_expires, $link_obj->expires ) ){
-                return true;
+                return false;
             }
 
             // Identify corresponding user's link object expiry status.
@@ -208,7 +208,7 @@ function dt_magic_link_continue( $args ){
         }
     }
 
-    return true;
+    return $response;
 }
 
 /**
