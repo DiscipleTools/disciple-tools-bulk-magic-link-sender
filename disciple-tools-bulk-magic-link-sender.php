@@ -80,6 +80,8 @@ class Disciple_Tools_Bulk_Magic_Link_Sender {
     }
 
     private function __construct() {
+        require_once( 'magic-link/magic-links-default-filters.php' );
+
         $is_rest = dt_is_rest();
 
         if ( $is_rest && strpos( dt_get_url_path(), 'disciple_tools_magic_links' ) !== false ) {
@@ -92,7 +94,6 @@ class Disciple_Tools_Bulk_Magic_Link_Sender {
         require_once( 'magic-link/magic-link-user-posts-base.php' );
         require_once( 'magic-link/magic-link-user-groups-app.php' );
         require_once( 'magic-link/magic-links-cron.php' );
-        require_once( 'magic-link/magic-links-default-filters.php' );
 
         if ( is_admin() ) {
             require_once( 'admin/admin-menu-and-tabs.php' ); // adds starter admin page and section for plugin
