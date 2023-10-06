@@ -1320,12 +1320,18 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                         ]
                     ], false );
 
+                    // Add primary recipient post as first element.
+                    array_unshift( $assigned_posts['posts'], $this->post );
+
+                    $assigned_posts['posts'] = apply_filters( 'dt_smart_links_filter_assigned_posts', $assigned_posts['posts'], $this->template );
+
+                    $this->post = null;
+                    if ( !empty( $assigned_posts['posts'] ) ) {
+                        $this->post = $assigned_posts['posts'][0];
+                    }
+
                     // Display only if there are valid hits!
                     if ( isset( $assigned_posts['posts'] ) && count( $assigned_posts['posts'] ) > 0 ){
-
-                        // Add primary recipient post as first element.
-                        array_unshift( $assigned_posts['posts'], $this->post );
-
                         ?>
                         <!-- LIST SUB-ASSIGNED CONTACTS -->
                         <div id="assigned_contacts_div">
@@ -1384,7 +1390,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                          * based on hidden flags!
                          */
 
-                        $this->post_field_settings = DT_Posts::get_post_field_settings( $this->post['post_type'], false );
+                        $this->post_field_settings = DT_Posts::get_post_field_settings( $this->post_type, false );
                         if ( ! empty( $this->post ) && ! empty( $this->post_field_settings ) && ! empty( $this->template ) ) {
 
                             // Display selected fields
