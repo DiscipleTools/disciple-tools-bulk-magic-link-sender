@@ -290,6 +290,24 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
     public function header_javascript() {
     }
 
+    private function localized_selected_field_settings( $template ) {
+        $post_type_field_settings = DT_Posts::get_post_field_settings( $template['post_type'], false );
+        if ( !empty( $template['fields'] ) ) {
+
+            $localized_selected_field_settings = [];
+            foreach ( $template['fields'] ?? [] as $template_field ) {
+                if ( isset( $template_field['id'], $template_field['type'], $template_field['enabled'] ) ) {
+                    if ( $template_field['enabled'] && ( $template_field['type'] === 'dt' ) && isset( $post_type_field_settings[ $template_field['id'] ] ) ) {
+                        $localized_selected_field_settings[ $template_field['id'] ] = $post_type_field_settings[ $template_field['id'] ];
+                    }
+                }
+            }
+            return $localized_selected_field_settings;
+        } else {
+            return $post_type_field_settings;
+        }
+    }
+
     /**
      * Writes javascript to the footer
      *
@@ -305,7 +323,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                 'parts'                   => $this->parts,
                 'post'                    => $this->post,
                 'template'                => $this->template,
-                'field_settings' => DT_Posts::get_post_field_settings( $this->template['post_type'], false ),
+                'field_settings' => $this->localized_selected_field_settings( $this->template ),
                 'translations'            => [
                     'regions_of_focus' => __( 'Regions of Focus', 'disciple_tools' ),
                     'all_locations'    => __( 'All Locations', 'disciple_tools' ),
