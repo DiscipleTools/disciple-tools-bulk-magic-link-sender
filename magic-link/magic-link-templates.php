@@ -295,7 +295,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         if ( !empty( $template['fields'] ) ) {
 
             $localized_selected_field_settings = [];
-            foreach ( $template['fields'] ?? [] as $template_field ) {
+            foreach ( $template['fields'] as $template_field ) {
                 if ( isset( $template_field['id'], $template_field['type'], $template_field['enabled'] ) ) {
                     if ( $template_field['enabled'] && ( $template_field['type'] === 'dt' ) && isset( $post_type_field_settings[ $template_field['id'] ] ) ) {
                         $localized_selected_field_settings[ $template_field['id'] ] = $post_type_field_settings[ $template_field['id'] ];
