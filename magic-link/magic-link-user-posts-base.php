@@ -326,8 +326,6 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                 ]
             ] ) ?>][0];
 
-            console.log(jsObject);
-
             /**
              * Fetch assigned groups
              */

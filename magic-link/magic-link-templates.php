@@ -290,7 +290,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
     public function header_javascript() {
     }
 
-    private function localized_selected_field_settings( $template ) {
+    private function localized_template_selected_field_settings( $template ) {
         $post_type_field_settings = DT_Posts::get_post_field_settings( $template['post_type'], false );
         if ( !empty( $template['fields'] ) ) {
 
@@ -308,6 +308,20 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         }
     }
 
+    private function localized_post_selected_field_settings( $post, $localised_fields, $inc_post_fields ) {
+        if ( !empty( $localised_fields ) ) {
+            $localized_post = [];
+            foreach ( $post as $post_key => $post_value ) {
+                if ( array_key_exists( $post_key, $localised_fields ) || in_array( $post_key, $inc_post_fields ) ) {
+                    $localized_post[ $post_key ] = $post_value;
+                }
+            }
+            return $localized_post;
+        } else {
+            return $post;
+        }
+    }
+
     /**
      * Writes javascript to the footer
      *
@@ -315,15 +329,17 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
      * @todo remove if not needed
      */
     public function footer_javascript() {
+        $localized_template_field_settings = $this->localized_template_selected_field_settings( $this->template );
+        $localized_post_field_settings = $this->localized_post_selected_field_settings( $this->post, $localized_template_field_settings, [ 'ID', 'post_type' ] );
         ?>
         <script>
             let jsObject = [<?php echo json_encode( [
                 'root'                    => esc_url_raw( rest_url() ),
                 'nonce'                   => wp_create_nonce( 'wp_rest' ),
                 'parts'                   => $this->parts,
-                'post'                    => $this->post,
+                'post'                    => $localized_post_field_settings,
                 'template'                => $this->template,
-                'field_settings' => $this->localized_selected_field_settings( $this->template ),
+                'field_settings' => $localized_template_field_settings,
                 'translations'            => [
                     'regions_of_focus' => __( 'Regions of Focus', 'disciple_tools' ),
                     'all_locations'    => __( 'All Locations', 'disciple_tools' ),
@@ -345,8 +361,6 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                     ]
                 ]
             ] ) ?>][0]
-
-            console.log(jsObject);
 
             /**
              * Activate various field controls.
@@ -1583,7 +1597,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         $post = DT_Posts::get_post( $params['post_type'], $params['post_id'], false, false );
         if ( !empty( $post ) && !is_wp_error( $post ) ){
             $response['success'] = true;
-            $response['post'] = $post;
+            $response['post'] = $this->localized_post_selected_field_settings( $post, $this->localized_template_selected_field_settings( $this->template ), [ 'ID', 'post_type' ] );
             $response['comments'] = DT_Posts::get_post_comments( $params['post_type'], $params['post_id'], false, 'all', [ 'number' => $params['comment_count'] ] );
         } else {
             $response['success'] = false;
