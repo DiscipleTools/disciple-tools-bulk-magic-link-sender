@@ -340,11 +340,11 @@ class Disciple_Tools_Magic_Links_Magic_Link extends DT_Magic_Url_Base {
 
         $args = [];
         if ( !is_user_logged_in() ){
-            $args['comment_author'] = 'Magic Link Submission';
+            $args['comment_author'] = 'Smart Link Submission';
             wp_set_current_user( 0 );
             $current_user = wp_get_current_user();
             $current_user->add_cap( 'magic_link' );
-            $current_user->display_name = 'Magic Link Submission';
+            $current_user->display_name = 'Smart Link Submission';
         }
 
         if ( isset( $params['update']['comment'] ) && !empty( $params['update']['comment'] ) ){
