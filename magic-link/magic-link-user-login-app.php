@@ -7,10 +7,10 @@ if ( !defined( 'ABSPATH' ) ) { exit; } // Exit if accessed directly.
  */
 class Disciple_Tools_Magic_Links_Magic_User_Login_App extends DT_Magic_Url_Base {
 
-    public $page_title = 'User Login App';
-    public $page_description = 'Login User App - Magic Links.';
-    public $root = 'my'; // @todo define the root of the url {yoursite}/root/type/key/action
-    public $type = 'apps'; // @todo define the type
+    public $page_title = 'App Portal';
+    public $page_description = 'User App Portal - Login to see your apps.';
+    public $root = 'my';
+    public $type = 'apps';
     public $post_type = 'user';
     private $meta_key = '';
     public $show_bulk_send = false;
@@ -90,13 +90,11 @@ class Disciple_Tools_Magic_Links_Magic_User_Login_App extends DT_Magic_Url_Base 
     }
 
     public function dt_magic_url_base_allowed_js( $allowed_js ) {
-        // @todo add or remove js files with this filter
-        return $allowed_js;
+        return [];
     }
 
     public function dt_magic_url_base_allowed_css( $allowed_css ) {
-        // @todo add or remove js files with this filter
-        return $allowed_css;
+        return [ 'site-css' ];
     }
 
     /**
@@ -160,7 +158,6 @@ class Disciple_Tools_Magic_Links_Magic_User_Login_App extends DT_Magic_Url_Base 
     public function header_javascript(){
         ?>
         <script>
-            console.log('insert header_javascript')
         </script>
         <?php
     }
@@ -174,18 +171,14 @@ class Disciple_Tools_Magic_Links_Magic_User_Login_App extends DT_Magic_Url_Base 
     public function footer_javascript(){
         ?>
         <script>
-            console.log('insert footer_javascript')
             let jsObject = [<?php echo json_encode([
                 'map_key' => DT_Mapbox_API::get_key(),
                 'root' => esc_url_raw( rest_url() ),
                 'nonce' => wp_create_nonce( 'wp_rest' ),
                 'parts' => $this->parts,
-                'translations' => [
-                    'add' => __( 'Add Magic', 'disciple-tools-plugin-starter-template' ),
-                ],
+                'translations' => [],
             ]) ?>][0];
 
-            console.log(jsObject);
         </script>
         <?php
         return true;
@@ -205,7 +198,6 @@ class Disciple_Tools_Magic_Links_Magic_User_Login_App extends DT_Magic_Url_Base 
         $app_owner = get_user_by( 'ID', $app_owner_id );
         $app_owner_display_name = dt_get_user_display_name( $app_owner_id );
 
-        // @todo Create an app here that interacts with both the logged in user and the user who owns the app
         $apps_list = apply_filters( 'dt_settings_apps_list', $apps_list = [] );
 
         ?>
@@ -222,7 +214,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Login_App extends DT_Magic_Url_Base 
                 <div class="app-container">
                     <?php
                     foreach ( $apps_list as $app ) {
-                        if ( $app['settings_display'] ){
+                        if ( $app['settings_display'] && $app['key'] !== $this->meta_key ){
                             $app_user_key = get_user_option( $app['key'] );
                             $app_url_base = trailingslashit( trailingslashit( site_url() ) . $app['url_base'] );
                             if ( !$app_user_key ){
