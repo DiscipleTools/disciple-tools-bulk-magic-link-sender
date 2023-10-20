@@ -282,6 +282,21 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         <?php
     }
 
+    private function localized_selected_field_settings( $post_type, $link_obj ) {
+        $post_type_field_settings = DT_Posts::get_post_field_settings( $post_type, false );
+        if ( !empty( $link_obj->type_fields ) ) {
+            $localized_selected_field_settings = [];
+            foreach ( $link_obj->type_fields as $link_obj_field ) {
+                if ( isset( $link_obj_field->id, $link_obj_field->enabled, $post_type_field_settings[ $link_obj_field->id ] ) && $link_obj_field->enabled ) {
+                    $localized_selected_field_settings[ $link_obj_field->id ] = $post_type_field_settings[ $link_obj_field->id ];
+                }
+            }
+            return $localized_selected_field_settings;
+        } else {
+            return $post_type_field_settings;
+        }
+    }
+
     /**
      * Writes javascript to the footer
      *
@@ -289,6 +304,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
      * @todo remove if not needed
      */
     public function footer_javascript() {
+        $link_obj = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $this->fetch_incoming_link_param( 'id' ) );
         ?>
         <script>
             let jsObject = [<?php echo json_encode( [
@@ -297,8 +313,8 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                 'nonce'          => wp_create_nonce( 'wp_rest' ),
                 'parts'          => $this->parts,
                 'lang'           => $this->fetch_incoming_link_param( 'lang' ),
-                'field_settings' => DT_Posts::get_post_field_settings( $this->sub_post_type, false ),
-                'link_obj_id'    => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $this->fetch_incoming_link_param( 'id' ) ),
+                'field_settings' => $this->localized_selected_field_settings( $this->sub_post_type, $link_obj ),
+                'link_obj_id'    => $link_obj,
                 'sys_type'       => $this->fetch_incoming_link_param( 'type' ),
                 'translations'   => [
                     'update_success' => __( 'Update Successful!', 'disciple-tools-bulk-magic-link-sender' ),
@@ -309,8 +325,6 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                     ]
                 ]
             ] ) ?>][0];
-
-            console.log(jsObject);
 
             /**
              * Fetch assigned groups
