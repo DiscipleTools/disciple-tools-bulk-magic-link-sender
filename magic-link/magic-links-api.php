@@ -778,7 +778,7 @@ Thanks!';
     }
 
     public static function determine_links_expiry_point( $amt, $time_unit, $base_ts ) {
-        return strtotime( '+' . $amt . ' ' . $time_unit, $base_ts );
+        return strtotime( '+' . $amt . ' ' . $time_unit, !empty( $base_ts ) ? $base_ts : time() );
     }
 
     public static function has_links_expired( $never_expires, $base_ts, $amt, $time_unit ): bool {
