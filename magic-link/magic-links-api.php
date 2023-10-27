@@ -778,7 +778,13 @@ Thanks!';
     }
 
     public static function determine_links_expiry_point( $amt, $time_unit, $base_ts ) {
-        return strtotime( '+' . $amt . ' ' . $time_unit, !empty( $base_ts ) ? $base_ts : time() );
+
+        // If any of the required values are empty, invalidate expiry point.
+        if ( empty( $amt ) || empty( $time_unit ) || empty( $base_ts ) ) {
+            return strtotime( '-1 day', time() );
+        } else {
+            return strtotime( '+' . $amt . ' ' . $time_unit, $base_ts );
+        }
     }
 
     public static function has_links_expired( $never_expires, $base_ts, $amt, $time_unit ): bool {
