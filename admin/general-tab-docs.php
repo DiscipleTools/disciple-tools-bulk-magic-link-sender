@@ -1,3 +1,12 @@
+<!-- Global Name -->
+<div id="ml_general_right_docs_global_name_title" style="display: none;">
+    Global Name
+</div>
+<div id="ml_general_right_docs_global_name_content" style="display: none;">
+    Ability to enable/disable a custom global name; to override system-wide Magic Link references.
+</div>
+<!-- Global Name -->
+
 <!-- All Scheduling Enabled -->
 <div id="ml_general_right_docs_all_scheduling_enabled_title" style="display: none;">
     All Scheduling Enabled

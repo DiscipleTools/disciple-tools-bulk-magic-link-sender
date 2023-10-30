@@ -9,6 +9,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Disciple_Tools_Bulk_Magic_Link_Sender_API {
 
     public static $option_dt_magic_links_objects = 'dt_magic_links_objects';
+    public static $option_dt_magic_links_global_name = 'dt_magic_links_global_name';
+    public static $option_dt_magic_links_global_name_enabled = 'dt_magic_links_global_name_enabled';
     public static $option_dt_magic_links_all_scheduling_enabled = 'dt_magic_links_all_scheduling_enabled';
     public static $option_dt_magic_links_all_channels_enabled = 'dt_magic_links_all_channels_enabled';
     public static $option_dt_magic_links_logging = 'dt_magic_links_logging';
