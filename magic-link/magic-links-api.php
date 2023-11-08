@@ -779,9 +779,9 @@ Thanks!';
 
     public static function determine_links_expiry_point( $amt, $time_unit, $base_ts ) {
 
-        // If any of the required values are empty, invalidate expiry point.
+        // If any of the required values are empty, set expiry point a day from now.
         if ( empty( $amt ) || empty( $time_unit ) || empty( $base_ts ) ) {
-            return strtotime( '-1 day', time() );
+            return strtotime( '+1 day', time() );
         } else {
             return strtotime( '+' . $amt . ' ' . $time_unit, $base_ts );
         }
