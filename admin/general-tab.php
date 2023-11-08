@@ -176,7 +176,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_General {
                     } else {
                         $global_name_enabled_checked_html = boolval( Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_global_name_enabled ) ) ? 'checked' : '';
                     }
-                    $global_name_value = Disciple_Tools_Bulk_Magic_Link_Sender_API::option_exists( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_global_name ) ? Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_global_name ) : '';
+                    $global_name_value = get_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_global_name, '' );
                     $global_name_disabled_html = ( $global_name_enabled_checked_html !== 'checked' ? 'disabled' : '' );
                     ?>
                     <input style="min-width: 70%;"

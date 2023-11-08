@@ -225,8 +225,8 @@ function dt_magic_link_continue( bool $response, array $args ){
 
 add_filter( 'dt_magic_link_global_name', 'dt_magic_link_global_name', 10, 1 );
 function dt_magic_link_global_name( $global_name ) {
-    if ( Disciple_Tools_Bulk_Magic_Link_Sender_API::option_exists( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_global_name_enabled ) && boolval( Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_global_name_enabled ) ) === true ) {
-        return Disciple_Tools_Bulk_Magic_Link_Sender_API::option_exists( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_global_name ) ? Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_global_name ) : $global_name;
+    if ( boolval( get_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_global_name_enabled, false ) ) === true ) {
+        return get_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_global_name, $global_name );
     }
 
     return $global_name;
