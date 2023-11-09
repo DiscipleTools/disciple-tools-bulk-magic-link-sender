@@ -33,6 +33,16 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_General {
 
     private function process_updates() {
         if ( isset( $_POST['ml_general_main_col_general_form_nonce'] ) && wp_verify_nonce( sanitize_key( wp_unslash( $_POST['ml_general_main_col_general_form_nonce'] ) ), 'ml_general_main_col_general_form_nonce' ) ) {
+            if ( isset( $_POST['ml_general_main_col_general_form_global_name'] ) ) {
+                $global_name = filter_var( wp_unslash( $_POST['ml_general_main_col_general_form_global_name'] ), FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_FLAG_NO_ENCODE_QUOTES );
+                Disciple_Tools_Bulk_Magic_Link_Sender_API::update_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_global_name, $global_name );
+            }
+
+            if ( isset( $_POST['ml_general_main_col_general_form_global_name_enabled'] ) ) {
+                $global_name_enabled = filter_var( wp_unslash( $_POST['ml_general_main_col_general_form_global_name_enabled'] ), FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_FLAG_NO_ENCODE_QUOTES );
+                Disciple_Tools_Bulk_Magic_Link_Sender_API::update_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_global_name_enabled, $global_name_enabled );
+            }
+
             if ( isset( $_POST['ml_general_main_col_general_form_all_scheduling_enabled'] ) ) {
                 $all_scheduling_enabled = filter_var( wp_unslash( $_POST['ml_general_main_col_general_form_all_scheduling_enabled'] ), FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_FLAG_NO_ENCODE_QUOTES );
                 Disciple_Tools_Bulk_Magic_Link_Sender_API::update_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_all_scheduling_enabled, $all_scheduling_enabled );
@@ -152,6 +162,38 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_General {
                 </td>
             </tr>
             <tr>
+                <td>
+                    Global Name [<a href="#" class="ml-general-docs"
+                                    data-title="ml_general_right_docs_global_name_title"
+                                    data-content="ml_general_right_docs_global_name_content">&#63;</a>]
+                </td>
+                <td>
+                    <?php
+                    $global_name_enabled_checked_html = 'checked';
+                    if ( ! Disciple_Tools_Bulk_Magic_Link_Sender_API::option_exists( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_global_name_enabled ) ) {
+                        // Ensure initial setup setting, is enabled by default
+                        Disciple_Tools_Bulk_Magic_Link_Sender_API::update_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_global_name_enabled, '1' );
+                    } else {
+                        $global_name_enabled_checked_html = boolval( Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_global_name_enabled ) ) ? 'checked' : '';
+                    }
+                    $global_name_value = get_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_global_name, '' );
+                    $global_name_disabled_html = ( $global_name_enabled_checked_html !== 'checked' ? 'disabled' : '' );
+                    ?>
+                    <input style="min-width: 70%;"
+                           type="text"
+                           id="ml_general_main_col_general_global_name"
+                           value="<?php echo esc_attr( $global_name_value ); ?>"
+                        <?php echo esc_attr( $global_name_disabled_html ); ?>
+                    />
+
+                    <input type="checkbox"
+                           id="ml_general_main_col_general_global_name_enabled"
+                           value=""
+                        <?php echo esc_attr( $global_name_enabled_checked_html ); ?>
+                    /> Enabled
+                </td>
+            </tr>
+            <tr>
                 <td style="vertical-align: middle;">All Scheduling Enabled [<a href="#" class="ml-general-docs"
                                                                                data-title="ml_general_right_docs_all_scheduling_enabled_title"
                                                                                data-content="ml_general_right_docs_all_scheduling_enabled_content">&#63;</a>]
@@ -214,6 +256,12 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_General {
             <input type="hidden" id="ml_general_main_col_general_form_nonce"
                    name="ml_general_main_col_general_form_nonce"
                    value="<?php echo esc_attr( wp_create_nonce( 'ml_general_main_col_general_form_nonce' ) ) ?>"/>
+
+            <input type="hidden" id="ml_general_main_col_general_form_global_name"
+                   name="ml_general_main_col_general_form_global_name" value=""/>
+
+            <input type="hidden" id="ml_general_main_col_general_form_global_name_enabled"
+                   name="ml_general_main_col_general_form_global_name_enabled" value=""/>
 
             <input type="hidden" id="ml_general_main_col_general_form_all_scheduling_enabled"
                    name="ml_general_main_col_general_form_all_scheduling_enabled" value=""/>

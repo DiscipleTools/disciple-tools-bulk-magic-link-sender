@@ -217,3 +217,21 @@ function dt_magic_link_continue( bool $response, array $args ){
 /**
  * LINK EXPIRY CHECKER
  */
+
+
+/**
+ * GLOBAL NAME
+ */
+
+add_filter( 'dt_magic_link_global_name', 'dt_magic_link_global_name', 10, 1 );
+function dt_magic_link_global_name( $global_name ) {
+    if ( boolval( get_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_global_name_enabled, false ) ) === true ) {
+        return get_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_global_name, $global_name );
+    }
+
+    return $global_name;
+}
+
+/**
+ * GLOBAL NAME
+ */

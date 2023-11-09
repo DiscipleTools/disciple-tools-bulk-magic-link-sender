@@ -968,7 +968,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                 wp_set_current_user( 0 );
                 $current_user = wp_get_current_user();
                 $current_user->add_cap( 'magic_link' );
-                $current_user->display_name = __( 'Smart Link Submission', 'disciple_tools' );
+                $current_user->display_name = sprintf( __( '%s Submission', 'disciple_tools' ), apply_filters( 'dt_magic_link_global_name', __( 'Magic Link', 'disciple_tools' ) ) );
                 break;
             default: // wp_user
                 wp_set_current_user( $user_id );
