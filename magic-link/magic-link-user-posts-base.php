@@ -676,6 +676,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
              * Submit group details
              */
             jQuery('#content_submit_but').on("click", function () {
+                let spinner = jQuery('.update-loading-spinner');
                 let id = jQuery('#post_id').val();
                 let post_type = jQuery('#post_type').val();
 
@@ -797,6 +798,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                             jQuery('#content_submit_but').prop('disabled', false);
                         }
                     } else {
+                        spinner.addClass('active');
 
                         // Submit data for post update
                         jQuery.ajax({
@@ -1012,6 +1014,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                 <br>
 
                 <!-- SUBMIT UPDATES -->
+                <span class="update-loading-spinner loading-spinner"></span>
                 <button id="content_submit_but" style="display: none; min-width: 100%;" class="button select-button">
                     <?php esc_html_e( 'Submit Update', 'disciple_tools' ) ?>
                 </button>
