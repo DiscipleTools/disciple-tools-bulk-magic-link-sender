@@ -690,6 +690,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
             $expire_on = self::fetch_links_expired_formatted_date( $link_obj->link_manage->links_never_expires, $user->links_expire_within_base_ts, $link_obj->link_manage->links_expire_within_amount, $link_obj->link_manage->links_expire_within_time_unit );
 
             // Construct message, having replaced placeholders
+            $expiry_point = self::determine_links_expiry_point( $link_obj->link_manage->links_expire_within_amount, $link_obj->link_manage->links_expire_within_time_unit, $user->links_expire_within_base_ts );
             $msg = str_replace(
                 [
                     '{{name}}',
@@ -701,7 +702,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
                     self::determine_assigned_user_name( $user ),
                     $link_url,
                     $expire_on,
-                    self::determine_relative_date( self::determine_links_expiry_point( $link_obj->link_manage->links_expire_within_amount, $link_obj->link_manage->links_expire_within_time_unit, $user->links_expire_within_base_ts ) )
+                    ( $expiry_point === false ) ? '' : self::determine_relative_date( $expiry_point )
                 ],
                 $link_obj->message
             );
@@ -781,7 +782,7 @@ Thanks!';
 
         // If any of the required values are empty, set expiry point a day from now.
         if ( empty( $amt ) || empty( $time_unit ) || empty( $base_ts ) ) {
-            return strtotime( '+1 day', time() );
+            return false;
         } else {
             return strtotime( '+' . $amt . ' ' . $time_unit, $base_ts );
         }
@@ -794,7 +795,7 @@ Thanks!';
 
         $expiry_point = self::determine_links_expiry_point( $amt, $time_unit, $base_ts );
 
-        return $expiry_point < time(); // In the past!
+        return !( $expiry_point === false ) && $expiry_point < time(); // In the past!
     }
 
     public static function fetch_links_expired_formatted_date( $never_expires, $base_ts, $amt, $time_unit ): string {
@@ -804,7 +805,7 @@ Thanks!';
 
         $expiry_point = self::determine_links_expiry_point( $amt, $time_unit, $base_ts );
 
-        return self::format_timestamp_in_local_time_zone( $expiry_point );
+        return ( $expiry_point === false ) ? '' : self::format_timestamp_in_local_time_zone( $expiry_point );
     }
 
     public static function determine_relative_date( $ts ): string {
@@ -1371,8 +1372,10 @@ Thanks!';
     }
 
     public static function refresh_user_links_expiration_values( $user, $base_ts, $amt, $time_unit, $never_expires ) {
+        $expiry_point = self::determine_links_expiry_point( $amt, $time_unit, $base_ts );
+
         $user->links_expire_within_base_ts  = $base_ts;
-        $user->links_expire_on_ts           = self::determine_links_expiry_point( $amt, $time_unit, $base_ts );
+        $user->links_expire_on_ts           = ( $expiry_point === false ) ? '' : $expiry_point;
         $user->links_expire_on_ts_formatted = self::fetch_links_expired_formatted_date( $never_expires, $base_ts, $amt, $time_unit );
 
         return $user;
