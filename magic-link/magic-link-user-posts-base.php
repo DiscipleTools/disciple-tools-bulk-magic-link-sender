@@ -1014,9 +1014,9 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                 <br>
 
                 <!-- SUBMIT UPDATES -->
-                <span class="update-loading-spinner loading-spinner"></span>
                 <button id="content_submit_but" style="display: none; min-width: 100%;" class="button select-button">
                     <?php esc_html_e( 'Submit Update', 'disciple_tools' ) ?>
+                    <span class="update-loading-spinner loading-spinner" style="height: 17px; width: 17px; vertical-align: text-bottom;"></span>
                 </button>
             </div>
         </div>
