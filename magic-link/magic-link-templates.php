@@ -1083,6 +1083,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
              */
 
             jQuery('#content_submit_but').on("click", function () {
+                let spinner = jQuery('.update-loading-spinner');
                 let id = jQuery('#post_id').val();
                 let post_type = jQuery('#post_type').val();
 
@@ -1249,6 +1250,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                             jQuery('#content_submit_but').prop('disabled', false);
                         }
                     } else {
+                        spinner.addClass('active');
 
                         // Submit data for post update.
                         jQuery.ajax({
@@ -1538,6 +1540,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                         style="<?php echo( ! empty( $this->post ) ? '' : 'display: none;' ) ?> min-width: 100%;"
                         class="button select-button">
                     <?php esc_html_e( 'Submit Update', 'disciple_tools' ) ?>
+                    <span class="update-loading-spinner loading-spinner" style="height: 17px; width: 17px; vertical-align: text-bottom;"></span>
                 </button>
             </div>
         </div>

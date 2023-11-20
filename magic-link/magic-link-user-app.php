@@ -555,6 +555,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
              * Submit contact details
              */
             jQuery('#content_submit_but').on("click", function () {
+                let spinner = jQuery('.update-loading-spinner');
                 let id = jQuery('#post_id').val();
 
                 // Reset error message field
@@ -600,6 +601,8 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                     if (window.is_field_enabled('comments')) {
                         payload['comments'] = jQuery('#form_content_comments_td').find('textarea').eq(0).val();
                     }
+
+                    spinner.addClass('active');
 
                     // Submit data for post update
                     jQuery('#content_submit_but').prop('disabled', true);
@@ -739,6 +742,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                 <!-- SUBMIT UPDATES -->
                 <button id="content_submit_but" style="display: none; min-width: 100%;" class="button select-button">
                     <?php esc_html_e( 'Submit Update', 'disciple_tools' ) ?>
+                    <span class="update-loading-spinner loading-spinner" style="height: 17px; width: 17px; vertical-align: text-bottom;"></span>
                 </button>
             </div>
         </div>
