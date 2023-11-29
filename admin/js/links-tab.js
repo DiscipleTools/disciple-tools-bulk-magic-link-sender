@@ -2,10 +2,12 @@ jQuery(function ($) {
 
   // Initial States
   $(document).ready(function () {
-    let link_obj = window.dt_magic_links.dt_previous_updated_link_obj;
-    if (link_obj) {
-      $('#ml_main_col_available_link_objs_select').val(link_obj['id']).trigger('change');
-    }
+    setup_widgets(true, function () {
+      let link_obj = window.dt_magic_links.dt_previous_updated_link_obj;
+      if (link_obj) {
+        $('#ml_main_col_available_link_objs_select').val(link_obj['id']).trigger('change');
+      }
+    });
   });
 
   // Event Listeners
@@ -74,6 +76,47 @@ jQuery(function ($) {
   });
 
   // Helper Functions
+  function setup_widgets(refresh = true, callback) {
+
+    // Specify setup data to be returned.
+    let payload = {
+      'dt_magic_link_types': !window.dt_magic_links.dt_magic_link_types || refresh,
+      'dt_magic_link_templates': !window.dt_magic_links.dt_magic_link_templates || refresh,
+      'dt_users': !window.dt_magic_links.dt_users || refresh,
+      'dt_teams': !window.dt_magic_links.dt_teams || refresh,
+      'dt_groups': !window.dt_magic_links.dt_groups || refresh,
+      'dt_magic_link_objects': !window.dt_magic_links.dt_magic_link_objects || refresh,
+      'dt_sending_channels': !window.dt_magic_links.dt_sending_channels || refresh
+    };
+    $.ajax({
+      url: window.dt_magic_links.dt_endpoint_setup_payload,
+      method: 'POST',
+      data: payload,
+      beforeSend: (xhr) => {
+        xhr.setRequestHeader("X-WP-Nonce", window.dt_admin_scripts.nonce);
+      },
+      success: function (data) {
+        if ( data['dt_magic_link_objects'] ) {
+          refresh_section_available_link_objs( data['dt_magic_link_objects'] );
+        }
+        if ( data['dt_magic_link_types'] || data['dt_magic_link_templates'] ) {
+          refresh_section_link_objs_manage_types( data['dt_magic_link_types'], data['dt_magic_link_templates'] );
+        }
+        if ( data['dt_users'] || data['dt_teams'] || data['dt_groups'] ) {
+          refresh_section_assign_users_teams( data['dt_users'], data['dt_teams'], data['dt_groups'] );
+        }
+        if ( data['dt_sending_channels'] ) {
+          reset_section_schedules_sending_channels( data['dt_sending_channels'] );
+        }
+
+        callback();
+      },
+      error: function (data) {
+        console.log(data);
+      }
+    });
+  }
+
   function sort_assign_users_teams_table() {
     let assigned_table = $('#ml_main_col_assign_users_teams_table');
     let sorted = assigned_table.find('tbody > tr').sort(function (a, b) {
@@ -141,6 +184,21 @@ jQuery(function ($) {
     $('#ml_main_col_available_link_objs_select').val('');
   }
 
+  function refresh_section_available_link_objs(link_objs = {}) {
+    let link_objs_select = $('#ml_main_col_available_link_objs_select');
+    $(link_objs_select).empty();
+    $(link_objs_select).append($('<option/>').prop('disabled', true).prop('selected', true).val('').text('-- select available link object --'));
+
+    $.each(link_objs, function (id, link_obj) {
+      $(link_objs_select).append($('<option/>').val(window.dt_admin_shared.escape(id)).text(window.dt_admin_shared.escape(link_obj.name)));
+    });
+
+    $(link_objs_select).val('');
+
+    // Update global variable.
+    window.dt_magic_links.dt_magic_link_objects = link_objs;
+  }
+
   function reset_section_link_objs_manage(id, enabled, name, expires_ts_secs, never_expires, type) {
     $('#ml_main_col_link_objs_manage_id').val(id);
     $('#ml_main_col_link_objs_manage_enabled').prop('checked', enabled);
@@ -163,6 +221,47 @@ jQuery(function ($) {
     $('#ml_main_col_link_objs_manage_type').val(type);
 
     toggle_never_expires_element_states(true);
+  }
+
+  function refresh_section_link_objs_manage_types(link_types = [], link_templates = {}) {
+    let link_types_select = $('#ml_main_col_link_objs_manage_type');
+    $(link_types_select).empty();
+    $(link_types_select).append($('<option/>').prop('disabled', true).prop('selected', true).text('-- select magic link type to be sent --'));
+
+    // Source available magic link types, ignoring templates at this stage
+    if ( link_types ) {
+      $.each(link_types, function (idx, type) {
+
+        /**
+         * Filter out master template class; which, in itself, is only the shepherd of child templates!
+         * Actual child magic link templates are extracted in the code block below; from options table.
+         */
+
+        if (!type['meta']['class_type'] || !['template'].includes(type['meta']['class_type'])) {
+          $(link_types_select).append($('<option/>').val(window.dt_admin_shared.escape(type['key'])).text(window.dt_admin_shared.escape(type['label'])));
+        }
+
+      });
+    }
+
+    // Source available magic link templates
+    if ( link_templates ) {
+      let supported_template_post_types = window.dt_magic_links.dt_supported_template_post_types;
+      $(link_types_select).append($('<option/>').prop('disabled', true).text('-- templates --'));
+      $.each(link_templates, function (post_type, templates) {
+        if ( supported_template_post_types.includes( post_type ) ) {
+          $.each(templates, function (template_key, template) {
+            if ( template['enabled'] && template['enabled'] === true ) {
+              $(link_types_select).append($('<option/>').val(window.dt_admin_shared.escape(template['id'])).text(window.dt_admin_shared.escape(template['name'])));
+            }
+          });
+        }
+      });
+    }
+
+    // Update global variables.
+    window.dt_magic_links.dt_magic_link_types = link_types;
+    window.dt_magic_links.dt_magic_link_templates = link_templates;
   }
 
   function reset_section_ml_type_fields() {
@@ -201,6 +300,58 @@ jQuery(function ($) {
 
     // Toggle management button states accordingly based on assigned table shape!
     toggle_assigned_user_links_manage_but_states();
+  }
+
+  function refresh_section_assign_users_teams(users, teams, groups) {
+    let users_teams_select = $('#ml_main_col_assign_users_teams_select');
+    $(users_teams_select).empty();
+    $(users_teams_select).append($('<option/>').prop('disabled', true).prop('selected', true).val('').text('-- select users & teams to receive links --'));
+
+    // Source available dt users
+    if ( users ) {
+      users.sort(function (a, b) {
+        return a['name'].toLowerCase().localeCompare(b['name'].toLowerCase());
+      });
+
+      $(users_teams_select).append($('<option/>').prop('disabled', true).text('-- users --'));
+      $.each(users, function (idx, user) {
+        let value = 'users+' + user['user_id'];
+          $(users_teams_select).append($('<option/>').val(window.dt_admin_shared.escape(value)).text(window.dt_admin_shared.escape(user['name'])));
+      });
+    }
+
+    // Source available dt teams
+    if ( teams ) {
+      teams.sort(function (a, b) {
+        return a['name'].toLowerCase().localeCompare(b['name'].toLowerCase());
+      });
+
+      $(users_teams_select).append($('<option/>').prop('disabled', true).text('-- teams --'));
+      $.each(teams, function (idx, team) {
+        let value = 'teams+' + team['id'];
+        $(users_teams_select).append($('<option/>').val(window.dt_admin_shared.escape(value)).text(window.dt_admin_shared.escape(team['name'])));
+      });
+    }
+
+    // Source available dt groups
+    if ( groups ) {
+      groups.sort(function (a, b) {
+        return a['name'].toLowerCase().localeCompare(b['name'].toLowerCase());
+      });
+
+      $(users_teams_select).append($('<option/>').prop('disabled', true).text('-- groups --'));
+      $.each(groups, function (idx, group) {
+        let value = 'groups+' + group['id'];
+        $(users_teams_select).append($('<option/>').val(window.dt_admin_shared.escape(value)).text(window.dt_admin_shared.escape(group['name'])));
+      });
+    }
+
+    $(users_teams_select).val('');
+
+    // Update global variables.
+    window.dt_magic_links.dt_users = users;
+    window.dt_magic_links.dt_teams = teams;
+    window.dt_magic_links.dt_groups = groups;
   }
 
   function reset_section_link_manage(links_expire_within_amount, links_expire_within_time_unit, links_never_expires, links_expire_auto_refresh_enabled) {
@@ -264,6 +415,27 @@ jQuery(function ($) {
       // Clear relative time info; as next scheduled date has been manually adjusted!
       $('#ml_main_col_schedules_next_schedule_run_relative_time').html('');
     });
+  }
+
+  function reset_section_schedules_sending_channels(sending_channels) {
+    let sending_channels_select = $('#ml_main_col_schedules_sending_channels');
+    $(sending_channels_select).empty();
+    $(sending_channels_select).append($('<option/>').prop('disabled', true).prop('selected', true).val('').text('-- select sending channel --'));
+
+    if ( sending_channels ) {
+      sending_channels.sort(function (a, b) {
+        return a['name'].toLowerCase().localeCompare(b['name'].toLowerCase());
+      });
+
+      $.each(sending_channels, function (idx, channel) {
+        $(sending_channels_select).append($('<option/>').val(window.dt_admin_shared.escape(channel['id'])).text(window.dt_admin_shared.escape(channel['name'])));
+      });
+    }
+
+    $(sending_channels_select).val('');
+
+    // Update global variables.
+    window.dt_magic_links.dt_sending_channels = sending_channels;
   }
 
   function reset_section(display, section, reset_element_func) {

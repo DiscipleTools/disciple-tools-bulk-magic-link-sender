@@ -23,6 +23,15 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
         $namespace = 'disciple_tools_magic_links/v1';
 
         register_rest_route(
+            $namespace, '/setup_payload', [
+                'methods'             => WP_REST_Server::CREATABLE,
+                'callback'            => [ $this, 'setup_payload' ],
+                'permission_callback' => function ( WP_REST_Request $request ) {
+                    return $this->has_permission();
+                }
+            ]
+        );
+        register_rest_route(
             $namespace, '/get_post_record', [
                 'methods'             => WP_REST_Server::READABLE,
                 'callback'            => [ $this, 'get_post_record' ],
@@ -85,6 +94,34 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
                 }
             ]
         );
+    }
+
+    public function setup_payload( WP_REST_Request $request ): array{
+        $params = $request->get_params();
+        $response = [];
+        if ( isset( $params['dt_magic_link_types'] ) && filter_var( $params['dt_magic_link_types'], FILTER_VALIDATE_BOOLEAN ) ){
+            $response['dt_magic_link_types'] = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_magic_link_types();
+        }
+        if ( isset( $params['dt_magic_link_templates'] ) && filter_var( $params['dt_magic_link_templates'], FILTER_VALIDATE_BOOLEAN ) ){
+            $response['dt_magic_link_templates'] = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_templates );
+        }
+        if ( isset( $params['dt_users'] ) && filter_var( $params['dt_users'], FILTER_VALIDATE_BOOLEAN ) ){
+            $response['dt_users'] = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_users();
+        }
+        if ( isset( $params['dt_teams'] ) && filter_var( $params['dt_teams'], FILTER_VALIDATE_BOOLEAN ) ){
+            $response['dt_teams'] = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_teams();
+        }
+        if ( isset( $params['dt_groups'] ) && filter_var( $params['dt_groups'], FILTER_VALIDATE_BOOLEAN ) ){
+            $response['dt_groups'] = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_groups();
+        }
+        if ( isset( $params['dt_magic_link_objects'] ) && filter_var( $params['dt_magic_link_objects'], FILTER_VALIDATE_BOOLEAN ) ){
+            $response['dt_magic_link_objects'] = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_objs();
+        }
+        if ( isset( $params['dt_sending_channels'] ) && filter_var( $params['dt_sending_channels'], FILTER_VALIDATE_BOOLEAN ) ){
+            $response['dt_sending_channels'] = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_sending_channels();
+        }
+
+        return $response;
     }
 
     public function get_post_record( WP_REST_Request $request ): array {

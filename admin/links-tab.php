@@ -42,12 +42,14 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
 
         wp_localize_script(
             'dt_magic_links_script', 'dt_magic_links', array(
-                'dt_magic_link_types'           => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_magic_link_types(),
-                'dt_magic_link_templates'       => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_templates ),
-                'dt_users'                      => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_users(),
-                'dt_teams'                      => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_teams(),
-                'dt_groups'                     => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_groups(),
-                'dt_magic_link_objects'         => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_objs(),
+                'dt_magic_link_types'           => null,
+                'dt_magic_link_templates'       => null,
+                'dt_users'                      => null,
+                'dt_teams'                      => null,
+                'dt_groups'                     => null,
+                'dt_magic_link_objects'         => null,
+                'dt_sending_channels'           => null,
+                'dt_endpoint_setup_payload'     => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_endpoint_setup_payload_url(),
                 'dt_endpoint_send_now'          => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_endpoint_send_now_url(),
                 'dt_endpoint_next_scheduled_run'          => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_endpoint_next_scheduled_run_url(),
                 'dt_endpoint_user_links_manage' => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_endpoint_user_links_manage_url(),
@@ -59,7 +61,8 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                 'dt_default_send_channel_id'    => Disciple_Tools_Bulk_Magic_Link_Sender_API::$channel_email_id,
                 'dt_base_url'                   => rest_url(),
                 'dt_wp_nonce'                   => esc_attr( wp_create_nonce( 'wp_rest' ) ),
-                'dt_previous_updated_link_obj'  => $this->fetch_previous_updated_link_obj()
+                'dt_previous_updated_link_obj'  => $this->fetch_previous_updated_link_obj(),
+                'dt_supported_template_post_types'  => $this->supported_template_post_types()
             )
         );
     }
@@ -428,18 +431,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
 
     private function main_column_available_link_objs() {
         ?>
-        <select style="min-width: 80%;" id="ml_main_col_available_link_objs_select">
-            <option disabled selected value>-- select available link object --</option>
-
-            <?php
-            $option_link_objs = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_objs();
-            foreach ( $option_link_objs ?? (object) [] as $id => $obj ) {
-                echo '<option value="' . esc_attr( $id ) . '">' . esc_attr( $obj->name ) . '</option>';
-            }
-            ?>
-
-        </select>
-
+        <select style="min-width: 80%;" id="ml_main_col_available_link_objs_select"></select>
         <span style="float:right;">
             <button id="ml_main_col_available_link_objs_new" type="submit"
                     class="button float-right"><?php esc_html_e( 'New', 'disciple_tools' ) ?></button>
@@ -481,44 +473,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                                                                         data-content="ml_links_right_docs_magic_link_type_content">&#63;</a>]
                 </td>
                 <td>
-                    <select style="min-width: 100%;" id="ml_main_col_link_objs_manage_type">
-                        <option disabled selected value>-- select magic link type to be sent --</option>
-
-                        <?php
-                        // Source available magic link types, ignoring templates at this stage
-                        $magic_link_types = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_magic_link_types();
-                        if ( ! empty( $magic_link_types ) ) {
-                            foreach ( $magic_link_types as $type ) {
-
-                                /**
-                                 * Filter out master template class; which, in itself, is only the shepherd of child templates!
-                                 * Actual child magic link templates are extracted in the code block below; from options table.
-                                 */
-
-                                if ( ! isset( $type['meta']['class_type'] ) || ! in_array( $type['meta']['class_type'], [ 'template' ] ) ) {
-                                    echo '<option value="' . esc_attr( $type['key'] ) . '">' . esc_attr( $type['label'] ) . '</option>';
-                                }
-                            }
-                        }
-
-                        // Source available magic link templates
-                        $magic_link_templates = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_templates );
-                        if ( ! empty( $magic_link_templates ) ) {
-                            ?>
-                            <option disabled value>-- templates --</option>
-                            <?php
-                            $supported_template_post_types = $this->supported_template_post_types();
-                            foreach ( $magic_link_templates as $post_type ) {
-                                foreach ( $post_type ?? [] as $template ) {
-                                    if ( $template['enabled'] && in_array( $template['post_type'], $supported_template_post_types ) ) {
-                                        echo '<option value="' . esc_attr( $template['id'] ) . '">' . esc_attr( $template['name'] ) . '</option>';
-                                    }
-                                }
-                            }
-                        }
-                        ?>
-
-                    </select>
+                    <select style="min-width: 100%;" id="ml_main_col_link_objs_manage_type"></select>
                 </td>
             </tr>
         </table>
@@ -580,59 +535,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
             <thead>
             <tr>
                 <th>
-                    <select style="min-width: 90%;" id="ml_main_col_assign_users_teams_select">
-                        <option disabled selected value>-- select users & teams to receive links --</option>
-
-                        <?php
-                        // Source available dt users
-                        $dt_users = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_users();
-                        if ( ! empty( $dt_users ) ) {
-                            usort( $dt_users, function ( $a, $b ){
-                                return strcmp( strtolower( $a['name'] ), strtolower( $b['name'] ) );
-                            } );
-
-                            echo '<option disabled>-- users --</option>';
-                            foreach ( $dt_users as $user ) {
-                                $value = 'users+' . $user['user_id'];
-                                echo '<option value="' . esc_attr( $value ) . '">' . esc_attr( $user['name'] ) . '</option>';
-                            }
-                        }
-                        ?>
-
-                        <?php
-                        // Source available dt teams
-                        $dt_teams = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_teams();
-                        if ( ! empty( $dt_teams ) ) {
-                            usort( $dt_teams, function ( $a, $b ){
-                                return strcmp( strtolower( $a['name'] ), strtolower( $b['name'] ) );
-                            } );
-
-                            echo '<option disabled>-- teams --</option>';
-                            foreach ( $dt_teams as $team ) {
-                                $value = 'teams+' . $team['id'];
-                                echo '<option value="' . esc_attr( $value ) . '">' . esc_attr( $team['name'] ) . '</option>';
-                            }
-                        }
-                        ?>
-
-                        <?php
-                        // Source available dt groups
-                        $dt_groups = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_groups();
-                        if ( ! empty( $dt_groups ) ) {
-                            usort( $dt_groups, function ( $a, $b ){
-                                return strcmp( strtolower( $a['name'] ), strtolower( $b['name'] ) );
-                            } );
-
-                            echo '<option disabled>-- groups --</option>';
-                            foreach ( $dt_groups as $group ) {
-                                $value = 'groups+' . $group['id'];
-                                echo '<option value="' . esc_attr( $value ) . '">' . esc_attr( $group['name'] ) . '</option>';
-                            }
-                        }
-                        ?>
-
-                    </select>
-
+                    <select style="min-width: 90%;" id="ml_main_col_assign_users_teams_select"></select>
                     <div id="ml_main_col_assign_users_teams_typeahead_div" style="display: none;"></div>
                 </th>
                 <th>
@@ -755,20 +658,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                                                                         data-content="ml_links_right_docs_send_channel_content">&#63;</a>]
                 </td>
                 <td>
-                    <select style="min-width: 100%;" id="ml_main_col_schedules_sending_channels">
-                        <option disabled selected value>-- select sending channel --</option>
-
-                        <?php
-                        // Source available sending channels
-                        $sending_channels = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_sending_channels();
-                        if ( ! empty( $sending_channels ) ) {
-                            foreach ( $sending_channels as $channel ) {
-                                echo '<option value="' . esc_attr( $channel['id'] ) . '">' . esc_attr( $channel['name'] ) . '</option>';
-                            }
-                        }
-                        ?>
-
-                    </select>
+                    <select style="min-width: 100%;" id="ml_main_col_schedules_sending_channels"></select>
                 </td>
             </tr>
             <tr>
