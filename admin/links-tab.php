@@ -44,9 +44,6 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
             'dt_magic_links_script', 'dt_magic_links', array(
                 'dt_magic_link_types'           => null,
                 'dt_magic_link_templates'       => null,
-                'dt_users'                      => null,
-                'dt_teams'                      => null,
-                'dt_groups'                     => null,
                 'dt_magic_link_objects'         => null,
                 'dt_sending_channels'           => null,
                 'dt_endpoint_setup_payload'     => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_endpoint_setup_payload_url(),
@@ -55,7 +52,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                 'dt_endpoint_user_links_manage' => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_endpoint_user_links_manage_url(),
                 'dt_endpoint_assigned_manage'   => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_endpoint_assigned_manage_url(),
                 'dt_endpoint_get_post_record'   => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_endpoint_get_post_record_url(),
-                'dt_endpoint_references'        => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_endpoint_references(),
+                'dt_endpoint_typeahead_users_teams_groups' => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_endpoint_typeahead_users_teams_groups_url(),
                 'dt_default_message_subject'    => '',
                 'dt_default_message'            => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_default_send_msg(),
                 'dt_default_send_channel_id'    => Disciple_Tools_Bulk_Magic_Link_Sender_API::$channel_email_id,
@@ -535,7 +532,6 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
             <thead>
             <tr>
                 <th>
-                    <select style="min-width: 90%;" id="ml_main_col_assign_users_teams_select"></select>
                     <div id="ml_main_col_assign_users_teams_typeahead_div" style="display: none;"></div>
                 </th>
                 <th>

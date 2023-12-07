@@ -198,14 +198,31 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
         return $expires;
     }
 
-    public static function fetch_dt_users(): array {
+    public static function fetch_dt_users( $fetch_by_query = false, $query_args = [] ): array {
         global $wpdb;
 
         // Fetch user ids
-        $user_ids = $wpdb->get_results( "
-            SELECT u.ID, u.display_name
-            FROM $wpdb->users u
-        ", ARRAY_A );
+        if ( $fetch_by_query && isset( $query_args['type'], $query_args['query'] ) && $query_args['type'] === 'name' ) {
+            $user_ids = $wpdb->get_results( $wpdb->prepare( "
+                SELECT u.ID, u.display_name
+                FROM $wpdb->users u
+                WHERE u.display_name LIKE %s
+            ", '%' . esc_sql( $query_args['query'] ) . '%' ), ARRAY_A );
+
+        } elseif ( $fetch_by_query && isset( $query_args['type'], $query_args['query'] ) && $query_args['type'] === 'id' ) {
+            $user_ids = $wpdb->get_results( $wpdb->prepare( "
+                SELECT u.ID, u.display_name
+                FROM $wpdb->users u
+                WHERE u.ID = %d
+                LIMIT 1
+            ", esc_sql( $query_args['query'] ) ), ARRAY_A );
+
+        } else {
+            $user_ids = $wpdb->get_results( "
+                SELECT u.ID, u.display_name
+                FROM $wpdb->users u
+            ", ARRAY_A );
+        }
 
         if ( ! empty( $user_ids ) ) {
             $users = [];
@@ -215,6 +232,8 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
                 $contact_id = Disciple_Tools_Users::get_contact_for_user( $user['ID'] );
                 if ( ! empty( $contact_id ) && ! is_wp_error( $contact_id ) ) {
                     $users[] = [
+                        'dt_type'    => 'user',
+                        'id'         => $user['ID'],
                         'user_id'    => $user['ID'],
                         'contact_id' => $contact_id,
                         'name'       => $user['display_name'],
@@ -231,16 +250,35 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
         return [];
     }
 
-    public static function fetch_dt_teams(): array {
+    public static function fetch_dt_teams( $fetch_by_query = false, $query_args = [] ): array {
         global $wpdb;
 
         // Fetch team ids
-        $team_ids = $wpdb->get_results( "
-        SELECT DISTINCT(pm.post_id)
-        FROM $wpdb->posts p
-        LEFT JOIN $wpdb->postmeta as pm ON (p.ID = pm.post_id AND pm.meta_key = 'group_type')
-        WHERE pm.meta_value = 'team';
-        ", ARRAY_A );
+        if ( $fetch_by_query && isset( $query_args['type'], $query_args['query'] ) && $query_args['type'] === 'name' ) {
+            $team_ids = $wpdb->get_results( $wpdb->prepare( "
+            SELECT DISTINCT(pm.post_id)
+            FROM $wpdb->posts p
+            LEFT JOIN $wpdb->postmeta as pm ON (p.ID = pm.post_id AND pm.meta_key = 'group_type')
+            WHERE pm.meta_value = 'team' AND p.post_title LIKE %s
+            ", '%' . esc_sql( $query_args['query'] ) . '%' ), ARRAY_A );
+
+        } elseif ( $fetch_by_query && isset( $query_args['type'], $query_args['query'] ) && $query_args['type'] === 'id' ) {
+            $team_ids = $wpdb->get_results( $wpdb->prepare( "
+            SELECT DISTINCT(pm.post_id)
+            FROM $wpdb->posts p
+            LEFT JOIN $wpdb->postmeta as pm ON (p.ID = pm.post_id AND pm.meta_key = 'group_type')
+            WHERE pm.meta_value = 'team' AND p.ID = %d
+            LIMIT 1
+            ", esc_sql( $query_args['query'] ) ), ARRAY_A );
+
+        } else {
+            $team_ids = $wpdb->get_results( "
+            SELECT DISTINCT(pm.post_id)
+            FROM $wpdb->posts p
+            LEFT JOIN $wpdb->postmeta as pm ON (p.ID = pm.post_id AND pm.meta_key = 'group_type')
+            WHERE pm.meta_value = 'team';
+            ", ARRAY_A );
+        }
 
         // Fetch team objects
         if ( ! empty( $team_ids ) ) {
@@ -254,6 +292,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
 
                     // Only capture what we need
                     $teams[] = [
+                        'dt_type' => 'team',
                         'id'      => $updated_team['ID'],
                         'name'    => $updated_team['name'],
                         'members' => $updated_team['members']
@@ -267,16 +306,35 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
         return [];
     }
 
-    public static function fetch_dt_groups(): array {
+    public static function fetch_dt_groups( $fetch_by_query = false, $query_args = [] ): array {
         global $wpdb;
 
         // Fetch group ids other than teams
-        $group_ids = $wpdb->get_results( "
-        SELECT DISTINCT(pm.post_id)
-        FROM $wpdb->posts p
-        LEFT JOIN $wpdb->postmeta as pm ON (p.ID = pm.post_id AND pm.meta_key = 'group_type')
-        WHERE pm.meta_value != 'team';
-        ", ARRAY_A );
+        if ( $fetch_by_query && isset( $query_args['type'], $query_args['query'] ) && $query_args['type'] === 'name' ) {
+            $group_ids = $wpdb->get_results( $wpdb->prepare( "
+            SELECT DISTINCT(pm.post_id)
+            FROM $wpdb->posts p
+            LEFT JOIN $wpdb->postmeta as pm ON (p.ID = pm.post_id AND pm.meta_key = 'group_type')
+            WHERE pm.meta_value != 'team' AND p.post_title LIKE %s
+            ", '%' . esc_sql( $query_args['query'] ) . '%' ), ARRAY_A );
+
+        } elseif ( $fetch_by_query && isset( $query_args['type'], $query_args['query'] ) && $query_args['type'] === 'id' ) {
+            $group_ids = $wpdb->get_results( $wpdb->prepare( "
+            SELECT DISTINCT(pm.post_id)
+            FROM $wpdb->posts p
+            LEFT JOIN $wpdb->postmeta as pm ON (p.ID = pm.post_id AND pm.meta_key = 'group_type')
+            WHERE pm.meta_value != 'team' AND p.ID = %d
+            LIMIT 1
+            ", esc_sql( $query_args['query'] ) ), ARRAY_A );
+
+        } else {
+            $group_ids = $wpdb->get_results( "
+            SELECT DISTINCT(pm.post_id)
+            FROM $wpdb->posts p
+            LEFT JOIN $wpdb->postmeta as pm ON (p.ID = pm.post_id AND pm.meta_key = 'group_type')
+            WHERE pm.meta_value != 'team';
+            ", ARRAY_A );
+        }
 
         // Fetch group objects
         if ( ! empty( $group_ids ) ) {
@@ -290,6 +348,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
 
                     // Only capture what we need
                     $groups[] = [
+                        'dt_type' => 'group',
                         'id'      => $updated_group['ID'],
                         'name'    => $updated_group['name'],
                         'members' => $updated_group['members']
@@ -938,12 +997,12 @@ Thanks!';
         return trailingslashit( site_url() ) . 'wp-json/disciple_tools_magic_links/v1/get_post_record';
     }
 
-    public static function fetch_endpoint_references(): string {
-        return trailingslashit( site_url() ) . 'wp-json/disciple_tools_magic_links/v1/references';
-    }
-
     public static function fetch_endpoint_report_url(): string {
         return trailingslashit( site_url() ) . 'wp-json/disciple_tools_magic_links/v1/report';
+    }
+
+    public static function fetch_endpoint_typeahead_users_teams_groups_url(): string {
+        return trailingslashit( site_url() ) . 'wp-json/disciple_tools_magic_links/v1/typeahead_users_teams_groups';
     }
 
     public static function fetch_report( $id ) {
