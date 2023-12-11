@@ -23,6 +23,15 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
         $namespace = 'disciple_tools_magic_links/v1';
 
         register_rest_route(
+            $namespace, '/setup_payload', [
+                'methods'             => WP_REST_Server::CREATABLE,
+                'callback'            => [ $this, 'setup_payload' ],
+                'permission_callback' => function ( WP_REST_Request $request ) {
+                    return $this->has_permission();
+                }
+            ]
+        );
+        register_rest_route(
             $namespace, '/get_post_record', [
                 'methods'             => WP_REST_Server::READABLE,
                 'callback'            => [ $this, 'get_post_record' ],
@@ -85,6 +94,34 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
                 }
             ]
         );
+        register_rest_route(
+            $namespace, '/typeahead_users_teams_groups', [
+                'methods'             => WP_REST_Server::READABLE,
+                'callback'            => [ $this, 'typeahead_users_teams_groups' ],
+                'permission_callback' => function ( WP_REST_Request $request ) {
+                    return $this->has_permission();
+                }
+            ]
+        );
+    }
+
+    public function setup_payload( WP_REST_Request $request ): array{
+        $params = $request->get_params();
+        $response = [];
+        if ( isset( $params['dt_magic_link_types'] ) && filter_var( $params['dt_magic_link_types'], FILTER_VALIDATE_BOOLEAN ) ){
+            $response['dt_magic_link_types'] = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_magic_link_types();
+        }
+        if ( isset( $params['dt_magic_link_templates'] ) && filter_var( $params['dt_magic_link_templates'], FILTER_VALIDATE_BOOLEAN ) ){
+            $response['dt_magic_link_templates'] = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_templates );
+        }
+        if ( isset( $params['dt_magic_link_objects'] ) && filter_var( $params['dt_magic_link_objects'], FILTER_VALIDATE_BOOLEAN ) ){
+            $response['dt_magic_link_objects'] = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_objs();
+        }
+        if ( isset( $params['dt_sending_channels'] ) && filter_var( $params['dt_sending_channels'], FILTER_VALIDATE_BOOLEAN ) ){
+            $response['dt_sending_channels'] = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_sending_channels();
+        }
+
+        return $response;
     }
 
     public function get_post_record( WP_REST_Request $request ): array {
@@ -95,20 +132,47 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
         $params = $request->get_params();
         if ( isset( $params['post_type'], $params['post_id'] ) ) {
 
-            $post = DT_Posts::get_post( $params['post_type'], $params['post_id'], true, false, true );
-            if ( ! empty( $post ) && ! is_wp_error( $post ) ) {
+            // Ensure user, team & group requests, are handled accordingly.
+            if ( in_array( $params['post_type'], [ 'dt_users', 'dt_teams', 'dt_groups' ] ) ) {
+                switch ( $params['post_type'] ) {
+                    case 'dt_users':
+                        $response['post'] = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_users( true, [
+                            'type' => 'id',
+                            'query' => $params['post_id']
+                        ] );
+                        break;
+                    case 'dt_teams':
+                        $response['post'] = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_teams( true, [
+                            'type' => 'id',
+                            'query' => $params['post_id']
+                        ] );
+                        break;
+                    case 'dt_groups':
+                        $response['post'] = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_groups( true, [
+                            'type' => 'id',
+                            'query' => $params['post_id']
+                        ] );
+                        break;
+                }
 
-                // Also, check for any associated magic links
-                $post['ml_links'] = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_post_magic_links( $post['ID'] );
-
-                // Update response payload
-                $response['post']    = $post;
                 $response['success'] = true;
                 $response['message'] = 'Successfully loaded ' . $params['post_type'] . ' post record for id: ' . $params['post_id'];
-
             } else {
-                $response['success'] = false;
-                $response['message'] = 'Unable to locate a valid ' . $params['post_type'] . ' post record for id: ' . $params['post_id'];
+                $post = DT_Posts::get_post( $params['post_type'], $params['post_id'], true, false, true );
+                if ( ! empty( $post ) && ! is_wp_error( $post ) ) {
+
+                    // Also, check for any associated magic links
+                    $post['ml_links'] = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_post_magic_links( $post['ID'] );
+
+                    // Update response payload
+                    $response['post']    = $post;
+                    $response['success'] = true;
+                    $response['message'] = 'Successfully loaded ' . $params['post_type'] . ' post record for id: ' . $params['post_id'];
+
+                } else {
+                    $response['success'] = false;
+                    $response['message'] = 'Unable to locate a valid ' . $params['post_type'] . ' post record for id: ' . $params['post_id'];
+                }
             }
         } else {
             $response['success'] = false;
@@ -178,9 +242,6 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
             $response['success']   = true;
             $response['message']   = 'User links management action[' . $params['action'] . '] successfully executed.';
             $response['assigned']  = $assigned;
-            $response['dt_users']  = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_users();
-            $response['dt_teams']  = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_teams();
-            $response['dt_groups'] = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_groups();
 
         } else {
             $response['success'] = false;
@@ -476,9 +537,6 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
                 case 'refresh':
                     $response['success'] = true;
                     $response['message'] = 'References action[' . $params['action'] . '] successfully executed.';
-                    $response['dt_users'] = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_users();
-                    $response['dt_teams'] = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_teams();
-                    $response['dt_groups'] = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_groups();
                     break;
             }
         } else {
@@ -487,6 +545,35 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
         }
 
         return $response;
+    }
+
+    public function typeahead_users_teams_groups( WP_REST_Request $request ): array {
+        $query = $request->get_params()['s'] ?? null;
+
+        $dt_users = [];
+        $dt_teams = [];
+        $dt_groups = [];
+
+        if ( ! empty( $query ) ) {
+            $dt_users = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_users( true, [
+                'type' => 'name',
+                'query' => $query
+            ] );
+            $dt_teams = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_teams( true, [
+                'type' => 'name',
+                'query' => $query
+            ] );
+            $dt_groups = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_dt_groups( true, [
+                'type' => 'name',
+                'query' => $query
+            ] );
+        }
+
+        return [
+            'dt_users' => $dt_users,
+            'dt_teams' => $dt_teams,
+            'dt_groups' => $dt_groups
+        ];
     }
 
     private static $_instance = null;

@@ -2,10 +2,12 @@ jQuery(function ($) {
 
   // Initial States
   $(document).ready(function () {
-    let link_obj = window.dt_magic_links.dt_previous_updated_link_obj;
-    if (link_obj) {
-      $('#ml_main_col_available_link_objs_select').val(link_obj['id']).trigger('change');
-    }
+    setup_widgets(true, function () {
+      let link_obj = window.dt_magic_links.dt_previous_updated_link_obj;
+      if (link_obj) {
+        $('#ml_main_col_available_link_objs_select').val(link_obj['id']).trigger('change');
+      }
+    });
   });
 
   // Event Listeners
@@ -74,6 +76,41 @@ jQuery(function ($) {
   });
 
   // Helper Functions
+  function setup_widgets(refresh = true, callback) {
+
+    // Specify setup data to be returned.
+    let payload = {
+      'dt_magic_link_types': !window.dt_magic_links.dt_magic_link_types || refresh,
+      'dt_magic_link_templates': !window.dt_magic_links.dt_magic_link_templates || refresh,
+      'dt_magic_link_objects': !window.dt_magic_links.dt_magic_link_objects || refresh,
+      'dt_sending_channels': !window.dt_magic_links.dt_sending_channels || refresh
+    };
+    $.ajax({
+      url: window.dt_magic_links.dt_endpoint_setup_payload,
+      method: 'POST',
+      data: payload,
+      beforeSend: (xhr) => {
+        xhr.setRequestHeader("X-WP-Nonce", window.dt_admin_scripts.nonce);
+      },
+      success: function (data) {
+        if ( data['dt_magic_link_objects'] ) {
+          refresh_section_available_link_objs( data['dt_magic_link_objects'] );
+        }
+        if ( data['dt_magic_link_types'] || data['dt_magic_link_templates'] ) {
+          refresh_section_link_objs_manage_types( data['dt_magic_link_types'], data['dt_magic_link_templates'] );
+        }
+        if ( data['dt_sending_channels'] ) {
+          reset_section_schedules_sending_channels( data['dt_sending_channels'] );
+        }
+
+        callback();
+      },
+      error: function (data) {
+        console.log(data);
+      }
+    });
+  }
+
   function sort_assign_users_teams_table() {
     let assigned_table = $('#ml_main_col_assign_users_teams_table');
     let sorted = assigned_table.find('tbody > tr').sort(function (a, b) {
@@ -141,6 +178,21 @@ jQuery(function ($) {
     $('#ml_main_col_available_link_objs_select').val('');
   }
 
+  function refresh_section_available_link_objs(link_objs = {}) {
+    let link_objs_select = $('#ml_main_col_available_link_objs_select');
+    $(link_objs_select).empty();
+    $(link_objs_select).append($('<option/>').prop('disabled', true).prop('selected', true).val('').text('-- select available link object --'));
+
+    $.each(link_objs, function (id, link_obj) {
+      $(link_objs_select).append($('<option/>').val(window.dt_admin_shared.escape(id)).text(window.dt_admin_shared.escape(link_obj.name)));
+    });
+
+    $(link_objs_select).val('');
+
+    // Update global variable.
+    window.dt_magic_links.dt_magic_link_objects = link_objs;
+  }
+
   function reset_section_link_objs_manage(id, enabled, name, expires_ts_secs, never_expires, type) {
     $('#ml_main_col_link_objs_manage_id').val(id);
     $('#ml_main_col_link_objs_manage_enabled').prop('checked', enabled);
@@ -165,12 +217,52 @@ jQuery(function ($) {
     toggle_never_expires_element_states(true);
   }
 
+  function refresh_section_link_objs_manage_types(link_types = [], link_templates = {}) {
+    let link_types_select = $('#ml_main_col_link_objs_manage_type');
+    $(link_types_select).empty();
+    $(link_types_select).append($('<option/>').prop('disabled', true).prop('selected', true).text('-- select magic link type to be sent --'));
+
+    // Source available magic link types, ignoring templates at this stage
+    if ( link_types ) {
+      $.each(link_types, function (idx, type) {
+
+        /**
+         * Filter out master template class; which, in itself, is only the shepherd of child templates!
+         * Actual child magic link templates are extracted in the code block below; from options table.
+         */
+
+        if (!type['meta']['class_type'] || !['template'].includes(type['meta']['class_type'])) {
+          $(link_types_select).append($('<option/>').val(window.dt_admin_shared.escape(type['key'])).text(window.dt_admin_shared.escape(type['label'])));
+        }
+
+      });
+    }
+
+    // Source available magic link templates
+    if ( link_templates ) {
+      let supported_template_post_types = window.dt_magic_links.dt_supported_template_post_types;
+      $(link_types_select).append($('<option/>').prop('disabled', true).text('-- templates --'));
+      $.each(link_templates, function (post_type, templates) {
+        if ( supported_template_post_types.includes( post_type ) ) {
+          $.each(templates, function (template_key, template) {
+            if ( template['enabled'] && template['enabled'] === true ) {
+              $(link_types_select).append($('<option/>').val(window.dt_admin_shared.escape(template['id'])).text(window.dt_admin_shared.escape(template['name'])));
+            }
+          });
+        }
+      });
+    }
+
+    // Update global variables.
+    window.dt_magic_links.dt_magic_link_types = link_types;
+    window.dt_magic_links.dt_magic_link_templates = link_templates;
+  }
+
   function reset_section_ml_type_fields() {
     $('#ml_main_col_ml_type_fields_table').find('tbody tr').remove();
   }
 
   function reset_section_assign_users_teams(assigned_users_teams, callback) {
-    $('#ml_main_col_assign_users_teams_select').val('');
     $('#ml_main_col_assign_users_teams_table').find('tbody > tr').remove();
 
     if (assigned_users_teams && assigned_users_teams.length > 0) {
@@ -264,6 +356,27 @@ jQuery(function ($) {
       // Clear relative time info; as next scheduled date has been manually adjusted!
       $('#ml_main_col_schedules_next_schedule_run_relative_time').html('');
     });
+  }
+
+  function reset_section_schedules_sending_channels(sending_channels) {
+    let sending_channels_select = $('#ml_main_col_schedules_sending_channels');
+    $(sending_channels_select).empty();
+    $(sending_channels_select).append($('<option/>').prop('disabled', true).prop('selected', true).val('').text('-- select sending channel --'));
+
+    if ( sending_channels ) {
+      sending_channels.sort(function (a, b) {
+        return a['name'].toLowerCase().localeCompare(b['name'].toLowerCase());
+      });
+
+      $.each(sending_channels, function (idx, channel) {
+        $(sending_channels_select).append($('<option/>').val(window.dt_admin_shared.escape(channel['id'])).text(window.dt_admin_shared.escape(channel['name'])));
+      });
+    }
+
+    $(sending_channels_select).val('');
+
+    // Update global variables.
+    window.dt_magic_links.dt_sending_channels = sending_channels;
   }
 
   function reset_section(display, section, reset_element_func) {
@@ -487,69 +600,52 @@ jQuery(function ($) {
   }
 
   function adjust_assigned_selector_by_magic_link_type(contacts_only) {
-    let users_teams_select = $('#ml_main_col_assign_users_teams_select');
     let users_teams_typeahead_div = $('#ml_main_col_assign_users_teams_typeahead_div');
 
-    /**
-     * CONTACTS ONLY ASSIGNMENTS
-     */
+    // Display contacts typeahead input field
+    users_teams_typeahead_div.fadeOut('fast', function () {
 
-    if (contacts_only) {
+      // Build typeahead object
+      let typeahead_obj = build_assign_users_teams_typeahead_obj(contacts_only);
+      users_teams_typeahead_div.html(typeahead_obj['html']);
 
-      // Display contacts typeahead input field
-      users_teams_select.fadeOut('fast', function () {
-        users_teams_typeahead_div.fadeOut('fast', function () {
+      // Instantiate typeahead configuration
+      $('#ml_main_col_assign_users_teams_typeahead_input').typeahead({
+        order: "asc",
+        accent: true,
+        minLength: 0,
+        maxItem: contacts_only ? 10 : 20,
+        dynamic: true,
+        searchOnFocus: true,
+        source: typeahead_obj['typeahead'][contacts_only ? 'endpoint_contacts_only' : 'endpoint_users_teams_groups'](window.dt_magic_links.dt_wp_nonce),
+        callback: {
+          onClick: function (node, a, item, event) {
+            let id = typeahead_obj['typeahead']['id_func'](item);
+            if (id) {
+              if (contacts_only) {
+                // Fetch associated post record...
+                get_post_record_request('contacts', id, function (post) {
 
-          // Build typeahead object
-          let typeahead_obj = build_assign_users_teams_typeahead_obj();
-          users_teams_typeahead_div.html(typeahead_obj['html']);
+                  // ...and stringify for future downstream processing
+                  $('#ml_main_col_assign_users_teams_typeahead_hidden').val(JSON.stringify(post));
+                });
+              } else {
 
-          // Instantiate typeahead configuration
-          $('#ml_main_col_assign_users_teams_typeahead_input').typeahead({
-            order: "asc",
-            accent: true,
-            minLength: 0,
-            maxItem: 10,
-            dynamic: true,
-            searchOnFocus: true,
-            source: typeahead_obj['typeahead']['endpoint'](window.dt_magic_links.dt_wp_nonce),
-            callback: {
-              onClick: function (node, a, item, event) {
-                let id = typeahead_obj['typeahead']['id_func'](item);
-                if (id) {
+                // Stringify directly, as user, team & group responses; come already self-packaged.
+                $('#ml_main_col_assign_users_teams_typeahead_hidden').val(JSON.stringify(item));
 
-                  // Fetch associated post record...
-                  get_post_record_request('contacts', id, function (post) {
-
-                    // ...and stringify for future downstream processing
-                    $('#ml_main_col_assign_users_teams_typeahead_hidden').val(JSON.stringify(post));
-                  });
-                }
               }
             }
-          });
-
-          // Display recently generated html
-          users_teams_typeahead_div.fadeIn('fast');
-        });
+          }
+        }
       });
 
-    } else {
-
-      /**
-       * REGULAR USERS, TEAMS & GROUPS ASSIGNMENTS
-       */
-
-      // Revert back to default dropdown select
-      users_teams_select.fadeOut('fast', function () {
-        users_teams_typeahead_div.fadeOut('fast', function () {
-          users_teams_select.fadeIn('fast');
-        });
-      });
-    }
+      // Display recently generated html
+      users_teams_typeahead_div.fadeIn('fast');
+    });
   }
 
-  function build_assign_users_teams_typeahead_obj() {
+  function build_assign_users_teams_typeahead_obj(contacts_only) {
     let base_url = window.dt_magic_links.dt_base_url;
 
     let response = {};
@@ -557,12 +653,12 @@ jQuery(function ($) {
 
     let html = '<div class="typeahead__container"><div class="typeahead__field"><div class="typeahead__query">';
     html += `<input type="hidden" id="ml_main_col_assign_users_teams_typeahead_hidden">`;
-    html += `<input type="text" class="dt-typeahead" autocomplete="off" placeholder="Start typing contact details..." style="min-width: 90%;" id="ml_main_col_assign_users_teams_typeahead_input">`;
+    html += `<input type="text" class="dt-typeahead" autocomplete="off" placeholder="Start typing ${(contacts_only ? `contact` : `user, team or group`)} details..." style="min-width: 90%;" id="ml_main_col_assign_users_teams_typeahead_input">`;
     html += '</div></div></div>';
     response['html'] = html;
 
     response['typeahead'] = {
-      endpoint: function (wp_nonce) {
+      endpoint_contacts_only: function (wp_nonce) {
         return {
           connections: {
             display: ["name", "ID"],
@@ -584,9 +680,51 @@ jQuery(function ($) {
           }
         }
       },
+      endpoint_users_teams_groups: function (wp_nonce) {
+        return {
+          connections: {
+            display: ["name", "id", "dt_type"],
+            template: "<span>{{name}} [{{dt_type}}]</span>",
+            ajax: {
+              url: window.dt_magic_links.dt_endpoint_typeahead_users_teams_groups,
+              data: {
+                s: '{{query}}'
+              },
+              beforeSend: function (xhr) {
+                xhr.setRequestHeader("X-WP-Nonce", wp_nonce);
+              },
+              callback: {
+                done: function (response) {
+
+                  // Merge response into a single flattened array.
+                  let merged_results = [];
+                  if ( response['dt_users'] ) {
+                    merged_results = merged_results.concat( response['dt_users'] );
+                  }
+
+                  if ( response['dt_teams'] ) {
+                    merged_results = merged_results.concat( response['dt_teams'] );
+                  }
+
+                  if ( response['dt_groups'] ) {
+                    merged_results = merged_results.concat( response['dt_groups'] );
+                  }
+
+                  return merged_results;
+                }
+              }
+            }
+          }
+        }
+      },
       id_func: function (item) {
-        if (item && item['ID']) {
-          return item['ID'];
+        if (item) {
+          if (item['ID']) {
+            return item['ID'];
+          }
+          if (item['id']) {
+            return item['id'];
+          }
         }
         return null;
       }
@@ -626,20 +764,25 @@ jQuery(function ($) {
     });
   }
 
-  function is_regular_assignment_user_select_element() {
-    return $('#ml_main_col_assign_users_teams_select').is(':visible') && $('#ml_main_col_assign_users_teams_typeahead_div').is(':hidden');
-  }
-
   function determine_assignment_user_select_id() {
-    if (is_regular_assignment_user_select_element()) {
-      return $('#ml_main_col_assign_users_teams_select').val();
+    let typeahead_hidden = $('#ml_main_col_assign_users_teams_typeahead_hidden');
+    if (typeahead_hidden.val()) {
+      let obj = JSON.parse(typeahead_hidden.val());
 
-    } else {
-      let typeahead_hidden = $('#ml_main_col_assign_users_teams_typeahead_hidden');
-      if (typeahead_hidden.val()) {
-        let post_obj = JSON.parse(typeahead_hidden.val());
-
-        return (post_obj) ? 'contacts+' + $.trim(post_obj['ID']) : null;
+      // Structure id accordingly, based on dt type.
+      if (obj) {
+        if (obj['dt_type']) {
+          switch (obj['dt_type']) {
+            case 'user':
+              return 'users+' + $.trim(obj['id']);
+            case 'team':
+              return 'teams+' + $.trim(obj['id']);
+            case 'group':
+              return 'groups+' + $.trim(obj['id']);
+          }
+        } else {
+          return 'contacts+' + $.trim(obj['ID']);
+        }
       }
     }
 
@@ -673,7 +816,7 @@ jQuery(function ($) {
     return enabled;
   }
 
-  function handle_add_users_teams_request(auto_update, selected_id, inc_default_members, load_contact_details, callback) {
+  function handle_add_users_teams_request(auto_update, selected_id, inc_default_members, load_assigned_details, callback) {
 
     // Flag to determine callback execution
     let execute_callback = true;
@@ -681,24 +824,41 @@ jQuery(function ($) {
     // Ensure selection is valid and table does not already contain selection...
     if (selected_id && !already_has_users_teams(selected_id)) {
 
+      /**
+       * If add request has been triggered following a manual click, then generate
+       * html the good old fashion way; otherwise, we need to get creative and go async;
+       * with the use of callbacks and the like! ;)
+       */
+
       // Add new row accordingly, based on selection type
       let html = null;
       if (selected_id.startsWith('users+')) {
-        html = build_user_row_html(auto_update, selected_id);
+        if (load_assigned_details === false) {
+          html = build_user_row_html(auto_update, selected_id);
+        } else {
+          html = null;
+          execute_callback = false;
+          build_assigned_row_html_async('dt_users', auto_update, selected_id, inc_default_members, callback);
+        }
       } else if (selected_id.startsWith('teams+')) {
-        html = build_team_group_row_html(auto_update, selected_id, inc_default_members, 'Team');
+        if (load_assigned_details === false) {
+          html = build_team_group_row_html(auto_update, selected_id, inc_default_members, 'Team');
+        } else {
+          html = null;
+          execute_callback = false;
+          build_assigned_row_html_async('dt_teams', auto_update, selected_id, inc_default_members, callback);
+        }
       } else if (selected_id.startsWith('groups+')) {
-        html = build_team_group_row_html(auto_update, selected_id, inc_default_members, 'Group');
+        if (load_assigned_details === false) {
+          html = build_team_group_row_html(auto_update, selected_id, inc_default_members, 'Group');
+        } else {
+          html = null;
+          execute_callback = false;
+          build_assigned_row_html_async('dt_groups', auto_update, selected_id, inc_default_members, callback);
+        }
       } else if (selected_id.startsWith('contacts+')) {
-
-        /**
-         * If add request has been triggered following a manual click, then generate
-         * html the good old fashion way; otherwise, we need to get creative and go async;
-         * with the use of callbacks and the like! ;)
-         */
-        if (load_contact_details === false) {
+        if (load_assigned_details === false) {
           html = build_contact_row_html(auto_update, selected_id);
-
         } else {
 
           // Ensure callback is executed following async return
@@ -706,7 +866,7 @@ jQuery(function ($) {
 
           // Invalidate html variable, as assigned table to be updated via request callbacks!
           html = null;
-          build_contact_row_html_async(auto_update, selected_id, callback);
+          build_assigned_row_html_async('contacts', auto_update, selected_id, inc_default_members, callback);
         }
       }
 
@@ -741,8 +901,13 @@ jQuery(function ($) {
     return (hits && hits.size() > 0) ? hits : null;
   }
 
-  function build_user_row_html(auto_update, id) {
-    let record = fetch_users_teams_record(id);
+  function build_user_row_html(auto_update, id, record = null) {
+
+    // If record is not provided, then attempt to fetch.
+    if (!record) {
+      record = fetch_users_teams_record(id);
+    }
+
     if (record) {
       let sys_type = 'wp_user';
       return build_row_html(auto_update, id, id.split('+')[1], 'User', record['name'], sys_type, 'user', build_comms_html(record, 'phone'), build_comms_html(record, 'email'), extract_link_parts(record['links'], sys_type));
@@ -759,16 +924,48 @@ jQuery(function ($) {
     return null;
   }
 
-  function build_contact_row_html_async(auto_update, id, callback) {
+  function build_assigned_row_html_async(post_type, auto_update, id, inc_default_members, callback) {
     let post_id = id.split('+')[1];
-    get_post_record_request('contacts', post_id, function (post) {
-      if (post && post['ID']) {
-        let sys_type = 'post';
-        let async_html = build_row_html(auto_update, id, post_id, 'Contact', post['name'], sys_type, post['post_type'], build_comms_html(post, 'contact_phone'), build_comms_html(post, 'contact_email'), extract_link_parts(post['ml_links'], sys_type));
+    get_post_record_request(post_type, post_id, function (post) {
+      if (post) {
+        switch (post_type) {
+          case 'contacts': {
+            if (post['ID']) {
+              let sys_type = 'post';
+              let async_html = build_row_html(auto_update, id, post_id, 'Contact', post['name'], sys_type, post['post_type'], build_comms_html(post, 'contact_phone'), build_comms_html(post, 'contact_email'), extract_link_parts(post['ml_links'], sys_type));
 
-        // If we have a valid html structure, then append to table listing
-        if (async_html) {
-          $('#ml_main_col_assign_users_teams_table').find('tbody:last').append(async_html);
+              // If we have a valid html structure, then append to table listing
+              if (async_html) {
+                $('#ml_main_col_assign_users_teams_table').find('tbody:last').append(async_html);
+              }
+            }
+            break;
+          }
+          case 'dt_users':
+          case 'dt_teams':
+          case 'dt_groups': {
+
+            // Unpack from array wrapping.
+            post = post[0];
+
+            // Build corresponding html.
+            let async_html = null;
+            if ( post_type === 'dt_users' ) {
+              async_html = build_user_row_html(auto_update, id, post);
+
+            } else if ( post_type === 'dt_teams' ) {
+              async_html = build_team_group_row_html(auto_update, id, inc_default_members, 'Team', post);
+
+            } else if ( post_type === 'dt_groups' ) {
+              async_html = build_team_group_row_html(auto_update, id, inc_default_members, 'Group', post);
+            }
+
+            // If we have a valid html structure, then append to table listing
+            if (async_html) {
+              $('#ml_main_col_assign_users_teams_table').find('tbody:last').append(async_html);
+            }
+            break;
+          }
         }
       }
 
@@ -780,9 +977,14 @@ jQuery(function ($) {
     });
   }
 
-  function build_team_group_row_html(auto_update, id, inc_default_members, type) {
-    let record = fetch_users_teams_record(id);
+  function build_team_group_row_html(auto_update, id, inc_default_members, type, record = null) {
     let html = null;
+
+    // If record is not provided, then attempt to fetch.
+    if (!record) {
+      record = fetch_users_teams_record(id);
+    }
+
     if (record) {
       let tokens = id.split('+');
       let is_parent = tokens.length === 2;
@@ -958,32 +1160,13 @@ jQuery(function ($) {
     let is_team = id.startsWith('teams+');
     let is_group = id.startsWith('groups+');
     let is_contact = id.startsWith('contacts+');
-    let dt_id = id.split('+')[1]; // dt_id always 2nd element...!
 
-    if (is_user) {
-      return fetch_record(dt_id, window.dt_magic_links.dt_users, 'user_id');
-    } else if (is_team) {
-      return fetch_record(dt_id, window.dt_magic_links.dt_teams, 'id');
-    } else if (is_group) {
-      return fetch_record(dt_id, window.dt_magic_links.dt_groups, 'id');
-    } else if (is_contact) {
-      return JSON.parse($('#ml_main_col_assign_users_teams_typeahead_hidden').val());
+    let typeahead_hidden = $('#ml_main_col_assign_users_teams_typeahead_hidden');
+    if ( $(typeahead_hidden).val() && ( is_user || is_team || is_group || is_contact ) ) {
+      return JSON.parse($(typeahead_hidden).val());
     }
 
     return null;
-  }
-
-  function fetch_record(dt_id, array, key) {
-    let record = null;
-    if (array) {
-      array.forEach(function (element, idx) {
-        if (String(element[key]) === String(dt_id)) {
-          record = element;
-        }
-      });
-    }
-
-    return record;
   }
 
   function handle_assigned_users_teams_table_row_options(evt) {
@@ -1102,17 +1285,13 @@ jQuery(function ($) {
             // First, remove all group members.....
             handle_remove_users_teams_request(row, function () {
 
-              // ....then, refresh all global variable references....
-              handle_references_management('refresh', function () {
+              // ....then, re-assign; detecting recently removed/added members.
+              let id = $(row).find('#ml_main_col_assign_users_teams_table_row_id').val();
+              handle_add_users_teams_request(true, id, true, false, function () {
 
-                // ....then, re-assign; detecting recently removed/added members.
-                let id = $(row).find('#ml_main_col_assign_users_teams_table_row_id').val();
-                handle_add_users_teams_request(true, id, true, false, function () {
+                // Not forgetting to re-sort refreshed table entries.
+                sort_assign_users_teams_table();
 
-                  // Not forgetting to re-sort refreshed table entries.
-                  sort_assign_users_teams_table();
-
-                });
               });
             });
           }
@@ -1562,9 +1741,6 @@ jQuery(function ($) {
       success: function (data) {
         if (data && data['success']) {
 
-          // Update global variables accordingly
-          update_global_variables(data);
-
           // Refresh assigned table, to display updated user link states!
           reset_section_assign_users_teams(data['assigned'], function () {
             // Automatically save updates....
@@ -1592,50 +1768,6 @@ jQuery(function ($) {
       }
     });
 
-  }
-
-  function update_global_variables(data) {
-    if (data['dt_users'] && data['dt_users'].length > 0) {
-      window.dt_magic_links.dt_users = data['dt_users'];
-    }
-    if (data['dt_teams'] && data['dt_teams'].length > 0) {
-      window.dt_magic_links.dt_teams = data['dt_teams'];
-    }
-    if (data['dt_groups'] && data['dt_groups'].length > 0) {
-      window.dt_magic_links.dt_groups = data['dt_groups'];
-    }
-  }
-
-  function handle_references_management(action, callback) {
-
-    let payload = {
-      action: action
-    };
-
-    $.ajax({
-      url: window.dt_magic_links.dt_endpoint_references,
-      method: 'POST',
-      data: payload,
-      beforeSend: (xhr) => {
-        xhr.setRequestHeader("X-WP-Nonce", window.dt_admin_scripts.nonce);
-      },
-      success: function (data) {
-        if (data && data['success']) {
-
-          // Update global variables accordingly
-          update_global_variables(data);
-
-        } else {
-          console.log(data);
-        }
-
-        // Execute callback
-        callback();
-      },
-      error: function (data) {
-        console.log(data);
-      }
-    });
   }
 
   function handle_assigned_general_management(action, record) {
