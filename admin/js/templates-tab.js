@@ -44,7 +44,7 @@ jQuery(function ($) {
   });
 
   $(document).on('click', '.templates-management-section-table-template-link', function (evt) {
-    handle_load_template_request(evt);
+    handle_load_template_request($(evt.target).data('template_id'));
   });
 
   $(document).on('click', '#ml_main_col_template_details_fields_add', function () {
@@ -321,7 +321,7 @@ jQuery(function ($) {
             </td>
             <td>
                 <input type="hidden" id="templates_management_section_table_template_id" value="${window.lodash.escape(template['id'])}">
-                <a href="#" class="templates-management-section-table-template-link">${window.lodash.escape(template['name'])}</a>
+                <a href="#" class="templates-management-section-table-template-link" data-template_id="${window.lodash.escape(template['id'])}">${window.lodash.escape(template['name'])}</a>
             </td>
         </tr>
     `;
@@ -373,7 +373,7 @@ jQuery(function ($) {
     });
   }
 
-  function handle_load_template_request(evt) {
+  function handle_load_template_request(template_id) {
 
     // Hide and reset main views accordingly - Ensure all resets have taken place prior to displaying loaded templete details!
     template_views_update_and_delete_but(...Array(2), function () {
@@ -386,9 +386,7 @@ jQuery(function ($) {
 
             // Fetch corresponding template details
             let post_type = $('#templates_management_section_selected_post_type').val();
-            let template_id = $(evt.currentTarget).parent().find('#templates_management_section_table_template_id').val();
             let template = fetch_template(post_type, template_id);
-
             if (template) {
 
               // Display refreshed views....
