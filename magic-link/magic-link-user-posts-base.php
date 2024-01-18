@@ -718,6 +718,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                             case 'multi_select':
                             case 'tags':
                             case 'location':
+                            case 'boolean':
                                 payload['fields'].push({
                                     id: field_id,
                                     type: field_type,
@@ -747,18 +748,6 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                                     type: field_type,
                                     post_type: document.querySelector(selector).dataset.posttype,
                                     value: document.querySelector(selector).value,
-                                });
-                                break;
-
-                            case 'boolean':
-                                let initial_val = JSON.parse(jQuery(tr).find('#field_initial_state_' + field_id).val());
-                                let current_val = jQuery(tr).find(selector).prop('checked');
-
-                                payload['fields'].push({
-                                    id: field_id,
-                                    type: field_type,
-                                    value: current_val,
-                                    changed: (initial_val !== current_val)
                                 });
                                 break;
 
@@ -1569,15 +1558,8 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                 case 'text':
                 case 'key_select':
                 case 'date':
-                    $updates[ $field['id'] ] = $field['value'];
-                    break;
-
                 case 'boolean':
-
-                    // Only update if there has been a state change!
-                    if ( $field['changed'] ) {
-                        $updates[ $field['id'] ] = $field['value'] === 'true';
-                    }
+                    $updates[ $field['id'] ] = $field['value'];
                     break;
 
                 case 'communication_channel':
