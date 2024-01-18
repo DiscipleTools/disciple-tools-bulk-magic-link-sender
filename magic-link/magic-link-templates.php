@@ -1101,8 +1101,8 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                     let payload = {
                         'action': 'get',
                         'parts': jsObject.parts,
-                        'template_name': jsObject.template['name'] ?? '',
-                        'send_submission_notifications': jsObject.template['send_submission_notifications'] ?? true,
+                        'template_name': ( jsObject.template['name'] ) ? jsObject.template['name'] : '',
+                        'send_submission_notifications': ( jsObject.template['send_submission_notifications'] ) ? jsObject.template['send_submission_notifications'] : true,
                         'post_id': id,
                         'post_type': post_type,
                         'fields': {
@@ -1127,6 +1127,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                 case 'textarea':
                                 case 'text':
                                 case 'key_select':
+                                case 'boolean':
                                     payload['fields']['dt'].push({
                                         id: field_id,
                                         dt_type: field_type,
@@ -1165,19 +1166,6 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                         dt_type: field_type,
                                         template_type: field_template_type,
                                         value: options
-                                    });
-                                    break;
-
-                                case 'boolean':
-                                    let initial_val = JSON.parse(jQuery(tr).find('#field_initial_state_' + field_id).val());
-                                    let current_val = jQuery(tr).find(selector).prop('checked');
-
-                                    payload['fields']['dt'].push({
-                                        id: field_id,
-                                        dt_type: field_type,
-                                        template_type: field_template_type,
-                                        value: current_val,
-                                        changed: (initial_val !== current_val)
                                     });
                                     break;
 
@@ -1633,15 +1621,8 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                 case 'text':
                 case 'key_select':
                 case 'date':
-                    $updates[ $field['id'] ] = $field['value'];
-                    break;
-
                 case 'boolean':
-
-                    // Only update if there has been a state change!
-                    if ( $field['changed'] ) {
-                        $updates[ $field['id'] ] = $field['value'] === 'true';
-                    }
+                    $updates[ $field['id'] ] = $field['value'];
                     break;
 
                 case 'communication_channel':
