@@ -204,7 +204,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
      * - description:       Magic link type description.
      * - settings_display:  Boolean flag which determines if magic link type is to be listed within frontend user profile settings.
      *
-     * @param $apps_list
+     * @param array $apps_list
      *
      * @return mixed
      */
@@ -1029,9 +1029,9 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
     }
     /**
      * Copied from theme to replace web component rendering. Can be removed if/when web-components are fully adopted in the theme.
-     * @param $field_key
-     * @param $fields
-     * @param $post
+     * @param string $field_key
+     * @param array $fields
+     * @param mixed $post
      * @param bool $show_extra_controls
      * @param bool $show_hidden
      * @param string $field_id_prefix

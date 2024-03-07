@@ -150,10 +150,10 @@ class ML_Send_Email_Job extends Job{
     /**
      * ML_Send_Email_Job constructor.
      *
-     * @param $email_to
-     * @param $email_subject
-     * @param $email_body
-     * @param $email_headers
+     * @param mixed $email_to
+     * @param string $email_subject
+     * @param string $email_body
+     * @param array $email_headers
      *
      */
     public function __construct( $email_to, $email_subject, $email_body, $email_headers ){

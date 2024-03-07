@@ -266,9 +266,24 @@ jQuery(function ($) {
     $('#ml_main_col_assign_users_teams_table').find('tbody > tr').remove();
 
     if (assigned_users_teams && assigned_users_teams.length > 0) {
-      assigned_users_teams = window.lodash.sortBy(assigned_users_teams, [assigned => assigned.name.toLowerCase()]);
+
+      // Ensure to filter out team & group members and sort.
+      assigned_users_teams = assigned_users_teams.filter((assigned) => assigned?.type !== 'member')
+      .sort((a, b) => {
+        if (a?.name.toLowerCase() < b?.name.toLowerCase()) {
+          return -1;
+        }
+
+        if (a?.name.toLowerCase() > b?.name.toLowerCase()) {
+          return 1;
+        }
+
+        return 0;
+      });
+
+      // Once filtered, proceed with assigned table build, including all team & group members.
       assigned_users_teams.forEach(function (element, idx) {
-        handle_add_users_teams_request(false, element['id'], false, true, function () {
+        handle_add_users_teams_request(false, element['id'], true, true, function () {
 
           // Retrospectively update link expiration details
           if (element['links_expire_within_base_ts'] && element['links_expire_on_ts'] && element['links_expire_on_ts_formatted']) {
@@ -996,7 +1011,25 @@ jQuery(function ($) {
 
         // Capture team members accordingly, based on flags!
         if (inc_default_members && record['members'] && record['members'].length > 0) {
-          record['members'].forEach(function (member, idx) {
+
+          // Remove duplicate record members.
+          let members = Array.from( new Set( record['members'].map( JSON.stringify ) ) ).map( JSON.parse );
+
+          // Sort record members.
+          members = members.sort((a, b) => {
+            if (a?.post_title.toLowerCase() < b?.post_title.toLowerCase()) {
+              return -1;
+            }
+
+            if (a?.post_title.toLowerCase() > b?.post_title.toLowerCase()) {
+              return 1;
+            }
+
+            return 0;
+          });
+
+          // Proceed with member html row build.
+          members.forEach(function (member, idx) {
             html += build_row_html(auto_update, id + "+" + member['type_id'], member['type_id'], 'Member', member['post_title'], member['type'], member['post_type'], build_comms_html(member, 'phone'), build_comms_html(member, 'email'), extract_link_parts(member['links'], member['type']));
           });
         }
@@ -1051,7 +1084,7 @@ jQuery(function ($) {
   }
 
   function is_email_format_valid(email) {
-    return new RegExp('^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$').test(window.lodash.escape(email));
+    return new RegExp('^[\u0600-\u06FFA-Za-z0-9._%+-]+@[\u0600-\u06FFA-Za-z0-9.-]+\\.[A-Za-z]{2,6}$').test(window.lodash.escape(email));
   }
 
   function extract_link_parts(links, sys_type) {
