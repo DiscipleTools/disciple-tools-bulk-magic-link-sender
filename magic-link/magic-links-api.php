@@ -870,7 +870,7 @@ Thanks!';
     }
 
     public static function determine_relative_date( $ts ): string {
-        if ( ! ctype_digit( $ts ) ) {
+        if ( ! ctype_digit( ''. $ts ) ) {
             $ts = strtotime( $ts );
         }
 
