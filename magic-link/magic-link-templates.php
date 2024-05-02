@@ -188,6 +188,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         $allowed_js[] = 'mapbox-gl';
         $allowed_js[] = 'mapbox-cookie';
         $allowed_js[] = 'mapbox-search-widget';
+        $allowed_js[] = 'google-search-widget';
         $allowed_js[] = 'jquery-typeahead';
         $allowed_js[] = 'toastify-js';
         $allowed_js[] = Disciple_Tools_Bulk_Magic_Link_Sender_API::get_magic_link_utilities_script_handle();
