@@ -129,7 +129,7 @@ jQuery(function ($) {
 
               // Refresh post type fields list
               let post_types = window.dt_magic_links.dt_post_types;
-              let post_type_id = $(evt.currentTarget).parent().find('#available_post_types_section_post_type_id').val();
+              let post_type_id = $(evt.target).parent().find('#available_post_types_section_post_type_id').val();
               refresh_post_type_fields_list(post_types[post_type_id]['fields']);
 
               // Capture selected post type id for future reference
