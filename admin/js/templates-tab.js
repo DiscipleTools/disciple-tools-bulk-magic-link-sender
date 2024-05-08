@@ -215,7 +215,7 @@ jQuery(function ($) {
     title_translations: {},
     type: 'single-record',
     custom_fields: '',
-    show_recent_comments: true,
+    show_recent_comments: false,
     send_submission_notifications: true
   }, callback = function () {
   }) {
