@@ -129,7 +129,7 @@ jQuery(function ($) {
 
               // Refresh post type fields list
               let post_types = window.dt_magic_links.dt_post_types;
-              let post_type_id = $(evt.currentTarget).parent().find('#available_post_types_section_post_type_id').val();
+              let post_type_id = $(evt.target).parent().find('#available_post_types_section_post_type_id').val();
               refresh_post_type_fields_list(post_types[post_type_id]['fields']);
 
               // Capture selected post type id for future reference
@@ -192,7 +192,7 @@ jQuery(function ($) {
 
       // Reload previously selected fields
       $.each(data['fields'], function (idx, field) {
-        $('.connected-sortable-fields').append(build_new_selected_field_html(field['id'], field['label'], field['type'], field['enabled'], (field['translations'] !== undefined) ? field['translations'] : {}, (field['custom_form_field_type'] !== undefined) ? field['custom_form_field_type'] : 'textfield'));
+        $('.connected-sortable-fields').append(build_new_selected_field_html(field['id'], field['label'], field['type'], field['enabled'], (field['translations'] !== undefined) ? field['translations'] : {}, (field['custom_form_field_type'] !== undefined) ? field['custom_form_field_type'] : 'textfield', field['readonly']));
       });
 
       // Instantiate sortable fields capabilities
@@ -215,7 +215,7 @@ jQuery(function ($) {
     title_translations: {},
     type: 'single-record',
     custom_fields: '',
-    show_recent_comments: true,
+    show_recent_comments: false,
     send_submission_notifications: true
   }, callback = function () {
   }) {
@@ -597,14 +597,21 @@ jQuery(function ($) {
     return already_selected;
   }
 
-  function build_new_selected_field_html(field_id, field_label, field_type, field_enabled, field_translations, field_custom_form_type = 'textfield') {
+  function build_new_selected_field_html(field_id, field_label, field_type, field_enabled, field_translations, field_custom_form_type = 'textfield', field_readonly = false) {
 
     // Ensure default field labels are disabled and cannot be overwritten, along with any other field type specific settings.
     let label_disabled_html = '';
     let final_form_custom_field_type_html = '';
+    let field_readonly_html = '';
     switch (field_type) {
       case 'dt' : {
         label_disabled_html = 'disabled';
+        field_readonly_html = `
+            <select id="ml_main_col_selected_fields_sortable_field_readonly">
+                <option value="" ${!field_readonly ? 'selected':''}>Editable</option>
+                <option value="readonly" ${field_readonly ? 'selected':''}>Readonly</option>
+            </select>
+        `;
         break;
       }
       case 'custom' : {
@@ -636,6 +643,7 @@ jQuery(function ($) {
                                type="text" value="${field_label}" ${label_disabled_html}/>
                     </td>
                     <td style="text-align: right;">
+                        ${field_readonly_html}
                         ${final_form_custom_field_type_html}
                         ${build_translation_button_html(field_id, field_label, field_type, field_translations, label_disabled_html)}
                         <button type="submit" class="button float-right connected-sortable-fields-remove-but">
@@ -733,6 +741,7 @@ jQuery(function ($) {
       let id = $(field_div).find('#ml_main_col_selected_fields_sortable_field_id').val();
       let type = $(field_div).find('#ml_main_col_selected_fields_sortable_field_type').val();
       let enabled = $(field_div).find('#ml_main_col_selected_fields_sortable_field_enabled').prop('checked');
+      let readonly = $(field_div).find('#ml_main_col_selected_fields_sortable_field_readonly').val() === 'readonly';
       let label = $(field_div).find('#ml_main_col_selected_fields_sortable_field_label').val();
       let translations = (type === 'dt') ? {} : JSON.parse(decodeURIComponent($(field_div).find('.connected-sortable-fields-translate-but').data('field_translations')));
       let custom_form_field_type = (type === 'custom') ? $(field_div).find('#ml_main_col_selected_fields_sortable_form_custom_field_type').val() : '';
@@ -741,6 +750,7 @@ jQuery(function ($) {
         'id': id,
         'type': type,
         'enabled': enabled,
+        'readonly': readonly,
         'label': label,
         'translations': translations,
         'custom_form_field_type': custom_form_field_type

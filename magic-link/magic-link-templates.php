@@ -188,6 +188,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         $allowed_js[] = 'mapbox-gl';
         $allowed_js[] = 'mapbox-cookie';
         $allowed_js[] = 'mapbox-search-widget';
+        $allowed_js[] = 'google-search-widget';
         $allowed_js[] = 'jquery-typeahead';
         $allowed_js[] = 'toastify-js';
         $allowed_js[] = Disciple_Tools_Bulk_Magic_Link_Sender_API::get_magic_link_utilities_script_handle();
@@ -659,7 +660,8 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
 
                                 let date_config = {
                                     singleDatePicker: true,
-                                    timePicker: true,
+                                    timePicker: false,
+                                    autoUpdateInput: false,
                                     locale: {
                                         format: 'MMMM D, YYYY'
                                     }
@@ -667,17 +669,22 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                 let post_date = jsObject['post'][field_id];
                                 if (post_date !== undefined) {
                                     date_config['startDate'] = moment.unix(post_date['timestamp']);
+                                    jQuery(tr).find('#' + field_id).val(moment.unix(post_date['timestamp']).format('MMMM D, YYYY'));
+                                } else {
+                                    jQuery(tr).find('#' + field_id).val('');
+                                    field_meta.val('');
                                 }
 
                                 jQuery(tr).find('#' + field_id).daterangepicker(date_config, function (start, end, label) {
                                     if (start) {
-                                        field_meta.val(start.unix());
+                                        jQuery(tr).find('#' + field_id).val(start.format('MMMM D, YYYY'));
+                                        field_meta.val(moment.unix(start.unix()).format('YYYY-MM-DD'));
                                     }
                                 });
 
                                 // If post timestamp available, set default hidden meta field value
                                 if (post_date !== undefined) {
-                                    field_meta.val(post_date['timestamp']);
+                                    field_meta.val(moment.unix(post_date['timestamp']).format('YYYY-MM-DD'));
                                 }
 
                                 /**
@@ -942,10 +949,11 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                             if (post[field_id] && post[field_id]['timestamp']) {
                                                 let timestamp = post[field_id]['timestamp'];
                                                 jQuery(tr).find(selector).data('daterangepicker').setStartDate(moment.unix(timestamp));
-                                                field_meta.val(timestamp);
+                                                jQuery(tr).find(selector).val(moment.unix(timestamp).format('MMMM D, YYYY'));
+                                                field_meta.val(moment.unix(timestamp).format('YYYY-MM-DD'));
 
                                             } else {
-                                                jQuery(tr).find(selector).data('daterangepicker').setStartDate(moment());
+                                                jQuery(tr).find(selector).val('');
                                                 field_meta.val('');
                                             }
                                             break;
@@ -1456,6 +1464,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                             // Capture rendered field html
                                             ob_start();
                                             $this->post_field_settings[$field['id']]['custom_display'] = false;
+                                            $this->post_field_settings[$field['id']]['readonly'] = $field['readonly'];
                                             render_field_for_display( $field['id'], $this->post_field_settings, $this->post, true );
                                             $rendered_field_html = ob_get_contents();
                                             ob_end_clean();
