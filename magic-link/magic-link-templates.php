@@ -1646,12 +1646,12 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         if ( !is_user_logged_in() ){
             $this->update_user_logged_in_state();
         }
-dt_write_log($params);
+
         $updates = [];
 
         // First, capture and package incoming DT field values
         foreach ( $params['fields']['dt'] ?? [] as $field ){
-            switch ($field['dt_type']){
+            switch ( $field['dt_type'] ) {
                 case 'number':
                 case 'textarea':
                 case 'text':
@@ -1733,7 +1733,7 @@ dt_write_log($params);
                     if ( !empty( $field['value'] ) && isset( $field['value'][$field['id']] ) ){
                         $locations[$field['id']] = $field['value'][$field['id']];
 
-                    } else{
+                    } else {
                         $locations[$field['id']] = [
                             'values' => []
                         ];
