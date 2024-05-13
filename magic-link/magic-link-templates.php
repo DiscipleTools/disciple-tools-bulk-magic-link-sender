@@ -1087,6 +1087,15 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
             };
 
             /**
+             * Create new record
+             */
+
+            jQuery('#add_new').on('click', function (evt) {
+                const add_new_but = $(evt.target);
+                window.get_assigned_details( $(add_new_but).data('post_type'), $(add_new_but).data('post_id'), $(add_new_but).data('post_name') );
+            });
+
+            /**
              * Submit contact details
              */
 
@@ -1388,6 +1397,17 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                         </div>
                         <?php
                     }
+
+                    // Determine if new item creation is enabled.
+                    if ( isset( $this->template['support_creating_new_items'] ) && $this->template['support_creating_new_items'] ) {
+                        ?>
+                        <br>
+                        <button id="add_new" class="button select-button" data-post_type="<?php echo esc_attr( $this->post['post_type'] ) ?>" data-post_id="0" data-post_name="<?php esc_html_e( 'New Record', 'disciple_tools' ) ?>">
+                            <?php esc_html_e( 'Add New', 'disciple_tools' ) ?>
+                        </button>
+                        <br>
+                        <?php
+                    }
                 }
                 ?>
 
@@ -1594,11 +1614,18 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
 
         // Fetch corresponding post record
         $response = [];
-        $post = DT_Posts::get_post( $params['post_type'], $params['post_id'], false, false );
+        if ( $params['post_id'] > 0 ){
+            $post = DT_Posts::get_post( $params['post_type'], $params['post_id'], false, false );
+        } else {
+            $post = [
+                'ID' => 0,
+                'post_type' => $params['post_type']
+            ];
+        }
         if ( !empty( $post ) && !is_wp_error( $post ) ){
             $response['success'] = true;
             $response['post'] = $this->localized_post_selected_field_settings( $post, $this->localized_template_selected_field_settings( $this->template ), [ 'ID', 'post_type' ] );
-            $response['comments'] = DT_Posts::get_post_comments( $params['post_type'], $params['post_id'], false, 'all', [ 'number' => $params['comment_count'] ] );
+            $response['comments'] = ( $post['ID'] > 0 ) ? DT_Posts::get_post_comments( $params['post_type'], $params['post_id'], false, 'all', [ 'number' => $params['comment_count'] ] ) : [];
         } else {
             $response['success'] = false;
         }
@@ -1606,9 +1633,9 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         return $response;
     }
 
-    public function update_record( WP_REST_Request $request ) {
+    public function update_record( WP_REST_Request $request ){
         $params = $request->get_params();
-        if ( ! isset( $params['post_id'], $params['post_type'], $params['parts'], $params['action'], $params['fields'] ) ) {
+        if ( !isset( $params['post_id'], $params['post_type'], $params['parts'], $params['action'], $params['fields'] ) ){
             return new WP_Error( __METHOD__, 'Missing core parameters', [ 'status' => 400 ] );
         }
 
@@ -1616,60 +1643,60 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         $params = dt_recursive_sanitize_array( $params );
 
         // Update logged-in user state, if required
-        if ( ! is_user_logged_in() ) {
+        if ( !is_user_logged_in() ){
             $this->update_user_logged_in_state();
         }
-
+dt_write_log($params);
         $updates = [];
 
         // First, capture and package incoming DT field values
-        foreach ( $params['fields']['dt'] ?? [] as $field ) {
-            switch ( $field['dt_type'] ) {
+        foreach ( $params['fields']['dt'] ?? [] as $field ){
+            switch ($field['dt_type']){
                 case 'number':
                 case 'textarea':
                 case 'text':
                 case 'key_select':
                 case 'date':
                 case 'boolean':
-                    $updates[ $field['id'] ] = $field['value'];
+                    $updates[$field['id']] = $field['value'];
                     break;
 
                 case 'communication_channel':
-                    $updates[ $field['id'] ] = [];
+                    $updates[$field['id']] = [];
 
                     // First, capture additions and updates
-                    foreach ( $field['value'] ?? [] as $value ) {
-                        $comm          = [];
+                    foreach ( $field['value'] ?? [] as $value ){
+                        $comm = [];
                         $comm['value'] = $value['value'];
 
-                        if ( $value['key'] !== 'new' ) {
+                        if ( $value['key'] !== 'new' ){
                             $comm['key'] = $value['key'];
                         }
 
-                        $updates[ $field['id'] ][] = $comm;
+                        $updates[$field['id']][] = $comm;
                     }
 
                     // Next, capture deletions
-                    foreach ( $field['deleted'] ?? [] as $delete_key ) {
-                        $updates[ $field['id'] ][] = [
+                    foreach ( $field['deleted'] ?? [] as $delete_key ){
+                        $updates[$field['id']][] = [
                             'delete' => true,
-                            'key'    => $delete_key
+                            'key' => $delete_key
                         ];
                     }
                     break;
 
                 case 'multi_select':
                     $options = [];
-                    foreach ( $field['value'] ?? [] as $option ) {
-                        $entry          = [];
+                    foreach ( $field['value'] ?? [] as $option ){
+                        $entry = [];
                         $entry['value'] = $option['value'];
-                        if ( $option['delete'] ) {
+                        if ( $option['delete'] ){
                             $entry['delete'] = true;
                         }
                         $options[] = $entry;
                     }
-                    if ( ! empty( $options ) ) {
-                        $updates[ $field['id'] ] = [
+                    if ( !empty( $options ) ){
+                        $updates[$field['id']] = [
                             'values' => $options
                         ];
                     }
@@ -1677,23 +1704,23 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
 
                 case 'location':
                     $locations = [];
-                    foreach ( $field['value'] ?? [] as $location ) {
-                        $entry          = [];
+                    foreach ( $field['value'] ?? [] as $location ){
+                        $entry = [];
                         $entry['value'] = $location['ID'];
-                        $locations[]    = $entry;
+                        $locations[] = $entry;
                     }
 
                     // Capture any incoming deletions
-                    foreach ( $field['deletions'] ?? [] as $location ) {
-                        $entry           = [];
-                        $entry['value']  = $location['ID'];
+                    foreach ( $field['deletions'] ?? [] as $location ){
+                        $entry = [];
+                        $entry['value'] = $location['ID'];
                         $entry['delete'] = true;
-                        $locations[]     = $entry;
+                        $locations[] = $entry;
                     }
 
                     // Package and append to global updates
-                    if ( ! empty( $locations ) ) {
-                        $updates[ $field['id'] ] = [
+                    if ( !empty( $locations ) ){
+                        $updates[$field['id']] = [
                             'values' => $locations
                         ];
                     }
@@ -1703,48 +1730,48 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                     $locations = [];
 
                     // Capture selected location, if available; or prepare shape
-                    if ( ! empty( $field['value'] ) && isset( $field['value'][ $field['id'] ] ) ) {
-                        $locations[ $field['id'] ] = $field['value'][ $field['id'] ];
+                    if ( !empty( $field['value'] ) && isset( $field['value'][$field['id']] ) ){
+                        $locations[$field['id']] = $field['value'][$field['id']];
 
-                    } else {
-                        $locations[ $field['id'] ] = [
+                    } else{
+                        $locations[$field['id']] = [
                             'values' => []
                         ];
                     }
 
                     // Capture any incoming deletions
-                    foreach ( $field['deletions'] ?? [] as $id ) {
-                        $entry                                 = [];
-                        $entry['grid_meta_id']                 = $id;
-                        $entry['delete']                       = true;
-                        $locations[ $field['id'] ]['values'][] = $entry;
+                    foreach ( $field['deletions'] ?? [] as $id ){
+                        $entry = [];
+                        $entry['grid_meta_id'] = $id;
+                        $entry['delete'] = true;
+                        $locations[$field['id']]['values'][] = $entry;
                     }
 
                     // Package and append to global updates
-                    if ( ! empty( $locations[ $field['id'] ]['values'] ) ) {
-                        $updates[ $field['id'] ] = $locations[ $field['id'] ];
+                    if ( !empty( $locations[$field['id']]['values'] ) ){
+                        $updates[$field['id']] = $locations[$field['id']];
                     }
                     break;
 
                 case 'tags':
                     $tags = [];
-                    foreach ( $field['value'] ?? [] as $tag ) {
-                        $entry          = [];
+                    foreach ( $field['value'] ?? [] as $tag ){
+                        $entry = [];
                         $entry['value'] = $tag['name'];
-                        $tags[]         = $entry;
+                        $tags[] = $entry;
                     }
 
                     // Capture any incoming deletions
-                    foreach ( $field['deletions'] ?? [] as $tag ) {
-                        $entry           = [];
-                        $entry['value']  = $tag['name'];
+                    foreach ( $field['deletions'] ?? [] as $tag ){
+                        $entry = [];
+                        $entry['value'] = $tag['name'];
                         $entry['delete'] = true;
-                        $tags[]          = $entry;
+                        $tags[] = $entry;
                     }
 
                     // Package and append to global updates
-                    if ( ! empty( $tags ) ) {
-                        $updates[ $field['id'] ] = [
+                    if ( !empty( $tags ) ){
+                        $updates[$field['id']] = [
                             'values' => $tags
                         ];
                     }
@@ -1753,11 +1780,30 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         }
 
         // Update specified post record
-        $updated_post = DT_Posts::update_post( $params['post_type'], $params['post_id'], $updates, false, false );
+        if ( empty( $params['post_id'] ) ) {
+            // if ID is empty ("0", 0, or generally falsy), create a new post
+            $updates['type'] = 'access';
+
+            // Subassign new item to parent post record.
+            if ( isset( $params['parts']['post_id'] ) ){
+                $updates['subassigned'] = [
+                    'values' => [
+                        [
+                            'value' => $params['parts']['post_id']
+                        ]
+                    ]
+                ];
+            }
+
+            $updated_post = DT_Posts::create_post( $params['post_type'], $updates, false, false );
+        } else {
+            $updated_post = DT_Posts::update_post( $params['post_type'], $params['post_id'], $updates, false, false );
+        }
+
         if ( empty( $updated_post ) || is_wp_error( $updated_post ) ) {
             return [
                 'success' => false,
-                'message' => 'Unable to update contact record details!'
+                'message' => 'Unable to update/create contact record details!'
             ];
         }
 

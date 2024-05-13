@@ -57,6 +57,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
             'app_type'       => 'magic_link',
             'post_type'      => $this->post_type,
             'contacts_only'  => false,
+            'supports_create' => true,
             'fields'         => [
                 [
                     'id'    => 'name',
@@ -552,6 +553,14 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
             }
 
             /**
+             * Create new record
+             */
+
+            jQuery('#add_new').on('click', function () {
+                window.get_contact(0);
+            });
+
+            /**
              * Submit contact details
              */
             jQuery('#content_submit_but').on("click", function () {
@@ -666,6 +675,8 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
     public function body() {
         // Revert back to dt translations
         $this->hard_switch_to_default_dt_text_domain();
+        $link_obj = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $this->fetch_incoming_link_param( 'id' ) );
+
         ?>
         <div id="custom-style"></div>
         <div id="wrapper">
@@ -686,11 +697,16 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                         </table>
                     </div>
                     <br>
+
+                    <?php if ( isset( $link_obj ) && property_exists( $link_obj, 'type_config' ) && property_exists( $link_obj->type_config, 'supports_create' ) && $link_obj->type_config->supports_create ): ?>
+                        <button id="add_new" class="button select-button">
+                            <?php esc_html_e( 'Add New', 'disciple_tools' ) ?>
+                        </button>
+                    <?php endif; ?>
                 </div>
 
                 <!-- ERROR MESSAGES -->
                 <span id="error" style="color: red;"></span>
-                <br>
                 <br>
 
                 <h3><span id="contact_name"></span>
@@ -879,11 +895,18 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
 
         // Fetch corresponding contacts post record
         $response = [];
-        $post     = DT_Posts::get_post( 'contacts', $params['post_id'], false );
+        if ( $params['post_id'] > 0 ){
+            $post = DT_Posts::get_post( 'contacts', $params['post_id'], false );
+        } else {
+            $post = [
+                'ID' => 0,
+                'post_type' => 'contacts'
+            ];
+        }
         if ( ! empty( $post ) && ! is_wp_error( $post ) ) {
             $response['success']  = true;
             $response['post']     = $post;
-            $response['comments'] = DT_Posts::get_post_comments( 'contacts', $params['post_id'], false, 'all', [ 'number' => $params['comment_count'] ] );
+            $response['comments'] = ( $post['ID'] > 0 ) ? DT_Posts::get_post_comments( 'contacts', $params['post_id'], false, 'all', [ 'number' => $params['comment_count'] ] ) : [];
         } else {
             $response['success'] = false;
         }
@@ -893,7 +916,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
 
     public function update_record( WP_REST_Request $request ) {
         $params = $request->get_params();
-        if ( ! isset( $params['post_id'], $params['parts'], $params['action'], $params['sys_type'] ) ) {
+        if ( !isset( $params['post_id'], $params['parts'], $params['action'], $params['sys_type'] ) ){
             return new WP_Error( __METHOD__, 'Missing core parameters', [ 'status' => 400 ] );
         }
 
@@ -901,38 +924,38 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
         $params = dt_recursive_sanitize_array( $params );
 
         // Update logged-in user state if required accordingly, based on their sys_type
-        if ( ! is_user_logged_in() ) {
+        if ( !is_user_logged_in() ){
             $this->update_user_logged_in_state( $params['sys_type'], $params['parts']['post_id'] );
         }
 
         // Capture name, if present
         $updates = [];
-        if ( isset( $params['name'] ) && ! empty( $params['name'] ) ) {
+        if ( isset( $params['name'] ) && !empty( $params['name'] ) ){
             $updates['name'] = $params['name'];
         }
 
         // Capture overall status
-        if ( isset( $params['overall_status'] ) && ! empty( $params['overall_status'] ) ) {
+        if ( isset( $params['overall_status'] ) && !empty( $params['overall_status'] ) ){
             $updates['overall_status'] = $params['overall_status'];
         }
 
         // Capture faith status
-        if ( isset( $params['faith_status'] ) ) {
+        if ( isset( $params['faith_status'] ) ){
             $updates['faith_status'] = $params['faith_status'];
         }
 
         // Capture milestones
-        if ( isset( $params['milestones'] ) ) {
+        if ( isset( $params['milestones'] ) ){
             $milestones = [];
-            foreach ( $params['milestones'] ?? [] as $milestone ) {
-                $entry          = [];
+            foreach ( $params['milestones'] ?? [] as $milestone ){
+                $entry = [];
                 $entry['value'] = $milestone['value'];
-                if ( strtolower( trim( $milestone['delete'] ) ) === 'true' ) {
+                if ( strtolower( trim( $milestone['delete'] ) ) === 'true' ){
                     $entry['delete'] = true;
                 }
                 $milestones[] = $entry;
             }
-            if ( ! empty( $milestones ) ) {
+            if ( !empty( $milestones ) ){
                 $updates['milestones'] = [
                     'values' => $milestones
                 ];
@@ -940,11 +963,17 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
         }
 
         // Update specified post record
-        $updated_post = DT_Posts::update_post( 'contacts', $params['post_id'], $updates, false, false );
+        if ( empty( $params['post_id'] ) ) {
+            // if ID is empty ("0", 0, or generally falsy), create a new post
+            $updates['type'] = 'access';
+            $updated_post = DT_Posts::create_post( 'contacts', $updates, false, false );
+        } else {
+            $updated_post = DT_Posts::update_post( 'contacts', $params['post_id'], $updates, false, false );
+        }
         if ( empty( $updated_post ) || is_wp_error( $updated_post ) ) {
             return [
                 'success' => false,
-                'message' => 'Unable to update contact record details!'
+                'message' => 'Unable to update/create contact record details!'
             ];
         }
 

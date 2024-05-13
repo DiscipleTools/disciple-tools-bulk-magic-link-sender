@@ -481,6 +481,14 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
                            value=""/>
                 </td>
             </tr>
+            <tr>
+                <td style="vertical-align: middle;">Support Creating New Items</td>
+                <td>
+                    <input type="checkbox" id="ml_main_col_template_details_supports_create"
+                           value=""/>
+                </td>
+            </tr>
+
         </table>
         <?php
     }
