@@ -698,7 +698,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                     </div>
                     <br>
 
-                    <?php if ( isset( $link_obj ) && property_exists( $link_obj, 'type_config' ) && property_exists( $link_obj->type_config, 'supports_create' ) && $link_obj->type_config->supports_create ): ?>
+                    <?php if ( ( isset( $link_obj ) && ( property_exists( $link_obj, 'type_config' ) && property_exists( $link_obj->type_config, 'supports_create' ) && $link_obj->type_config->supports_create ) ) || ( ! property_exists( $link_obj, 'type_config' ) ) ): ?>
                         <button id="add_new" class="button select-button">
                             <?php esc_html_e( 'Add New', 'disciple_tools' ) ?>
                         </button>
@@ -966,6 +966,12 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
         if ( empty( $params['post_id'] ) ) {
             // if ID is empty ("0", 0, or generally falsy), create a new post
             $updates['type'] = 'access';
+
+            // Assign new item to parent post record.
+            if ( isset( $params['parts']['post_id'] ) ){
+                $updates['assigned_to'] = 'user-' . $params['parts']['post_id'];
+            }
+
             $updated_post = DT_Posts::create_post( 'contacts', $updates, false, false );
         } else {
             $updated_post = DT_Posts::update_post( 'contacts', $params['post_id'], $updates, false, false );
