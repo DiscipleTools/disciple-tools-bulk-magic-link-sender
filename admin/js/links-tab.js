@@ -20,10 +20,6 @@ jQuery(function ($) {
   });
 
   $(document).on('click', '#ml_main_col_assign_users_teams_add', function () {
-    const assign_users_teams_notice = $('#ml_main_col_assign_users_teams_table_notice');
-    $(assign_users_teams_notice).find('span').hide();
-    $(assign_users_teams_notice).fadeIn('fast');
-
     handle_add_users_teams_request(true, determine_assignment_user_select_id(), true, false, function () {
       sort_assign_users_teams_table();
     });
