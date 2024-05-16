@@ -85,6 +85,10 @@ jQuery(function ($) {
     handle_template_title_translation(evt);
   });
 
+  $(document).on('change', '#ml_main_col_template_details_type', function (evt) {
+    $('#ml_main_col_template_details_supports_create').prop( 'disabled', !( $(evt.target).val() === 'list-sub-assigned-contacts' ) );
+  });
+
   /**
    * Helper Functions
    */
@@ -216,7 +220,8 @@ jQuery(function ($) {
     type: 'single-record',
     custom_fields: '',
     show_recent_comments: false,
-    send_submission_notifications: true
+    send_submission_notifications: true,
+    support_creating_new_items: false // Linked to type & only enabled for list-sub-assigned-contacts type.
   }, callback = function () {
   }) {
 
@@ -253,6 +258,7 @@ jQuery(function ($) {
     });
 
     // Proceed with updating template details accordingly.
+    const supports_create = $('#ml_main_col_template_details_supports_create');
     let view_template_details = $('#ml_main_col_template_details');
     if (fade_out) {
       view_template_details.fadeOut(fade_speed, function () {
@@ -266,6 +272,8 @@ jQuery(function ($) {
         $('#ml_main_col_template_details_custom_fields').val(data.custom_fields);
         $('#ml_main_col_template_details_show_recent_comments').prop('checked', data.show_recent_comments);
         $('#ml_main_col_template_details_send_submission_notifications').prop('checked', data.send_submission_notifications);
+        $(supports_create).prop('checked', data.support_creating_new_items);
+        $(supports_create).prop( 'disabled', ( data.type === 'single-record' ) );
         callback();
       });
 
@@ -280,6 +288,8 @@ jQuery(function ($) {
       $('#ml_main_col_template_details_custom_fields').val(data.custom_fields);
       $('#ml_main_col_template_details_show_recent_comments').prop('checked', data.show_recent_comments);
       $('#ml_main_col_template_details_send_submission_notifications').prop('checked', data.send_submission_notifications);
+      $(supports_create).prop('checked', data.support_creating_new_items);
+      $(supports_create).prop( 'disabled', ( data.type === 'single-record' ) );
       view_template_details.fadeIn(fade_speed, function () {
         callback();
       });
@@ -399,7 +409,8 @@ jQuery(function ($) {
                 type: template['type'] ?? 'single-record',
                 custom_fields: '',
                 show_recent_comments: template['show_recent_comments'],
-                send_submission_notifications: template['send_submission_notifications'] ?? true
+                send_submission_notifications: template['send_submission_notifications'] ?? true,
+                support_creating_new_items: template['support_creating_new_items'] ?? false
               });
               template_views_selected_fields(false, 'slow', {fields: template['fields']});
               template_views_message(false, 'slow', {text: template['message']});
@@ -683,6 +694,7 @@ jQuery(function ($) {
     let type = $('#ml_main_col_template_details_type').val();
     let show_recent_comments = $('#ml_main_col_template_details_show_recent_comments').prop('checked');
     let send_submission_notifications = $('#ml_main_col_template_details_send_submission_notifications').prop('checked');
+    let support_creating_new_items = $('#ml_main_col_template_details_supports_create').prop('checked');
     let message = $('#ml_main_col_msg_textarea').val();
     let fields = fetch_selected_fields();
 
@@ -722,6 +734,7 @@ jQuery(function ($) {
         'type': type,
         'show_recent_comments': show_recent_comments,
         'send_submission_notifications': send_submission_notifications,
+        'support_creating_new_items': support_creating_new_items,
         'message': message,
         'fields': fields
       };
