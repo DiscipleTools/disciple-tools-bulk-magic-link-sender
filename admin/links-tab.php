@@ -544,6 +544,11 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
             </thead>
         </table>
         <br>
+        <span id="ml_main_col_assign_users_teams_table_notice" class="notice notice-warning" style="display: inline-block; padding-top: 10px; padding-bottom: 10px; width: 95%;">
+            <span class="loading-spinner active" style="margin-right: 10px;"></span>
+            DO NOT LEAVE THE PAGE until all assignments have successfully finished.
+        </span>
+        <br>
 
         Currently Assigned Users, Teams & Groups
         <hr>

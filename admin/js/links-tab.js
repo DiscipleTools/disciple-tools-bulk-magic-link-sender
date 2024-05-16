@@ -77,6 +77,7 @@ jQuery(function ($) {
 
   // Helper Functions
   function setup_widgets(refresh = true, callback) {
+    $('#ml_main_col_assign_users_teams_table_notice').fadeOut('fast');
 
     // Specify setup data to be returned.
     let payload = {
@@ -281,6 +282,12 @@ jQuery(function ($) {
         return 0;
       });
 
+      // Manage assignment notice display.
+      let counter = 0;
+      const assign_users_teams_notice = $('#ml_main_col_assign_users_teams_table_notice');
+      $(assign_users_teams_notice).find('span').show();
+      $(assign_users_teams_notice).fadeIn('fast');
+
       // Once filtered, proceed with assigned table build, including all team & group members.
       assigned_users_teams.forEach(function (element, idx) {
         handle_add_users_teams_request(false, element['id'], true, true, function () {
@@ -302,6 +309,10 @@ jQuery(function ($) {
           // Execute callback
           callback();
 
+          // Hide notice on final assignment.
+          if ( ++counter >= assigned_users_teams.length ) {
+            $(assign_users_teams_notice).fadeOut('fast');
+          }
         });
       });
     }
