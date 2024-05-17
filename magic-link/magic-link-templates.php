@@ -42,7 +42,7 @@ class Disciple_Tools_Magic_Links_Templates_Loader {
     } // End instance()
 
     public function __construct() {
-        add_action( 'after_setup_theme', function () {
+        add_action( 'disciple_tools_loaded', function () {
             self::load_templates();
         }, 200 );
     }
