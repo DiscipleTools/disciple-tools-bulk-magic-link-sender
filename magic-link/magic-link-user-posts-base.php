@@ -34,6 +34,21 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
          */
         $this->adjust_global_values_by_incoming_sys_type( $this->fetch_incoming_link_param( 'type' ) );
 
+        add_action( 'disciple_tools_loaded', [ $this, 'disciple_tools_loaded' ] );
+
+        /**
+         * Once adjustments have been made, proceed with parent instantiation!
+         */
+        $this->meta_key = $this->root . '_' . $this->type . '_magic_key';
+        parent::__construct();
+
+        /**
+         * user_app and module section
+         */
+        // add_filter( 'dt_settings_apps_list', [ $this, 'dt_settings_apps_list' ], 10, 1 );
+    }
+
+    public function disciple_tools_loaded(): void {
         $fields[] = [
             'id'    => 'comments',
             'label' => __( 'Comments', 'disciple_tools' ) // Special Case!
@@ -66,17 +81,6 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                 'ignore_ids' => [ 'comments' ]
             ]
         ];
-
-        /**
-         * Once adjustments have been made, proceed with parent instantiation!
-         */
-        $this->meta_key = $this->root . '_' . $this->type . '_magic_key';
-        parent::__construct();
-
-        /**
-         * user_app and module section
-         */
-        // add_filter( 'dt_settings_apps_list', [ $this, 'dt_settings_apps_list' ], 10, 1 );
     }
 
     public function register_front_end() {
