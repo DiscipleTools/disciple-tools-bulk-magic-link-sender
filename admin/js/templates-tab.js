@@ -219,7 +219,7 @@ jQuery(function ($) {
     title_translations: {},
     type: 'single-record',
     custom_fields: '',
-    show_recent_comments: false,
+    show_recent_comments: 0,
     send_submission_notifications: true,
     support_creating_new_items: false // Linked to type & only enabled for list-sub-assigned-contacts type.
   }, callback = function () {
@@ -270,7 +270,7 @@ jQuery(function ($) {
         $('#ml_main_col_template_details_type').val(data.type);
         $('.template-title-translate-but-label').text(Object.keys(data.title_translations).length);
         $('#ml_main_col_template_details_custom_fields').val(data.custom_fields);
-        $('#ml_main_col_template_details_show_recent_comments').prop('checked', data.show_recent_comments);
+        $('#ml_main_col_template_details_show_recent_comments').val(data.show_recent_comments === true ? 2 : Number(data.show_recent_comments));
         $('#ml_main_col_template_details_send_submission_notifications').prop('checked', data.send_submission_notifications);
         $(supports_create).prop('checked', data.support_creating_new_items);
         $(supports_create).prop( 'disabled', ( data.type === 'single-record' ) );
@@ -286,7 +286,7 @@ jQuery(function ($) {
       $('#ml_main_col_template_details_type').val(data.type);
       $('.template-title-translate-but-label').text(Object.keys(data.title_translations).length);
       $('#ml_main_col_template_details_custom_fields').val(data.custom_fields);
-      $('#ml_main_col_template_details_show_recent_comments').prop('checked', data.show_recent_comments);
+      $('#ml_main_col_template_details_show_recent_comments').val(data.show_recent_comments === true ? 2 : Number(data.show_recent_comments))
       $('#ml_main_col_template_details_send_submission_notifications').prop('checked', data.send_submission_notifications);
       $(supports_create).prop('checked', data.support_creating_new_items);
       $(supports_create).prop( 'disabled', ( data.type === 'single-record' ) );
@@ -692,7 +692,7 @@ jQuery(function ($) {
     let title = $('#ml_main_col_template_details_title').val();
     let title_translations = JSON.parse(decodeURIComponent($('#ml_main_col_template_details_title_translate_but').data('field_translations')));
     let type = $('#ml_main_col_template_details_type').val();
-    let show_recent_comments = $('#ml_main_col_template_details_show_recent_comments').prop('checked');
+    let show_recent_comments = $('#ml_main_col_template_details_show_recent_comments').val();
     let send_submission_notifications = $('#ml_main_col_template_details_send_submission_notifications').prop('checked');
     let support_creating_new_items = $('#ml_main_col_template_details_supports_create').prop('checked');
     let message = $('#ml_main_col_msg_textarea').val();
@@ -732,7 +732,7 @@ jQuery(function ($) {
         'title': title,
         'title_translations': title_translations,
         'type': type,
-        'show_recent_comments': show_recent_comments,
+        'show_recent_comments': Number(show_recent_comments),
         'send_submission_notifications': send_submission_notifications,
         'support_creating_new_items': support_creating_new_items,
         'message': message,
