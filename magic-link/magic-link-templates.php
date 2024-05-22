@@ -1537,7 +1537,8 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
 
                             // If requested, display recent comments
                             if ( $this->template['show_recent_comments'] ) {
-                                $recent_comments = DT_Posts::get_post_comments( $this->post['post_type'], $this->post['ID'], false, 'all', [ 'number' => 2 ] );
+                                $comment_count = is_bool( $this->template['show_recent_comments'] ) ? 2 : intval( $this->template['show_recent_comments'] );
+                                $recent_comments = DT_Posts::get_post_comments( $this->post['post_type'], $this->post['ID'], false, 'all', [ 'number' => $comment_count ] );
                                 foreach ( $recent_comments['comments'] ?? [] as $comment ) {
                                     ?>
                                     <tr class="dt-comment-tr">

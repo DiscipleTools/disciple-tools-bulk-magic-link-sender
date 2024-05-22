@@ -465,9 +465,9 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
                 </td>
             </tr>
             <tr>
-                <td style="vertical-align: middle;">Show Recent Comments</td>
+                <td style="vertical-align: middle;">Number for recent comments to show. To disable set the value to 0.</td>
                 <td>
-                    <input type="checkbox" id="ml_main_col_template_details_show_recent_comments"
+                    <input type="number" id="ml_main_col_template_details_show_recent_comments"
                            value=""/>
                 </td>
             </tr>
