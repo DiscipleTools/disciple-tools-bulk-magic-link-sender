@@ -1491,9 +1491,8 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         $params = dt_recursive_sanitize_array( $params );
 
         // Update logged-in user state if required accordingly, based on their sys_type
-        if ( ! is_user_logged_in() ) {
-            $this->update_user_logged_in_state( $params['sys_type'], $params['parts']['post_id'] );
-        }
+        $this->update_user_logged_in_state( $params['sys_type'], $params['parts']['post_id'] );
+
         $this->determine_language_locale( $params['parts'] );
 
         $link_obj = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $params['parts']['instance_id'] );
@@ -1537,9 +1536,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         $params = dt_recursive_sanitize_array( $params );
 
         // Update logged-in user state if required accordingly, based on their sys_type
-        if ( ! is_user_logged_in() ) {
-            $this->update_user_logged_in_state( $params['sys_type'], $params['parts']['post_id'] );
-        }
+        $this->update_user_logged_in_state( $params['sys_type'], $params['parts']['post_id'] );
 
         $updates = [];
         $comments = [];
@@ -1730,9 +1727,8 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         $params = dt_recursive_sanitize_array( $params );
 
         // Update logged-in user state if required accordingly, based on their sys_type
-        if ( ! is_user_logged_in() ) {
-            $this->update_user_logged_in_state( $params['sys_type'], $params['parts']['post_id'] );
-        }
+        $this->update_user_logged_in_state( $params['sys_type'], $params['parts']['post_id'] );
+
         $this->determine_language_locale( $params['parts'] );
 
         // Fetch parent link object.
