@@ -1491,7 +1491,9 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         $params = dt_recursive_sanitize_array( $params );
 
         // Update logged-in user state if required accordingly, based on their sys_type
-        $this->update_user_logged_in_state( $params['sys_type'], $params['parts']['post_id'] );
+        if ( ! is_user_logged_in() ) {
+            $this->update_user_logged_in_state( $params['sys_type'], $params['parts']['post_id'] );
+        }
 
         $this->determine_language_locale( $params['parts'] );
 
@@ -1536,7 +1538,9 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         $params = dt_recursive_sanitize_array( $params );
 
         // Update logged-in user state if required accordingly, based on their sys_type
-        $this->update_user_logged_in_state( $params['sys_type'], $params['parts']['post_id'] );
+        if ( ! is_user_logged_in() ) {
+            $this->update_user_logged_in_state( $params['sys_type'], $params['parts']['post_id'] );
+        }
 
         $updates = [];
         $comments = [];
@@ -1556,7 +1560,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                 case 'key_select':
                 case 'date':
                 case 'boolean':
-                    $updates[ $field['id'] ] = $field['value'];
+                    $updates[ $field['id'] ] = $field['value'] ?? '';
                     break;
 
                 case 'communication_channel':
@@ -1681,6 +1685,11 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         // Update specified post record
         if ( empty( $params['post_id'] ) ) {
             // if ID is empty ("0", 0, or generally falsy), create a new post
+            // Assign new item to parent post record.
+            if ( isset( $params['parts']['post_id'] ) ) {
+                $updates['assigned_to'] = $params['parts']['post_id'];
+            }
+
             $updated_post = DT_Posts::create_post( $params['post_type'], $updates, false, false );
         } else {
             $updated_post = DT_Posts::update_post( $params['post_type'], $params['post_id'], $updates, false, false );
@@ -1727,7 +1736,9 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         $params = dt_recursive_sanitize_array( $params );
 
         // Update logged-in user state if required accordingly, based on their sys_type
-        $this->update_user_logged_in_state( $params['sys_type'], $params['parts']['post_id'] );
+        if ( ! is_user_logged_in() ) {
+            $this->update_user_logged_in_state( $params['sys_type'], $params['parts']['post_id'] );
+        }
 
         $this->determine_language_locale( $params['parts'] );
 
