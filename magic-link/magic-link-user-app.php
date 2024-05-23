@@ -889,7 +889,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
         $params = dt_recursive_sanitize_array( $params );
 
         // Update logged-in user state if required accordingly, based on their sys_type
-        if ( ! is_user_logged_in() ) {
+        if ( ! is_user_logged_in() ){
             $this->update_user_logged_in_state( $params['sys_type'], $params['parts']['post_id'] );
         }
 
@@ -924,7 +924,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
         $params = dt_recursive_sanitize_array( $params );
 
         // Update logged-in user state if required accordingly, based on their sys_type
-        if ( !is_user_logged_in() ){
+        if ( ! is_user_logged_in() ) {
             $this->update_user_logged_in_state( $params['sys_type'], $params['parts']['post_id'] );
         }
 
