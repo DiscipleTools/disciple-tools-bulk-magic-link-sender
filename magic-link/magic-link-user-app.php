@@ -557,6 +557,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
              */
 
             jQuery('#add_new').on('click', function () {
+                jQuery('#contact_name').html('');
                 window.get_contact(0);
             });
 
