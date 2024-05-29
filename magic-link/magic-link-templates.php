@@ -668,25 +668,17 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                     }
                                 };
                                 let post_date = jsObject['post'][field_id];
-                                if (post_date !== undefined) {
-                                    date_config['startDate'] = moment.unix(post_date['timestamp']);
-                                    jQuery(tr).find('#' + field_id).val(window.SHAREDFUNCTIONS.formatDate(post_date['timestamp']));
-                                } else {
-                                    jQuery(tr).find('#' + field_id).val('');
-                                    field_meta.val('');
-                                }
+                                const formatted_date = (post_date?.timestamp !== undefined) ? window.SHAREDFUNCTIONS.formatDate(post_date['timestamp']) : '';
+
+                                jQuery(tr).find('#' + field_id).val(formatted_date);
+                                field_meta.val(post_date?.formatted || '');
 
                                 jQuery(tr).find('#' + field_id).daterangepicker(date_config, function (start, end, label) {
-                                    if (start) {
+                                  if (start) {
                                         jQuery(tr).find('#' + field_id).val(start.format('MMMM D, YYYY'));
                                         field_meta.val(moment.unix(start.unix()).format('YYYY-MM-DD'));
                                     }
                                 });
-
-                                // If post timestamp available, set default hidden meta field value
-                                if (post_date !== undefined) {
-                                    field_meta.val(moment.unix(post_date['timestamp']).format('YYYY-MM-DD'));
-                                }
 
                                 /**
                                  * Clear Date
