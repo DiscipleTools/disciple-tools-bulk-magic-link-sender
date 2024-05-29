@@ -305,6 +305,10 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
      */
     public function footer_javascript() {
         $link_obj = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $this->fetch_incoming_link_param( 'id' ) );
+        $sys_type = $this->fetch_incoming_link_param( 'type' );
+        if ( empty( $sys_type ) ) {
+            $sys_type = 'wp_user';
+        }
         ?>
         <script>
             let jsObject = [<?php echo json_encode( [
@@ -315,7 +319,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                 'lang'           => $this->fetch_incoming_link_param( 'lang' ),
                 'field_settings' => $this->localized_selected_field_settings( $this->sub_post_type, $link_obj ),
                 'link_obj_id'    => $link_obj,
-                'sys_type'       => $this->fetch_incoming_link_param( 'type' ),
+                'sys_type'       => $sys_type,
                 'translations'   => [
                     'update_success' => __( 'Update Successful!', 'disciple-tools-bulk-magic-link-sender' ),
                     'validation' => [
@@ -669,6 +673,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
             }
 
             jQuery('#add_new').on('click', function () {
+                jQuery('#post_name').html('');
                 window.get_post(0);
             });
 
@@ -964,10 +969,11 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                     </div>
                     <br>
 
-                    <?php if ( isset( $link_obj ) && property_exists( $link_obj, 'type_config' ) && property_exists( $link_obj->type_config, 'supports_create' ) && $link_obj->type_config->supports_create ): ?>
+                    <?php if ( ( isset( $link_obj ) && property_exists( $link_obj, 'type_config' ) && property_exists( $link_obj->type_config, 'supports_create' ) && $link_obj->type_config->supports_create ) || ( ! property_exists( $link_obj, 'type_config' ) ) ): ?>
                         <button id="add_new" class="button select-button">
                             <?php esc_html_e( 'Add New', 'disciple_tools' ) ?>
                         </button>
+                        <br><br>
                     <?php endif; ?>
                 </div>
 
@@ -1206,11 +1212,10 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         }
     }
 
-    public function post_form( $post, $fields, $post_settings, $link_obj ) {
+    public function post_form( $post, $fields, $post_settings, $connections_enabled ) {
 
         $post_tiles = DT_Posts::get_post_tiles( $this->sub_post_type );
         $this->post_field_settings = $post_settings['fields'];
-        $connections_enabled = isset( $link_obj->type_config->enable_connection_fields ) && $link_obj->type_config->enable_connection_fields;
 
         $wc_types = [ 'key_select', 'tags', 'multi_select', 'text', 'textarea', 'number', 'date', 'connection', 'location' ];
         if ( !empty( $fields ) && !empty( $this->post_field_settings ) ) {
@@ -1497,7 +1502,36 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
 
         $this->determine_language_locale( $params['parts'] );
 
-        $link_obj = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $params['parts']['instance_id'] );
+        // Source type fields accordingly, based on detected instance_id.
+        $type_fields = [];
+        $connections_enabled = false;
+        if ( ! empty( $params['parts']['instance_id'] ) ) {
+            $link_obj = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $params['parts']['instance_id'] );
+            $type_fields = ! empty( $link_obj->type_fields ) ? $link_obj->type_fields : [];
+            $connections_enabled = isset( $link_obj->type_config->enable_connection_fields ) && $link_obj->type_config->enable_connection_fields;
+        }
+
+        // Fetch directly from source, if link_obj instance lookup has failed to produce the goods!
+        if ( empty( $type_fields ) ) {
+            $connections_enabled = true;
+            $magic_link_types = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_magic_link_types();
+            foreach ( $magic_link_types as $magic_link_type ) {
+                if ( isset( $magic_link_type['meta_key'], $params['parts']['meta_key'] ) && ( $magic_link_type['meta_key'] === $params['parts']['meta_key'] ) ) {
+
+                    // Reshape identified type fields.
+                    foreach ( $magic_link_type['meta']['fields'] ?? [] as $meta_field ) {
+                        if ( isset( $meta_field['id'], $meta_field['field_type'] ) ) {
+                            $type_fields[] = [
+                                'id' => $meta_field['id'],
+                                'type' => $meta_field['field_type'],
+                                'label' => $meta_field['label'] ?? '',
+                                'enabled' => true
+                            ];
+                        }
+                    }
+                }
+            }
+        }
 
         // Fetch corresponding groups post record
         $response = [];
@@ -1511,11 +1545,11 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         }
         if ( ! empty( $post ) && ! is_wp_error( $post ) ) {
             $post_settings = DT_Posts::get_post_settings( $this->sub_post_type );
-            $fields = json_decode( json_encode( $link_obj->type_fields ), true );
+            $fields = json_decode( json_encode( $type_fields ), true );
 
             // start output buffer to capture markup output
             ob_start();
-            $this->post_form( $post, $fields, $post_settings, $link_obj );
+            $this->post_form( $post, $fields, $post_settings, $connections_enabled );
             $response['form_html'] = ob_get_clean();
 
             $response['success']  = true;
@@ -1728,7 +1762,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
 
     public function get_field_options( WP_REST_Request $request ) {
         $params = $request->get_params();
-        if ( ! isset( $params['parts'], $params['action'], $params['field'], $params['sys_type'], $params['link_obj_id'] ) ) {
+        if ( ! isset( $params['parts'], $params['action'], $params['field'], $params['sys_type'] ) ) {
             return new WP_Error( __METHOD__, 'Missing parameters', [ 'status' => 400 ] );
         }
 
@@ -1743,7 +1777,11 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         $this->determine_language_locale( $params['parts'] );
 
         // Fetch parent link object.
-        $link_obj = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $params['link_obj_id'] );
+        if ( isset( $params['link_obj_id'] ) ) {
+            $link_obj = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $params['link_obj_id'] );
+        } else {
+            $link_obj = null;
+        }
 
         // get available post options for current field
         $options = [];
@@ -1753,8 +1791,10 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         if ( key_exists( $field, $post_settings['fields'] ) ) {
             $field_settings = $post_settings['fields'][$field];
 
-            if ( ( $field_settings['type'] === 'connection' ) && ( isset( $link_obj->type_config->enable_connection_fields ) && $link_obj->type_config->enable_connection_fields ) ) {
-                $options = DT_Posts::get_viewable_compact( $field_settings['post_type'], $query ?? '' );
+            if ( $field_settings['type'] === 'connection' ) {
+                if ( empty( $link_obj ) || isset( $link_obj->type_config->enable_connection_fields ) && $link_obj->type_config->enable_connection_fields ) {
+                    $options = DT_Posts::get_viewable_compact( $field_settings['post_type'], $query ?? '' );
+                }
             } else if ( $field_settings['type'] === 'tags' ) {
                 $options = DT_Posts::get_multi_select_options( $this->sub_post_type, $field, $query );
             } else if ( $field_settings['type'] === 'location' ) {
@@ -1763,8 +1803,6 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                     'filter' => isset( $params['filter'] ) ? $params['filter'] : 'all',
                 ] );
             }
-        // } else {
-            //can't find field
         }
 
         // Fetch corresponding groups post record
