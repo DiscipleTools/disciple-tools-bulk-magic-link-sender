@@ -662,6 +662,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                     singleDatePicker: true,
                                     timePicker: false,
                                     autoUpdateInput: false,
+                                    showDropdowns: true,
                                     locale: {
                                         format: 'MMMM D, YYYY'
                                     }
@@ -669,7 +670,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                 let post_date = jsObject['post'][field_id];
                                 if (post_date !== undefined) {
                                     date_config['startDate'] = moment.unix(post_date['timestamp']);
-                                    jQuery(tr).find('#' + field_id).val(moment.unix(post_date['timestamp']).format('MMMM D, YYYY'));
+                                    jQuery(tr).find('#' + field_id).val(window.SHAREDFUNCTIONS.formatDate(post_date['timestamp']));
                                 } else {
                                     jQuery(tr).find('#' + field_id).val('');
                                     field_meta.val('');
