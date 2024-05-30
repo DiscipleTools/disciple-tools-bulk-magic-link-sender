@@ -803,7 +803,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                  * Load
                                  */
 
-                                // If available, load previous post record tags
+                                    // If available, load previous post record tags
                                 let typeahead_tags = window.Typeahead[typeahead_tags_field_input];
                                 let post_tags = jsObject['post'][field_id];
                                 if ((post_tags !== undefined) && typeahead_tags) {
@@ -1466,7 +1466,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                             'communication_channel',
                                             'location',
                                             'location_meta'
-                                    ] ) ) {
+                                        ] ) ) {
                                         continue;
                                     }
 
@@ -1640,7 +1640,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         }
 
         // Sanitize and fetch user id
-        $params = dt_recursive_sanitize_array( $params );
+//        $params = dt_recursive_sanitize_array( $params );
 
         // Update logged-in user state, if required
         if ( !is_user_logged_in() ){
@@ -1655,13 +1655,16 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                 case 'number':
                 case 'textarea':
                 case 'text':
-                case 'key_select':
                 case 'date':
                 case 'boolean':
+                    $field = dt_recursive_sanitize_array( $field );
                     $updates[$field['id']] = $field['value'];
                     break;
-
+                case 'key_select':
+                    $updates[$field['id']] = wp_slash( $field['value'] );
+                    break;
                 case 'communication_channel':
+                    $field = dt_recursive_sanitize_array( $field );
                     $updates[$field['id']] = [];
 
                     // First, capture additions and updates
@@ -1686,6 +1689,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                     break;
 
                 case 'multi_select':
+                    $field = dt_recursive_sanitize_array( $field );
                     $options = [];
                     foreach ( $field['value'] ?? [] as $option ){
                         $entry = [];
@@ -1703,6 +1707,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                     break;
 
                 case 'location':
+                    $field = dt_recursive_sanitize_array( $field );
                     $locations = [];
                     foreach ( $field['value'] ?? [] as $location ){
                         $entry = [];
@@ -1727,6 +1732,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                     break;
 
                 case 'location_meta':
+                    $field = dt_recursive_sanitize_array( $field );
                     $locations = [];
 
                     // Capture selected location, if available; or prepare shape
@@ -1754,6 +1760,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                     break;
 
                 case 'tags':
+                    $field = dt_recursive_sanitize_array( $field );
                     $tags = [];
                     foreach ( $field['value'] ?? [] as $tag ){
                         $entry = [];
@@ -1809,6 +1816,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
 
         // Next, any identified custom fields, are to be added as comments
         foreach ( $params['fields']['custom'] ?? [] as $field ) {
+            $field = dt_recursive_sanitize_array( $field );
             if ( ! empty( $field['value'] ) ) {
                 $updated_comment = DT_Posts::add_post_comment( $updated_post['post_type'], $updated_post['ID'], $field['value'], 'comment', [], false );
                 if ( empty( $updated_comment ) || is_wp_error( $updated_comment ) ) {
