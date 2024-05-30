@@ -1470,7 +1470,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                                             'communication_channel',
                                             'location',
                                             'location_meta'
-                                        ] ) ) {
+                                    ] ) ) {
                                         continue;
                                     }
 
@@ -1665,7 +1665,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                     $updates[$field['id']] = $field['value'];
                     break;
                 case 'key_select':
-                    $updates[$field['id']] = wp_slash( $field['value'] );
+                    $updates[$field['id']] = $field['value'];
                     break;
                 case 'communication_channel':
                     $field = dt_recursive_sanitize_array( $field );
