@@ -1129,6 +1129,10 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                         let field_template_type = jQuery(tr).find('#form_content_table_field_template_type').val();
                         let field_meta = jQuery(tr).find('#form_content_table_field_meta');
 
+                        let template_fields = jsObject.template.fields.filter(f => f.id === field_id);
+                        if (template_fields && template_fields.length && template_fields[0].readonly) {
+                            return;
+                        }
                         let selector = '#' + field_id;
                         if (field_template_type === 'dt') {
                             switch (field_type) {
