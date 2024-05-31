@@ -344,7 +344,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                 'translations'            => [
                     'regions_of_focus' => __( 'Regions of Focus', 'disciple_tools' ),
                     'all_locations'    => __( 'All Locations', 'disciple_tools' ),
-                    'update_success' => __( 'Update Successful!', 'disciple_tools' ),
+                    'update_success' => __( 'Thank you for your successful submission. You may return to the form and re-submit if changes are needed.', 'disciple_tools' ),
                     'validation' => [
                         'number' => [
                             'out_of_range' => __( 'Value out of range!', 'disciple_tools' )
@@ -1093,9 +1093,13 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
              */
 
             jQuery('#content_submit_but').on("click", function () {
-                let spinner = jQuery('.update-loading-spinner');
+                const alert_notice = jQuery('#alert_notice');
+                const spinner = jQuery('.update-loading-spinner');
+                const submit_but = jQuery('#content_submit_but');
                 let id = jQuery('#post_id').val();
                 let post_type = jQuery('#post_type').val();
+
+                alert_notice.fadeOut('fast');
 
                 // Reset error message field
                 let error = jQuery('#error');
@@ -1227,7 +1231,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                     });
 
                     // Disable submission button during this process.
-                    jQuery('#content_submit_but').prop('disabled', true);
+                    submit_but.prop('disabled', true);
 
                     // Final sanity check of submitted payload fields.
                     let validated = null;
@@ -1240,13 +1244,12 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                             jsObject.translations.validation);
                     }
                     if (validated && !validated['success']) {
-                        if (typeof window.ml_utility_submit_error_function === "function") {
-                            window.ml_utility_submit_error_function(validated['message'], function () {
-                                jQuery('#content_submit_but').prop('disabled', false);
-                            });
-                        } else {
-                            jQuery('#content_submit_but').prop('disabled', false);
-                        }
+                        alert_notice.find('#alert_notice_content').text(validated['message']);
+                        alert_notice.fadeIn('slow', function () {
+                            spinner.removeClass('active');
+                            submit_but.prop('disabled', false);
+                            document.documentElement.scrollTop = 0;
+                        });
                     } else {
                         spinner.addClass('active');
 
@@ -1262,43 +1265,28 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                             }
 
                         }).done(function (data) {
+                            alert_notice.find('#alert_notice_content').text(data['success'] ? jsObject.translations.update_success : data['message']);
+                            alert_notice.fadeIn('slow', function () {
 
-                            // If successful, refresh page, otherwise; display error message
-                            if (data['success']) {
-                                if (typeof window.ml_utility_submit_success_function === "function") {
-                                    window.ml_utility_submit_success_function(jsObject.translations.update_success, function () {
-                                        window.location.reload();
-                                    });
-                                } else {
-                                    window.location.reload();
-                                }
+                                // Reactivate submit button and scroll up to notice.
+                                spinner.removeClass('active');
+                                submit_but.prop('disabled', false);
+                                document.documentElement.scrollTop = 0;
 
-                            } else {
-                                if (typeof window.ml_utility_submit_error_function === "function") {
-                                    window.ml_utility_submit_error_function(data['message'], function () {
-                                        console.log(data);
-                                        jQuery('#error').html('');
-                                        jQuery('#content_submit_but').prop('disabled', false);
-                                    });
-                                } else {
-                                    console.log(data);
-                                    jQuery('#error').html('');
-                                    jQuery('#content_submit_but').prop('disabled', false);
+                                // Refresh any identified record ids.
+                                if (data?.id > 0) {
+                                    window.get_assigned_post(payload['post_type'], data['id']);
                                 }
-                            }
+                            });
 
                         }).fail(function (e) {
-                            if (typeof window.ml_utility_submit_error_function === "function") {
-                                window.ml_utility_submit_error_function(e['responseJSON']['message'], function () {
-                                    console.log(e);
-                                    jQuery('#error').html('');
-                                    jQuery('#content_submit_but').prop('disabled', false);
-                                });
-                            } else {
-                                console.log(e);
-                                jQuery('#error').html('');
-                                jQuery('#content_submit_but').prop('disabled', false);
-                            }
+                            console.log(e);
+                            alert_notice.find('#alert_notice_content').text(e['responseJSON']['message']);
+                            alert_notice.fadeIn('slow', function () {
+                                spinner.removeClass('active');
+                                submit_but.prop('disabled', false);
+                                document.documentElement.scrollTop = 0;
+                            });
                         });
                     }
                 }
@@ -1330,6 +1318,15 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                 <?php
             }
             ?>
+            <div id="alert_notice" style="display: none; background-color: rgba(142,195,81,0.2); border-radius: 5px; padding: 2em; margin: 1em 0">
+                <div style="display: flex; grid-gap: 1em">
+                    <div style="display: flex; align-items: center">
+                        <img style="width: 2em; filter: invert(52%) sepia(77%) saturate(383%) hue-rotate(73deg) brightness(98%) contrast(83%);"
+                             src="<?php echo esc_url( plugin_dir_url( __FILE__ ) . 'exclamation-circle.svg' ); ?>" alt="Exclamation Circle"/>
+                    </div>
+                    <div id="alert_notice_content" style="display: flex; align-items: center"></div>
+                </div>
+            </div>
             <div id="content">
 
                 <!-- TEMPLATE MESSAGE -->
@@ -1802,6 +1799,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
 
         if ( empty( $updated_post ) || is_wp_error( $updated_post ) ) {
             return [
+                'id' => 0,
                 'success' => false,
                 'message' => 'Unable to update/create contact record details!'
             ];
@@ -1813,6 +1811,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                 $updated_comment = DT_Posts::add_post_comment( $updated_post['post_type'], $updated_post['ID'], $field['value'], 'comment', [], false );
                 if ( empty( $updated_comment ) || is_wp_error( $updated_comment ) ) {
                     return [
+                        'id' => $updated_post['ID'],
                         'success' => false,
                         'message' => 'Unable to add comment to record details!'
                     ];
@@ -1829,6 +1828,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
 
         // Finally, return successful response
         return [
+            'id' => $updated_post['ID'],
             'success' => true,
             'message' => ''
         ];
