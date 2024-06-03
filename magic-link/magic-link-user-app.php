@@ -140,26 +140,16 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
 
     public function dt_magic_url_base_allowed_js( $allowed_js ) {
         // @todo add or remove js files with this filter
-
-        $allowed_js[] = 'toastify-js';
-        $allowed_js[] = Disciple_Tools_Bulk_Magic_Link_Sender_API::get_magic_link_utilities_script_handle();
-
         return $allowed_js;
     }
 
     public function dt_magic_url_base_allowed_css( $allowed_css ) {
         // @todo add or remove js files with this filter
 
-        $allowed_css[] = 'toastify-js-css';
-
         return $allowed_css;
     }
 
     public function wp_enqueue_scripts() {
-        wp_enqueue_style( 'toastify-js-css', 'https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.css', [], '1.12.0' );
-        wp_enqueue_script( 'toastify-js', 'https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.js', [ 'jquery' ], '1.12.0' );
-
-        Disciple_Tools_Bulk_Magic_Link_Sender_API::enqueue_magic_link_utilities_script();
     }
 
     /**
@@ -676,16 +666,16 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                 </div>
             </div>
             <hr>
-            <div id="alert_notice" style="display: none; background-color: rgba(142,195,81,0.2); border-radius: 5px; padding: 2em; margin: 1em 0">
-                <div style="display: flex; grid-gap: 1em">
-                    <div style="display: flex; align-items: center">
-                        <img style="width: 2em; filter: invert(52%) sepia(77%) saturate(383%) hue-rotate(73deg) brightness(98%) contrast(83%);"
-                             src="<?php echo esc_url( plugin_dir_url( __FILE__ ) . 'exclamation-circle.svg' ); ?>" alt="Exclamation Circle"/>
-                    </div>
-                    <div id="alert_notice_content" style="display: flex; align-items: center"></div>
-                </div>
-            </div>
             <div id="content">
+                <div id="alert_notice" style="display: none; border-style: solid; border-width: 2px; border-color: #4caf50; background-color: rgba(142,195,81,0.2); border-radius: 5px; padding: 2em; margin: 1em 0">
+                    <div style="display: flex; grid-gap: 1em">
+                        <div style="display: flex; align-items: center">
+                            <img style="width: 2em; filter: invert(52%) sepia(77%) saturate(383%) hue-rotate(73deg) brightness(98%) contrast(83%);"
+                                 src="<?php echo esc_url( plugin_dir_url( __FILE__ ) . 'exclamation-circle.svg' ); ?>" alt="Exclamation Circle"/>
+                        </div>
+                        <div id="alert_notice_content" style="display: flex; align-items: center"></div>
+                    </div>
+                </div>
                 <div id="assigned_contacts_div" style="display: none;">
                     <h3><?php esc_html_e( 'Contacts', 'disciple_tools' ) ?> [ <span id="total">0</span> ]</h3>
                     <hr>

@@ -162,9 +162,6 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
 
         wp_enqueue_style( 'material-font-icons-css', 'https://cdn.jsdelivr.net/npm/@mdi/font@6.6.96/css/materialdesignicons.min.css', [], '6.6.96' );
 
-        wp_enqueue_style( 'toastify-js-css', 'https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.css', [], '1.12.0' );
-        wp_enqueue_script( 'toastify-js', 'https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.js', [ 'jquery' ], '1.12.0' );
-
         Disciple_Tools_Bulk_Magic_Link_Sender_API::enqueue_magic_link_utilities_script();
 
         $this->enqueue_web_component( 'form-components', 'index.js' );
@@ -178,7 +175,6 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         $allowed_js[] = 'mapbox-search-widget';
         $allowed_js[] = 'jquery-typeahead';
         $allowed_js[] = 'dtwc-form-components';
-        $allowed_js[] = 'toastify-js';
         $allowed_js[] = Disciple_Tools_Bulk_Magic_Link_Sender_API::get_magic_link_utilities_script_handle();
 
         return $allowed_js;
@@ -191,7 +187,6 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         $allowed_css[] = 'jquery-typeahead-css';
         $allowed_css[] = 'material-font-icons-css';
         $allowed_css[] = 'dtwc-light-css';
-        $allowed_css[] = 'toastify-js-css';
 
         return $allowed_css;
     }
@@ -944,16 +939,16 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                 <h2 id="title"><b><?php esc_html_e( 'Updates Needed', 'disciple_tools' ) ?></b></h2>
             </header>
             <hr>
-            <div id="alert_notice" style="display: none; background-color: rgba(142,195,81,0.2); border-radius: 5px; padding: 2em; margin: 1em 0">
-                <div style="display: flex; grid-gap: 1em">
-                    <div style="display: flex; align-items: center">
-                        <img style="width: 2em; filter: invert(52%) sepia(77%) saturate(383%) hue-rotate(73deg) brightness(98%) contrast(83%);"
-                             src="<?php echo esc_url( plugin_dir_url( __FILE__ ) . 'exclamation-circle.svg' ); ?>" alt="Exclamation Circle"/>
-                    </div>
-                    <div id="alert_notice_content" style="display: flex; align-items: center"></div>
-                </div>
-            </div>
             <div id="content">
+                <div id="alert_notice" style="display: none; border-style: solid; border-width: 2px; border-color: var(--dt-checkmark-color); background-color: rgba(142,195,81,0.2); border-radius: 5px; padding: 2em; margin: 1em 0">
+                    <div style="display: flex; grid-gap: 1em">
+                        <div style="display: flex; align-items: center">
+                            <img style="width: 2em; filter: invert(52%) sepia(77%) saturate(383%) hue-rotate(73deg) brightness(98%) contrast(83%);"
+                                 src="<?php echo esc_url( plugin_dir_url( __FILE__ ) . 'exclamation-circle.svg' ); ?>" alt="Exclamation Circle"/>
+                        </div>
+                        <div id="alert_notice_content" style="display: flex; align-items: center"></div>
+                    </div>
+                </div>
                 <div id="assigned_posts_div" style="display: none;">
                     <h3><?php echo esc_html( $this->sub_post_type_display ) ?> [ <span id="total">0</span> ]</h3>
                     <?php do_action( 'dt_magic_link_sender_after_heading', [ 'type' => $this->type ] ) ?>
