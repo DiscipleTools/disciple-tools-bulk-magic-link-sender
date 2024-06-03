@@ -31,7 +31,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @access public
  */
 function disciple_tools_bulk_magic_link_sender() {
-    $disciple_tools_magic_links_required_dt_theme_version = '1.20';
+    $disciple_tools_magic_links_required_dt_theme_version = '1.63';
     $wp_theme                                             = wp_get_theme();
     $version                                              = $wp_theme->version;
 
@@ -59,7 +59,7 @@ function disciple_tools_bulk_magic_link_sender() {
 
 }
 
-add_action( 'after_setup_theme', 'disciple_tools_bulk_magic_link_sender', 20 );
+add_action( 'disciple_tools_load_plugins', 'disciple_tools_bulk_magic_link_sender', 20 );
 
 /**
  * Singleton class for setting up the plugin.
