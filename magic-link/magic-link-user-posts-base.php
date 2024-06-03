@@ -162,9 +162,6 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
 
         wp_enqueue_style( 'material-font-icons-css', 'https://cdn.jsdelivr.net/npm/@mdi/font@6.6.96/css/materialdesignicons.min.css', [], '6.6.96' );
 
-        wp_enqueue_style( 'toastify-js-css', 'https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.css', [], '1.12.0' );
-        wp_enqueue_script( 'toastify-js', 'https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.js', [ 'jquery' ], '1.12.0' );
-
         Disciple_Tools_Bulk_Magic_Link_Sender_API::enqueue_magic_link_utilities_script();
 
         $this->enqueue_web_component( 'form-components', 'index.js' );
@@ -178,7 +175,6 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         $allowed_js[] = 'mapbox-search-widget';
         $allowed_js[] = 'jquery-typeahead';
         $allowed_js[] = 'dtwc-form-components';
-        $allowed_js[] = 'toastify-js';
         $allowed_js[] = Disciple_Tools_Bulk_Magic_Link_Sender_API::get_magic_link_utilities_script_handle();
 
         return $allowed_js;
@@ -191,7 +187,6 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         $allowed_css[] = 'jquery-typeahead-css';
         $allowed_css[] = 'material-font-icons-css';
         $allowed_css[] = 'dtwc-light-css';
-        $allowed_css[] = 'toastify-js-css';
 
         return $allowed_css;
     }
@@ -321,7 +316,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                 'link_obj_id'    => $link_obj,
                 'sys_type'       => $sys_type,
                 'translations'   => [
-                    'update_success' => __( 'Update Successful!', 'disciple-tools-bulk-magic-link-sender' ),
+                    'update_success' => __( 'Thank you for your successful submission. You may return to the form and re-submit if changes are needed.', 'disciple-tools-bulk-magic-link-sender' ),
                     'validation' => [
                         'number' => [
                             'out_of_range' => __( 'Value out of range!', 'disciple_tools' )
@@ -681,9 +676,13 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
              * Submit group details
              */
             jQuery('#content_submit_but').on("click", function () {
-                let spinner = jQuery('.update-loading-spinner');
+                const alert_notice = jQuery('#alert_notice');
+                const spinner = jQuery('.update-loading-spinner');
+                const submit_but = jQuery('#content_submit_but');
                 let id = jQuery('#post_id').val();
                 let post_type = jQuery('#post_type').val();
+
+                alert_notice.fadeOut('fast');
 
                 // Reset error message field
                 let error = jQuery('#error');
@@ -771,7 +770,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                     });
 
                     // Disable submission button during this process.
-                    jQuery('#content_submit_but').prop('disabled', true);
+                    submit_but.prop('disabled', true);
 
                     // Final sanity check of submitted payload fields.
                     let validated = null;
@@ -784,13 +783,12 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                             jsObject.translations.validation);
                     }
                     if (validated && !validated['success']) {
-                        if (typeof window.ml_utility_submit_error_function === "function") {
-                            window.ml_utility_submit_error_function(validated['message'], function () {
-                                jQuery('#content_submit_but').prop('disabled', false);
-                            });
-                        } else {
-                            jQuery('#content_submit_but').prop('disabled', false);
-                        }
+                        alert_notice.find('#alert_notice_content').text(validated['message']);
+                        alert_notice.fadeIn('slow', function () {
+                            spinner.removeClass('active');
+                            submit_but.prop('disabled', false);
+                            document.documentElement.scrollTop = 0;
+                        });
                     } else {
                         spinner.addClass('active');
 
@@ -806,43 +804,28 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                             }
 
                         }).done(function (data) {
+                            alert_notice.find('#alert_notice_content').text(data['success'] ? jsObject.translations.update_success : data['message']);
+                            alert_notice.fadeIn('slow', function () {
 
-                            // If successful, refresh page, otherwise; display error message
-                            if (data['success']) {
-                                if (typeof window.ml_utility_submit_success_function === "function") {
-                                    window.ml_utility_submit_success_function(jsObject.translations.update_success, function () {
-                                        window.location.reload();
-                                    });
-                                } else {
-                                    window.location.reload();
-                                }
+                                // Reactivate submit button and scroll up to notice.
+                                spinner.removeClass('active');
+                                submit_but.prop('disabled', false);
+                                document.documentElement.scrollTop = 0;
 
-                            } else {
-                                if (typeof window.ml_utility_submit_error_function === "function") {
-                                    window.ml_utility_submit_error_function(data['message'], function () {
-                                        console.log(data);
-                                        jQuery('#error').html('');
-                                        jQuery('#content_submit_but').prop('disabled', false);
-                                    });
-                                } else {
-                                    console.log(data);
-                                    jQuery('#error').html('');
-                                    jQuery('#content_submit_but').prop('disabled', false);
+                                // Refresh any identified record ids.
+                                if (data?.id > 0) {
+                                    window.get_post(data['id']);
                                 }
-                            }
+                            });
 
                         }).fail(function (e) {
-                            if (typeof window.ml_utility_submit_error_function === "function") {
-                                window.ml_utility_submit_error_function(e['responseJSON']['message'], function () {
-                                    console.log(e);
-                                    jQuery('#error').html('');
-                                    jQuery('#content_submit_but').prop('disabled', false);
-                                });
-                            } else {
-                                console.log(e);
-                                jQuery('#error').html('');
-                                jQuery('#content_submit_but').prop('disabled', false);
-                            }
+                            console.log(e);
+                            alert_notice.find('#alert_notice_content').text(e['responseJSON']['message']);
+                            alert_notice.fadeIn('slow', function () {
+                                spinner.removeClass('active');
+                                submit_but.prop('disabled', false);
+                                document.documentElement.scrollTop = 0;
+                            });
                         });
                     }
                 }
@@ -957,6 +940,15 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
             </header>
             <hr>
             <div id="content">
+                <div id="alert_notice" style="display: none; border-style: solid; border-width: 2px; border-color: var(--dt-checkmark-color); background-color: rgba(142,195,81,0.2); border-radius: 5px; padding: 2em; margin: 1em 0">
+                    <div style="display: flex; grid-gap: 1em">
+                        <div style="display: flex; align-items: center">
+                            <img style="width: 2em; filter: invert(52%) sepia(77%) saturate(383%) hue-rotate(73deg) brightness(98%) contrast(83%);"
+                                 src="<?php echo esc_url( plugin_dir_url( __FILE__ ) . 'exclamation-circle.svg' ); ?>" alt="Exclamation Circle"/>
+                        </div>
+                        <div id="alert_notice_content" style="display: flex; align-items: center"></div>
+                    </div>
+                </div>
                 <div id="assigned_posts_div" style="display: none;">
                     <h3><?php echo esc_html( $this->sub_post_type_display ) ?> [ <span id="total">0</span> ]</h3>
                     <?php do_action( 'dt_magic_link_sender_after_heading', [ 'type' => $this->type ] ) ?>
@@ -1733,6 +1725,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                 dt_write_log( $updated_post );
             }
             return [
+                'id' => 0,
                 'success' => false,
                 'message' => 'Unable to update record details!'
             ];
@@ -1745,6 +1738,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                     $updated_comment = DT_Posts::add_post_comment( $updated_post['post_type'], $updated_post['ID'], $comment, 'comment', [], false );
                     if ( empty( $updated_comment ) || is_wp_error( $updated_comment ) ) {
                         return [
+                            'id' => $updated_post['ID'],
                             'success' => false,
                             'message' => 'Unable to add comment to record details!'
                         ];
@@ -1755,6 +1749,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
 
         // Finally, return successful response
         return [
+            'id' => $updated_post['ID'],
             'success' => true,
             'message' => ''
         ];
