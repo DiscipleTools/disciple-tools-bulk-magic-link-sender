@@ -191,7 +191,7 @@ main {
     text-decoration: none;
     text-wrap: nowrap;
 }
-#detail .content {
+#detail-content {
     overflow-y: auto;
 }
 

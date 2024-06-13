@@ -87,7 +87,18 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
 
         $this->post = DT_Posts::get_post( $this->post_type, $this->parts['post_id'], true, false );
 
-//        $this->items = DT_Posts::search_viewable_post()
+        $query_fields = [];
+        if ( !empty( $this->template['connection_fields'] ) ) {
+            foreach ( $this->template['connection_fields'] as $field ) {
+                $query_fields[][$field] = [ $this->post['ID'] ];
+            }
+        }
+        $this->items = DT_Posts::list_posts( $this->record_post_type, [
+            'limit' => 1000,
+            'fields' => [
+                $query_fields
+            ]
+        ], false );
 
         /**
          * Attempt to load corresponding link object, if a valid incoming id has been detected.
@@ -123,24 +134,6 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
         wp_enqueue_style( 'dt-web-components-css', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/src/styles/light.css", [], $dtwc_version );
         wp_enqueue_script( 'dt-web-components-js', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/dist/index.min.js", $dtwc_version );
 
-        // <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
-        //      rel="stylesheet">
-        // Support Geolocation APIs
-//        if ( DT_Mapbox_API::get_key() ) {
-//            DT_Mapbox_API::load_mapbox_header_scripts();
-//            DT_Mapbox_API::load_mapbox_search_widget();
-//        }
-//
-//        // Support Typeahead APIs
-//        $path     = '/dt-core/dependencies/typeahead/dist/';
-//        $path_js  = $path . 'jquery.typeahead.min.js';
-//        $path_css = $path . 'jquery.typeahead.min.css';
-//        wp_enqueue_script( 'jquery-typeahead', get_template_directory_uri() . $path_js, [ 'jquery' ], filemtime( get_template_directory() . $path_js ) );
-//        wp_enqueue_style( 'jquery-typeahead-css', get_template_directory_uri() . $path_css, [], filemtime( get_template_directory() . $path_css ) );
-//
-//        wp_enqueue_style( 'toastify-js-css', 'https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.css', [], '1.12.0' );
-//        wp_enqueue_script( 'toastify-js', 'https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.js', [ 'jquery' ], '1.12.0' );
-//
         $mdi_version = '6.6.96';
         wp_enqueue_style( 'material-font-icons-css', "https://cdn.jsdelivr.net/npm/@mdi/font@$mdi_version/css/materialdesignicons.min.css", [], $mdi_version );
 
@@ -148,12 +141,6 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
     }
 
     public function dt_magic_url_base_allowed_js( $allowed_js ) {
-        // @todo add or remove js files with this filter
-        // example: $allowed_js[] = 'your-enqueue-handle';
-//        $allowed_js[] = 'mapbox-gl';
-//        $allowed_js[] = 'mapbox-cookie';
-//        $allowed_js[] = 'mapbox-search-widget';
-//        $allowed_js[] = 'google-search-widget';
         $allowed_js[] = 'dt-web-components-js';
         $allowed_js[] = 'ml-post-connections-js';
         $allowed_js[] = Disciple_Tools_Bulk_Magic_Link_Sender_API::get_magic_link_utilities_script_handle();
@@ -162,9 +149,6 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
     }
 
     public function dt_magic_url_base_allowed_css( $allowed_css ) {
-        // @todo add or remove js files with this filter
-        // example: $allowed_css[] = 'your-enqueue-handle';
-//        $allowed_css[] = 'mapbox-gl-css';
         $allowed_css[] = 'material-font-icons-css';
         $allowed_css[] = 'dt-web-components-css';
         $allowed_css[] = 'ml-post-connections-css';
@@ -239,7 +223,6 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
      * Writes javascript to the footer
      *
      * @see DT_Magic_Url_Base()->footer_javascript() for default state
-     * @todo remove if not needed
      */
     public function footer_javascript() {
         $localized_template_field_settings = $this->localized_template_selected_field_settings( $this->template );
@@ -251,8 +234,9 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                 'nonce'                   => wp_create_nonce( 'wp_rest' ),
                 'parts'                   => $this->parts,
                 'post'                    => $localized_post_field_settings,
+                'items'                   => $this->items,
                 'template'                => $this->template,
-                'field_settings' => $localized_template_field_settings,
+                'fieldSettings' => $localized_template_field_settings, //todo: should be for sub-type
                 'translations'            => [
                     'regions_of_focus' => __( 'Regions of Focus', 'disciple_tools' ),
                     'all_locations'    => __( 'All Locations', 'disciple_tools' ),
@@ -273,7 +257,9 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                         'open_modal'      => __( 'Open Modal', 'disciple_tools' )
                     ]
                 ]
-            ] ) ?>][0]
+            ] ) ?>][0];
+
+            const listItems = new Map(jsObject.items.posts.map((obj) => [obj.ID.toString(), obj]));
 
         </script>
         <?php
@@ -310,24 +296,23 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                     </div>
                 </div>
                 <ul class="items">
-                    <li><a href="javascript:togglePanels()">Item 1</a></li>
-                    <li><a href="javascript:togglePanels()">Item 2</a></li>
-                    <li><a href="javascript:togglePanels()">Item 3</a></li>
-                    <li><a href="javascript:togglePanels()">Item 4</a></li>
-                    <li><a href="javascript:togglePanels()">Item 5</a></li>
-                    <li><a href="javascript:togglePanels()">Item 6</a></li>
-                    <li><a href="javascript:togglePanels()">Item 7</a></li>
-                    <li><a href="javascript:togglePanels()">Item 8</a></li>
-                    <li><a href="javascript:togglePanels()">Item 9</a></li>
-                    <li><a href="javascript:togglePanels()">Item 10</a></li>
-                    <li><a href="javascript:togglePanels()">Item 11</a></li>
+                <?php if ( isset( $this->items['posts'] ) && count( $this->items['posts'] ) > 0 ): ?>
+                <?php foreach ( $this->items['posts'] as $item ): ?>
+                    <li>
+                        <a href="javascript:loadPostDetail(<?php echo esc_attr( $item['ID'] ) ?>)">
+                            <?php echo esc_html( $item['name'] ) ?>
+                        </a>
+                    </li>
+                <?php endforeach; ?>
+                <?php endif; ?>
                 </ul>
             </div>
             <div id="detail" class="-is-expanded">
                 <header>
-                    <button class="details-toggle mdi mdi-arrow-left"></button>
-                    <h2>Detail Title</h2>
+                    <button class="details-toggle mdi mdi-arrow-left" onclick="togglePanels()"></button>
+                    <h2 id="detail-title"></h2>
 
+                    <!--
                     <ul class="tabs">
                         <li><a href="#status">Status</a></li>
                         <li><a href="#details">Details</a></li>
@@ -335,71 +320,20 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                         <li><a href="#other">Other</a></li>
                         <li><a href="#comments">Comments & Activity</a></li>
                     </ul>
+                    -->
                 </header>
 
-                <div class="content">
-                    <details id="status" open>
-                        <summary>Status</summary>
-                        <div>
-                            Status form elements here...
-                            <dt-text label="DT Field Name" name="dt-field-name" />
-                            <p><label>Field Name</label><input type="text" /></p>
-                            <p><label>Field Name</label><input type="text" /></p>
-                            <p><label>Field Name</label><input type="text" /></p>
-                            <p><label>Field Name</label><input type="text" /></p>
-                            <p><label>Field Name</label><input type="text" /></p>
-                        </div>
-                    </details>
-
-                    <details id="details" open>
-                        <summary>Details</summary>
-                        <div>
-                            Detail form elements here...
-                            <p><label>Field Name</label><input type="text" /></p>
-                            <p><label>Field Name</label><input type="text" /></p>
-                            <p><label>Field Name</label><input type="text" /></p>
-                            <p><label>Field Name</label><input type="text" /></p>
-                            <p><label>Field Name</label><input type="text" /></p>
-                        </div>
-                    </details>
-
-                    <details id="faith" open>
-                        <summary>Faith</summary>
-                        <div>
-                            Faith form elements here...
-                            <p><label>Field Name</label><input type="text" /></p>
-                            <p><label>Field Name</label><input type="text" /></p>
-                            <p><label>Field Name</label><input type="text" /></p>
-                            <p><label>Field Name</label><input type="text" /></p>
-                            <p><label>Field Name</label><input type="text" /></p>
-                        </div>
-                    </details>
-
-                    <details id="other" open>
-                        <summary>Other</summary>
-                        <div>
-                            Other form elements here...
-                            <p><label>Field Name</label><input type="text" /></p>
-                            <p><label>Field Name</label><input type="text" /></p>
-                            <p><label>Field Name</label><input type="text" /></p>
-                            <p><label>Field Name</label><input type="text" /></p>
-                            <p><label>Field Name</label><input type="text" /></p>
-                        </div>
-                    </details>
-
-                    <details id="comments" open>
-                        <summary>Comments</summary>
-                        <div>
-                            Comments and activity here...
-                            <p><label>Field Name</label><input type="text" /></p>
-                            <p><label>Field Name</label><input type="text" /></p>
-                            <p><label>Field Name</label><input type="text" /></p>
-                            <p><label>Field Name</label><input type="text" /></p>
-                            <p><label>Field Name</label><input type="text" /></p>
-                        </div>
-                    </details>
-                    <pre><code><?php echo json_encode( $this->template, JSON_PRETTY_PRINT ) ?></code></pre>
+                <div id="detail-content">
                 </div>
+                <?php /* <pre><code><?php echo json_encode( $this->template, JSON_PRETTY_PRINT ) ?></code></pre> */ ?>
+                <template id="post-detail-template">
+                    <dt-tile id="status" open>
+                        <dt-text label="Name" name="name" />
+                    </dt-tile>
+                </template>
+                <template id="post-loading-template">
+                    <div>Loading...</div>
+                </template>
             </div>
         </main>
         <?php
