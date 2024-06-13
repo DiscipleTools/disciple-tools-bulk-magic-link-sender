@@ -445,7 +445,10 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
                 </td>
             </tr>
             <tr class="connection-field-row" style="display: none;">
-                <td style="vertical-align: middle;">Connection Field</td>
+                <td style="vertical-align: middle;">
+                    Connection Field
+                    <div style="opacity: 0.5">Which field on the listed post type should contain the parent post</div>
+                </td>
                 <td>
                     <select style="min-width: 100%;" id="ml_main_col_template_details_connection" multiple></select>
                 </td>

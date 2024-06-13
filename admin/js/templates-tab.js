@@ -385,9 +385,9 @@ jQuery(function ($) {
     let post_types = window.dt_magic_links.dt_post_types;
 
     // get connection fields between parent and child type
-    const fields = post_types[post_type]['fields']
+    const fields = post_types[record_post_type]['fields']
       .filter((field) => {
-        return field.type === 'connection' && field.post_type === record_post_type;
+        return field.type === 'connection' && field.post_type === post_type;
       });
 
     let fields_select = $('#ml_main_col_template_details_connection');
