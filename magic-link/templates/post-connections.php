@@ -3,70 +3,18 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 } // Exit if accessed directly.
 
-function fetch_magic_link_templates(): array {
-
-    $templates            = [];
-    $magic_link_templates = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_templates );
-
-    if ( ! empty( $magic_link_templates ) ) {
-        foreach ( $magic_link_templates as $post_type ) {
-            foreach ( $post_type ?? [] as $template ) {
-                if ( $template['enabled'] ) {
-
-                    // Populate url_base first...
-                    $template['url_base'] = str_replace( 'templates_', 'templates/', $template['id'] );
-
-                    // Capture updated template
-                    $templates[] = $template;
-                }
-            }
-        }
-    }
-
-    return $templates;
-}
-
-/**
- * Class Disciple_Tools_Magic_Links_Templates_Loader
- */
-class Disciple_Tools_Magic_Links_Templates_Loader {
-
-    private static $_instance = null;
-
-    public static function instance() {
-        if ( is_null( self::$_instance ) ) {
-            self::$_instance = new self();
-        }
-
-        return self::$_instance;
-    } // End instance()
-
-    public function __construct() {
-        add_action( 'after_setup_theme', function () {
-            self::load_templates();
-        }, 200 );
-    }
-
-    private function load_templates() {
-        foreach ( fetch_magic_link_templates() ?? [] as $template ) {
-            new Disciple_Tools_Magic_Links_Templates( $template );
-        }
-    }
-}
-
-Disciple_Tools_Magic_Links_Templates_Loader::instance();
-
 /**
  * Class Disciple_Tools_Magic_Links_Templates
  */
-class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
+class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_Base {
 
-    public $page_title = 'Template Title';
+    public $page_title = 'Post Connections';
     public $page_description = 'Template Title Description';
     public $root = 'templates'; // @todo define the root of the url {yoursite}/root/type/key/action
     public $type = 'template_id'; // Placeholder to be replaced with actual template ids
     public $type_name = '';
     public $post_type = 'contacts'; // Support ML contacts (which can be any one of the DT post types) by default!
+    public $record_post_type = 'groups'; //todo: use this in the admin UI
     private $post = null;
     private $post_field_settings = null;
     private $meta_key = '';
@@ -92,10 +40,6 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
          */
 
         if ( empty( $template ) ) {
-            return;
-        } else if ( $template['type'] === 'post-connections' ) {
-            require_once( 'templates/post-connections.php' );
-            new Disciple_Tools_Magic_Links_Template_Post_Connections( $template );
             return;
         }
 
@@ -152,11 +96,11 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
          * Load if valid url
          */
 
-        add_action( 'dt_blank_body', [ $this, 'body' ] );
-        add_filter( 'dt_magic_url_base_allowed_css', [ $this, 'dt_magic_url_base_allowed_css' ], 10, 1 );
-        add_filter( 'dt_magic_url_base_allowed_js', [ $this, 'dt_magic_url_base_allowed_js' ], 10, 1 );
-        add_action( 'wp_enqueue_scripts', [ $this, 'wp_enqueue_scripts' ], 100 );
-        add_filter( 'dt_can_update_permission', [ $this, 'can_update_permission_filter' ], 10, 3 );
+        add_action('dt_blank_body', [$this, 'body']);
+        add_filter('dt_magic_url_base_allowed_css', [$this, 'dt_magic_url_base_allowed_css'], 10, 1);
+        add_filter('dt_magic_url_base_allowed_js', [$this, 'dt_magic_url_base_allowed_js'], 10, 1);
+        add_action('wp_enqueue_scripts', [$this, 'wp_enqueue_scripts'], 100);
+        add_filter('dt_can_update_permission', [$this, 'can_update_permission_filter'], 10, 3);
     }
 
     // Ensure template fields remain editable
@@ -166,19 +110,22 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
 
     public function wp_enqueue_scripts() {
         // Support Geolocation APIs
-        if ( DT_Mapbox_API::get_key() ) {
-            DT_Mapbox_API::load_mapbox_header_scripts();
-            DT_Mapbox_API::load_mapbox_search_widget();
-        }
-
-        // Support Typeahead APIs
-        $path     = '/dt-core/dependencies/typeahead/dist/';
-        $path_js  = $path . 'jquery.typeahead.min.js';
-        $path_css = $path . 'jquery.typeahead.min.css';
-        wp_enqueue_script( 'jquery-typeahead', get_template_directory_uri() . $path_js, [ 'jquery' ], filemtime( get_template_directory() . $path_js ) );
-        wp_enqueue_style( 'jquery-typeahead-css', get_template_directory_uri() . $path_css, [], filemtime( get_template_directory() . $path_css ) );
-
-        wp_enqueue_style( 'material-font-icons-css', 'https://cdn.jsdelivr.net/npm/@mdi/font@6.6.96/css/materialdesignicons.min.css', [], '6.6.96' );
+//        if ( DT_Mapbox_API::get_key() ) {
+//            DT_Mapbox_API::load_mapbox_header_scripts();
+//            DT_Mapbox_API::load_mapbox_search_widget();
+//        }
+//
+//        // Support Typeahead APIs
+//        $path     = '/dt-core/dependencies/typeahead/dist/';
+//        $path_js  = $path . 'jquery.typeahead.min.js';
+//        $path_css = $path . 'jquery.typeahead.min.css';
+//        wp_enqueue_script( 'jquery-typeahead', get_template_directory_uri() . $path_js, [ 'jquery' ], filemtime( get_template_directory() . $path_js ) );
+//        wp_enqueue_style( 'jquery-typeahead-css', get_template_directory_uri() . $path_css, [], filemtime( get_template_directory() . $path_css ) );
+//
+//        wp_enqueue_style( 'toastify-js-css', 'https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.css', [], '1.12.0' );
+//        wp_enqueue_script( 'toastify-js', 'https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.js', [ 'jquery' ], '1.12.0' );
+//
+//        wp_enqueue_style( 'material-font-icons-css', 'https://cdn.jsdelivr.net/npm/@mdi/font@6.6.96/css/materialdesignicons.min.css', [], '6.6.96' );
 
         Disciple_Tools_Bulk_Magic_Link_Sender_API::enqueue_magic_link_utilities_script();
     }
@@ -186,11 +133,12 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
     public function dt_magic_url_base_allowed_js( $allowed_js ) {
         // @todo add or remove js files with this filter
         // example: $allowed_js[] = 'your-enqueue-handle';
-        $allowed_js[] = 'mapbox-gl';
-        $allowed_js[] = 'mapbox-cookie';
-        $allowed_js[] = 'mapbox-search-widget';
-        $allowed_js[] = 'google-search-widget';
-        $allowed_js[] = 'jquery-typeahead';
+//        $allowed_js[] = 'mapbox-gl';
+//        $allowed_js[] = 'mapbox-cookie';
+//        $allowed_js[] = 'mapbox-search-widget';
+//        $allowed_js[] = 'google-search-widget';
+//        $allowed_js[] = 'jquery-typeahead';
+//        $allowed_js[] = 'toastify-js';
         $allowed_js[] = Disciple_Tools_Bulk_Magic_Link_Sender_API::get_magic_link_utilities_script_handle();
 
         return $allowed_js;
@@ -199,9 +147,10 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
     public function dt_magic_url_base_allowed_css( $allowed_css ) {
         // @todo add or remove js files with this filter
         // example: $allowed_css[] = 'your-enqueue-handle';
-        $allowed_css[] = 'mapbox-gl-css';
-        $allowed_css[] = 'jquery-typeahead-css';
-        $allowed_css[] = 'material-font-icons-css';
+//        $allowed_css[] = 'mapbox-gl-css';
+//        $allowed_css[] = 'jquery-typeahead-css';
+//        $allowed_css[] = 'material-font-icons-css';
+//        $allowed_css[] = 'toastify-js-css';
 
         return $allowed_css;
     }
@@ -343,7 +292,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                 'translations'            => [
                     'regions_of_focus' => __( 'Regions of Focus', 'disciple_tools' ),
                     'all_locations'    => __( 'All Locations', 'disciple_tools' ),
-                    'update_success' => __( 'Thank you for your successful submission. You may return to the form and re-submit if changes are needed.', 'disciple_tools' ),
+                    'update_success' => __( 'Update Successful!', 'disciple_tools' ),
                     'validation' => [
                         'number' => [
                             'out_of_range' => __( 'Value out of range!', 'disciple_tools' )
@@ -1092,13 +1041,9 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
              */
 
             jQuery('#content_submit_but').on("click", function () {
-                const alert_notice = jQuery('#alert_notice');
-                const spinner = jQuery('.update-loading-spinner');
-                const submit_but = jQuery('#content_submit_but');
+                let spinner = jQuery('.update-loading-spinner');
                 let id = jQuery('#post_id').val();
                 let post_type = jQuery('#post_type').val();
-
-                alert_notice.fadeOut('fast');
 
                 // Reset error message field
                 let error = jQuery('#error');
@@ -1234,7 +1179,7 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                     });
 
                     // Disable submission button during this process.
-                    submit_but.prop('disabled', true);
+                    jQuery('#content_submit_but').prop('disabled', true);
 
                     // Final sanity check of submitted payload fields.
                     let validated = null;
@@ -1247,12 +1192,13 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                             jsObject.translations.validation);
                     }
                     if (validated && !validated['success']) {
-                        alert_notice.find('#alert_notice_content').text(validated['message']);
-                        alert_notice.fadeIn('slow', function () {
-                            spinner.removeClass('active');
-                            submit_but.prop('disabled', false);
-                            document.documentElement.scrollTop = 0;
-                        });
+                        if (typeof window.ml_utility_submit_error_function === "function") {
+                            window.ml_utility_submit_error_function(validated['message'], function () {
+                                jQuery('#content_submit_but').prop('disabled', false);
+                            });
+                        } else {
+                            jQuery('#content_submit_but').prop('disabled', false);
+                        }
                     } else {
                         spinner.addClass('active');
 
@@ -1268,28 +1214,43 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                             }
 
                         }).done(function (data) {
-                            alert_notice.find('#alert_notice_content').text(data['success'] ? jsObject.translations.update_success : data['message']);
-                            alert_notice.fadeIn('slow', function () {
 
-                                // Reactivate submit button and scroll up to notice.
-                                spinner.removeClass('active');
-                                submit_but.prop('disabled', false);
-                                document.documentElement.scrollTop = 0;
-
-                                // Refresh any identified record ids.
-                                if (data?.id > 0) {
-                                    window.get_assigned_post(payload['post_type'], data['id']);
+                            // If successful, refresh page, otherwise; display error message
+                            if (data['success']) {
+                                if (typeof window.ml_utility_submit_success_function === "function") {
+                                    window.ml_utility_submit_success_function(jsObject.translations.update_success, function () {
+                                        window.location.reload();
+                                    });
+                                } else {
+                                    window.location.reload();
                                 }
-                            });
+
+                            } else {
+                                if (typeof window.ml_utility_submit_error_function === "function") {
+                                    window.ml_utility_submit_error_function(data['message'], function () {
+                                        console.log(data);
+                                        jQuery('#error').html('');
+                                        jQuery('#content_submit_but').prop('disabled', false);
+                                    });
+                                } else {
+                                    console.log(data);
+                                    jQuery('#error').html('');
+                                    jQuery('#content_submit_but').prop('disabled', false);
+                                }
+                            }
 
                         }).fail(function (e) {
-                            console.log(e);
-                            alert_notice.find('#alert_notice_content').text(e['responseJSON']['message']);
-                            alert_notice.fadeIn('slow', function () {
-                                spinner.removeClass('active');
-                                submit_but.prop('disabled', false);
-                                document.documentElement.scrollTop = 0;
-                            });
+                            if (typeof window.ml_utility_submit_error_function === "function") {
+                                window.ml_utility_submit_error_function(e['responseJSON']['message'], function () {
+                                    console.log(e);
+                                    jQuery('#error').html('');
+                                    jQuery('#content_submit_but').prop('disabled', false);
+                                });
+                            } else {
+                                console.log(e);
+                                jQuery('#error').html('');
+                                jQuery('#content_submit_but').prop('disabled', false);
+                            }
                         });
                     }
                 }
@@ -1305,261 +1266,8 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
         ?>
         <div id="custom-style"></div>
         <div id="wrapper">
-            <div class="grid-x">
-                <div class="cell center">
-                    <h2 id="title">
-                        <b>
-                            <?php echo esc_html( $has_title ? $this->adjust_template_title_translation( $this->template['title'], $this->template['title_translations'] ) : '' ); ?>
-                        </b>
-                    </h2>
-                </div>
-            </div>
-            <?php
-            if ( $has_title ) {
-                ?>
-                <hr/>
-                <?php
-            }
-            ?>
-            <div id="content">
-                <div id="alert_notice" style="display: none; border-style: solid; border-width: 2px; border-color: #4caf50; background-color: rgba(142,195,81,0.2); border-radius: 5px; padding: 2em; margin: 1em 0">
-                    <div style="display: flex; grid-gap: 1em">
-                        <div style="display: flex; align-items: center">
-                            <img style="width: 2em; filter: invert(52%) sepia(77%) saturate(383%) hue-rotate(73deg) brightness(98%) contrast(83%);"
-                                 src="<?php echo esc_url( plugin_dir_url( __FILE__ ) . 'exclamation-circle.svg' ); ?>" alt="Exclamation Circle"/>
-                        </div>
-                        <div id="alert_notice_content" style="display: flex; align-items: center"></div>
-                    </div>
-                </div>
-
-                <!-- TEMPLATE MESSAGE -->
-                <p id="template_msg">
-                    <?php echo nl2br( esc_html( ! empty( $this->template ) && isset( $this->template['message'] ) ? $this->template['message'] : '' ) ); ?>
-                </p>
-
-                <?php
-                // Determine if template type list of assigned contacts is to be displayed.
-                if ( isset( $this->template['type'] ) && ( $this->template['type'] == 'list-sub-assigned-contacts' ) && !empty( $this->post ) ){
-
-                    // Build query fields.
-                    $query_fields = [
-                        'subassigned' => [ $this->post['ID'] ]
-                    ];
-
-                    if ( !empty( $this->post['corresponds_to_user'] ) ) {
-                        $query_fields['assigned_to'] = [ $this->post['corresponds_to_user'] ];
-                    }
-
-                    // Fetch all assigned posts
-                    $assigned_posts = DT_Posts::list_posts( $this->post['post_type'], [
-                        'limit' => 1000,
-                        'fields' => [
-                            $query_fields
-                        ]
-                    ], false );
-
-                    // Add primary recipient post as first element.
-                    array_unshift( $assigned_posts['posts'], $this->post );
-
-                    $assigned_posts['posts'] = apply_filters( 'dt_smart_links_filter_assigned_posts', $assigned_posts['posts'], $this->template );
-
-                    $this->post = null;
-                    if ( !empty( $assigned_posts['posts'] ) ) {
-                        $this->post = $assigned_posts['posts'][0];
-                    }
-
-                    // Display only if there are valid hits!
-                    if ( isset( $assigned_posts['posts'] ) && count( $assigned_posts['posts'] ) > 0 ){
-                        ?>
-                        <!-- LIST SUB-ASSIGNED CONTACTS -->
-                        <div id="assigned_contacts_div">
-                            <h3><?php esc_html_e( 'Subassigned', 'disciple_tools' ) ?> [ <span
-                                    id="total"><?php echo esc_html( count( $assigned_posts['posts'] ) ); ?></span>
-                                ]</h3>
-                            <hr>
-                            <div class="grid-x api-content-div-style" id="api-content">
-                                <table class="api-content-table">
-                                    <tbody>
-                                    <?php
-                                    foreach ( $assigned_posts['posts'] as $assigned ){
-                                        ?>
-                                        <tr onclick="get_assigned_details('<?php echo esc_html( $assigned['post_type'] ); ?>','<?php echo esc_html( $assigned['ID'] ); ?>','<?php echo esc_html( str_replace( "'", '&apos;', $assigned['name'] ) ); ?>')">
-                                            <td><?php echo esc_html( $assigned['name'] ) ?></td>
-                                        </tr>
-                                        <?php
-                                    }
-                                    ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <br>
-                        </div>
-                        <?php
-                    }
-
-                    // Determine if new item creation is enabled.
-                    if ( isset( $this->template['support_creating_new_items'] ) && $this->template['support_creating_new_items'] ) {
-                        ?>
-                        <br>
-                        <button id="add_new" class="button select-button" data-post_type="<?php echo esc_attr( $this->post['post_type'] ) ?>" data-post_id="0" data-post_name="<?php esc_html_e( 'New Record', 'disciple_tools' ) ?>">
-                            <?php esc_html_e( 'Add New', 'disciple_tools' ) ?>
-                        </button>
-                        <br>
-                        <?php
-                    }
-                }
-                ?>
-
-                <!-- ERROR MESSAGES -->
-                <span id="error" style="color: red;"></span>
-                <br>
-
-                <h3>
-                    <span id="contact_name" style="font-weight: bold">
-                        <?php echo esc_html( ! empty( $this->post ) ? $this->post['name'] : '---' ); ?>
-                    </span>
-                </h3>
-                <hr>
-                <div class="grid-x" id="form-content">
-                    <input id="post_id" type="hidden"
-                           value="<?php echo esc_html( ! empty( $this->post ) ? $this->post['ID'] : '' ); ?>"/>
-                    <input id="post_type" type="hidden"
-                           value="<?php echo esc_html( ! empty( $this->post ) ? $this->post['post_type'] : '' ); ?>"/>
-                    <?php
-                    // Revert back to dt translations
-                    $this->hard_switch_to_default_dt_text_domain();
-                    ?>
-                    <table style="<?php echo( ! empty( $this->post ) ? '' : 'display: none;' ) ?>"
-                           class="form-content-table">
-                        <tbody>
-                        <?php
-
-                        /**
-                         * If a valid post is present, then display fields accordingly,
-                         * based on hidden flags!
-                         */
-
-                        $this->post_field_settings = DT_Posts::get_post_field_settings( $this->post_type, false );
-                        if ( ! empty( $this->post ) && ! empty( $this->post_field_settings ) && ! empty( $this->template ) ) {
-
-                            // Display selected fields
-                            foreach ( $this->template['fields'] ?? [] as $field ) {
-                                if ( $field['enabled'] && $this->is_link_obj_field_enabled( $field['id'] ) ) {
-
-                                    $post_field_type = '';
-                                    if ( $field['type'] === 'dt' && isset( $this->post_field_settings[ $field['id'] ]['type'] ) ) {
-                                        $post_field_type = $this->post_field_settings[ $field['id'] ]['type'];
-                                    }
-                                    if ( $field['type'] === 'dt' && empty( $post_field_type ) ) {
-                                        continue;
-                                    }
-                                    // Field types to be supported.
-                                    if ( $field['type'] === 'dt' && ! in_array( $post_field_type, [
-                                            'text',
-                                            'textarea',
-                                            'date',
-                                            'boolean',
-                                            'key_select',
-                                            'multi_select',
-                                            'number',
-                                            'link',
-                                            'communication_channel',
-                                            'location',
-                                            'location_meta'
-                                    ] ) ) {
-                                        continue;
-                                    }
-
-                                    // Generate hidden values to assist downstream processing
-                                    $hidden_values_html = '<input id="form_content_table_field_id" type="hidden" value="' . $field['id'] . '">';
-                                    $hidden_values_html .= '<input id="form_content_table_field_type" type="hidden" value="' . $post_field_type . '">';
-                                    $hidden_values_html .= '<input id="form_content_table_field_template_type" type="hidden" value="' . $field['type'] . '">';
-                                    $hidden_values_html .= '<input id="form_content_table_field_meta" type="hidden" value="">';
-
-                                    // Render field accordingly, based on template field type!
-                                    switch ( $field['type'] ) {
-                                        case 'dt':
-
-                                            // Capture rendered field html
-                                            ob_start();
-                                            $this->post_field_settings[$field['id']]['custom_display'] = false;
-                                            $this->post_field_settings[$field['id']]['readonly'] = !empty( $field['readonly'] );
-                                            render_field_for_display( $field['id'], $this->post_field_settings, $this->post, true );
-                                            $rendered_field_html = ob_get_contents();
-                                            ob_end_clean();
-
-                                            // Only display if valid html content has been generated
-                                            if ( ! empty( $rendered_field_html ) ) {
-                                                ?>
-                                                <tr>
-                                                    <?php
-                                                    // phpcs:disable
-                                                    echo $hidden_values_html;
-                                                    // phpcs:enable
-                                                    ?>
-                                                    <td>
-                                                        <?php
-                                                        // phpcs:disable
-                                                        echo $rendered_field_html;
-                                                        // phpcs:enable
-                                                        ?>
-                                                    </td>
-                                                </tr>
-                                                <?php
-                                            }
-                                            break;
-                                        case 'custom':
-                                            ?>
-                                            <tr>
-                                                <?php
-                                                // phpcs:disable
-                                                echo $hidden_values_html;
-                                                // phpcs:enable
-                                                ?>
-                                                <td>
-                                                    <?php
-                                                    $this->render_custom_field_for_display( $field );
-                                                    ?>
-                                                </td>
-                                            </tr>
-                                            <?php
-                                            break;
-                                    }
-                                }
-                            }
-
-                            // If requested, display recent comments
-                            if ( $this->template['show_recent_comments'] ) {
-                                $comment_count = is_bool( $this->template['show_recent_comments'] ) ? 2 : intval( $this->template['show_recent_comments'] );
-                                $recent_comments = DT_Posts::get_post_comments( $this->post['post_type'], $this->post['ID'], false, 'all', [ 'number' => $comment_count ] );
-                                foreach ( $recent_comments['comments'] ?? [] as $comment ) {
-                                    ?>
-                                    <tr class="dt-comment-tr">
-                                        <td>
-                                            <div class="section-subheader dt-comment-subheader">
-                                                <?php echo esc_html( $comment['comment_author'] . ' @ ' . $comment['comment_date'] ); ?>
-                                            </div>
-                                            <span class="dt-comment-content"><?php echo esc_html( $comment['comment_content'] ); ?></span>
-                                        </td>
-                                    </tr>
-                                    <?php
-                                }
-                            }
-                        }
-                        ?>
-                        </tbody>
-                    </table>
-                </div>
-                <br>
-
-                <!-- SUBMIT UPDATES -->
-                <button id="content_submit_but"
-                        style="<?php echo( ! empty( $this->post ) ? '' : 'display: none;' ) ?> min-width: 100%;"
-                        class="button select-button">
-                    <?php esc_html_e( 'Submit Update', 'disciple_tools' ) ?>
-                    <span class="update-loading-spinner loading-spinner" style="height: 17px; width: 17px; vertical-align: text-bottom;"></span>
-                </button>
-            </div>
+            <h1>My new magic template!</h1>
+            <pre><code><?php echo json_encode( $this->template, JSON_PRETTY_PRINT ) ?></code></pre>
         </div>
         <?php
     }
@@ -1809,7 +1517,6 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
 
         if ( empty( $updated_post ) || is_wp_error( $updated_post ) ) {
             return [
-                'id' => 0,
                 'success' => false,
                 'message' => 'Unable to update/create contact record details!'
             ];
@@ -1822,7 +1529,6 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
                 $updated_comment = DT_Posts::add_post_comment( $updated_post['post_type'], $updated_post['ID'], $field['value'], 'comment', [], false );
                 if ( empty( $updated_comment ) || is_wp_error( $updated_comment ) ) {
                     return [
-                        'id' => $updated_post['ID'],
                         'success' => false,
                         'message' => 'Unable to add comment to record details!'
                     ];
@@ -1839,7 +1545,6 @@ class Disciple_Tools_Magic_Links_Templates extends DT_Magic_Url_Base {
 
         // Finally, return successful response
         return [
-            'id' => $updated_post['ID'],
             'success' => true,
             'message' => ''
         ];
