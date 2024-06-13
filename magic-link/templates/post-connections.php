@@ -16,6 +16,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
     public $post_type = 'contacts'; // Support ML contacts (which can be any one of the DT post types) by default!
     public $record_post_type = 'groups'; //todo: use this in the admin UI
     private $post = null;
+    private $items = [];
     private $post_field_settings = null;
     private $meta_key = '';
 
@@ -86,6 +87,8 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
 
         $this->post = DT_Posts::get_post( $this->post_type, $this->parts['post_id'], true, false );
 
+//        $this->items = DT_Posts::search_viewable_post()
+
         /**
          * Attempt to load corresponding link object, if a valid incoming id has been detected.
          */
@@ -101,6 +104,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
         add_filter('dt_magic_url_base_allowed_js', [$this, 'dt_magic_url_base_allowed_js'], 10, 1);
         add_action('wp_enqueue_scripts', [$this, 'wp_enqueue_scripts'], 100);
         add_filter('dt_can_update_permission', [$this, 'can_update_permission_filter'], 10, 3);
+        add_filter( 'script_loader_tag', [ $this, 'script_loader_tag' ], 10, 2 );
     }
 
     // Ensure template fields remain editable
@@ -109,6 +113,18 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
     }
 
     public function wp_enqueue_scripts() {
+        $js_path = '../../assets/post-connections.js';
+        $css_path = '../../assets/post-connections.css';
+
+        wp_enqueue_style( 'ml-post-connections-css', plugin_dir_url( __FILE__ ) . $css_path, null, filemtime( plugin_dir_path( __FILE__ ) . $css_path ) );
+        wp_enqueue_script( 'ml-post-connections-js', plugin_dir_url( __FILE__ ) . $js_path, null, filemtime( plugin_dir_path( __FILE__ ) . $js_path ) );
+
+        $dtwc_version = '0.6.3';
+        wp_enqueue_style( 'dt-web-components-css', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/src/styles/light.css", [], $dtwc_version );
+        wp_enqueue_script( 'dt-web-components-js', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/dist/index.min.js", $dtwc_version );
+
+        // <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+        //      rel="stylesheet">
         // Support Geolocation APIs
 //        if ( DT_Mapbox_API::get_key() ) {
 //            DT_Mapbox_API::load_mapbox_header_scripts();
@@ -125,7 +141,8 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
 //        wp_enqueue_style( 'toastify-js-css', 'https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.css', [], '1.12.0' );
 //        wp_enqueue_script( 'toastify-js', 'https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.js', [ 'jquery' ], '1.12.0' );
 //
-//        wp_enqueue_style( 'material-font-icons-css', 'https://cdn.jsdelivr.net/npm/@mdi/font@6.6.96/css/materialdesignicons.min.css', [], '6.6.96' );
+        $mdi_version = '6.6.96';
+        wp_enqueue_style( 'material-font-icons-css', "https://cdn.jsdelivr.net/npm/@mdi/font@$mdi_version/css/materialdesignicons.min.css", [], $mdi_version );
 
         Disciple_Tools_Bulk_Magic_Link_Sender_API::enqueue_magic_link_utilities_script();
     }
@@ -137,8 +154,8 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
 //        $allowed_js[] = 'mapbox-cookie';
 //        $allowed_js[] = 'mapbox-search-widget';
 //        $allowed_js[] = 'google-search-widget';
-//        $allowed_js[] = 'jquery-typeahead';
-//        $allowed_js[] = 'toastify-js';
+        $allowed_js[] = 'dt-web-components-js';
+        $allowed_js[] = 'ml-post-connections-js';
         $allowed_js[] = Disciple_Tools_Bulk_Magic_Link_Sender_API::get_magic_link_utilities_script_handle();
 
         return $allowed_js;
@@ -148,11 +165,30 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
         // @todo add or remove js files with this filter
         // example: $allowed_css[] = 'your-enqueue-handle';
 //        $allowed_css[] = 'mapbox-gl-css';
-//        $allowed_css[] = 'jquery-typeahead-css';
-//        $allowed_css[] = 'material-font-icons-css';
-//        $allowed_css[] = 'toastify-js-css';
+        $allowed_css[] = 'material-font-icons-css';
+        $allowed_css[] = 'dt-web-components-css';
+        $allowed_css[] = 'ml-post-connections-css';
 
         return $allowed_css;
+    }
+
+    public function script_loader_tag( $tag, $handle ) {
+        // add type="module" to web components script tag
+        if ( str_contains( $handle, 'dt-web-components' ) ) {
+            $re = '/type=[\'"](.*?)[\'"]/m';
+
+            preg_match_all( $re, $tag, $matches, PREG_SET_ORDER, 0 );
+
+            if ( count( $matches ) > 0 ) {
+                $tag = str_replace( $matches[0][0], 'type="module"', $tag );
+            } else {
+                $tag = str_replace( '<script ', '<script type="module" ', $tag );
+            }
+
+            return $tag;
+        }
+
+        return $tag;
     }
 
     private function is_link_obj_field_enabled( $field_id ): bool {
@@ -165,78 +201,6 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
         }
 
         return true;
-    }
-
-    private function render_custom_field_for_display( $field ) {
-        ?>
-        <div class="section-subheader"><?php
-
-            // Support custom field label translations; or simply default to initial label entry.
-            $label = ( ! empty( $field['translations'] ) && isset( $field['translations'][ determine_locale() ] ) ) ? $field['translations'][ determine_locale() ]['translation'] : $field['label'];
-
-            echo esc_html( $label ); ?>
-        </div>
-        <?php
-        if ( isset( $field['custom_form_field_type'] ) && $field['custom_form_field_type'] == 'textarea' ){
-            ?>
-            <textarea id="<?php echo esc_html( $field['id'] ); ?>"></textarea>
-            <?php
-        } else {
-            ?>
-            <input id="<?php echo esc_html( $field['id'] ); ?>" type="text" class="text-input" value="">
-            <?php
-        }
-    }
-
-    private function adjust_template_title_translation( $title, $title_translations ) {
-        return ( ! empty( $title_translations ) && isset( $title_translations[ determine_locale() ] ) ) ? $title_translations[ determine_locale() ]['translation'] : $title;
-    }
-
-    /**
-     * Writes custom styles to header
-     *
-     * @see DT_Magic_Url_Base()->header_style() for default state
-     * @todo remove if not needed
-     */
-    public function header_style() {
-        ?>
-        <style>
-            body {
-                background-color: white;
-                padding: 1em;
-            }
-
-            .api-content-div-style {
-                height: 150px;
-                overflow-x: hidden;
-                overflow-y: scroll;
-                text-align: left;
-            }
-
-            .api-content-table tbody {
-                border: none;
-            }
-
-            .api-content-table tr {
-                cursor: pointer;
-                background: #ffffff;
-                padding: 0px;
-            }
-
-            .api-content-table tr:hover {
-                background-color: #f5f5f5;
-            }
-        </style>
-        <?php
-    }
-
-    /**
-     * Writes javascript to the header
-     *
-     * @see DT_Magic_Url_Base()->header_javascript() for default state
-     * @todo remove if not needed
-     */
-    public function header_javascript() {
     }
 
     private function localized_template_selected_field_settings( $template ) {
@@ -311,951 +275,6 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                 ]
             ] ) ?>][0]
 
-            /**
-             * Activate various field controls.
-             */
-
-            window.activate_field_controls = () => {
-                jQuery('.form-content-table > tbody > tr').each(function (idx, tr) {
-
-                    let field_id = jQuery(tr).find('#form_content_table_field_id').val();
-                    let field_type = jQuery(tr).find('#form_content_table_field_type').val();
-                    let field_template_type = jQuery(tr).find('#form_content_table_field_template_type').val();
-                    let field_meta = jQuery(tr).find('#form_content_table_field_meta');
-
-                    if (field_template_type && field_template_type === 'dt') {
-                        switch (field_type) {
-                            case 'communication_channel':
-
-                                /**
-                                 * Add
-                                 */
-
-                                jQuery(tr).find('button.add-button').on('click', evt => {
-                                    let field = jQuery(evt.currentTarget).data('list-class');
-                                    let list = jQuery(tr).find(`#edit-${field}`);
-
-                                    list.append(`
-                                        <div class="input-group">
-                                            <input type="text" data-field="${window.lodash.escape(field)}" class="dt-communication-channel input-group-field" dir="auto" />
-                                            <div class="input-group-button">
-                                                <button class="button alert input-height delete-button-style channel-delete-button delete-button new-${window.lodash.escape(field)}" data-key="new" data-field="${window.lodash.escape(field)}">&times;</button>
-                                            </div>
-                                        </div>`);
-                                });
-
-                                /**
-                                 * Remove
-                                 */
-
-                                jQuery(tr).on('click', '.channel-delete-button', evt => {
-                                    let field = jQuery(evt.currentTarget).data('field');
-                                    let key = jQuery(evt.currentTarget).data('key');
-
-                                    // If needed, keep a record of key for future api removal.
-                                    if (key !== 'new') {
-                                        let deleted_keys = (field_meta.val()) ? JSON.parse(field_meta.val()) : [];
-                                        deleted_keys.push(key);
-                                        field_meta.val(JSON.stringify(deleted_keys));
-                                    }
-
-                                    // Final removal of input group
-                                    jQuery(evt.currentTarget).parent().parent().remove();
-                                });
-
-                                break;
-
-                            case 'location_meta':
-
-                                /**
-                                 * Load
-                                 */
-
-                                jQuery(tr).find('#mapbox-wrapper').empty().append(`
-                                    <div id="location-grid-meta-results"></div>
-                                    <div class="reveal" id="mapping-modal" data-v-offset="0" data-reveal>
-                                      <div id="mapping-modal-contents"></div>
-                                      <button class="close-button" data-close aria-label="Close modal" type="button">
-                                        <span aria-hidden="true">&times;</span>
-                                      </button>
-                                    </div>
-                                `);
-
-                                // Display previously saved locations
-                                let lgm_results = jQuery(tr).find('#location-grid-meta-results');
-                                if (jsObject['post']['location_grid_meta'] !== undefined && jsObject['post']['location_grid_meta'].length !== 0) {
-                                    jQuery.each(jsObject['post']['location_grid_meta'], function (i, v) {
-                                        if (v.grid_meta_id) {
-                                            lgm_results.append(`<div class="input-group">
-                                                <input type="text" class="active-location input-group-field" id="location-${window.lodash.escape(v.grid_meta_id)}" dir="auto" value="${window.lodash.escape(v.label)}" readonly />
-                                                <div class="input-group-button">
-                                                  <button type="button" class="button success delete-button-style open-mapping-grid-modal" title="${window.lodash.escape(jsObject['mapbox']['translations']['open_modal'])}" data-id="${window.lodash.escape(v.grid_meta_id)}"><i class="fi-map"></i></button>
-                                                  <button type="button" class="button alert delete-button-style delete-button mapbox-delete-button" title="${window.lodash.escape(jsObject['mapbox']['translations']['delete_location'])}" data-id="${window.lodash.escape(v.grid_meta_id)}">&times;</button>
-                                                </div>
-                                              </div>`);
-                                        } else {
-                                            lgm_results.append(`<div class="input-group">
-                                                <input type="text" class="dt-communication-channel input-group-field" id="${window.lodash.escape(v.key)}" value="${window.lodash.escape(v.label)}" dir="auto" data-field="contact_address" />
-                                                <div class="input-group-button">
-                                                  <button type="button" class="button success delete-button-style open-mapping-address-modal"
-                                                      title="${window.lodash.escape(jsObject['mapbox']['translations']['open_modal'])}"
-                                                      data-id="${window.lodash.escape(v.key)}"
-                                                      data-field="contact_address"
-                                                      data-key="${window.lodash.escape(v.key)}">
-                                                      <i class="fi-pencil"></i>
-                                                  </button>
-                                                  <button type="button" class="button alert input-height delete-button-style channel-delete-button delete-button" title="${window.lodash.escape(jsObject['mapbox']['translations']['delete_location'])}" data-id="${window.lodash.escape(v.key)}" data-field="contact_address" data-key="${window.lodash.escape(v.key)}">&times;</button>
-                                                </div>
-                                              </div>`);
-                                        }
-                                    })
-                                }
-
-                                /**
-                                 * Add
-                                 */
-
-                                jQuery(tr).find('#new-mapbox-search').on('click', evt => {
-
-                                    // Display search field with autosubmit disabled!
-                                    if (jQuery(tr).find('#mapbox-autocomplete').length === 0) {
-                                        jQuery(tr).find('#mapbox-wrapper').prepend(`
-                                        <div id="mapbox-autocomplete" class="mapbox-autocomplete input-group" data-autosubmit="false">
-                                            <input id="mapbox-search" type="text" name="mapbox_search" placeholder="${window.lodash.escape(jsObject['mapbox']['translations']['search_location'])}" autocomplete="off" dir="auto" />
-                                            <div class="input-group-button">
-                                                <button id="mapbox-spinner-button" class="button hollow" style="display:none;"><span class="loading-spinner active"></span></button>
-                                                <button id="mapbox-clear-autocomplete" class="button alert input-height delete-button-style mapbox-delete-button" type="button" title="${window.lodash.escape(jsObject['mapbox']['translations']['delete_location'])}" >&times;</button>
-                                            </div>
-                                            <div id="mapbox-autocomplete-list" class="mapbox-autocomplete-items"></div>
-                                        </div>`);
-                                    }
-
-                                    // Switch over to standard workflow, with autosubmit disabled!
-                                    write_input_widget();
-                                });
-
-                                // Hide new button and default to single entry
-                                jQuery(tr).find('#new-mapbox-search').hide();
-                                jQuery(tr).find('#new-mapbox-search').trigger('click');
-
-                                /**
-                                 * Remove
-                                 */
-
-                                jQuery(document).on('click', '.mapbox-delete-button', evt => {
-                                    let id = jQuery(evt.currentTarget).data('id');
-
-                                    // If needed, keep a record of key for future api removal.
-                                    if (id !== undefined) {
-                                        let deleted_ids = (field_meta.val()) ? JSON.parse(field_meta.val()) : [];
-                                        deleted_ids.push(id);
-                                        field_meta.val(JSON.stringify(deleted_ids));
-
-                                        // Final removal of input group
-                                        jQuery(evt.currentTarget).parent().parent().remove();
-
-                                    } else {
-
-                                        // Remove global selected location
-                                        window.selected_location_grid_meta = null;
-                                    }
-                                });
-
-                                /**
-                                 * Open Modal
-                                 */
-
-                                jQuery(tr).find('.open-mapping-grid-modal').on('click', evt => {
-                                    let grid_meta_id = jQuery(evt.currentTarget).data('id');
-                                    let post_location_grid_meta = jsObject['post']['location_grid_meta'];
-
-                                    if (post_location_grid_meta !== undefined && post_location_grid_meta.length !== 0) {
-                                        jQuery.each(post_location_grid_meta, function (i, v) {
-                                            if (String(grid_meta_id) === String(v.grid_meta_id)) {
-                                                return load_modal(v.lng, v.lat, v.level, v.label, v.grid_id);
-                                            }
-                                        });
-                                    }
-                                });
-
-                                break;
-
-                            case 'location':
-
-                                /**
-                                 * Load Typeahead
-                                 */
-
-                                let typeahead_field_input = '.js-typeahead-' + field_id;
-                                if (!window.Typeahead[typeahead_field_input]) {
-                                    jQuery(tr).find(typeahead_field_input).typeahead({
-                                        input: typeahead_field_input,
-                                        minLength: 0,
-                                        accent: true,
-                                        searchOnFocus: true,
-                                        maxItem: 20,
-                                        dropdownFilter: [{
-                                            key: 'group',
-                                            value: 'focus',
-                                            template: window.lodash.escape(jsObject['translations']['regions_of_focus']),
-                                            all: window.lodash.escape(jsObject['translations']['all_locations'])
-                                        }],
-                                        source: {
-                                            focus: {
-                                                display: "name",
-                                                ajax: {
-                                                    url: jsObject['root'] + 'dt/v1/mapping_module/search_location_grid_by_name',
-                                                    data: {
-                                                        s: "{{query}}",
-                                                        filter: function () {
-                                                            return window.lodash.get(window.Typeahead[typeahead_field_input].filters.dropdown, 'value', 'all');
-                                                        }
-                                                    },
-                                                    beforeSend: function (xhr) {
-                                                        xhr.setRequestHeader('X-WP-Nonce', jsObject['nonce']);
-                                                    },
-                                                    callback: {
-                                                        done: function (data) {
-                                                            return data.location_grid;
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        },
-                                        display: "name",
-                                        templateValue: "{{name}}",
-                                        dynamic: true,
-                                        multiselect: {
-                                            matchOn: ["ID"],
-                                            data: function () {
-                                                return [];
-                                            }, callback: {
-                                                onCancel: function (node, item) {
-
-                                                    // Keep a record of deleted options
-                                                    let deleted_items = (field_meta.val()) ? JSON.parse(field_meta.val()) : [];
-                                                    deleted_items.push(item);
-                                                    field_meta.val(JSON.stringify(deleted_items));
-
-                                                }
-                                            }
-                                        },
-                                        callback: {
-                                            onClick: function (node, a, item, event) {
-                                                // If present, remove from deleted meta list.
-                                                let deleted_items = (field_meta.val()) ? JSON.parse(field_meta.val()) : [];
-                                                if (deleted_items.find(e => e.ID.toString() === item.ID.toString())) {
-                                                    let idx = deleted_items.findIndex(e => e.ID.toString() === item.ID.toString());
-                                                    if (idx > -1) {
-                                                        deleted_items.splice(idx, 1);
-                                                        field_meta.val(JSON.stringify(deleted_items));
-                                                    }
-                                                }
-                                            },
-                                            onReady() {
-                                                this.filters.dropdown = {
-                                                    key: "group",
-                                                    value: "focus",
-                                                    template: window.lodash.escape(jsObject['translations']['regions_of_focus'])
-                                                };
-                                                this.container
-                                                    .removeClass("filter")
-                                                    .find("." + this.options.selector.filterButton)
-                                                    .html(window.lodash.escape(jsObject['translations']['regions_of_focus']));
-                                            }
-                                        }
-                                    });
-                                }
-
-                                // If available, load previous post record locations
-                                let typeahead = window.Typeahead[typeahead_field_input];
-                                let post_locations = jsObject['post'][field_id];
-                                if ((post_locations !== undefined) && typeahead) {
-                                    jQuery.each(post_locations, function (idx, location) {
-                                        typeahead.addMultiselectItemLayout({
-                                            ID: location['id'],
-                                            name: window.lodash.escape(location['label'])
-                                        });
-                                    });
-                                }
-
-                                break;
-
-                            case 'multi_select':
-
-                                /**
-                                 * Handle Selections
-                                 */
-
-                                jQuery(tr).find('.dt_multi_select').on("click", function (evt) {
-                                    let multi_select = jQuery(evt.currentTarget);
-                                    if (multi_select.hasClass('empty-select-button')) {
-                                        multi_select.removeClass('empty-select-button');
-                                        multi_select.addClass('selected-select-button');
-                                    } else {
-                                        multi_select.removeClass('selected-select-button');
-                                        multi_select.addClass('empty-select-button');
-                                    }
-                                });
-
-                                break;
-
-                            case 'date':
-
-                                /**
-                                 * Load Date Range Picker
-                                 */
-
-                                let date_config = {
-                                    singleDatePicker: true,
-                                    timePicker: false,
-                                    autoUpdateInput: false,
-                                    showDropdowns: true,
-                                    locale: {
-                                        format: 'MMMM D, YYYY'
-                                    }
-                                };
-                                let post_date = jsObject['post'][field_id];
-                                const formatted_date = (post_date?.timestamp !== undefined) ? window.SHAREDFUNCTIONS.formatDate(post_date['timestamp']) : '';
-
-                                jQuery(tr).find('#' + field_id).val(formatted_date);
-                                field_meta.val(post_date?.formatted || '');
-
-                                jQuery(tr).find('#' + field_id).daterangepicker(date_config, function (start, end, label) {
-                                  if (start) {
-                                        jQuery(tr).find('#' + field_id).val(start.format('MMMM D, YYYY'));
-                                        field_meta.val(moment.unix(start.unix()).format('YYYY-MM-DD'));
-                                    }
-                                });
-
-                                /**
-                                 * Clear Date
-                                 */
-
-                                jQuery(tr).find('.clear-date-button').on('click', evt => {
-                                    let input_id = jQuery(evt.currentTarget).data('inputid');
-
-                                    if (input_id) {
-                                        jQuery(tr).find('#' + input_id).val('');
-                                        field_meta.val('');
-                                    }
-                                });
-
-                                break;
-
-                            case 'tags':
-
-                                /**
-                                 * Activate
-                                 */
-
-                                // Hide new button and default to single entry
-                                jQuery(tr).find('.create-new-tag').hide();
-
-                                let typeahead_tags_field_input = '.js-typeahead-' + field_id;
-                                if (!window.Typeahead[typeahead_tags_field_input]) {
-                                    jQuery(tr).find(typeahead_tags_field_input).typeahead({
-                                        input: typeahead_tags_field_input,
-                                        minLength: 0,
-                                        maxItem: 20,
-                                        searchOnFocus: true,
-                                        source: {
-                                            tags: {
-                                                display: ["name"],
-                                                ajax: {
-                                                    url: jsObject['root'] + `dt-posts/v2/${jsObject['post']['post_type']}/multi-select-values`,
-                                                    data: {
-                                                        s: "{{query}}",
-                                                        field: field_id
-                                                    },
-                                                    beforeSend: function (xhr) {
-                                                        xhr.setRequestHeader('X-WP-Nonce', jsObject['nonce']);
-                                                    },
-                                                    callback: {
-                                                        done: function (data) {
-                                                            return (data || []).map(tag => {
-                                                                return {name: tag}
-                                                            })
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        },
-                                        display: "name",
-                                        templateValue: "{{name}}",
-                                        emptyTemplate: function (query) {
-                                            const {addNewTagText, tagExistsText} = this.node[0].dataset
-                                            if (this.comparedItems.includes(query)) {
-                                                return tagExistsText.replace('%s', query)
-                                            }
-                                            const liItem = jQuery('<li>')
-                                            const button = jQuery('<button>', {
-                                                class: "button primary",
-                                                text: addNewTagText.replace('%s', query),
-                                            })
-                                            const tag = this.query
-                                            button.on("click", function () {
-                                                window.Typeahead[typeahead_tags_field_input].addMultiselectItemLayout({name: tag});
-                                            })
-                                            liItem.append(button);
-                                            return liItem;
-                                        },
-                                        dynamic: true,
-                                        multiselect: {
-                                            matchOn: ["name"],
-                                            data: function () {
-                                                return (jsObject['post'][field_id] || []).map(t => {
-                                                    return {name: t}
-                                                })
-                                            },
-                                            callback: {
-                                                onCancel: function (node, item, event) {
-                                                    // Keep a record of deleted tags
-                                                    let deleted_items = (field_meta.val()) ? JSON.parse(field_meta.val()) : [];
-                                                    deleted_items.push(item);
-                                                    field_meta.val(JSON.stringify(deleted_items));
-                                                }
-                                            },
-                                            href: function (item) {
-                                            },
-                                        },
-                                        callback: {
-                                            onClick: function (node, a, item, event) {
-                                                event.preventDefault();
-                                                this.addMultiselectItemLayout({name: item.name});
-
-                                                // If present, remove from deleted meta list.
-                                                let deleted_items = (field_meta.val()) ? JSON.parse(field_meta.val()) : [];
-                                                if (deleted_items.find(e => e.name === item.name)) {
-                                                    let idx = deleted_items.findIndex(e => e.name === item.name);
-                                                    if (idx > -1) {
-                                                        deleted_items.splice(idx, 1);
-                                                        field_meta.val(JSON.stringify(deleted_items));
-                                                    }
-                                                }
-                                            },
-                                            onResult: function (node, query, result, resultCount) {
-                                                let text = TYPEAHEADS.typeaheadHelpText(resultCount, query, result)
-                                                jQuery(tr).find(`#${field_id}-result-container`).html(text);
-                                            },
-                                            onHideLayout: function () {
-                                                jQuery(tr).find(`#${field_id}-result-container`).html("");
-                                            },
-                                            onShowLayout() {
-                                            }
-                                        }
-                                    });
-                                }
-
-                                /**
-                                 * Load
-                                 */
-
-                                    // If available, load previous post record tags
-                                let typeahead_tags = window.Typeahead[typeahead_tags_field_input];
-                                let post_tags = jsObject['post'][field_id];
-                                if ((post_tags !== undefined) && typeahead_tags) {
-                                    jQuery.each(post_tags, function (idx, tag) {
-                                        typeahead_tags.addMultiselectItemLayout({
-                                            name: window.lodash.escape(tag)
-                                        });
-                                    });
-                                }
-
-                                break;
-                        }
-                    }
-                });
-            };
-            window.activate_field_controls();
-
-            /**
-             * Handle fetch request for assigned details
-             */
-
-            window.get_assigned_details = (post_type, post_id, post_name) => {
-                let contact_name = jQuery('#contact_name');
-
-                // Update contact name
-                contact_name.html(post_name);
-
-                // Fetch requested assigned details
-                window.get_assigned_post(post_type, post_id);
-            };
-
-            /**
-             * Format comment @mentions.
-             */
-
-            let comments = jQuery('.dt-comment-content');
-            if (comments) {
-                jQuery.each(comments, function (idx, comment) {
-                    let formatted_comment = window.SHAREDFUNCTIONS.formatComment(window.lodash.escape(jQuery(comment).html()));
-                    jQuery(comment).html(formatted_comment);
-                });
-            }
-
-            /**
-             * Fetch requested assigned details
-             */
-
-            window.get_assigned_post = (post_type, post_id) => {
-                let comment_count = 2;
-                let form_content_table = jQuery('.form-content-table');
-                form_content_table.fadeOut('fast', function () {
-                    jQuery.ajax({
-                        type: "GET",
-                        data: {
-                            action: 'get',
-                            parts: jsObject.parts,
-                            post_type: post_type,
-                            post_id: post_id,
-                            comment_count: comment_count,
-                            ts: moment().unix() // Alter url shape, to force cache refresh!
-                        },
-                        contentType: "application/json; charset=utf-8",
-                        dataType: "json",
-                        url: jsObject.root + jsObject.parts.root + '/v1/' + jsObject.parts.type + '/post',
-                        beforeSend: function (xhr) {
-                            xhr.setRequestHeader('X-WP-Nonce', jsObject.nonce);
-                            xhr.setRequestHeader('Cache-Control', 'no-store');
-                        }
-
-                    }).done(function (data) {
-                        if (data['success'] && data['post']) {
-                            let post = data['post'];
-
-                            // Iterate over form fields, updating values accordingly based on returned post shape.
-                            jQuery('.form-content-table > tbody > tr').each(function (idx, tr) {
-                                let field_id = jQuery(tr).find('#form_content_table_field_id').val();
-                                let field_type = jQuery(tr).find('#form_content_table_field_type').val();
-                                let field_template_type = jQuery(tr).find('#form_content_table_field_template_type').val();
-                                let field_meta = jQuery(tr).find('#form_content_table_field_meta');
-
-                                let selector = '#' + field_id;
-                                if (field_template_type === 'dt') {
-                                    switch (field_type) {
-                                        case 'number':
-                                        case 'textarea':
-                                        case 'text': {
-                                            jQuery(tr).find(selector).val(post[field_id] ? post[field_id]:'');
-                                            break;
-                                        }
-                                        case 'key_select': {
-                                            jQuery(tr).find(selector).val((post[field_id] && post[field_id]['key']) ? post[field_id]['key']:'');
-                                            break;
-                                        }
-                                        case 'communication_channel': {
-
-                                            // Remove any stale communication_channel fields, without delete metadata update.
-                                            jQuery(tr).find('.channel-delete-button[data-field="' + field_id + '"]').each(function (idx, del_button) {
-                                                jQuery(del_button).parent().parent().remove();
-                                            });
-
-                                            // Display any new post communication_channel fields.
-                                            if (post[field_id]) {
-                                                post[field_id].forEach(function (option) {
-                                                    jQuery(tr).find('button.add-button').trigger('click');
-
-                                                    // Insert field value and update key.
-                                                    jQuery(tr).find('.input-group').last().find('input').val(option['value']);
-                                                    if (option['key']) {
-                                                        jQuery(tr).find('.input-group').last().find('button').attr('data-key', window.lodash.escape(option['key']));
-                                                    }
-                                                });
-                                            }
-
-                                            // Reset row meta field!
-                                            field_meta.val('');
-
-                                            break;
-                                        }
-                                        case 'multi_select': {
-                                            jQuery(tr).find('button').each(function () {
-                                                jQuery(this).addClass('empty-select-button');
-                                                jQuery(this).removeClass('selected-select-button');
-
-                                                if (post[field_id] && (jQuery(this).data('field-key') === field_id) && post[field_id].includes(jQuery(this).attr('id'))) {
-                                                    jQuery(this).removeClass('empty-select-button');
-                                                    jQuery(this).addClass('selected-select-button');
-                                                }
-                                            });
-                                            break;
-                                        }
-                                        case 'boolean': {
-                                            jQuery(tr).find(selector).prop('checked', post[field_id]);
-                                            break;
-                                        }
-                                        case 'date': {
-                                            if (post[field_id] && post[field_id]['timestamp']) {
-                                                let timestamp = post[field_id]['timestamp'];
-                                                jQuery(tr).find(selector).data('daterangepicker').setStartDate(moment.unix(timestamp));
-                                                jQuery(tr).find(selector).val(moment.unix(timestamp).format('MMMM D, YYYY'));
-                                                field_meta.val(moment.unix(timestamp).format('YYYY-MM-DD'));
-
-                                            } else {
-                                                jQuery(tr).find(selector).val('');
-                                                field_meta.val('');
-                                            }
-                                            break;
-                                        }
-                                        case 'tags': {
-                                            jQuery(tr).find('span.typeahead__cancel-button').trigger('click');
-                                            let typeahead_tags_field_input = '.js-typeahead-' + field_id;
-                                            let typeahead_tags = window.Typeahead[typeahead_tags_field_input];
-
-                                            typeahead_tags.items = [];
-                                            typeahead_tags.comparedItems = [];
-                                            typeahead_tags.label.container.empty();
-
-                                            if (post[field_id] && typeahead_tags) {
-                                                post[field_id].forEach(function (tag) {
-                                                    typeahead_tags.addMultiselectItemLayout({
-                                                        name: window.lodash.escape(tag)
-                                                    });
-                                                    typeahead_tags.adjustInputSize();
-                                                });
-                                            }
-
-                                            // Reset meta field!
-                                            field_meta.val('');
-
-                                            break;
-                                        }
-                                        case 'location': {
-                                            jQuery(tr).find('span.typeahead__cancel-button').trigger('click');
-                                            let typeahead_location_field_input = '.js-typeahead-' + field_id;
-                                            let typeahead_location = window.Typeahead[typeahead_location_field_input];
-
-                                            typeahead_location.items = [];
-                                            typeahead_location.comparedItems = [];
-                                            typeahead_location.label.container.empty();
-
-                                            if (post[field_id] && typeahead_location) {
-                                                post[field_id].forEach(function (location) {
-                                                    typeahead_location.addMultiselectItemLayout({
-                                                        ID: location['id'],
-                                                        name: window.lodash.escape(location['label'])
-                                                    });
-                                                    typeahead_location.adjustInputSize();
-                                                });
-                                            }
-
-                                            // Reset meta field!
-                                            field_meta.val('');
-
-                                            break;
-                                        }
-                                        case 'location_meta': {
-                                            jQuery(tr).find('.mapbox-delete-button').trigger('click');
-
-                                            // Display previously saved locations
-                                            let lgm_results = jQuery(tr).find('#location-grid-meta-results');
-                                            if (post[field_id] !== undefined && post[field_id].length !== 0) {
-                                                jQuery.each(post[field_id], function (i, v) {
-                                                    if (v.grid_meta_id) {
-                                                        lgm_results.append(`<div class="input-group">
-                                                            <input type="text" class="active-location input-group-field" id="location-${window.lodash.escape(v.grid_meta_id)}" dir="auto" value="${window.lodash.escape(v.label)}" readonly />
-                                                            <div class="input-group-button">
-                                                              <button type="button" class="button success delete-button-style open-mapping-grid-modal" title="${window.lodash.escape(jsObject['mapbox']['translations']['open_modal'])}" data-id="${window.lodash.escape(v.grid_meta_id)}"><i class="fi-map"></i></button>
-                                                              <button type="button" class="button alert delete-button-style delete-button mapbox-delete-button" title="${window.lodash.escape(jsObject['mapbox']['translations']['delete_location'])}" data-id="${window.lodash.escape(v.grid_meta_id)}">&times;</button>
-                                                            </div>
-                                                          </div>`);
-                                                    } else {
-                                                        lgm_results.append(`<div class="input-group">
-                                                            <input type="text" class="dt-communication-channel input-group-field" id="${window.lodash.escape(v.key)}" value="${window.lodash.escape(v.label)}" dir="auto" data-field="contact_address" />
-                                                            <div class="input-group-button">
-                                                              <button type="button" class="button success delete-button-style open-mapping-address-modal"
-                                                                  title="${window.lodash.escape(jsObject['mapbox']['translations']['open_modal'])}"
-                                                                  data-id="${window.lodash.escape(v.key)}"
-                                                                  data-field="contact_address"
-                                                                  data-key="${window.lodash.escape(v.key)}">
-                                                                  <i class="fi-pencil"></i>
-                                                              </button>
-                                                              <button type="button" class="button alert input-height delete-button-style channel-delete-button delete-button" title="${window.lodash.escape(jsObject['mapbox']['translations']['delete_location'])}" data-id="${window.lodash.escape(v.key)}" data-field="contact_address" data-key="${window.lodash.escape(v.key)}">&times;</button>
-                                                            </div>
-                                                          </div>`);
-                                                    }
-                                                })
-                                            }
-
-                                            // Reset meta field!
-                                            field_meta.val('');
-
-                                            break;
-                                        }
-                                        default:
-                                            break;
-                                    }
-                                } else if (field_template_type === 'custom') {
-                                    jQuery(tr).find(selector).val('');
-                                }
-                            });
-
-                            // Update Comments -> First, removing any previous comments, before capturing new ones!
-                            form_content_table.find('.dt-comment-tr').remove();
-                            if (data['comments'] && data['comments']['comments'] && (data['comments']['comments'].length > 0)) {
-                                $.each(data['comments']['comments'], function (idx, comment) {
-                                    let comment_tr_html = `
-                                    <tr class="dt-comment-tr">
-                                        <td>
-                                            <div class="section-subheader dt-comment-subheader">
-                                                ${window.lodash.escape(comment['comment_author'])} @ ${window.lodash.escape(comment['comment_date'])}
-                                            </div>
-                                            <span class="dt-comment-content">${window.SHAREDFUNCTIONS.formatComment(window.lodash.escape(comment['comment_content']))}</span>
-                                        </td>
-                                    </tr>
-                                    `;
-
-                                    form_content_table.find('tbody').append(comment_tr_html);
-                                });
-                            }
-
-                            // Final Updates -> Capture new post id, type & object
-                            jQuery('#post_id').val(post['ID']);
-                            jQuery('#post_type').val(post['post_type']);
-                            jsObject.post = post;
-
-                            // Display updated form fields.
-                            form_content_table.fadeIn('fast');
-                        }
-
-                    }).fail(function (e) {
-                        console.log(e);
-                        jQuery('#error').html(e);
-                    });
-                });
-            };
-
-            /**
-             * Create new record
-             */
-
-            jQuery('#add_new').on('click', function (evt) {
-                const add_new_but = $(evt.target);
-                window.get_assigned_details( $(add_new_but).data('post_type'), $(add_new_but).data('post_id'), $(add_new_but).data('post_name') );
-            });
-
-            /**
-             * Submit contact details
-             */
-
-            jQuery('#content_submit_but').on("click", function () {
-                let spinner = jQuery('.update-loading-spinner');
-                let id = jQuery('#post_id').val();
-                let post_type = jQuery('#post_type').val();
-
-                // Reset error message field
-                let error = jQuery('#error');
-                error.html('');
-
-                // Sanity check content prior to submission
-                if (!id || String(id).trim().length === 0) {
-                    error.html('Invalid post id detected!');
-
-                } else {
-
-                    // Build payload accordingly, based on enabled states
-                    let payload = {
-                        'action': 'get',
-                        'parts': jsObject.parts,
-                        'template_name': ( jsObject.template['name'] ) ? jsObject.template['name'] : '',
-                        'send_submission_notifications': ( jsObject.template['send_submission_notifications'] ) ? jsObject.template['send_submission_notifications'] : true,
-                        'post_id': id,
-                        'post_type': post_type,
-                        'fields': {
-                            'dt': [],
-                            'custom': []
-                        }
-                    }
-
-                    // Iterate over form fields, capturing values accordingly.
-                    jQuery('.form-content-table > tbody > tr').each(function (idx, tr) {
-
-                        let field_id = jQuery(tr).find('#form_content_table_field_id').val();
-                        let field_type = jQuery(tr).find('#form_content_table_field_type').val();
-                        let field_template_type = jQuery(tr).find('#form_content_table_field_template_type').val();
-                        let field_meta = jQuery(tr).find('#form_content_table_field_meta');
-
-                        let template_fields = jsObject.template.fields.filter(f => f.id === field_id);
-                        if (template_fields && template_fields.length && template_fields[0].readonly) {
-                            return;
-                        }
-                        let selector = '#' + field_id;
-                        if (field_template_type === 'dt') {
-                            switch (field_type) {
-
-                                case 'number':
-                                case 'textarea':
-                                case 'text':
-                                case 'key_select':
-                                case 'boolean':
-                                    payload['fields']['dt'].push({
-                                        id: field_id,
-                                        dt_type: field_type,
-                                        template_type: field_template_type,
-                                        value: jQuery(tr).find(selector).val()
-                                    });
-                                    break;
-
-                                case 'communication_channel':
-                                    let values = [];
-                                    jQuery(tr).find('.input-group').each(function () {
-                                        values.push({
-                                            'key': jQuery(this).find('button').data('key'),
-                                            'value': jQuery(this).find('input').val()
-                                        });
-                                    });
-                                    payload['fields']['dt'].push({
-                                        id: field_id,
-                                        dt_type: field_type,
-                                        template_type: field_template_type,
-                                        value: values,
-                                        deleted: field_meta.val() ? JSON.parse(field_meta.val()) : []
-                                    });
-                                    break;
-
-                                case 'multi_select':
-                                    let options = [];
-                                    jQuery(tr).find('button').each(function () {
-                                        options.push({
-                                            'value': jQuery(this).attr('id'),
-                                            'delete': jQuery(this).hasClass('empty-select-button')
-                                        });
-                                    });
-                                    payload['fields']['dt'].push({
-                                        id: field_id,
-                                        dt_type: field_type,
-                                        template_type: field_template_type,
-                                        value: options
-                                    });
-                                    break;
-
-                                case 'date':
-                                    payload['fields']['dt'].push({
-                                        id: field_id,
-                                        dt_type: field_type,
-                                        template_type: field_template_type,
-                                        value: field_meta.val()
-                                    });
-                                    break;
-
-                                case 'tags':
-                                case 'location':
-                                    let typeahead = window.Typeahead['.js-typeahead-' + field_id];
-                                    if (typeahead) {
-                                        payload['fields']['dt'].push({
-                                            id: field_id,
-                                            dt_type: field_type,
-                                            template_type: field_template_type,
-                                            value: typeahead.items,
-                                            deletions: field_meta.val() ? JSON.parse(field_meta.val()) : []
-                                        });
-                                    }
-                                    break;
-
-                                case 'location_meta':
-                                    payload['fields']['dt'].push({
-                                        id: field_id,
-                                        dt_type: field_type,
-                                        template_type: field_template_type,
-                                        value: (window.selected_location_grid_meta !== undefined) ? window.selected_location_grid_meta : '',
-                                        deletions: field_meta.val() ? JSON.parse(field_meta.val()) : []
-                                    });
-                                    break;
-
-                                default:
-                                    break;
-                            }
-
-                        } else if (field_template_type === 'custom') {
-                            payload['fields']['custom'].push({
-                                id: field_id,
-                                dt_type: field_type,
-                                template_type: field_template_type,
-                                value: jQuery(tr).find(selector).val() ? jQuery(tr).find('.section-subheader').html() + ': ' + jQuery(tr).find(selector).val() : ''
-                            });
-                        }
-                    });
-
-                    // Disable submission button during this process.
-                    jQuery('#content_submit_but').prop('disabled', true);
-
-                    // Final sanity check of submitted payload fields.
-                    let validated = null;
-                    if (typeof window.ml_utility_submit_field_validation_function === "function") {
-                        validated = window.ml_utility_submit_field_validation_function(jsObject.field_settings, payload['fields']['dt'], {
-                                'id': 'id',
-                                'type': 'dt_type',
-                                'value': 'value'
-                            },
-                            jsObject.translations.validation);
-                    }
-                    if (validated && !validated['success']) {
-                        if (typeof window.ml_utility_submit_error_function === "function") {
-                            window.ml_utility_submit_error_function(validated['message'], function () {
-                                jQuery('#content_submit_but').prop('disabled', false);
-                            });
-                        } else {
-                            jQuery('#content_submit_but').prop('disabled', false);
-                        }
-                    } else {
-                        spinner.addClass('active');
-
-                        // Submit data for post update.
-                        jQuery.ajax({
-                            type: "POST",
-                            data: JSON.stringify(payload),
-                            contentType: "application/json; charset=utf-8",
-                            dataType: "json",
-                            url: jsObject.root + jsObject.parts.root + '/v1/' + jsObject.parts.type + '/update',
-                            beforeSend: function (xhr) {
-                                xhr.setRequestHeader('X-WP-Nonce', jsObject.nonce)
-                            }
-
-                        }).done(function (data) {
-
-                            // If successful, refresh page, otherwise; display error message
-                            if (data['success']) {
-                                if (typeof window.ml_utility_submit_success_function === "function") {
-                                    window.ml_utility_submit_success_function(jsObject.translations.update_success, function () {
-                                        window.location.reload();
-                                    });
-                                } else {
-                                    window.location.reload();
-                                }
-
-                            } else {
-                                if (typeof window.ml_utility_submit_error_function === "function") {
-                                    window.ml_utility_submit_error_function(data['message'], function () {
-                                        console.log(data);
-                                        jQuery('#error').html('');
-                                        jQuery('#content_submit_but').prop('disabled', false);
-                                    });
-                                } else {
-                                    console.log(data);
-                                    jQuery('#error').html('');
-                                    jQuery('#content_submit_but').prop('disabled', false);
-                                }
-                            }
-
-                        }).fail(function (e) {
-                            if (typeof window.ml_utility_submit_error_function === "function") {
-                                window.ml_utility_submit_error_function(e['responseJSON']['message'], function () {
-                                    console.log(e);
-                                    jQuery('#error').html('');
-                                    jQuery('#content_submit_but').prop('disabled', false);
-                                });
-                            } else {
-                                console.log(e);
-                                jQuery('#error').html('');
-                                jQuery('#content_submit_but').prop('disabled', false);
-                            }
-                        });
-                    }
-                }
-            });
-
         </script>
         <?php
         return true;
@@ -1264,11 +283,125 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
     public function body() {
         $has_title = ! empty( $this->template ) && ( isset( $this->template['title'] ) && ! empty( $this->template['title'] ) );
         ?>
-        <div id="custom-style"></div>
-        <div id="wrapper">
-            <h1>My new magic template!</h1>
-            <pre><code><?php echo json_encode( $this->template, JSON_PRETTY_PRINT ) ?></code></pre>
-        </div>
+        <main>
+            <div id="list" class="is-expanded">
+                <div id="search-filter">
+                    <div id="search-bar">
+                        <input type="text" id="search" placeholder="Search" />
+                        <button class="filter-button mdi mdi-filter-variant"></button>
+
+                    </div>
+                    <div class="filters hidden">
+                        <div class="container">
+                            <h3>Sort By</h3>
+                            <label>
+                                <input type="radio" name="sort" value="-updated_at" checked />
+                                Last Updated
+                            </label>
+                            <label>
+                                <input type="radio" name="sort" value="name" />
+                                Name (A-Z)
+                            </label>
+                            <label>
+                                <input type="radio" name="sort" value="-name" />
+                                Name (Z-A)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <ul class="items">
+                    <li><a href="javascript:togglePanels()">Item 1</a></li>
+                    <li><a href="javascript:togglePanels()">Item 2</a></li>
+                    <li><a href="javascript:togglePanels()">Item 3</a></li>
+                    <li><a href="javascript:togglePanels()">Item 4</a></li>
+                    <li><a href="javascript:togglePanels()">Item 5</a></li>
+                    <li><a href="javascript:togglePanels()">Item 6</a></li>
+                    <li><a href="javascript:togglePanels()">Item 7</a></li>
+                    <li><a href="javascript:togglePanels()">Item 8</a></li>
+                    <li><a href="javascript:togglePanels()">Item 9</a></li>
+                    <li><a href="javascript:togglePanels()">Item 10</a></li>
+                    <li><a href="javascript:togglePanels()">Item 11</a></li>
+                </ul>
+            </div>
+            <div id="detail" class="-is-expanded">
+                <header>
+                    <button class="details-toggle mdi mdi-arrow-left"></button>
+                    <h2>Detail Title</h2>
+
+                    <ul class="tabs">
+                        <li><a href="#status">Status</a></li>
+                        <li><a href="#details">Details</a></li>
+                        <li><a href="#faith">Faith</a></li>
+                        <li><a href="#other">Other</a></li>
+                        <li><a href="#comments">Comments & Activity</a></li>
+                    </ul>
+                </header>
+
+                <div class="content">
+                    <details id="status" open>
+                        <summary>Status</summary>
+                        <div>
+                            Status form elements here...
+                            <dt-text label="DT Field Name" name="dt-field-name" />
+                            <p><label>Field Name</label><input type="text" /></p>
+                            <p><label>Field Name</label><input type="text" /></p>
+                            <p><label>Field Name</label><input type="text" /></p>
+                            <p><label>Field Name</label><input type="text" /></p>
+                            <p><label>Field Name</label><input type="text" /></p>
+                        </div>
+                    </details>
+
+                    <details id="details" open>
+                        <summary>Details</summary>
+                        <div>
+                            Detail form elements here...
+                            <p><label>Field Name</label><input type="text" /></p>
+                            <p><label>Field Name</label><input type="text" /></p>
+                            <p><label>Field Name</label><input type="text" /></p>
+                            <p><label>Field Name</label><input type="text" /></p>
+                            <p><label>Field Name</label><input type="text" /></p>
+                        </div>
+                    </details>
+
+                    <details id="faith" open>
+                        <summary>Faith</summary>
+                        <div>
+                            Faith form elements here...
+                            <p><label>Field Name</label><input type="text" /></p>
+                            <p><label>Field Name</label><input type="text" /></p>
+                            <p><label>Field Name</label><input type="text" /></p>
+                            <p><label>Field Name</label><input type="text" /></p>
+                            <p><label>Field Name</label><input type="text" /></p>
+                        </div>
+                    </details>
+
+                    <details id="other" open>
+                        <summary>Other</summary>
+                        <div>
+                            Other form elements here...
+                            <p><label>Field Name</label><input type="text" /></p>
+                            <p><label>Field Name</label><input type="text" /></p>
+                            <p><label>Field Name</label><input type="text" /></p>
+                            <p><label>Field Name</label><input type="text" /></p>
+                            <p><label>Field Name</label><input type="text" /></p>
+                        </div>
+                    </details>
+
+                    <details id="comments" open>
+                        <summary>Comments</summary>
+                        <div>
+                            Comments and activity here...
+                            <p><label>Field Name</label><input type="text" /></p>
+                            <p><label>Field Name</label><input type="text" /></p>
+                            <p><label>Field Name</label><input type="text" /></p>
+                            <p><label>Field Name</label><input type="text" /></p>
+                            <p><label>Field Name</label><input type="text" /></p>
+                        </div>
+                    </details>
+                    <pre><code><?php echo json_encode( $this->template, JSON_PRETTY_PRINT ) ?></code></pre>
+                </div>
+            </div>
+        </main>
         <?php
     }
 
