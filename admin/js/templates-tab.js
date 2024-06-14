@@ -327,7 +327,7 @@ jQuery(function ($) {
 
       // Refresh post type fields list
       let post_types = window.dt_magic_links.dt_post_types;
-      const fields_post_type = (data.type === 'post-connections' ? data.record_type : data.post_type) || data.post_type;
+      const fields_post_type = (data.type === 'post-connections' ? data.record_type : data.post_type) || post_type;
       refresh_post_type_fields_list(post_types[fields_post_type]['fields']);
 
       // Refresh connections fields list

@@ -3,26 +3,48 @@ function loadPostDetail(id) {
 
   const detailTitle = document.getElementById('detail-title');
   const detailTemplate = document.getElementById('post-detail-template');
-  const loadingTemplate = document.getElementById('post-loading-template');
   const detailContent = document.getElementById('detail-content');
-
-  detailContent.replaceChildren(loadingTemplate.content.cloneNode(true));
 
   detailTitle.innerText = item.name;
   const content = detailTemplate.content.cloneNode(true);
-  // const fields = jsObject.fieldSettings;
-  const fields = jsObject.template.fields;
-  for (const field of jsObject.template.fields) {
-    console.log(field);
-    const input = content.querySelector(`[name="${field.id}"]`);
-    if (input) {
-      input.value = item[field.id];
-    }
-  }
+
+  // set value of all inputs in the template
+  setInputValues(content, item);
 
   detailContent.replaceChildren(content);
 
   document.getElementById('list').classList.remove('is-expanded');
+}
+
+function setInputValues(parent, post) {
+  const elements = parent.childNodes;
+
+  for (const element of elements) {
+    if (!element.tagName) {
+      continue;
+    }
+    const tagName = element.tagName.toLowerCase();
+    const name = element.attributes.name ? element.attributes.name.value : null;
+
+    const postValue = post[name];
+
+    switch (tagName) {
+      case 'dt-date':
+        const date = new Date(post[name].timestamp*1000);
+        element.value = date.toISOString().substring(0, 10);
+        break;
+      case 'dt-single-select':
+        element.value = postValue?.key;
+        break;
+      case 'dt-tile':
+        setInputValues(element, post);
+        break;
+      default:
+        if (tagName.startsWith('dt-')) {
+          element.value = post[name];
+        }
+    }
+  }
 }
 function togglePanels() {
   document.querySelectorAll('#list, #detail').forEach((el) => {
