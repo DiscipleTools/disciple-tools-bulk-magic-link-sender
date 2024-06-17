@@ -138,6 +138,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
         $dtwc_version = '0.6.3';
         wp_enqueue_style( 'dt-web-components-css', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/src/styles/light.css", [], $dtwc_version );
         wp_enqueue_script( 'dt-web-components-js', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/dist/index.min.js", $dtwc_version );
+        wp_enqueue_script( 'dt-web-components-services-js', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/dist/services.min.js", $dtwc_version );
 
         $mdi_version = '6.6.96';
         wp_enqueue_style( 'material-font-icons-css', "https://cdn.jsdelivr.net/npm/@mdi/font@$mdi_version/css/materialdesignicons.min.css", [], $mdi_version );
@@ -147,6 +148,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
 
     public function dt_magic_url_base_allowed_js( $allowed_js ) {
         $allowed_js[] = 'dt-web-components-js';
+        $allowed_js[] = 'dt-web-components-services-js';
         $allowed_js[] = 'ml-post-connections-js';
         $allowed_js[] = Disciple_Tools_Bulk_Magic_Link_Sender_API::get_magic_link_utilities_script_handle();
 
@@ -163,7 +165,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
 
     public function script_loader_tag( $tag, $handle ) {
         // add type="module" to web components script tag
-        if ( str_contains( $handle, 'dt-web-components' ) ) {
+        if ( str_contains( $handle, 'dt-web-components-js' ) ) {
             $re = '/type=[\'"](.*?)[\'"]/m';
 
             preg_match_all( $re, $tag, $matches, PREG_SET_ORDER, 0 );
@@ -266,6 +268,8 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
 
             const listItems = new Map(jsObject.items.posts.map((obj) => [obj.ID.toString(), obj]));
 
+            // initialize the list of items
+            loadListItems();
         </script>
         <?php
         return true;
@@ -300,39 +304,30 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                         </div>
                     </div>
                 </div>
-                <ul class="items">
-                <?php if ( isset( $this->items['posts'] ) && count( $this->items['posts'] ) > 0 ): ?>
-                <?php foreach ( $this->items['posts'] as $item ): ?>
+                <ul id="list-items" class="items"></ul>
+                <template id="list-item-template">
                     <li>
-                        <a href="javascript:loadPostDetail(<?php echo esc_attr( $item['ID'] ) ?>)">
-                            <?php echo esc_html( $item['name'] ) ?>
-                        </a>
+                        <a href="javascript:loadPostDetail()"></a>
                     </li>
-                <?php endforeach; ?>
-                <?php endif; ?>
-                </ul>
+                </template>
             </div>
             <div id="detail" class="-is-expanded">
-                <header>
-                    <button class="details-toggle mdi mdi-arrow-left" onclick="togglePanels()"></button>
-                    <h2 id="detail-title"></h2>
+                <form onsubmit="saveItem(event)">
+                    <header>
+                        <button type="button" class="details-toggle mdi mdi-arrow-left" onclick="togglePanels()"></button>
+                        <h2 id="detail-title"></h2>
+                    </header>
 
-                    <!--
-                    <ul class="tabs">
-                        <li><a href="#status">Status</a></li>
-                        <li><a href="#details">Details</a></li>
-                        <li><a href="#faith">Faith</a></li>
-                        <li><a href="#other">Other</a></li>
-                        <li><a href="#comments">Comments & Activity</a></li>
-                    </ul>
-                    -->
-                </header>
-
-                <div id="detail-content"></div>
+                    <div id="detail-content"></div>
+                    <footer>
+                        <button type="submit">Submit</button>
+                    </footer>
+                </form>
 
                 <template id="post-detail-template">
+                    <input type="hidden" name="id" id="post-id" />
+                    <input type="hidden" name="type" id="post-type" />
                     <dt-tile id="all-fields" open>
-                        <dt-text label="Name" name="name"></dt-text>
                     <?php
                     $post_field_settings = DT_Posts::get_post_field_settings( $this->template['record_type'] );
                     if ( isset( $this->template['fields'] ) ) {
@@ -354,7 +349,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                                     : 'dt-text';
                                 $label = ( ! empty( $field['translations'] ) && isset( $field['translations'][ determine_locale() ] ) ) ? $field['translations'][ determine_locale() ]['translation'] : $field['label'];
                             ?>
-                                <<?php echo $tag ?> id="<?php echo esc_html( $field['id'] ) ?>" label="<?php echo esc_attr( $label ) ?>"></<?php echo $tag ?>>
+                                <<?php echo $tag ?> id="<?php echo esc_html( $field['id'] ) ?>" class="custom-field" label="<?php echo esc_attr( $label ) ?>"></<?php echo $tag ?>>
                             <?php
                             }
                         }
@@ -580,14 +575,13 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
         }
     }
 
-
     /**
      * Register REST Endpoints
      * @link https://github.com/DiscipleTools/disciple-tools-theme/wiki/Site-to-Site-Link for outside of wordpress authentication
      */
     public function add_endpoints() {
         $namespace = $this->root . '/v1';
-        register_rest_route(
+        /*register_rest_route(
             $namespace, '/' . $this->type . '/post', [
                 [
                     'methods'             => 'GET',
@@ -599,7 +593,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                     },
                 ],
             ]
-        );
+        );*/
         register_rest_route(
             $namespace, '/' . $this->type . '/update', [
                 [
@@ -657,7 +651,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
         }
 
         // Sanitize and fetch user id
-//        $params = dt_recursive_sanitize_array( $params );
+        $params = dt_recursive_sanitize_array( $params );
 
         // Update logged-in user state, if required
         if ( !is_user_logged_in() ){
@@ -666,140 +660,9 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
 
         $updates = [];
 
-        // First, capture and package incoming DT field values
         foreach ( $params['fields']['dt'] ?? [] as $field ){
-            switch ( $field['dt_type'] ) {
-                case 'number':
-                case 'textarea':
-                case 'text':
-                case 'date':
-                case 'boolean':
-                    $field = dt_recursive_sanitize_array( $field );
-                    $updates[$field['id']] = $field['value'];
-                    break;
-                case 'key_select':
-                    $updates[$field['id']] = $field['value'];
-                    break;
-                case 'communication_channel':
-                    $field = dt_recursive_sanitize_array( $field );
-                    $updates[$field['id']] = [];
-
-                    // First, capture additions and updates
-                    foreach ( $field['value'] ?? [] as $value ){
-                        $comm = [];
-                        $comm['value'] = $value['value'];
-
-                        if ( $value['key'] !== 'new' ){
-                            $comm['key'] = $value['key'];
-                        }
-
-                        $updates[$field['id']][] = $comm;
-                    }
-
-                    // Next, capture deletions
-                    foreach ( $field['deleted'] ?? [] as $delete_key ){
-                        $updates[$field['id']][] = [
-                            'delete' => true,
-                            'key' => $delete_key
-                        ];
-                    }
-                    break;
-
-                case 'multi_select':
-                    $field = dt_recursive_sanitize_array( $field );
-                    $options = [];
-                    foreach ( $field['value'] ?? [] as $option ){
-                        $entry = [];
-                        $entry['value'] = $option['value'];
-                        if ( $option['delete'] ){
-                            $entry['delete'] = true;
-                        }
-                        $options[] = $entry;
-                    }
-                    if ( !empty( $options ) ){
-                        $updates[$field['id']] = [
-                            'values' => $options
-                        ];
-                    }
-                    break;
-
-                case 'location':
-                    $field = dt_recursive_sanitize_array( $field );
-                    $locations = [];
-                    foreach ( $field['value'] ?? [] as $location ){
-                        $entry = [];
-                        $entry['value'] = $location['ID'];
-                        $locations[] = $entry;
-                    }
-
-                    // Capture any incoming deletions
-                    foreach ( $field['deletions'] ?? [] as $location ){
-                        $entry = [];
-                        $entry['value'] = $location['ID'];
-                        $entry['delete'] = true;
-                        $locations[] = $entry;
-                    }
-
-                    // Package and append to global updates
-                    if ( !empty( $locations ) ){
-                        $updates[$field['id']] = [
-                            'values' => $locations
-                        ];
-                    }
-                    break;
-
-                case 'location_meta':
-                    $field = dt_recursive_sanitize_array( $field );
-                    $locations = [];
-
-                    // Capture selected location, if available; or prepare shape
-                    if ( !empty( $field['value'] ) && isset( $field['value'][$field['id']] ) ){
-                        $locations[$field['id']] = $field['value'][$field['id']];
-
-                    } else {
-                        $locations[$field['id']] = [
-                            'values' => []
-                        ];
-                    }
-
-                    // Capture any incoming deletions
-                    foreach ( $field['deletions'] ?? [] as $id ){
-                        $entry = [];
-                        $entry['grid_meta_id'] = $id;
-                        $entry['delete'] = true;
-                        $locations[$field['id']]['values'][] = $entry;
-                    }
-
-                    // Package and append to global updates
-                    if ( !empty( $locations[$field['id']]['values'] ) ){
-                        $updates[$field['id']] = $locations[$field['id']];
-                    }
-                    break;
-
-                case 'tags':
-                    $field = dt_recursive_sanitize_array( $field );
-                    $tags = [];
-                    foreach ( $field['value'] ?? [] as $tag ){
-                        $entry = [];
-                        $entry['value'] = $tag['name'];
-                        $tags[] = $entry;
-                    }
-
-                    // Capture any incoming deletions
-                    foreach ( $field['deletions'] ?? [] as $tag ){
-                        $entry = [];
-                        $entry['value'] = $tag['name'];
-                        $entry['delete'] = true;
-                        $tags[] = $entry;
-                    }
-
-                    // Package and append to global updates
-                    if ( !empty( $tags ) ){
-                        $updates[$field['id']] = [
-                            'values' => $tags
-                        ];
-                    }
-                    break;
+            if ( isset( $field['value'] )/* && $field['id'] === 'name'*/ ) {
+                $updates[$field['id']] = $field['value'];
             }
         }
 
@@ -846,7 +709,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
         }
 
         // Next, dispatch submission notification, accordingly; always send by default.
-        if ( $params['send_submission_notifications'] && isset( $updated_post['assigned_to'], $updated_post['assigned_to']['id'], $updated_post['assigned_to']['display'] ) ) {
+        if ( isset( $params['send_submission_notifications'] ) && $params['send_submission_notifications'] && isset( $updated_post['assigned_to'], $updated_post['assigned_to']['id'], $updated_post['assigned_to']['display'] ) ) {
             $default_comment = sprintf( __( '%s Updates Submitted', 'disciple_tools' ), $params['template_name'] );
             $submission_comment = '@[' . $updated_post['assigned_to']['display'] . '](' . $updated_post['assigned_to']['id'] . ') ' . $default_comment;
             DT_Posts::add_post_comment( $updated_post['post_type'], $updated_post['ID'], $submission_comment, 'comment', [], false );
@@ -855,7 +718,8 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
         // Finally, return successful response
         return [
             'success' => true,
-            'message' => ''
+            'message' => '',
+            'post' => $updated_post,
         ];
     }
 
