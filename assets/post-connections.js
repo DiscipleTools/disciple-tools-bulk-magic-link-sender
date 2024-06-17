@@ -80,8 +80,10 @@ function setInputValues(parent, post) {
 
     switch (tagName) {
       case 'dt-date':
-        const date = new Date(post[name].timestamp*1000);
-        element.value = date.toISOString().substring(0, 10);
+        if (postValue && postValue.timestamp) {
+          const date = new Date(postValue.timestamp * 1000);
+          element.value = date.toISOString().substring(0, 10);
+        }
         break;
       case 'dt-single-select':
         element.value = postValue?.key;

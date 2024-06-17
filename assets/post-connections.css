@@ -26,6 +26,7 @@ code { display: block !important; }
 
 /* ===== List Panel ===== */
 #list {
+    --header-height: 2rem;
     --search-margin-block: 1rem;
     --search-border-width: 2px;
     --search-input-height: 2.5rem;
@@ -49,10 +50,19 @@ code { display: block !important; }
     transition: flex 0.2s ease-in;
 }
 
+#list > header {
+    background-color: #fff;
+    text-align: center;
+    height: var(--header-height);
+}
+
 #list .items {
     flex-grow: 1;
     list-style: none;
-    padding: calc(var(--search-height) + 1rem) 1rem 0 1rem;
+    padding: calc(
+        var(--header-height) +
+        var(--search-height) +
+        1rem) 1rem 0 1rem;
     overflow-y: auto;
     position: absolute;
     top: 0;

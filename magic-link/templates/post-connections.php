@@ -246,11 +246,11 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
     public function body() {
         $has_title = ! empty( $this->template ) && ( isset( $this->template['title'] ) && ! empty( $this->template['title'] ) );
         ?>
-        <header>
-            <h1><?php echo $has_title ? $this->template['title'] : '' ?></h1>
-        </header>
         <main>
             <div id="list" class="is-expanded">
+                <header>
+                    <h1><?php echo $has_title ? $this->template['title'] : '&nbsp;' ?></h1>
+                </header>
                 <div id="search-filter">
                     <div id="search-bar">
                         <input type="text" id="search" placeholder="Search" />
