@@ -204,5 +204,3 @@ function toggleFilters() {
     el.classList.toggle('hidden');
   })
 }
-
-document.querySelectorAll('button.filter').forEach((el) => el.addEventListener('click', toggleFilters));

@@ -95,6 +95,9 @@ class Disciple_Tools_Bulk_Magic_Link_Sender {
         require_once( 'magic-link/magic-link-user-posts-base.php' );
         require_once( 'magic-link/magic-link-user-groups-app.php' );
         require_once( 'magic-link/magic-links-cron.php' );
+        require_once( 'magic-link/magic-links-helper.php' );
+
+        class_alias('Disciple_Tools_Magic_Links_Helper', 'DT_ML_Helper'); // make a shorter, easier alias for helper class
 
         if ( is_admin() ) {
             require_once( 'admin/admin-menu-and-tabs.php' ); // adds starter admin page and section for plugin
