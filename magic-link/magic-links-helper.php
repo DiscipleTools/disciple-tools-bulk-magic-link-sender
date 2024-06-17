@@ -79,6 +79,7 @@ class Disciple_Tools_Magic_Links_Helper
                   id="' . esc_attr( $display_field_id ) . '"
                   name="' . esc_attr( $field_key ) .'"
                   label="' . esc_attr( $fields[$field_key]['name'] ) . '"
+                  data-type="' . esc_attr( $field_type ) . '"
                   ' . esc_html( $icon ) . '
                   ' . esc_html( $required_tag ) . '
                   ' . esc_html( $disabled ) . '

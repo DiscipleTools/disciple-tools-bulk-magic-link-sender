@@ -143,13 +143,13 @@ function saveItem(event) {
       return;
     }
     const field_id = el.name;
-
+    const type = el.dataset.type;
 
     const value = WebComponentServices.ComponentService.convertValue(el.localName, el.value);
-    const fieldType = el.classList.contains('custom-field') ? 'custom' : 'dt';
+    const fieldType = type === 'custom' ? 'custom' : 'dt';
     payload['fields'][fieldType].push({
       id: field_id,
-      // type: field_type,
+      type,
       value: value,
     });
   });

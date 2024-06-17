@@ -312,7 +312,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                                 $post_field_settings[$field['id']]['custom_display'] = false;
                                 $post_field_settings[$field['id']]['readonly'] = !empty($field['readonly']) && boolval( $field['readonly'] );
 
-                                DT_ML_Helper::render_field_for_display($field['id'], $post_field_settings, []);
+                                Disciple_Tools_Magic_Links_Helper::render_field_for_display($field['id'], $post_field_settings, []);
                             } else {
                                 // display custom field for this magic link
                                 $tag = isset( $field['custom_form_field_type'] ) && $field['custom_form_field_type'] == 'textarea'
@@ -320,7 +320,12 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                                     : 'dt-text';
                                 $label = ( ! empty( $field['translations'] ) && isset( $field['translations'][ determine_locale() ] ) ) ? $field['translations'][ determine_locale() ]['translation'] : $field['label'];
                             ?>
-                                <<?php echo $tag ?> id="<?php echo esc_html( $field['id'] ) ?>" class="custom-field" label="<?php echo esc_attr( $label ) ?>"></<?php echo $tag ?>>
+                                <<?php echo $tag ?>
+                                    id="<?php esc_html_e( $field['id'] ) ?>"
+                                    name="<?php esc_html_e( $field['id'] ) ?>"
+                                    data-type="<?php esc_attr_e( $field['type'] ) ?>"
+                                    label="<?php echo esc_attr( $label ) ?>"
+                                ></<?php echo $tag ?>>
                             <?php
                             }
                         }
