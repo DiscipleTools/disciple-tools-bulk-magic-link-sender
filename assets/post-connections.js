@@ -171,6 +171,8 @@ function saveItem(event) {
     })
     .then((json) => {
       if (json.success && json.post) {
+        showNotification('Item saved', 'success');
+
         // update jsObject
         const idx = jsObject.items.posts.findIndex((i) => i.ID === json.post.ID);
         if (idx > -1) {
@@ -190,6 +192,39 @@ function saveItem(event) {
       console.log(reason);
     });
 }
+
+/**
+ * Insert new notification message into snackbar area
+ * @param message - Content of message
+ * @param type - CSS class to add (e.g. succeess, error)
+ * @param duration - Duration (ms) to keep message visible
+ */
+function showNotification(message, type, duration = 5000) {
+  const template = document.getElementById('snackbar-item-template').content;
+  const newItem = template.cloneNode(true);
+  const now = Date.now()
+  const itemEl = newItem.querySelector('.snackbar-item');
+
+  if (type) {
+    itemEl.classList.add(type);
+  }
+  itemEl.innerText = message;
+  const elId = `snack-${now}`
+  itemEl.id = elId;
+  document.getElementById('snackbar-area').appendChild(newItem);
+
+  setTimeout(async () => {
+    const el = document.getElementById(elId);
+
+    // wait for CSS transition
+    el.classList.add('exiting');
+    await new Promise(r => setTimeout(r, 500));
+
+    // remove element from DOM
+    el.remove();
+  }, duration);
+}
+
 function togglePanels() {
   document.querySelectorAll('#list, #detail').forEach((el) => {
     el.classList.toggle('is-expanded');

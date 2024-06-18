@@ -334,6 +334,10 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                     </dt-tile>
                 </template>
             </div>
+            <div id="snackbar-area"></div>
+            <template id="snackbar-item-template">
+                <div class="snackbar-item"></div>
+            </template>
         </main>
         <?php
     }
