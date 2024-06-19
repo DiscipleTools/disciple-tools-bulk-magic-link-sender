@@ -429,7 +429,25 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
 
         foreach ( $params['fields']['dt'] ?? [] as $field ){
             if ( isset( $field['value'] ) && $field['id'] === 'name' ) {
-                $updates[$field['id']] = $field['value'];
+                switch ( $field['type'] ) {
+                    case 'text':
+                    case 'textarea':
+                    case 'number':
+                    case 'date':
+                    case 'datetime':
+                    case 'boolean':
+                    case 'key_select':
+                    case 'multi_select':
+                    case 'communication_channel':
+                    case 'tags':
+                    case 'location':
+                    case 'location_meta': // todo: this isn't working right
+                        $updates[$field['id']] = $field['value'];
+                        break;
+                    default:
+                        $updates[$field['id']] = $field['value'];
+                        break;
+                }
             }
         }
 
