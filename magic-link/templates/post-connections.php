@@ -111,6 +111,9 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
 
         $this->link_obj = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $this->fetch_incoming_link_param( 'id' ) );
 
+        // Revert back to dt translations
+        $this->hard_switch_to_default_dt_text_domain();
+        
         /**
          * Load if valid url
          */
@@ -291,7 +294,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
 
                     <div id="detail-content"></div>
                     <footer>
-                        <button type="submit">Submit</button>
+                        <button type="submit"><?php esc_html_e( 'Submit Update', 'disciple_tools' ) ?></button>
                     </footer>
                 </form>
 
