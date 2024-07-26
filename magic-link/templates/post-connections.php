@@ -113,7 +113,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
 
         // Revert back to dt translations
         $this->hard_switch_to_default_dt_text_domain();
-        
+
         /**
          * Load if valid url
          */
@@ -123,7 +123,6 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
         add_filter('dt_magic_url_base_allowed_js', [$this, 'dt_magic_url_base_allowed_js'], 10, 1);
         add_action('wp_enqueue_scripts', [$this, 'wp_enqueue_scripts'], 100);
         add_filter('dt_can_update_permission', [$this, 'can_update_permission_filter'], 10, 3);
-        add_filter( 'script_loader_tag', [ $this, 'script_loader_tag' ], 10, 2 );
     }
 
     // Ensure template fields remain editable
@@ -138,10 +137,23 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
         wp_enqueue_style( 'ml-post-connections-css', plugin_dir_url( __FILE__ ) . $css_path, null, filemtime( plugin_dir_path( __FILE__ ) . $css_path ) );
         wp_enqueue_script( 'ml-post-connections-js', plugin_dir_url( __FILE__ ) . $js_path, null, filemtime( plugin_dir_path( __FILE__ ) . $js_path ) );
 
-        $dtwc_version = '0.6.3';
-        wp_enqueue_style( 'dt-web-components-css', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/src/styles/light.css", [], $dtwc_version );
-        wp_enqueue_script( 'dt-web-components-js', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/dist/index.min.js", $dtwc_version );
-        wp_enqueue_script( 'dt-web-components-services-js', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/dist/services.min.js", $dtwc_version );
+        $dtwc_version = '0.7.0-beta.2';
+        wp_enqueue_style( 'dt-web-components-css', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/styles/light.css", [], $dtwc_version );
+        wp_enqueue_script( 'dt-web-components-js', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/dist/index.js", $dtwc_version );
+
+//        $path = '../../assets/dtwc/dist2/index.js';
+//        wp_enqueue_script( 'dt-web-components-js',
+//            plugin_dir_url( __FILE__ ) . $path,
+//            null,
+//            filemtime( plugin_dir_path( __FILE__ ) . $path )
+//        );
+//
+//        $css_path = '../../assets/dtwc/dist2/light.css';
+//        wp_enqueue_style( 'dt-web-components-css',
+//            plugin_dir_url( __FILE__ ) . $css_path,
+//            null,
+//            filemtime( plugin_dir_path( __FILE__ ) . $css_path )
+//        );
 
         $mdi_version = '6.6.96';
         wp_enqueue_style( 'material-font-icons-css', "https://cdn.jsdelivr.net/npm/@mdi/font@$mdi_version/css/materialdesignicons.min.css", [], $mdi_version );
@@ -164,25 +176,6 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
         $allowed_css[] = 'ml-post-connections-css';
 
         return $allowed_css;
-    }
-
-    public function script_loader_tag( $tag, $handle ) {
-        // add type="module" to web components script tag
-        if ( str_contains( $handle, 'dt-web-components-js' ) ) {
-            $re = '/type=[\'"](.*?)[\'"]/m';
-
-            preg_match_all( $re, $tag, $matches, PREG_SET_ORDER, 0 );
-
-            if ( count( $matches ) > 0 ) {
-                $tag = str_replace( $matches[0][0], 'type="module"', $tag );
-            } else {
-                $tag = str_replace( '<script ', '<script type="module" ', $tag );
-            }
-
-            return $tag;
-        }
-
-        return $tag;
     }
 
     private function is_link_obj_field_enabled( $field_id ): bool {
@@ -430,8 +423,12 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
 
         $updates = [];
 
-        foreach ( $params['fields']['dt'] ?? [] as $field ){
-            if ( isset( $field['value'] ) && $field['id'] === 'name' ) {
+        foreach ( $params['fields']['dt'] ?? [] as $field ) {
+            if ( $field['id'] === 'age' ) {
+                $field['value'] = str_replace( '&lt;', '<', $field['value'] );
+                $field['value'] = str_replace( '&gt;', '>', $field['value'] );
+            }
+            if ( isset( $field['value'] ) ) {
                 switch ( $field['type'] ) {
                     case 'text':
                     case 'textarea':
@@ -441,14 +438,37 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                     case 'boolean':
                     case 'key_select':
                     case 'multi_select':
-                    case 'communication_channel':
-                    case 'tags':
-                    case 'location':
-                    case 'location_meta': // todo: this isn't working right
+//                    case 'tags':
                         $updates[$field['id']] = $field['value'];
                         break;
+                    case 'communication_channel':
+                        $updates[$field['id']] = [
+                            'values'=> $field['value'],
+                            'force_values' => true,
+                        ];
+                        break;
+//                    case 'location':
+                    case 'location_meta':
+                        $values = array_map(function ($value) {
+                            // try to send without grid_id to get more specific location
+                            if ( isset( $value['lat'], $value['lng'], $value['label'], $value['level'], $value['source'] ) ) {
+                                return array_intersect_key($value, array_fill_keys([
+                                    'lat', 'lng', 'label', 'level', 'source',
+                                ], null));
+                            }
+                            return array_intersect_key($value, array_fill_keys([
+                                'lat', 'lng', 'label', 'level', 'source', 'grid_id'
+                            ], null));
+
+                        }, $field['value'] );
+                        $updates[$field['id']] = [
+                            'values'=> $values,
+                            'force_values' => true,
+                        ];
+                        break;
                     default:
-                        $updates[$field['id']] = $field['value'];
+                        // unhandled field types
+                        dt_write_log( "Unsupported field type: " . $field['value']);
                         break;
                 }
             }
@@ -472,10 +492,12 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
 
             $updated_post = DT_Posts::create_post( $params['post_type'], $updates, false, false );
         } else {
+            // dt_write_log( json_encode( $updates ) );
             $updated_post = DT_Posts::update_post( $params['post_type'], $params['post_id'], $updates, false, false );
         }
 
         if ( empty( $updated_post ) || is_wp_error( $updated_post ) ) {
+            dt_write_log( $updated_post );
             return [
                 'success' => false,
                 'message' => 'Unable to update/create contact record details!'
