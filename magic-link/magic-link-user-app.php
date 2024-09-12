@@ -867,6 +867,8 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
             }
         }
 
+        $data = apply_filters( 'dt_smart_links_filter_assigned_posts_in_contact_updates', $data ); // e.g. to sort alphabetically on name
+
         return $data;
     }
 
