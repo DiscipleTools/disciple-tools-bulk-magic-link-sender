@@ -56,7 +56,6 @@ function disciple_tools_bulk_magic_link_sender() {
     }
 
     return Disciple_Tools_Bulk_Magic_Link_Sender::instance();
-
 }
 
 add_action( 'after_setup_theme', 'disciple_tools_bulk_magic_link_sender', 20 );
@@ -344,5 +343,4 @@ add_action( 'tgmpa_register', function () {
     ];
 
     tgmpa( $plugins, $config );
-
 } );

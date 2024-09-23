@@ -38,7 +38,6 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Menu {
     public function __construct() {
 
         add_action( 'admin_menu', array( $this, 'register_menu' ) );
-
     } // End __construct()
 
 
