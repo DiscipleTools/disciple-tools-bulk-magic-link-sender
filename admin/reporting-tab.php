@@ -12,7 +12,6 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Reporting {
 
         // Load scripts and styles
         $this->process_scripts();
-
     }
 
     private function process_scripts() {

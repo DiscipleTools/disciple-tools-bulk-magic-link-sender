@@ -93,8 +93,8 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Logging {
             if ( ! empty( $logs ) ) {
                 $counter = 0;
                 $limit   = 500;
-                for ( $x = count( $logs ) - 1; $x > 0; $x -- ) {
-                    if ( ++ $counter <= $limit ) {
+                for ( $x = count( $logs ) - 1; $x > 0; $x-- ) {
+                    if ( ++$counter <= $limit ) {
                         echo '<tr>';
                         echo '<td style="vertical-align: middle; text-align: left; min-width: 150px;">' . esc_attr( Disciple_Tools_Bulk_Magic_Link_Sender_API::format_timestamp_in_local_time_zone( $logs[ $x ]->timestamp ) ) . '</td>';
                         echo '<td style="vertical-align: middle; text-align: left;">' . esc_attr( $logs[ $x ]->log ) . '</td>';

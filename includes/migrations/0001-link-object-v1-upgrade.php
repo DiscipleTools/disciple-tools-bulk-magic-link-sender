@@ -105,7 +105,6 @@ class Disciple_Tools_Bulk_Magic_Link_Migration_0001 extends Disciple_Tools_Bulk_
      * @throws \Exception  Got error when dropping table $name.
      */
     public function down() {
-
     }
 
     /**

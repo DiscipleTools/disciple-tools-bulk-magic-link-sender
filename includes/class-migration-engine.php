@@ -46,7 +46,7 @@ class Disciple_Tools_Bulk_Magic_Link_Migration_Engine {
                     require_once( plugin_dir_path( __FILE__ ) . "migrations/$filename" );
                     $migration_name = sprintf( 'Disciple_Tools_Bulk_Magic_Link_Migration_%04d', $got_migration_number );
                     $rv[]           = new $migration_name();
-                    $expected_migration_number ++;
+                    $expected_migration_number++;
                 } else {
                     throw new Exception( "Found filename that doesn't match pattern: $filename" );
                 }

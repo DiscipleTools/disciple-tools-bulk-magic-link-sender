@@ -590,7 +590,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
             $cut_off_point_idx = 0;
 
             $count = count( $logs );
-            for ( $x = 0; $x < $count; $x ++ ) {
+            for ( $x = 0; $x < $count; $x++ ) {
 
                 // Stale logs will typically be found at the start! Therefore, capture transition point!
                 if ( $logs[ $x ]->timestamp > $cut_off_point_ts ) {
@@ -1101,7 +1101,7 @@ Thanks!';
 
                             // If required, increment updated count
                             if ( $updated ) {
-                                $updated_count ++;
+                                $updated_count++;
                             }
                         }
                     }
