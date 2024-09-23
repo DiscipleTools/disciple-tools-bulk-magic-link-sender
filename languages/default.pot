@@ -9,20 +9,20 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2024-08-09T10:14:47+00:00\n"
+"POT-Creation-Date: 2024-09-23T13:20:42+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.11.0\n"
 "X-Domain: disciple-tools-bulk-magic-link-sender\n"
 
-#: magic-link/magic-link-post-type.php:90
+#: magic-link/magic-link-post-type.php:89
 msgid "Magic Url"
 msgstr ""
 
-#: magic-link/magic-link-post-type.php:164
+#: magic-link/magic-link-post-type.php:163
 msgid "Update Successful!"
 msgstr ""
 
-#: magic-link/magic-link-user-app.php:251
+#: magic-link/magic-link-user-app.php:250
 #: magic-link/magic-link-user-posts-base.php:319
 msgid "Thank you for your successful submission. You may return to the form and re-submit if changes are needed."
 msgstr ""
