@@ -245,7 +245,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
         <main>
             <div id="list" class="is-expanded">
                 <header>
-                    <h1><?php echo $has_title ? $this->template['title'] : '&nbsp;' ?></h1>
+                    <h1><?php echo $has_title ? esc_html( $this->template['title'] ) : '&nbsp;' ?></h1>
                 </header>
                 <div id="search-filter">
                     <div id="search-bar">
@@ -316,12 +316,12 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                                     : 'dt-text';
                                 $label = ( ! empty( $field['translations'] ) && isset( $field['translations'][ determine_locale() ] ) ) ? $field['translations'][ determine_locale() ]['translation'] : $field['label'];
                                 ?>
-                                <<?php echo $tag ?>
-                                    id="<?php esc_html_e( $field['id'] ) ?>"
-                                    name="<?php esc_html_e( $field['id'] ) ?>"
-                                    data-type="<?php esc_attr_e( $field['type'] ) ?>"
+                                <<?php echo esc_html( $tag ) ?>
+                                    id="<?php echo esc_html( $field['id'] ) ?>"
+                                    name="<?php echo esc_html( $field['id'] ) ?>"
+                                    data-type="<?php echo esc_attr( $field['type'] ) ?>"
                                     label="<?php echo esc_attr( $label ) ?>"
-                                ></<?php echo $tag ?>>
+                                ></<?php echo esc_html( $tag ) ?>>
                                 <?php
                             }
                         }
