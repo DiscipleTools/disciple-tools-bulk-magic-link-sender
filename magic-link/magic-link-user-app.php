@@ -11,8 +11,8 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
 
     public $page_title = 'User Contact Updates';
     public $page_description = 'An update summary of assigned contacts.';
-    public $root = 'smart_links'; // @todo define the root of the url {yoursite}/root/type/key/action
-    public $type = 'user_contacts_updates'; // @todo define the type
+    public $root = 'smart_links';
+    public $type = 'user_contacts_updates';
     public $post_type = 'user';
     private $meta_key = '';
 
@@ -88,7 +88,9 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                 'enabled'    => true,
                 'post_type'  => 'contacts',
                 'ignore_ids' => [ 'comments' ]
-            ]
+            ],
+            'icon'           => 'mdi mdi-stack-exchange',
+            'show_in_home_apps' => true,
         ];
 
         /**
@@ -864,6 +866,8 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                 }
             }
         }
+
+        $data = apply_filters( 'dt_smart_links_filter_user_contacts_updates', $data ); // e.g. to sort alphabetically on name
 
         return $data;
     }
