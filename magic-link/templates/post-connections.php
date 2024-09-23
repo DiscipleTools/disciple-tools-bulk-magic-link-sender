@@ -118,11 +118,11 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
          * Load if valid url
          */
 
-        add_action('dt_blank_body', [$this, 'body']);
-        add_filter('dt_magic_url_base_allowed_css', [$this, 'dt_magic_url_base_allowed_css'], 10, 1);
-        add_filter('dt_magic_url_base_allowed_js', [$this, 'dt_magic_url_base_allowed_js'], 10, 1);
-        add_action('wp_enqueue_scripts', [$this, 'wp_enqueue_scripts'], 100);
-        add_filter('dt_can_update_permission', [$this, 'can_update_permission_filter'], 10, 3);
+        add_action( 'dt_blank_body', [ $this, 'body' ] );
+        add_filter( 'dt_magic_url_base_allowed_css', [ $this, 'dt_magic_url_base_allowed_css' ], 10, 1 );
+        add_filter( 'dt_magic_url_base_allowed_js', [ $this, 'dt_magic_url_base_allowed_js' ], 10, 1 );
+        add_action( 'wp_enqueue_scripts', [ $this, 'wp_enqueue_scripts' ], 100 );
+        add_filter( 'dt_can_update_permission', [ $this, 'can_update_permission_filter' ], 10, 3 );
     }
 
     // Ensure template fields remain editable
@@ -306,23 +306,23 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                             if ( $field['type'] === 'dt' ) {
                                 // display standard DT fields
                                 $post_field_settings[$field['id']]['custom_display'] = false;
-                                $post_field_settings[$field['id']]['readonly'] = !empty($field['readonly']) && boolval( $field['readonly'] );
+                                $post_field_settings[$field['id']]['readonly'] = !empty( $field['readonly'] ) && boolval( $field['readonly'] );
 
-                                Disciple_Tools_Magic_Links_Helper::render_field_for_display($field['id'], $post_field_settings, []);
+                                Disciple_Tools_Magic_Links_Helper::render_field_for_display( $field['id'], $post_field_settings, [] );
                             } else {
                                 // display custom field for this magic link
                                 $tag = isset( $field['custom_form_field_type'] ) && $field['custom_form_field_type'] == 'textarea'
                                     ? 'dt-textarea'
                                     : 'dt-text';
                                 $label = ( ! empty( $field['translations'] ) && isset( $field['translations'][ determine_locale() ] ) ) ? $field['translations'][ determine_locale() ]['translation'] : $field['label'];
-                            ?>
+                                ?>
                                 <<?php echo $tag ?>
                                     id="<?php esc_html_e( $field['id'] ) ?>"
                                     name="<?php esc_html_e( $field['id'] ) ?>"
                                     data-type="<?php esc_attr_e( $field['type'] ) ?>"
                                     label="<?php echo esc_attr( $label ) ?>"
                                 ></<?php echo $tag ?>>
-                            <?php
+                                <?php
                             }
                         }
                     }
@@ -443,32 +443,40 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                         break;
                     case 'communication_channel':
                         $updates[$field['id']] = [
-                            'values'=> $field['value'],
+                            'values' => $field['value'],
                             'force_values' => true,
                         ];
                         break;
 //                    case 'location':
                     case 'location_meta':
-                        $values = array_map(function ($value) {
+                        $values = array_map(function ( $value ) {
                             // try to send without grid_id to get more specific location
                             if ( isset( $value['lat'], $value['lng'], $value['label'], $value['level'], $value['source'] ) ) {
                                 return array_intersect_key($value, array_fill_keys([
-                                    'lat', 'lng', 'label', 'level', 'source',
+                                    'lat',
+                                    'lng',
+                                    'label',
+                                    'level',
+                                    'source',
                                 ], null));
                             }
                             return array_intersect_key($value, array_fill_keys([
-                                'lat', 'lng', 'label', 'level', 'source', 'grid_id'
+                                'lat',
+                                'lng',
+                                'label',
+                                'level',
+                                'source',
+                                'grid_id'
                             ], null));
-
                         }, $field['value'] );
                         $updates[$field['id']] = [
-                            'values'=> $values,
+                            'values' => $values,
                             'force_values' => true,
                         ];
                         break;
                     default:
                         // unhandled field types
-                        dt_write_log( "Unsupported field type: " . $field['value']);
+                        dt_write_log( 'Unsupported field type: ' . $field['value'] );
                         break;
                 }
             }
