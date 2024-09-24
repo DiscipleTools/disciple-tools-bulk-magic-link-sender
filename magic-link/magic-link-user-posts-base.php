@@ -1041,7 +1041,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         } else {
             $can_update = true;
         }
-        if ( $can_update || isset( $post['assigned_to']['id'] ) && $post['assigned_to']['id'] == get_current_user_id() ) {
+        if ( $can_update || ( isset( $post['assigned_to']['id'] ) && $post['assigned_to']['id'] == get_current_user_id() ) ) {
             $disabled = '';
         }
         $required_tag = ( isset( $fields[$field_key]['required'] ) && $fields[$field_key]['required'] === true ) ? 'required' : '';
@@ -1787,7 +1787,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
             $field_settings = $post_settings['fields'][$field];
 
             if ( $field_settings['type'] === 'connection' ) {
-                if ( empty( $link_obj ) || isset( $link_obj->type_config->enable_connection_fields ) && $link_obj->type_config->enable_connection_fields ) {
+                if ( empty( $link_obj ) || ( isset( $link_obj->type_config->enable_connection_fields ) && $link_obj->type_config->enable_connection_fields ) ) {
                     $options = DT_Posts::get_viewable_compact( $field_settings['post_type'], $query ?? '' );
                 }
             } else if ( $field_settings['type'] === 'tags' ) {

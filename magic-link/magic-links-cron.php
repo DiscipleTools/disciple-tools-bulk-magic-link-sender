@@ -122,5 +122,4 @@ function execute_ml_send( $link_obj, &$logs ) {
         $updated_link_obj->assigned = $updated_assigned;
         Disciple_Tools_Bulk_Magic_Link_Sender_API::update_option_link_obj( $updated_link_obj );
     }
-
 }
