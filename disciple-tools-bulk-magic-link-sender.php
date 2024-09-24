@@ -94,6 +94,8 @@ class Disciple_Tools_Bulk_Magic_Link_Sender {
         require_once( 'magic-link/magic-link-user-posts-base.php' );
         require_once( 'magic-link/magic-link-user-groups-app.php' );
         require_once( 'magic-link/magic-links-cron.php' );
+        require_once( 'magic-link/templates/single-record.php' );
+        require_once( 'magic-link/templates/list-sub-assigned.php' );
 
         if ( is_admin() ) {
             require_once( 'admin/admin-menu-and-tabs.php' ); // adds starter admin page and section for plugin
