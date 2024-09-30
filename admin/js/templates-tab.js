@@ -226,24 +226,7 @@ jQuery(function ($) {
   }) {
 
     // Adjust available type options based on selected post type.
-    let type_option_adjustments = {
-      'contacts': [
-        {
-          'value': 'single-record',
-          'text': 'Single Record'
-        },
-        {
-          'value': 'list-sub-assigned-contacts',
-          'text': 'List Sub-Assigned Contacts'
-        }
-      ],
-      'default-options': [
-        {
-          'value': 'single-record',
-          'text': 'Single Record'
-        }
-      ]
-    };
+    let type_option_adjustments = window.dt_magic_links.dt_magic_links_template_types;
 
     let post_type = $('#templates_management_section_selected_post_type').val();
     let template_details_type_select = $('#ml_main_col_template_details_type');
