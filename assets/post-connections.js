@@ -227,7 +227,7 @@ function showNotification(message, type, duration = 5000) {
 }
 
 function togglePanels() {
-  document.querySelectorAll('#list, #detail').forEach((el) => {
+  document.querySelectorAll('#list').forEach((el) => {
     el.classList.toggle('is-expanded');
   });
 

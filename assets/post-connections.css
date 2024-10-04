@@ -2,7 +2,7 @@
 
 button.mdi {
     background-color: transparent;
-    border: 1px solid gray;
+    border: 0px;
     aspect-ratio: 1;
 }
 
@@ -26,7 +26,7 @@ code { display: block !important; }
 
 /* ===== List Panel ===== */
 #list {
-    --header-height: 2rem;
+    --header-height: 3rem;
     --search-margin-block: 1rem;
     --search-border-width: 2px;
     --search-input-height: 2.5rem;
@@ -40,14 +40,14 @@ code { display: block !important; }
     position: relative;
     flex: 0 1 auto;
     flex-shrink: 1;
-    overflow-y: hidden;
+    overflow-y: auto;
     width: 100%;
     -webkit-transition: flex .2s ease-out;
     transition: flex .2s ease-out;
 }
 @media print, screen and (min-width: 40em) {
     #list {
-        --header-height: 2.5rem;
+        --header-height: 3.5rem;
     }
 }
 #list.is-expanded {
@@ -57,9 +57,27 @@ code { display: block !important; }
 }
 
 #list > header {
+    --icon-size: 2rem;
+    display: flex;
+    align-items: center;
     background-color: #fff;
     text-align: center;
     height: var(--header-height);
+    padding-block-start: 1rem;
+    position: absolute;
+    width: 100%;
+    z-index: 1;
+}
+
+#list > header > h1 {
+    flex-grow: 1;
+    margin: 0;
+    margin-inline-start: calc( var(--icon-size) + 1rem );
+}
+
+#list > header > button.mdi {
+    font-size: var(--icon-size);
+    margin-inline-end: 1rem;
 }
 
 #list .items {
@@ -105,6 +123,9 @@ code { display: block !important; }
     grid-template-rows: var(--search-height) 1fr;
     transition: grid-template-rows 500ms;
     z-index: 1;
+    position: absolute;
+    width: 100%;
+    top: var(--header-height);
 }
 #search-filter:not(:has(.filters)) {
     border-bottom: 4px solid lightgray;
@@ -292,6 +313,10 @@ code { display: block !important; }
 
 /* ===== Misc ===== */
 label {
+    font-weight: bold;
+    display: block;
+}
+#post-detail-modal-content .post-name {
     font-weight: bold;
     display: block;
 }

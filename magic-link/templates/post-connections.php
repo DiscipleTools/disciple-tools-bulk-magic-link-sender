@@ -259,6 +259,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
             <div id="list" class="is-expanded">
                 <header>
                     <h1><?php echo $has_title ? esc_html( $this->template['title'] ) : '&nbsp;' ?></h1>
+                    <button class="mdi mdi-information-outline" onclick="document.getElementById('post-detail-modal')._openModal()"></button>
                 </header>
                 <div id="search-filter">
                     <!--
@@ -293,7 +294,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                     </li>
                 </template>
             </div>
-            <div id="detail" class="-is-expanded">
+            <div id="detail" class="">
                 <!-- <form onsubmit="saveItem(event)"> -->
                 <form>
                     <header>
@@ -351,6 +352,12 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                 <div class="snackbar-item"></div>
             </template>
         </main>
+        <dt-modal id="post-detail-modal" buttonlabel="Open Modal" hideheader hidebutton closebutton>
+            <span slot="content" id="post-detail-modal-content">
+                <span class="post-name"><?php echo $this->post['name'] ?></span>
+                <span class="post-id">ID: <?php echo $this->post['ID'] ?></span>
+            </span>
+        </dt-modal>
         <?php
     }
 
