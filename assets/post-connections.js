@@ -147,7 +147,8 @@ function saveItem(event) {
     const field_id = el.name;
     const type = el.dataset.type;
 
-    const value = DtWebComponents.ComponentService.convertValue(el.localName, el.value);
+    // const value = DtWebComponents.ComponentService.convertValue(el.localName, el.value);
+    const value = window.WebComponentServices.ComponentService.convertValue(el.localName, el.value);
     const fieldType = type === 'custom' ? 'custom' : 'dt';
     payload['fields'][fieldType].push({
       id: field_id,

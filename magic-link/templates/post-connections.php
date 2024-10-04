@@ -153,9 +153,19 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
         wp_enqueue_style( 'ml-post-connections-css', plugin_dir_url( __FILE__ ) . $css_path, null, filemtime( plugin_dir_path( __FILE__ ) . $css_path ) );
         wp_enqueue_script( 'ml-post-connections-js', plugin_dir_url( __FILE__ ) . $js_path, null, filemtime( plugin_dir_path( __FILE__ ) . $js_path ) );
 
-        $dtwc_version = '0.7.0-beta.2';
+        $dtwc_version = '0.6.6';
         wp_enqueue_style( 'dt-web-components-css', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/styles/light.css", [], $dtwc_version );
         wp_enqueue_script( 'dt-web-components-js', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/dist/index.js", $dtwc_version );
+        add_filter( 'script_loader_tag', 'add_module_type_to_script', 10, 3 );
+        function add_module_type_to_script( $tag, $handle, $src ) {
+            if ( 'dt-web-components-js' === $handle ) {
+                // @codingStandardsIgnoreStart
+                $tag = '<script type="module" src="' . esc_url( $src ) . '"></script>';
+                // @codingStandardsIgnoreEnd
+            }
+            return $tag;
+        }
+        wp_enqueue_script( 'dt-web-components-services-js', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/dist/services.min.js", array( 'jquery' ), true ); // not needed after v0.7
 
         $mdi_version = '6.6.96';
         wp_enqueue_style( 'material-font-icons-css', "https://cdn.jsdelivr.net/npm/@mdi/font@$mdi_version/css/materialdesignicons.min.css", [], $mdi_version );
