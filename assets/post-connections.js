@@ -107,7 +107,7 @@ function saveItem(event) {
   event.preventDefault();
   console.log(event);
 
-  const form = event.target;
+  const form = event.target.closest('form');
   const formdata = new FormData(form);
   console.log(formdata);
 

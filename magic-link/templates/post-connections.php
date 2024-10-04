@@ -292,7 +292,8 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                 </template>
             </div>
             <div id="detail" class="-is-expanded">
-                <form onsubmit="saveItem(event)">
+                <!-- <form onsubmit="saveItem(event)"> -->
+                <form>
                     <header>
                         <button type="button" class="details-toggle mdi mdi-arrow-left" onclick="togglePanels()"></button>
                         <h2 id="detail-title"></h2>
@@ -300,7 +301,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
 
                     <div id="detail-content"></div>
                     <footer>
-                        <button type="submit"><?php esc_html_e( 'Submit Update', 'disciple_tools' ) ?></button>
+                        <dt-button onclick="saveItem(event)" type="submit" context="primary"><?php esc_html_e( 'Submit Update', 'disciple_tools' ) ?></dt-button>
                     </footer>
                 </form>
 
