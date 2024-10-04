@@ -3,18 +3,37 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 } // Exit if accessed directly.
 
+add_filter('dt_magic_link_template_types', function( $types ) {
+    $types['contacts'][] = [
+        'value' => 'post-connections',
+        'text' => 'Post Connections',
+    ];
+    $types['default-options'][] = [
+        'value' => 'post-connections',
+        'text' => 'Post Connections',
+    ];
+    return $types;
+});
+
+add_action('dt_magic_link_template_load', function ( $template ) {
+    if ( !empty( $template ) && $template['type'] === 'post-connections' ) {
+        new Disciple_Tools_Magic_Links_Template_Post_Connections( $template );
+    }
+} );
+
 /**
  * Class Disciple_Tools_Magic_Links_Templates
  */
 class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_Base {
 
+    protected $template_type = 'post-connections';
     public $page_title = 'Post Connections';
-    public $page_description = 'Template Title Description';
+    public $page_description = 'Edit all connections to a given post';
     public $root = 'templates'; // @todo define the root of the url {yoursite}/root/type/key/action
     public $type = 'template_id'; // Placeholder to be replaced with actual template ids
     public $type_name = '';
-    public $post_type = 'contacts'; // Support ML contacts (which can be any one of the DT post types) by default!
-    public $record_post_type = 'groups'; //todo: use this in the admin UI
+    public $post_type = 'contacts'; // Main post type that the ML is linked to.
+    public $record_post_type = 'groups'; // Child post type determined by the connection field selected
     private $post = null;
     private $items = [];
     private $post_field_settings = null;
@@ -36,11 +55,8 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
 
     public function __construct( $template = null ) {
 
-        /**
-         * Assuming a valid template, then capture header values
-         */
-
-        if ( empty( $template ) ) {
+        // only handle this template type
+        if ( empty( $template ) || $template['type'] !== $this->template_type ) {
             return;
         }
 
@@ -140,20 +156,6 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
         $dtwc_version = '0.7.0-beta.2';
         wp_enqueue_style( 'dt-web-components-css', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/styles/light.css", [], $dtwc_version );
         wp_enqueue_script( 'dt-web-components-js', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/dist/index.js", $dtwc_version );
-
-//        $path = '../../assets/dtwc/dist2/index.js';
-//        wp_enqueue_script( 'dt-web-components-js',
-//            plugin_dir_url( __FILE__ ) . $path,
-//            null,
-//            filemtime( plugin_dir_path( __FILE__ ) . $path )
-//        );
-//
-//        $css_path = '../../assets/dtwc/dist2/light.css';
-//        wp_enqueue_style( 'dt-web-components-css',
-//            plugin_dir_url( __FILE__ ) . $css_path,
-//            null,
-//            filemtime( plugin_dir_path( __FILE__ ) . $css_path )
-//        );
 
         $mdi_version = '6.6.96';
         wp_enqueue_style( 'material-font-icons-css', "https://cdn.jsdelivr.net/npm/@mdi/font@$mdi_version/css/materialdesignicons.min.css", [], $mdi_version );
