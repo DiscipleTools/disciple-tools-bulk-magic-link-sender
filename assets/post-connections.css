@@ -44,6 +44,11 @@ code { display: block !important; }
     -webkit-transition: flex .2s ease-out;
     transition: flex .2s ease-out;
 }
+@media print, screen and (min-width: 40em) {
+    #list {
+        --header-height: 2.5rem;
+    }
+}
 #list.is-expanded {
     flex-shrink: 0;
     -webkit-transition: flex 0.2s ease-in;
