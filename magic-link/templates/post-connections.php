@@ -261,6 +261,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                     <h1><?php echo $has_title ? esc_html( $this->template['title'] ) : '&nbsp;' ?></h1>
                 </header>
                 <div id="search-filter">
+                    <!--
                     <div id="search-bar">
                         <input type="text" id="search" placeholder="Search" />
                         <button class="filter-button mdi mdi-filter-variant" onclick="toggleFilters()"></button>
@@ -283,6 +284,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                             </label>
                         </div>
                     </div>
+                    -->
                 </div>
                 <ul id="list-items" class="items"></ul>
                 <template id="list-item-template">
