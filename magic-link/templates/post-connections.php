@@ -354,8 +354,8 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
         </main>
         <dt-modal id="post-detail-modal" buttonlabel="Open Modal" hideheader hidebutton closebutton>
             <span slot="content" id="post-detail-modal-content">
-                <span class="post-name"><?php echo $this->post['name'] ?></span>
-                <span class="post-id">ID: <?php echo $this->post['ID'] ?></span>
+                <span class="post-name"><?php echo esc_html( $this->post['name'] ) ?></span>
+                <span class="post-id">ID: <?php echo esc_html( $this->post['ID'] ) ?></span>
             </span>
         </dt-modal>
         <?php
