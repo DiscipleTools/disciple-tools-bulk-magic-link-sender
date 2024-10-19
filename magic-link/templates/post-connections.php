@@ -6,11 +6,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 add_filter('dt_magic_link_template_types', function( $types ) {
     $types['contacts'][] = [
         'value' => 'post-connections',
-        'text' => 'Post Connections',
+        'text' => 'Post Connections (beta)',
     ];
     $types['default-options'][] = [
         'value' => 'post-connections',
-        'text' => 'Post Connections',
+        'text' => 'Post Connections (beta)',
     ];
     return $types;
 });
