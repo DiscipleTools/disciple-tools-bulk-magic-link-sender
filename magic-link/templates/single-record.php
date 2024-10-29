@@ -16,7 +16,7 @@ add_filter('dt_magic_link_template_types', function( $types ) {
 });
 
 add_action('dt_magic_link_template_load', function ( $template ) {
-    if ( !empty( $template ) && $template['type'] === 'single-record' ) {
+    if ( !empty( $template ) && isset( $template['type'] ) && $template['type'] === 'single-record' ) {
         new Disciple_Tools_Magic_Links_Template_Single_Record( $template );
     }
 } );
@@ -523,6 +523,7 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                                                     },
                                                     beforeSend: function (xhr) {
                                                         xhr.setRequestHeader('X-WP-Nonce', jsObject['nonce']);
+                                                        xhr.setRequestHeader('DT-MAGIC-LINK', '');
                                                     },
                                                     callback: {
                                                         done: function (data) {
