@@ -7,10 +7,75 @@ function loadPostDetail(id) {
 
   const detailTitle = document.getElementById('detail-title');
   const detailTemplate = document.getElementById('post-detail-template').content;
+  const detailComments = document.getElementById('comments-detail-template').content;
   const detailContainer = document.getElementById('detail-content');
+  const commentContainer = document.getElementById('detail-comments');
 
   // Set detail title
   detailTitle.innerText = item.name;
+
+  let payload = {
+    action: 'get',
+    parts: jsObject.parts,
+    sys_type: jsObject.sys_type,
+    post_id: id,
+    post_type: jsObject.template.record_type,
+    comment_count: 2,
+  }
+
+  // Load detail comments
+      //no route found, unsure where i got this from
+        //const commentURL = jsObject.root + jsObject.parts.root + '/v1/' + jsObject.template.record_type + '/post';
+          //http://localhost:10007/wp-json/templates/v1/contacts/post
+
+      //looking for 'comment' to write/add a new one
+        //const commentURL = jsObject.root + 'dt-posts/v2/' + jsObject.template.record_type + '/' + id; + '/comments';
+
+      //same as /update api request, access denied
+  const commentURL = jsObject.root + jsObject.parts.root + '/v1/' + jsObject.parts.type + '/post';
+      //build url from where i found the post in the big json string, access denied
+        //const commentURL = jsObject.root + 'templates/v1/1724093548/post';//jsObject.parts.root + '/v1/' + jsObject.template.record_type + '/post';
+  
+  console.log('URL:'+commentURL);
+  fetch(commentURL,{
+    method: "POST", // *GET, POST, PUT, DELETE, etc.
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "X-WP-Nonce": jsObject.nonce,
+    },
+    body: JSON.stringify(payload), // body data type must match "Content-Type" header
+  })
+    .then((response) => {
+      console.log(response);
+      //console.log(response.json());
+      return response.json();
+    })
+    .then((json) => {
+      const commentContent = detailComments.cloneNode(true); //clone template that holds divs & spans with formatting
+      jQuery.each(json['comments']['comments'], function(i, val) { //for each comment in our json,
+
+        //const div = commentContent.getElementById('dt-comment-name'); //get the div from the template
+        const div = document.createElement("div");
+        div.innerText = val['comment_author'] + ' @ ' + val['comment_date'];
+        //const divContent = document.createTextNode(val['comment_author'] + ' @ ' + val['comment_date']); //add author text
+        //div.appendChild(divContent);
+
+        //const span = commentContent.getElementById('dt-comment-content'); //get the span from the template
+        const span = document.createElement("span");
+        span.innerText = val['comment_content'];
+        //const spanContent = document.createTextNode(val['comment_content']); //add comment body text
+        //span.appendChild(spanContent);
+        //td.appendChild(span);
+
+        commentContent.appendChild(div);
+        commentContent.appendChild(span); //append both to the empty all-comments tile
+      });
+
+      commentContainer.replaceChildren(commentContent); //replace empty detail-comments div with our comment tile
+    })
+    .catch((reason) => {
+      console.log(reason);
+    });
 
   // clone detail template
   const content = detailTemplate.cloneNode(true);
@@ -138,6 +203,22 @@ function saveItem(event) {
 
   Array.from(form.elements).forEach((el) => {
     if (!el.localName.startsWith('dt-')) {
+      if (el.name == "comments") {
+        let promises = [];
+        promises.push(
+          window.API.post_comment(
+            jsObject.template.record_type,
+            id,
+            el.value,
+            "comment",
+          ).catch((err) => {
+            console.error(err);
+          }),
+        );
+        Promise.all(promises).then(function (responses) {
+          done(responses);
+        });
+      }
       return;
     }
     // if readonly: skip

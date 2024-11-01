@@ -285,15 +285,23 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                         <h2 id="detail-title"></h2>
                     </header>
 
+                    <dt-tile id="detail-comments"></dt-tile>
+
                     <div id="detail-content"></div>
                     <footer>
                         <button type="submit"><?php esc_html_e( 'Submit Update', 'disciple_tools' ) ?></button>
                     </footer>
                 </form>
+                
+                <template id="comments-detail-template"> <!-- template used to copy div & span w/ formatting per comment, maybe not needed -->
+                    <div id="dt-comment-name" class="section-subheader dt-comment-subheader"></div>
+                    <span id="dt-comment-content" class="dt-comment-content"></span>
+                </template>
 
                 <template id="post-detail-template">
                     <input type="hidden" name="id" id="post-id" />
                     <input type="hidden" name="type" id="post-type" />
+                    
                     <dt-tile id="all-fields" open>
                     <?php
                     $post_field_settings = DT_Posts::get_post_field_settings( $this->template['record_type'] );
@@ -344,10 +352,10 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
      */
     public function add_endpoints() {
         $namespace = $this->root . '/v1';
-        /*register_rest_route(
+        register_rest_route(
             $namespace, '/' . $this->type . '/post', [
                 [
-                    'methods'             => 'GET',
+                    'methods'             => 'POST',
                     'callback'            => [ $this, 'get_post' ],
                     'permission_callback' => function ( WP_REST_Request $request ) {
                         $magic = new DT_Magic_URL( $this->root );
@@ -356,7 +364,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                     },
                 ],
             ]
-        );*/
+        );
         register_rest_route(
             $namespace, '/' . $this->type . '/update', [
                 [
