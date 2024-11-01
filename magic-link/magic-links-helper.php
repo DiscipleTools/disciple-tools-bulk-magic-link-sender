@@ -10,7 +10,7 @@ class Disciple_Tools_Magic_Links_Helper
      * @param $field
      * @return void
      */
-    public static function render_icon_slot($field ) {
+    public static function render_icon_slot( $field ) {
         if ( isset( $field['font-icon'] ) && !empty( $field['font-icon'] ) ): ?>
             <span slot="icon-start">
                 <i class="dt-icon ' . esc_html( $field['font-icon'] ) . '"></i>
@@ -41,7 +41,7 @@ class Disciple_Tools_Magic_Links_Helper
      * @param $field_id_prefix
      * @return void
      */
-    public static function render_field_for_display($field_key, $fields, $post, $show_extra_controls = false, $show_hidden = false, $field_id_prefix = '' ) {
+    public static function render_field_for_display( $field_key, $fields, $post, $show_extra_controls = false, $show_hidden = false, $field_id_prefix = '' ) {
         $disabled = $fields[$field_key]['readonly'] ? 'disabled' : '';
 //        if ( isset( $post['post_type'] ) && isset( $post['ID'] ) && $post['ID'] !== 0 ) {
 //            $can_update = DT_Posts::can_update( $post['post_type'], $post['ID'] );
@@ -90,9 +90,9 @@ class Disciple_Tools_Magic_Links_Helper
                 <dt-single-select class="select-field"
                     <?php echo wp_kses_post( $shared_attributes ) ?>
                                   value="<?php echo esc_attr( key_exists( $field_key, $post ) ? $post[$field_key]['key'] : null ) ?>"
-                                  options="<?php echo esc_attr( json_encode(Disciple_Tools_Magic_Links_Helper::assoc_to_array($fields[$field_key]['default'])) ) ?>"
+                                  options="<?php echo esc_attr( json_encode( self::assoc_to_array( $fields[$field_key]['default'] ) ) ) ?>"
                 >
-                    <?php Disciple_Tools_Magic_Links_Helper::render_icon_slot($fields[$field_key]) ?>
+                    <?php self::render_icon_slot( $fields[$field_key] ) ?>
                 </dt-single-select>
 
             <?php elseif ( $field_type === 'tags' ) : ?>
@@ -109,7 +109,7 @@ class Disciple_Tools_Magic_Links_Helper
                     placeholder="<?php echo esc_html( sprintf( _x( 'Search %s', "Search 'something'", 'disciple_tools' ), $fields[$field_key]['name'] ) )?>"
                     allowAdd
                 >
-                    <?php Disciple_Tools_Magic_Links_Helper::render_icon_slot($fields[$field_key]) ?>
+                    <?php self::render_icon_slot( $fields[$field_key] ) ?>
                 </dt-tags>
 
             <?php elseif ( $field_type === 'multi_select' ) : ?>
@@ -128,7 +128,7 @@ class Disciple_Tools_Magic_Links_Helper
                     placeholder="<?php echo esc_attr( sprintf( _x( 'Search %s', "Search 'something'", 'disciple_tools' ), $fields[$field_key]['name'] ) )?>"
                     display="<?php echo esc_attr( isset( $fields[$field_key]['display'] ) ? $fields[$field_key]['display'] : 'typeahead' ) ?>"
                 >
-                    <?php Disciple_Tools_Magic_Links_Helper::render_icon_slot($fields[$field_key]) ?>
+                    <?php self::render_icon_slot( $fields[$field_key] ) ?>
                 </dt-multi-select>
 
             <?php elseif ( $field_type === 'text' ) :?>
@@ -136,14 +136,14 @@ class Disciple_Tools_Magic_Links_Helper
                     <?php echo wp_kses_post( $shared_attributes ) ?>
                     value="<?php echo esc_html( $post[$field_key] ?? '' ) ?>"
                 >
-                    <?php Disciple_Tools_Magic_Links_Helper::render_icon_slot($fields[$field_key]) ?>
+                    <?php self::render_icon_slot( $fields[$field_key] ) ?>
                 </dt-text>
             <?php elseif ( $field_type === 'textarea' ) :?>
                 <dt-textarea
                     <?php echo wp_kses_post( $shared_attributes ) ?>
                     value="<?php echo esc_html( $post[$field_key] ?? '' ) ?>"
                 >
-                    <?php Disciple_Tools_Magic_Links_Helper::render_icon_slot($fields[$field_key]) ?>
+                    <?php self::render_icon_slot( $fields[$field_key] ) ?>
                 </dt-textarea>
             <?php elseif ( $field_type === 'number' ) :?>
                 <dt-number
@@ -152,14 +152,14 @@ class Disciple_Tools_Magic_Links_Helper
                     <?php echo isset( $fields[$field_key]['min_option'] ) && is_numeric( $fields[$field_key]['min_option'] ) ? 'min="' . esc_html( $fields[$field_key]['min_option'] ?? '' ) . '"' : '' ?>
                     <?php echo isset( $fields[$field_key]['max_option'] ) && is_numeric( $fields[$field_key]['max_option'] ) ? 'max="' . esc_html( $fields[$field_key]['max_option'] ?? '' ) . '"' : '' ?>
                 >
-                    <?php Disciple_Tools_Magic_Links_Helper::render_icon_slot($fields[$field_key]) ?>
+                    <?php self::render_icon_slot( $fields[$field_key] ) ?>
                 </dt-number>
             <?php elseif ( $field_type === 'date' ) :?>
                 <dt-date
                     <?php echo wp_kses_post( $shared_attributes ) ?>
                     timestamp="<?php echo esc_html( $post[$field_key]['timestamp'] ?? '' ) ?>"
                 >
-                    <?php Disciple_Tools_Magic_Links_Helper::render_icon_slot($fields[$field_key]) ?>
+                    <?php self::render_icon_slot( $fields[$field_key] ) ?>
                 </dt-date>
 
             <?php elseif ( $field_type === 'connection' ) :?>
@@ -178,7 +178,7 @@ class Disciple_Tools_Magic_Links_Helper
                     data-posttype="<?php echo esc_attr( $fields[$field_key]['post_type'] ) ?>"
                     allowAdd
                 >
-                    <?php Disciple_Tools_Magic_Links_Helper::render_icon_slot($fields[$field_key]) ?>
+                    <?php self::render_icon_slot( $fields[$field_key] ) ?>
                 </dt-connection>
 
             <?php elseif ( $field_type === 'location' ) :?>
@@ -205,7 +205,7 @@ class Disciple_Tools_Magic_Links_Helper
                     filters="<?php echo esc_attr( json_encode( $filters ) ) ?>"
                     placeholder="<?php echo esc_html( sprintf( _x( 'Search %s', "Search 'something'", 'disciple_tools' ), $fields[$field_key]['name'] ) )?>"
                 >
-                    <?php Disciple_Tools_Magic_Links_Helper::render_icon_slot($fields[$field_key]) ?>
+                    <?php self::render_icon_slot( $fields[$field_key] ) ?>
                 </dt-location>
 
             <?php elseif ( $field_type === 'location_meta' ) :?>
@@ -220,7 +220,7 @@ class Disciple_Tools_Magic_Links_Helper
                     mapbox-token="<?php echo esc_attr( $mapbox_token ) ?>"
                     google-token="<?php echo esc_attr( $google_token ) ?>"
                 >
-                    <?php Disciple_Tools_Magic_Links_Helper::render_icon_slot($fields[$field_key]) ?>
+                    <?php self::render_icon_slot( $fields[$field_key] ) ?>
                 </dt-location-map>
 
             <?php elseif ( $field_type === 'communication_channel' ): ?>
@@ -231,9 +231,9 @@ class Disciple_Tools_Magic_Links_Helper
                     <?php echo wp_kses_post( $shared_attributes ) ?>
                     value="<?php echo esc_attr( json_encode( $value ) ) ?>"
                 >
-                    <?php Disciple_Tools_Magic_Links_Helper::render_icon_slot($fields[$field_key]) ?>
+                    <?php self::render_icon_slot( $fields[$field_key] ) ?>
                 </dt-comm-channel>
-            <?php else: ?>
+            <?php else : ?>
                 <?php dt_write_log( "Skipping field type: $field_type" ); ?>
             <?php endif;
         }

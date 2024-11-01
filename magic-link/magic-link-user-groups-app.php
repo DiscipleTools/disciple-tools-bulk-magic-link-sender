@@ -13,6 +13,7 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends Disciple_Tools_Ma
     public $type = 'user_groups_updates';
     public $sub_post_type = 'groups';
     public $sub_post_type_display = 'Groups';
+    public $meta = [];
 
     private static $_instance = null;
     public static function instance() {
@@ -25,6 +26,8 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends Disciple_Tools_Ma
 
     public function __construct() {
         parent::__construct();
+        $this->meta['show_in_home_apps'] = true;
+        $this->meta['icon'] = 'mdi mdi-account-group';
 
         $this->sub_post_type_display = __( 'Groups', 'disciple_tools' );
 
