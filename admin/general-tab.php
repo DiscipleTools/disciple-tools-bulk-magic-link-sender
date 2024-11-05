@@ -57,6 +57,18 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_General {
                 Disciple_Tools_Bulk_Magic_Link_Sender_API::update_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_local_time_zone, $default_time_zone );
             }
         }
+
+        // As functionality is now hidden, force to an enabled state, using default server.
+        $email_option = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_defaults_email );
+        if ( !empty( $email_option ) ) {
+            $email_obj = json_decode( $email_option, true );
+
+            if ( !isset( $email_obj['enabled'] ) || ( isset( $email_obj['enabled'] ) && !$email_obj['enabled'] ) ) {
+                $email_obj['enabled'] = true;
+                $email_obj['use_default_server'] = true;
+                Disciple_Tools_Bulk_Magic_Link_Sender_API::update_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_defaults_email, json_encode( $email_obj ) );
+            }
+        }
     }
 
     public function content() {
