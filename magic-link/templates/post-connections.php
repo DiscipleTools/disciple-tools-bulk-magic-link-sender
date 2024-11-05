@@ -296,7 +296,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                 <template id="comments-detail-template">
                     <h3 class="section-header">Comments</h3>
                     <div></div>
-                    <textarea id="comments-text-area"></textarea>
+                    <textarea id="comments-text-area" style="resize: none;"></textarea>
                 </template>
 
                 <template id="post-detail-template">
