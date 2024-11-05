@@ -438,6 +438,25 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
                     <select style="min-width: 100%;" id="ml_main_col_template_details_type"></select>
                 </td>
             </tr>
+            <tr class="record-post-type-row" style="display: none;">
+                <td style="vertical-align: middle;">Post Type to List</td>
+                <td>
+                    <select style="min-width: 100%;" id="ml_main_col_template_details_record_type">
+                    <?php foreach ( $this->fetch_post_types() ?? [] as $post_type ): ?>
+                        <option value="<?php echo esc_attr( $post_type['id'] ) ?>"><?php echo esc_html( $post_type['name'] ) ?></option>
+                    <?php endforeach; ?>
+                    </select>
+                </td>
+            </tr>
+            <tr class="connection-field-row" style="display: none;">
+                <td style="vertical-align: middle;">
+                    Connection Field
+                    <div style="opacity: 0.5">Which field on the listed post type should contain the parent post</div>
+                </td>
+                <td>
+                    <select style="min-width: 100%;" id="ml_main_col_template_details_connection" multiple></select>
+                </td>
+            </tr>
             <tr>
                 <td style="vertical-align: middle;">Add a D.T field to the form</td>
                 <td>
@@ -469,7 +488,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
                 </td>
             </tr>
             <tr>
-                <td style="vertical-align: middle;">Number for recent comments to show. To disable set the value to 0.</td>
+                <td style="vertical-align: middle;">Number of recent comments to show. <div style="opacity: 0.5;">To disable set the value to 0.</div></td>
                 <td>
                     <input type="number" id="ml_main_col_template_details_show_recent_comments"
                            value=""/>
@@ -530,22 +549,6 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
         <?php
     }
 
-    private function supported_field_types(): array {
-        return [
-            'text',
-            'textarea',
-            'date',
-            'boolean',
-            'key_select',
-            'multi_select',
-            'number',
-            'link',
-            'communication_channel',
-            'location',
-            'location_meta'
-        ];
-    }
-
     private function fetch_post_types(): array {
 
         $post_types = [];
@@ -553,15 +556,13 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
         $dt_post_types = DT_Posts::get_post_types();
         if ( ! empty( $dt_post_types ) ) {
 
-            $supported_field_types = $this->supported_field_types();
-
             foreach ( $dt_post_types as $dt_post_type ) {
                 $dt_post_type_settings = DT_Posts::get_post_settings( $dt_post_type );
 
                 $fields = [];
                 foreach ( $dt_post_type_settings['fields'] as $key => $dt_field ) {
 
-                    if ( in_array( $dt_field['type'], $supported_field_types ) && ! ( $dt_field['hidden'] ?? false ) && ! ( $dt_field['private'] ?? false ) && ! isset( $dt_field['section'] ) ) {
+                    if ( ! ( $dt_field['hidden'] ?? false ) && ! ( $dt_field['private'] ?? false ) && ! isset( $dt_field['section'] ) ) {
                         $fields[] = [
                             'id'        => $key,
                             'name'      => $dt_field['name'],
