@@ -86,7 +86,31 @@ jQuery(function ($) {
   });
 
   $(document).on('change', '#ml_main_col_template_details_type', function (evt) {
-    $('#ml_main_col_template_details_supports_create').prop( 'disabled', !( $(evt.target).val() === 'list-sub-assigned-contacts' ) );
+    const template_type = $(evt.target).val();
+
+    // only support create for list-sub-assigned-contacts
+    $('#ml_main_col_template_details_supports_create').prop( 'disabled', !( template_type === 'list-sub-assigned-contacts' ) );
+
+    // show record-post-type and connection field only for post-connections
+    $('tr.record-post-type-row, tr.connection-field-row').css('display', template_type === 'post-connections' ? 'revert' : 'none');
+  });
+
+  $(document).on('change', '#ml_main_col_template_details_record_type', function (evt) {
+    // only for post-connections
+    const record_type = $(evt.target).val();
+
+    // load fields dropdown based on record post type
+    let post_types = window.dt_magic_links.dt_post_types;
+    refresh_post_type_fields_list(post_types[record_type]['fields']);
+
+    // load connections dropdown
+    let post_type = $('#templates_management_section_selected_post_type').val();
+    refresh_connections_fields_list( post_type, record_type );
+
+    // clear selected fields list since record type change and the existing ones aren't valid now
+    template_views_selected_fields(true, 'slow', null, () => {
+      template_views_selected_fields(false, 'slow', {fields:[]});
+    });
   });
 
   /**
@@ -131,10 +155,7 @@ jQuery(function ($) {
           template_views_template_details(...Array(3), function () {
             template_views_templates_management(...Array(3), function () {
 
-              // Refresh post type fields list
-              let post_types = window.dt_magic_links.dt_post_types;
               let post_type_id = $(evt.target).parent().find('#available_post_types_section_post_type_id').val();
-              refresh_post_type_fields_list(post_types[post_type_id]['fields']);
 
               // Capture selected post type id for future reference
               $('#templates_management_section_selected_post_type').val(post_type_id);
@@ -251,12 +272,15 @@ jQuery(function ($) {
         $('#ml_main_col_template_details_title').val(data.title);
         $('#ml_main_col_template_details_title_translate_but').data('field_translations', encodeURIComponent(JSON.stringify(data.title_translations)));
         $('#ml_main_col_template_details_type').val(data.type);
+        $('#ml_main_col_template_details_record_type').val(data.record_type);
+        $('#ml_main_col_template_details_connection').val(data.connection_fields);
         $('.template-title-translate-but-label').text(Object.keys(data.title_translations).length);
         $('#ml_main_col_template_details_custom_fields').val(data.custom_fields);
         $('#ml_main_col_template_details_show_recent_comments').val(data.show_recent_comments === true ? 2 : Number(data.show_recent_comments));
         $('#ml_main_col_template_details_send_submission_notifications').prop('checked', data.send_submission_notifications);
         $(supports_create).prop('checked', data.support_creating_new_items);
         $(supports_create).prop( 'disabled', ( data.type === 'single-record' ) );
+        $('tr.record-post-type-row, tr.connection-field-row').css('display', data.type === 'post-connections' ? 'revert' : 'none');
         callback();
       });
 
@@ -267,12 +291,24 @@ jQuery(function ($) {
       $('#ml_main_col_template_details_title').val(data.title);
       $('#ml_main_col_template_details_title_translate_but').data('field_translations', encodeURIComponent(JSON.stringify(data.title_translations)));
       $('#ml_main_col_template_details_type').val(data.type);
+      $('#ml_main_col_template_details_record_type').val(data.record_type);
       $('.template-title-translate-but-label').text(Object.keys(data.title_translations).length);
       $('#ml_main_col_template_details_custom_fields').val(data.custom_fields);
       $('#ml_main_col_template_details_show_recent_comments').val(data.show_recent_comments === true ? 2 : Number(data.show_recent_comments))
       $('#ml_main_col_template_details_send_submission_notifications').prop('checked', data.send_submission_notifications);
       $(supports_create).prop('checked', data.support_creating_new_items);
-      $(supports_create).prop( 'disabled', ( data.type === 'single-record' ) );
+      $(supports_create).prop( 'disabled', ( data.type !== 'list-sub-assigned-contacts' ) );
+      $('tr.record-post-type-row, tr.connection-field-row').css('display', data.type === 'post-connections' ? 'revert' : 'none');
+
+      // Refresh post type fields list
+      let post_types = window.dt_magic_links.dt_post_types;
+      const fields_post_type = (data.type === 'post-connections' ? data.record_type : data.post_type) || post_type;
+      refresh_post_type_fields_list(post_types[fields_post_type]['fields']);
+
+      // Refresh connections fields list
+      refresh_connections_fields_list( data.post_type, fields_post_type );
+      $('#ml_main_col_template_details_connection').val(data.connection_fields);
+
       view_template_details.fadeIn(fade_speed, function () {
         callback();
       });
@@ -320,8 +356,16 @@ jQuery(function ($) {
     `;
   }
 
-  function refresh_post_type_fields_list(fields) {
-    let fields_select = $('#ml_main_col_template_details_fields');
+  function refresh_connections_fields_list(post_type, record_post_type) {
+    let post_types = window.dt_magic_links.dt_post_types;
+
+    // get connection fields between parent and child type
+    const fields = post_types[record_post_type]['fields']
+      .filter((field) => {
+        return field.type === 'connection' && field.post_type === post_type;
+      });
+
+    let fields_select = $('#ml_main_col_template_details_connection');
 
     // Empty existing list and insert initial select placeholder
     fields_select.empty();
@@ -330,6 +374,37 @@ jQuery(function ($) {
     // Iterate fields array and append corresponding options
     if (fields) {
       $.each(sort_by_field_name(fields), function (idx, field) {
+        fields_select.append(`<option value="${field['id']}">${field['name']}</option>`);
+      });
+    }
+  }
+
+  function refresh_post_type_fields_list(fields) {
+    let fields_select = $('#ml_main_col_template_details_fields');
+
+    // Empty existing list and insert initial select placeholder
+    fields_select.empty();
+    fields_select.append('<option disabled selected value>-- select field --</option>');
+
+    // filter to only supported field types
+    const fields_filtered = fields.filter((field) => {
+      return [
+        'text',
+        'textarea',
+        'date',
+        'boolean',
+        'key_select',
+        'multi_select',
+        'number',
+        'link',
+        'communication_channel',
+        'location',
+        'location_meta'
+      ].includes(field.type);
+    });
+    // Iterate fields array and append corresponding options
+    if (fields_filtered) {
+      $.each(sort_by_field_name(fields_filtered), function (idx, field) {
         fields_select.append(`<option value="${field['id']}">${field['name']}</option>`);
       });
     }
@@ -385,11 +460,14 @@ jQuery(function ($) {
               // Display refreshed views....
               template_views_template_details(false, 'slow', {
                 id: template['id'],
+                post_type: template['post_type'],
                 enabled: template['enabled'],
                 name: template['name'],
                 title: template['title'],
                 title_translations: template['title_translations'] ?? {},
                 type: template['type'] ?? 'single-record',
+                record_type: template['record_type'] ?? 'contacts',
+                connection_fields: template['connection_fields'] ?? [],
                 custom_fields: '',
                 show_recent_comments: template['show_recent_comments'],
                 send_submission_notifications: template['send_submission_notifications'] ?? true,
@@ -675,6 +753,8 @@ jQuery(function ($) {
     let title = $('#ml_main_col_template_details_title').val();
     let title_translations = JSON.parse(decodeURIComponent($('#ml_main_col_template_details_title_translate_but').data('field_translations')));
     let type = $('#ml_main_col_template_details_type').val();
+    let record_type = $('#ml_main_col_template_details_record_type').val();
+    let connection_fields = $('#ml_main_col_template_details_connection').val();
     let show_recent_comments = $('#ml_main_col_template_details_show_recent_comments').val();
     let send_submission_notifications = $('#ml_main_col_template_details_send_submission_notifications').prop('checked');
     let support_creating_new_items = $('#ml_main_col_template_details_supports_create').prop('checked');
@@ -721,6 +801,10 @@ jQuery(function ($) {
         'message': message,
         'fields': fields
       };
+      if (type === 'post-connections') {
+        template_obj.record_type = record_type;
+        template_obj.connection_fields = connection_fields;
+      }
       $('#ml_main_col_update_form_template').val(JSON.stringify(template_obj));
 
       // Submit link object package for saving
