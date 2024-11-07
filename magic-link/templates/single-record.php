@@ -16,7 +16,7 @@ add_filter('dt_magic_link_template_types', function( $types ) {
 });
 
 add_action('dt_magic_link_template_load', function ( $template ) {
-    if ( !empty( $template ) && $template['type'] === 'single-record' ) {
+    if ( !empty( $template ) && isset( $template['type'] ) && $template['type'] === 'single-record' ) {
         new Disciple_Tools_Magic_Links_Template_Single_Record( $template );
     }
 } );
@@ -514,12 +514,13 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                                             focus: {
                                                 display: "name",
                                                 ajax: {
-                                                    url: jsObject['root'] + 'dt/v1/mapping_module/search_location_grid_by_name',
+                                                    url: jsObject.root + jsObject.parts.root + '/v1/' + jsObject.parts.type + '/search_location_grid_by_name',
                                                     data: {
                                                         s: "{{query}}",
                                                         filter: function () {
                                                             return window.lodash.get(window.Typeahead[typeahead_field_input].filters.dropdown, 'value', 'all');
-                                                        }
+                                                        },
+                                                        parts: jsObject.parts
                                                     },
                                                     beforeSend: function (xhr) {
                                                         xhr.setRequestHeader('X-WP-Nonce', jsObject['nonce']);
@@ -1457,6 +1458,19 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
     public function add_endpoints() {
         $namespace = $this->root . '/v1';
         register_rest_route(
+            $namespace, '/' . $this->type . '/search_location_grid_by_name', [
+                [
+                    'methods'             => 'GET',
+                    'callback'            => [ $this, 'search_location_grid_by_name' ],
+                    'permission_callback' => function ( WP_REST_Request $request ) {
+                        $magic = new DT_Magic_URL( $this->root );
+
+                        return $magic->verify_rest_endpoint_permissions_on_post( $request );
+                    },
+                ],
+            ]
+        );
+        register_rest_route(
             $namespace, '/' . $this->type . '/post', [
                 [
                     'methods'             => 'GET',
@@ -1482,6 +1496,42 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                 ],
             ]
         );
+    }
+
+    public function search_location_grid_by_name( WP_REST_Request $request ) {
+        $params = $request->get_params();
+        $search = '';
+        if ( isset( $params['s'] ) ) {
+            $search = $params['s'];
+        }
+        $filter = 'all';
+        if ( isset( $params['filter'] ) ){
+            $filter = $params['filter'];
+        }
+        //search for only the locations that are currently in use
+        if ( $filter === 'used' ){
+            $locations = Disciple_Tools_Mapping_Queries::search_used_location_grid_by_name( [
+                'search_query' => $search,
+            ] );
+        } else {
+            $locations = Disciple_Tools_Mapping_Queries::search_location_grid_by_name( [
+                'search_query' => $search,
+                'filter' => $filter
+            ] );
+        }
+
+        $prepared = [];
+        foreach ( $locations['location_grid'] as $location ){
+            $prepared[] = [
+                'name' => $location['label'],
+                'ID' => $location['grid_id']
+            ];
+        }
+
+        return [
+            'location_grid' => $prepared,
+            'total' => $locations['total']
+        ];
     }
 
     public function get_post( WP_REST_Request $request ){

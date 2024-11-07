@@ -12,7 +12,7 @@ add_filter('dt_magic_link_template_types', function( $types ) {
 });
 
 add_action('dt_magic_link_template_load', function ( $template ) {
-    if ( !empty( $template ) && $template['type'] === 'list-sub-assigned-contacts' ) {
+    if ( !empty( $template ) && isset( $template['type'] ) && $template['type'] === 'list-sub-assigned-contacts' ) {
         new Disciple_Tools_Magic_Links_Template_List_Sub_Assigned( $template );
     }
 } );
