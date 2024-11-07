@@ -16,7 +16,7 @@ add_filter('dt_magic_link_template_types', function( $types ) {
 });
 
 add_action('dt_magic_link_template_load', function ( $template ) {
-    if ( !empty( $template ) && $template['type'] === 'post-connections' ) {
+    if ( !empty( $template ) && isset( $template['type'] ) && $template['type'] === 'post-connections' ) {
         new Disciple_Tools_Magic_Links_Template_Post_Connections( $template );
     }
 } );
