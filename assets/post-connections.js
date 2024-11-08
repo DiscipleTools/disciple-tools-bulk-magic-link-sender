@@ -262,7 +262,7 @@ function toggleFilters() {
 
 function setCommentTemplate(id) {
   const detailComments = document.getElementById('comments-detail-template').content;
-  const commentContainer = document.getElementById('detail-comments');
+  const commentContainer = document.getElementById('comments-tile');
 
   let payload = {
     action: 'get',
@@ -276,56 +276,64 @@ function setCommentTemplate(id) {
   const commentURL = jsObject.root + jsObject.parts.root + '/v1/' + jsObject.parts.type + '/post';
   
   fetch(commentURL,{
-    method: "POST", // *GET, POST, PUT, DELETE, etc.
+    method: "POST",
     headers: {
       "Content-Type": "application/json; charset=utf-8",
       "X-WP-Nonce": jsObject.nonce,
     },
-    body: JSON.stringify(payload), // body data type must match "Content-Type" header
+    body: JSON.stringify(payload),
   })
     .then((response) => {
       console.log(response);
-      //console.log(response.json());
       return response.json();
     })
     .then((json) => {
-      const commentContent = detailComments.cloneNode(true); //clone template that holds divs & spans with formatting
+      const commentDetail = detailComments.cloneNode(true);
 
-      //<button id="ml-add-comment-button" class="button loader">
-      //<?php esc_html_e( 'Submit comment', 'disciple_tools' ) ?>
-      //</button>
+      const buttonDiv = document.createElement('div');
+      buttonDiv.className = "action-block";
 
-      const button = document.createElement('button');
-      button.innerText = "Submit Comment";
-      button.className = "button loader";
-      
-      //const button = document.getElementById('ml-add-comment-button');
+      const button = commentDetail.getElementById('comment-button');
       button.addEventListener('click', () => {
-        test_logger(id);
+        submitComment(id);
       });
+      commentDetail.appendChild(button);
 
-      commentContent.appendChild(button);
+      const activityBlock = document.createElement("div");
+      activityBlock.className = "activity-block";
 
-      jQuery.each(json['comments']['comments'], function(i, val) { //for each comment in our json,
+      jQuery.each(json['comments']['comments'], function(i, val) {
+        const commentHeaderTemplate = document.getElementById('comment-header-template').content;
+        const commentHeader = commentHeaderTemplate.cloneNode(true);
+        const commentAuthor = commentHeader.getElementById('comment-author');
+        const commentDate = commentHeader.getElementById('comment-date');
 
-        const author = document.createElement("div");
-        author.innerText = val['comment_author'] + ' @ ' + val['comment_date'];
+        commentAuthor.innerText = val['comment_author'];
+        commentDate.innerText = val['comment_date'];
 
-        const content = document.createElement("div");
-        content.innerText = val['comment_content'];
+        const commentContentTemplate = document.getElementById('comment-content-template').content;
+        const commentContent = commentContentTemplate.cloneNode(true);
+        const commentId = commentContent.getElementById('comment-id');
+        const commentText = commentContent.getElementById('comment-content');
 
-        commentContent.appendChild(author);
-        commentContent.appendChild(content); //append both to the empty all-comments tile
+        commentId.className = "comment-bubble " + val['comment_ID'];
+        commentId.setAttribute("data-comment-id", val['comment_ID']);
+        commentText.setAttribute("title", val['comment_date']);
+        commentText.innerText = val['comment_content'];
+
+        activityBlock.appendChild(commentHeader);
+        activityBlock.appendChild(commentContent);
       });
+      commentDetail.appendChild(activityBlock);
 
-      commentContainer.replaceChildren(commentContent); //replace empty detail-comments div with our comment tile
+      commentContainer.replaceChildren(commentDetail);
     })
     .catch((reason) => {
       console.log(reason);
     });
   }
 
-  function test_logger(id) {
+  function submitComment(id) {
 
     const textArea = document.getElementById('comments-text-area');
 
@@ -342,22 +350,19 @@ function setCommentTemplate(id) {
     const commentURL = jsObject.root + 'dt-posts/v2/' + jsObject.template.record_type + '/' + id + '/comments';
     
     fetch(commentURL,{
-      method: "POST", // *GET, POST, PUT, DELETE, etc.
+      method: "POST",
       headers: {
         "Content-Type": "application/json; charset=utf-8",
         "X-WP-Nonce": jsObject.nonce,
       },
-      body: JSON.stringify(payload), // body data type must match "Content-Type" header
+      body: JSON.stringify(payload),
     })
       .then((response) => {
-        console.log("response:");
-        console.log(response);
-        //console.log(response.json());
+        setCommentTemplate(id);
         return response.json();
       })
       .catch((reason) => {
         console.log("reason:");
         console.log(reason);
       });
-
   }
