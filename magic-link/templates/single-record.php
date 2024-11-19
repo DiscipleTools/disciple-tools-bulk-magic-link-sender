@@ -934,22 +934,24 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                                             break;
                                         }
                                         case 'location': {
-                                            jQuery(tr).find('span.typeahead__cancel-button').trigger('click');
+                                            //.....jQuery(tr).find('span.typeahead__cancel-button').trigger('click');
                                             let typeahead_location_field_input = '.js-typeahead-' + field_id;
                                             let typeahead_location = window.Typeahead[typeahead_location_field_input];
 
-                                            typeahead_location.items = [];
-                                            typeahead_location.comparedItems = [];
-                                            typeahead_location.label.container.empty();
+                                            if ( typeahead_location ) {
+                                                typeahead_location.items = [];
+                                                typeahead_location.comparedItems = [];
+                                                typeahead_location.label.container.empty();
 
-                                            if (post[field_id] && typeahead_location) {
-                                                post[field_id].forEach(function (location) {
-                                                    typeahead_location.addMultiselectItemLayout({
-                                                        ID: location['id'],
-                                                        name: window.lodash.escape(location['label'])
+                                                if (post[field_id] ) {
+                                                    post[field_id].forEach(function (location) {
+                                                        typeahead_location.addMultiselectItemLayout({
+                                                            ID: location['id'],
+                                                            name: window.lodash.escape(location['label'])
+                                                        });
+                                                        typeahead_location.adjustInputSize();
                                                     });
-                                                    typeahead_location.adjustInputSize();
-                                                });
+                                                }
                                             }
 
                                             // Reset meta field!
