@@ -109,7 +109,7 @@ function saveItem(event) {
   event.preventDefault();
   console.log(event);
 
-  const form = event.target;
+  const form = event.target.closest('form');
   const formdata = new FormData(form);
   console.log(formdata);
 
@@ -165,7 +165,8 @@ function saveItem(event) {
     const field_id = el.name;
     const type = el.dataset.type;
 
-    const value = DtWebComponents.ComponentService.convertValue(el.localName, el.value);
+    // const value = DtWebComponents.ComponentService.convertValue(el.localName, el.value);
+    const value = window.WebComponentServices.ComponentService.convertValue(el.localName, el.value);
     const fieldType = type === 'custom' ? 'custom' : 'dt';
     payload['fields'][fieldType].push({
       id: field_id,
@@ -244,7 +245,7 @@ function showNotification(message, type, duration = 5000) {
 }
 
 function togglePanels() {
-  document.querySelectorAll('#list, #detail').forEach((el) => {
+  document.querySelectorAll('#list').forEach((el) => {
     el.classList.toggle('is-expanded');
   });
 
@@ -274,7 +275,7 @@ function setCommentTemplate(id) {
   }
 
   const commentURL = jsObject.root + jsObject.parts.root + '/v1/' + jsObject.parts.type + '/post';
-  
+
   fetch(commentURL,{
     method: "POST",
     headers: {
@@ -348,7 +349,7 @@ function setCommentTemplate(id) {
     }
 
     const commentURL = jsObject.root + 'dt-posts/v2/' + jsObject.template.record_type + '/' + id + '/comments';
-    
+
     fetch(commentURL,{
       method: "POST",
       headers: {

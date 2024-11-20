@@ -3,18 +3,37 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 } // Exit if accessed directly.
 
+add_filter('dt_magic_link_template_types', function( $types ) {
+    $types['contacts'][] = [
+        'value' => 'post-connections',
+        'text' => 'Post Connections (beta)',
+    ];
+    $types['default-options'][] = [
+        'value' => 'post-connections',
+        'text' => 'Post Connections (beta)',
+    ];
+    return $types;
+});
+
+add_action('dt_magic_link_template_load', function ( $template ) {
+    if ( isset( $template['type'] ) && $template['type'] === 'post-connections' ) {
+        new Disciple_Tools_Magic_Links_Template_Post_Connections( $template );
+    }
+} );
+
 /**
  * Class Disciple_Tools_Magic_Links_Templates
  */
 class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_Base {
 
+    protected $template_type = 'post-connections';
     public $page_title = 'Post Connections';
-    public $page_description = 'Template Title Description';
+    public $page_description = 'Edit all connections to a given post';
     public $root = 'templates'; // @todo define the root of the url {yoursite}/root/type/key/action
     public $type = 'template_id'; // Placeholder to be replaced with actual template ids
     public $type_name = '';
-    public $post_type = 'contacts'; // Support ML contacts (which can be any one of the DT post types) by default!
-    public $record_post_type = 'groups'; //todo: use this in the admin UI
+    public $post_type = 'contacts'; // Main post type that the ML is linked to.
+    public $record_post_type = 'groups'; // Child post type determined by the connection field selected
     private $post = null;
     private $items = [];
     private $post_field_settings = null;
@@ -36,11 +55,8 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
 
     public function __construct( $template = null ) {
 
-        /**
-         * Assuming a valid template, then capture header values
-         */
-
-        if ( empty( $template ) ) {
+        // only handle this template type
+        if ( empty( $template ) || $template['type'] !== $this->template_type ) {
             return;
         }
 
@@ -118,11 +134,11 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
          * Load if valid url
          */
 
-        add_action('dt_blank_body', [$this, 'body']);
-        add_filter('dt_magic_url_base_allowed_css', [$this, 'dt_magic_url_base_allowed_css'], 10, 1);
-        add_filter('dt_magic_url_base_allowed_js', [$this, 'dt_magic_url_base_allowed_js'], 10, 1);
-        add_action('wp_enqueue_scripts', [$this, 'wp_enqueue_scripts'], 100);
-        add_filter('dt_can_update_permission', [$this, 'can_update_permission_filter'], 10, 3);
+        add_action( 'dt_blank_body', [ $this, 'body' ] );
+        add_filter( 'dt_magic_url_base_allowed_css', [ $this, 'dt_magic_url_base_allowed_css' ], 10, 1 );
+        add_filter( 'dt_magic_url_base_allowed_js', [ $this, 'dt_magic_url_base_allowed_js' ], 10, 1 );
+        add_action( 'wp_enqueue_scripts', [ $this, 'wp_enqueue_scripts' ], 100 );
+        add_filter( 'dt_can_update_permission', [ $this, 'can_update_permission_filter' ], 10, 3 );
     }
 
     // Ensure template fields remain editable
@@ -137,23 +153,20 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
         wp_enqueue_style( 'ml-post-connections-css', plugin_dir_url( __FILE__ ) . $css_path, null, filemtime( plugin_dir_path( __FILE__ ) . $css_path ) );
         wp_enqueue_script( 'ml-post-connections-js', plugin_dir_url( __FILE__ ) . $js_path, null, filemtime( plugin_dir_path( __FILE__ ) . $js_path ) );
 
-        $dtwc_version = '0.7.0-beta.2';
-        wp_enqueue_style( 'dt-web-components-css', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/styles/light.css", [], $dtwc_version );
+        $dtwc_version = '0.6.6';
+//        wp_enqueue_style( 'dt-web-components-css', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/styles/light.css", [], $dtwc_version );
+        wp_enqueue_style( 'dt-web-components-css', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/src/styles/light.css", [], $dtwc_version ); // remove 'src' after v0.7
         wp_enqueue_script( 'dt-web-components-js', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/dist/index.js", $dtwc_version );
-
-//        $path = '../../assets/dtwc/dist2/index.js';
-//        wp_enqueue_script( 'dt-web-components-js',
-//            plugin_dir_url( __FILE__ ) . $path,
-//            null,
-//            filemtime( plugin_dir_path( __FILE__ ) . $path )
-//        );
-//
-//        $css_path = '../../assets/dtwc/dist2/light.css';
-//        wp_enqueue_style( 'dt-web-components-css',
-//            plugin_dir_url( __FILE__ ) . $css_path,
-//            null,
-//            filemtime( plugin_dir_path( __FILE__ ) . $css_path )
-//        );
+        add_filter( 'script_loader_tag', 'add_module_type_to_script', 10, 3 );
+        function add_module_type_to_script( $tag, $handle, $src ) {
+            if ( 'dt-web-components-js' === $handle ) {
+                // @codingStandardsIgnoreStart
+                $tag = '<script type="module" src="' . esc_url( $src ) . '"></script>';
+                // @codingStandardsIgnoreEnd
+            }
+            return $tag;
+        }
+        wp_enqueue_script( 'dt-web-components-services-js', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/dist/services.min.js", array( 'jquery' ), true ); // not needed after v0.7
 
         $mdi_version = '6.6.96';
         wp_enqueue_style( 'material-font-icons-css', "https://cdn.jsdelivr.net/npm/@mdi/font@$mdi_version/css/materialdesignicons.min.css", [], $mdi_version );
@@ -245,9 +258,11 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
         <main>
             <div id="list" class="is-expanded">
                 <header>
-                    <h1><?php echo $has_title ? $this->template['title'] : '&nbsp;' ?></h1>
+                    <h1><?php echo $has_title ? esc_html( $this->template['title'] ) : '&nbsp;' ?></h1>
+                    <button class="mdi mdi-information-outline" onclick="document.getElementById('post-detail-modal')._openModal()"></button>
                 </header>
                 <div id="search-filter">
+                    <!--
                     <div id="search-bar">
                         <input type="text" id="search" placeholder="Search" />
                         <button class="filter-button mdi mdi-filter-variant" onclick="toggleFilters()"></button>
@@ -270,6 +285,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                             </label>
                         </div>
                     </div>
+                    -->
                 </div>
                 <ul id="list-items" class="items"></ul>
                 <template id="list-item-template">
@@ -278,18 +294,19 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                     </li>
                 </template>
             </div>
-            <div id="detail" class="-is-expanded">
-                <form onsubmit="saveItem(event)">
+            <div id="detail" class="">
+                <!-- <form onsubmit="saveItem(event)"> -->
+                <form>
                     <header>
                         <button type="button" class="details-toggle mdi mdi-arrow-left" onclick="togglePanels()"></button>
                         <h2 id="detail-title"></h2>
                     </header>
-                    
+
                     <dt-tile id="comments-tile" title="Comments"></dt-tile>
 
                     <div id="detail-content"></div>
                     <footer>
-                        <button type="submit"><?php esc_html_e( 'Submit Update', 'disciple_tools' ) ?></button>
+                        <dt-button onclick="saveItem(event)" type="submit" context="primary"><?php esc_html_e( 'Submit Update', 'disciple_tools' ) ?></dt-button>
                     </footer>
                 </form>
 
@@ -307,7 +324,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                         </div>
                     </div>
                 </template>
-                
+
                 <template id="comments-detail-template">
                     <div>
                         <textarea id="comments-text-area" style="resize: none;"></textarea>
@@ -318,7 +335,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                 <template id="post-detail-template">
                     <input type="hidden" name="id" id="post-id" />
                     <input type="hidden" name="type" id="post-type" />
-                    
+
                     <dt-tile id="all-fields" open>
                     <?php
                     $post_field_settings = DT_Posts::get_post_field_settings( $this->template['record_type'] );
@@ -331,9 +348,9 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                             if ( $field['type'] === 'dt' ) {
                                 // display standard DT fields
                                 $post_field_settings[$field['id']]['custom_display'] = false;
-                                $post_field_settings[$field['id']]['readonly'] = !empty($field['readonly']) && boolval( $field['readonly'] );
+                                $post_field_settings[$field['id']]['readonly'] = !empty( $field['readonly'] ) && boolval( $field['readonly'] );
 
-                                Disciple_Tools_Magic_Links_Helper::render_field_for_display($field['id'], $post_field_settings, []);
+                                Disciple_Tools_Magic_Links_Helper::render_field_for_display( $field['id'], $post_field_settings, [] );
                             } else {
                                 // display custom field for this magic link
                                 $tag = isset( $field['custom_form_field_type'] ) && $field['custom_form_field_type'] == 'textarea'
@@ -341,12 +358,12 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                                     : 'dt-text';
                                 $label = ( ! empty( $field['translations'] ) && isset( $field['translations'][ determine_locale() ] ) ) ? $field['translations'][ determine_locale() ]['translation'] : $field['label'];
                             ?>
-                                <<?php echo $tag ?>
+                                <<?php echo esc_html( $tag ) ?>
                                     id="<?php esc_html_e( $field['id'] ) ?>"
                                     name="<?php esc_html_e( $field['id'] ) ?>"
                                     data-type="<?php esc_attr_e( $field['type'] ) ?>"
                                     label="<?php echo esc_attr( $label ) ?>"
-                                ></<?php echo $tag ?>>
+                                ></<?php echo esc_html( $tag ) ?>>
                             <?php
                             }
                         }
@@ -360,6 +377,12 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                 <div class="snackbar-item"></div>
             </template>
         </main>
+        <dt-modal id="post-detail-modal" buttonlabel="Open Modal" hideheader hidebutton closebutton>
+            <span slot="content" id="post-detail-modal-content">
+                <span class="post-name"><?php echo esc_html( $this->post['name'] ) ?></span>
+                <span class="post-id">ID: <?php echo esc_html( $this->post['ID'] ) ?></span>
+            </span>
+        </dt-modal>
         <?php
     }
 
@@ -468,32 +491,40 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                         break;
                     case 'communication_channel':
                         $updates[$field['id']] = [
-                            'values'=> $field['value'],
+                            'values' => $field['value'],
                             'force_values' => true,
                         ];
                         break;
 //                    case 'location':
                     case 'location_meta':
-                        $values = array_map(function ($value) {
+                        $values = array_map(function ( $value ) {
                             // try to send without grid_id to get more specific location
                             if ( isset( $value['lat'], $value['lng'], $value['label'], $value['level'], $value['source'] ) ) {
                                 return array_intersect_key($value, array_fill_keys([
-                                    'lat', 'lng', 'label', 'level', 'source',
+                                    'lat',
+                                    'lng',
+                                    'label',
+                                    'level',
+                                    'source',
                                 ], null));
                             }
                             return array_intersect_key($value, array_fill_keys([
-                                'lat', 'lng', 'label', 'level', 'source', 'grid_id'
+                                'lat',
+                                'lng',
+                                'label',
+                                'level',
+                                'source',
+                                'grid_id'
                             ], null));
-
                         }, $field['value'] );
                         $updates[$field['id']] = [
-                            'values'=> $values,
+                            'values' => $values,
                             'force_values' => true,
                         ];
                         break;
                     default:
                         // unhandled field types
-                        dt_write_log( "Unsupported field type: " . $field['value']);
+                        dt_write_log( 'Unsupported field type: ' . $field['value'] );
                         break;
                 }
             }
