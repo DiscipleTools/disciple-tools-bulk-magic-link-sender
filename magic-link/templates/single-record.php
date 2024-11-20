@@ -949,9 +949,12 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                                                             ID: location['id'],
                                                             name: window.lodash.escape(location['label'])
                                                         });
-                                                        typeahead_location.adjustInputSize();
+
                                                     });
                                                 }
+                                                setTimeout(() => {
+                                                    typeahead_location.adjustInputSize();
+                                                }, 1);
                                             }
 
                                             // Reset meta field!
