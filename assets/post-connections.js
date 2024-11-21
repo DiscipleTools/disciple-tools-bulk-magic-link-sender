@@ -9,7 +9,7 @@ function loadPostDetail(id) {
   const detailTemplate = document.getElementById('post-detail-template').content;
   const detailContainer = document.getElementById('detail-content');
 
-  setCommentTemplate(id);
+  const commentContainer = setCommentTemplate(id, true);
 
   // Set detail title
   detailTitle.innerText = item.name;
@@ -23,6 +23,7 @@ function loadPostDetail(id) {
 
   // insert templated content into detail panel
   detailContainer.replaceChildren(content);
+  detailContainer.appendChild(commentContainer);
 
   // open detail panel
   document.getElementById('list').classList.remove('is-expanded');
@@ -140,22 +141,6 @@ function saveItem(event) {
 
   Array.from(form.elements).forEach((el) => {
     if (!el.localName.startsWith('dt-')) {
-      if (el.name == "comments") {
-        let promises = [];
-        promises.push(
-          window.API.post_comment(
-            jsObject.template.record_type,
-            id,
-            el.value,
-            "comment",
-          ).catch((err) => {
-            console.error(err);
-          }),
-        );
-        Promise.all(promises).then(function (responses) {
-          done(responses);
-        });
-      }
       return;
     }
     // if readonly: skip
@@ -260,7 +245,7 @@ function toggleFilters() {
   })
 }
 
-function setCommentTemplate(id) {
+function setCommentTemplate(id, initialLoad) {
   const detailComments = document.getElementById('comments-detail-template').content;
   const commentContainer = document.getElementById('comments-tile');
 
@@ -274,7 +259,9 @@ function setCommentTemplate(id) {
   }
 
   const commentURL = jsObject.root + jsObject.parts.root + '/v1/' + jsObject.parts.type + '/post';
-  
+  if (initialLoad) {
+    commentContainer.replaceChildren(detailComments.cloneNode(true));
+  }
   fetch(commentURL,{
     method: "POST",
     headers: {
@@ -290,19 +277,19 @@ function setCommentTemplate(id) {
     .then((json) => {
       const commentDetail = detailComments.cloneNode(true);
 
-      const buttonDiv = document.createElement('div');
-      buttonDiv.className = "action-block";
+      const actionBlock = document.createElement('div');
+      actionBlock.className = "action-block";
 
       const button = commentDetail.getElementById('comment-button');
       button.addEventListener('click', () => {
         submitComment(id);
       });
-      commentDetail.appendChild(button);
+      actionBlock.appendChild(button);
 
       const activityBlock = document.createElement("div");
       activityBlock.className = "activity-block";
 
-      jQuery.each(json['comments']['comments'], function(i, val) {
+      for (const val of json['comments']['comments']) {
         const commentHeaderTemplate = document.getElementById('comment-header-template').content;
         const commentHeader = commentHeaderTemplate.cloneNode(true);
         const commentAuthor = commentHeader.getElementById('comment-author');
@@ -323,7 +310,9 @@ function setCommentTemplate(id) {
 
         activityBlock.appendChild(commentHeader);
         activityBlock.appendChild(commentContent);
-      });
+      }
+
+      commentDetail.appendChild(actionBlock);
       commentDetail.appendChild(activityBlock);
 
       commentContainer.replaceChildren(commentDetail);
@@ -331,6 +320,7 @@ function setCommentTemplate(id) {
     .catch((reason) => {
       console.log(reason);
     });
+    return commentContainer;
   }
 
   function submitComment(id) {
@@ -358,7 +348,7 @@ function setCommentTemplate(id) {
       body: JSON.stringify(payload),
     })
       .then((response) => {
-        setCommentTemplate(id);
+        setCommentTemplate(id, false);
         return response.json();
       })
       .catch((reason) => {
