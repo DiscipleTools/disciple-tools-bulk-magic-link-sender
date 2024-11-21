@@ -284,8 +284,6 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                         <button type="button" class="details-toggle mdi mdi-arrow-left" onclick="togglePanels()"></button>
                         <h2 id="detail-title"></h2>
                     </header>
-                    
-                    <dt-tile id="comments-tile" title="Comments"></dt-tile>
 
                     <div id="detail-content"></div>
                     <footer>
@@ -307,7 +305,8 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                         </div>
                     </div>
                 </template>
-                
+                    
+                <dt-tile id="comments-tile" title="Comments"></dt-tile>
                 <template id="comments-detail-template">
                     <div>
                         <textarea id="comments-text-area" style="resize: none;"></textarea>
