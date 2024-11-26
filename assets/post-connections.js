@@ -19,8 +19,12 @@ function loadPostDetail(id) {
   content.getElementById('post-id').value = id;
   setInputValues(content, item);
 
+  const button = content.getElementById('comment-button');
+  button.addEventListener('click', () => {
+    submitComment(id);
+  });
   const commentTile = content.getElementById('comments-tile');
-  setComments(commentTile, item);
+  setComments(commentTile, item.ID);
 
   // insert templated content into detail panel
   detailContainer.replaceChildren(content);
@@ -246,21 +250,18 @@ function toggleFilters() {
   })
 }
 
-function setComments(commentsTile, item) {
-  // const detailComments = document.getElementById('comments-detail-template').content;
-  const commentContainer = document.getElementById('comments-tile');
-
+function setComments(commentsTile, id) {
   let payload = {
     action: 'get',
     parts: jsObject.parts,
     sys_type: jsObject.sys_type,
-    post_id: item.ID,
+    post_id: id,
     post_type: jsObject.template.record_type,
     comment_count: 2,
   }
 
   const commentURL = jsObject.root + jsObject.parts.root + '/v1/' + jsObject.parts.type + '/post';
-  const comments = commentsTile.getElementsByClassName('activity-block action-block');
+  const comments = commentsTile.querySelectorAll('.activity-block, .action-block');
   if (comments.length) {
     for (const comment of comments) {
       comment.parentNode.removeChild(comment);
@@ -343,7 +344,9 @@ function setComments(commentsTile, item) {
       body: JSON.stringify(payload),
     })
       .then((response) => {
-        setCommentTemplate(id, false);
+        textArea.value = '';
+        const commentTile = document.getElementById('comments-tile');
+        setComments(commentTile, id);
         return response.json();
       })
       .catch((reason) => {
