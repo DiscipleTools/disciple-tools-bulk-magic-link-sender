@@ -302,8 +302,6 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                         <h2 id="detail-title"></h2>
                     </header>
 
-                    <dt-tile id="comments-tile" title="Comments"></dt-tile>
-
                     <div id="detail-content"></div>
                     <footer>
                         <dt-button onclick="saveItem(event)" type="submit" context="primary"><?php esc_html_e( 'Submit Update', 'disciple_tools' ) ?></dt-button>
@@ -324,7 +322,8 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                         </div>
                     </div>
                 </template>
-
+                    
+                <dt-tile id="comments-tile" title="Comments"></dt-tile>
                 <template id="comments-detail-template">
                     <div>
                         <textarea id="comments-text-area" style="resize: none;"></textarea>
