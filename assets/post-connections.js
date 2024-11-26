@@ -9,8 +9,6 @@ function loadPostDetail(id) {
   const detailTemplate = document.getElementById('post-detail-template').content;
   const detailContainer = document.getElementById('detail-content');
 
-  const commentContainer = setCommentTemplate(id, true);
-
   // Set detail title
   detailTitle.innerText = item.name;
 
@@ -21,9 +19,11 @@ function loadPostDetail(id) {
   content.getElementById('post-id').value = id;
   setInputValues(content, item);
 
+  const commentTile = content.getElementById('comments-tile');
+  setComments(commentTile, item);
+
   // insert templated content into detail panel
   detailContainer.replaceChildren(content);
-  detailContainer.appendChild(commentContainer);
 
   // open detail panel
   document.getElementById('list').classList.remove('is-expanded');
@@ -246,22 +246,25 @@ function toggleFilters() {
   })
 }
 
-function setCommentTemplate(id, initialLoad) {
-  const detailComments = document.getElementById('comments-detail-template').content;
+function setComments(commentsTile, item) {
+  // const detailComments = document.getElementById('comments-detail-template').content;
   const commentContainer = document.getElementById('comments-tile');
 
   let payload = {
     action: 'get',
     parts: jsObject.parts,
     sys_type: jsObject.sys_type,
-    post_id: id,
+    post_id: item.ID,
     post_type: jsObject.template.record_type,
     comment_count: 2,
   }
 
   const commentURL = jsObject.root + jsObject.parts.root + '/v1/' + jsObject.parts.type + '/post';
-  if (initialLoad) {
-    commentContainer.replaceChildren(detailComments.cloneNode(true));
+  const comments = commentsTile.getElementsByClassName('activity-block action-block');
+  if (comments.length) {
+    for (const comment of comments) {
+      comment.parentNode.removeChild(comment);
+    }
   }
   fetch(commentURL,{
     method: "POST",
@@ -276,16 +279,8 @@ function setCommentTemplate(id, initialLoad) {
       return response.json();
     })
     .then((json) => {
-      const commentDetail = detailComments.cloneNode(true);
-
       const actionBlock = document.createElement('div');
       actionBlock.className = "action-block";
-
-      const button = commentDetail.getElementById('comment-button');
-      button.addEventListener('click', () => {
-        submitComment(id);
-      });
-      actionBlock.appendChild(button);
 
       const activityBlock = document.createElement("div");
       activityBlock.className = "activity-block";
@@ -313,16 +308,15 @@ function setCommentTemplate(id, initialLoad) {
         activityBlock.appendChild(commentContent);
       }
 
-      commentDetail.appendChild(actionBlock);
-      commentDetail.appendChild(activityBlock);
+      commentsTile.appendChild(actionBlock);
+      commentsTile.appendChild(activityBlock);
 
-      commentContainer.replaceChildren(commentDetail);
+
     })
     .catch((reason) => {
       console.log(reason);
     });
-    return commentContainer;
-  }
+}
 
   function submitComment(id) {
 

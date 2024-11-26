@@ -322,14 +322,6 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                         </div>
                     </div>
                 </template>
-                    
-                <dt-tile id="comments-tile" title="Comments"></dt-tile>
-                <template id="comments-detail-template">
-                    <div>
-                        <textarea id="comments-text-area" style="resize: none;"></textarea>
-                    </div>
-                    <button class="button loader" type="button" id="comment-button">Submit</button>
-                </template>
 
                 <template id="post-detail-template">
                     <input type="hidden" name="id" id="post-id" />
@@ -368,6 +360,13 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                         }
                     }
                     ?>
+                    </dt-tile>
+
+                    <dt-tile id="comments-tile" title="Comments">
+                        <div>
+                            <textarea id="comments-text-area" style="resize: none;"></textarea>
+                        </div>
+                        <button class="button loader" type="button" id="comment-button">Submit</button>
                     </dt-tile>
                 </template>
             </div>
