@@ -416,6 +416,19 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                 ],
             ]
         );
+        register_rest_route(
+            $namespace, '/' . $this->type . '/comment', [
+                [
+                    'methods'             => 'POST',
+                    'callback'            => [ $this, 'new_comment' ],
+                    'permission_callback' => function ( WP_REST_Request $request ) {
+                        $magic = new DT_Magic_URL( $this->root );
+
+                        return $magic->verify_rest_endpoint_permissions_on_post( $request );
+                    },
+                ],
+            ]
+        );
     }
 
     public function get_post( WP_REST_Request $request ){
@@ -584,6 +597,31 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
             'success' => true,
             'message' => '',
             'post' => $updated_post,
+        ];
+    }
+
+    public function new_comment( WP_REST_Request $request ){
+        $params = $request->get_params();
+        if ( !isset( $params['post_type'], $params['post_id'], $params['parts'], $params['action'] ) ){
+            return new WP_Error( __METHOD__, 'Missing parameters', [ 'status' => 400 ] );
+        }
+
+        // Sanitize and fetch user id
+        $params = dt_recursive_sanitize_array( $params );
+
+        // Update logged-in user state, if required
+        if ( !is_user_logged_in() ){
+            DT_ML_Helper::update_user_logged_in_state();
+        }
+
+        $post = DT_Posts::get_post( $params['post_type'], $params['post_id'], false, false );
+        //$params['comment']
+        DT_Posts::add_post_comment( $post['post_type'], $post['ID'], $params['comment'], 'comment', [], false );
+
+        return [
+            'success' => true,
+            'message' => '',
+            'post' => $post,
         ];
     }
 }

@@ -333,9 +333,9 @@ function setComments(commentsTile, id) {
       comment: textArea.value,
     }
 
-    const commentURL = jsObject.root + 'dt-posts/v2/' + jsObject.template.record_type + '/' + id + '/comments';
+    const url = jsObject.root + jsObject.parts.root + '/v1/' + jsObject.parts.type + '/comment';
 
-    fetch(commentURL,{
+    fetch(url,{
       method: "POST",
       headers: {
         "Content-Type": "application/json; charset=utf-8",
