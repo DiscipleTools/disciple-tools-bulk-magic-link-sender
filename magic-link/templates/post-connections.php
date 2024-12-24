@@ -3,18 +3,37 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 } // Exit if accessed directly.
 
+add_filter('dt_magic_link_template_types', function( $types ) {
+    $types['contacts'][] = [
+        'value' => 'post-connections',
+        'text' => 'Post Connections (beta)',
+    ];
+    $types['default-options'][] = [
+        'value' => 'post-connections',
+        'text' => 'Post Connections (beta)',
+    ];
+    return $types;
+});
+
+add_action('dt_magic_link_template_load', function ( $template ) {
+    if ( isset( $template['type'] ) && $template['type'] === 'post-connections' ) {
+        new Disciple_Tools_Magic_Links_Template_Post_Connections( $template );
+    }
+} );
+
 /**
  * Class Disciple_Tools_Magic_Links_Templates
  */
 class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_Base {
 
+    protected $template_type = 'post-connections';
     public $page_title = 'Post Connections';
-    public $page_description = 'Template Title Description';
+    public $page_description = 'Edit all connections to a given post';
     public $root = 'templates'; // @todo define the root of the url {yoursite}/root/type/key/action
     public $type = 'template_id'; // Placeholder to be replaced with actual template ids
     public $type_name = '';
-    public $post_type = 'contacts'; // Support ML contacts (which can be any one of the DT post types) by default!
-    public $record_post_type = 'groups'; //todo: use this in the admin UI
+    public $post_type = 'contacts'; // Main post type that the ML is linked to.
+    public $record_post_type = 'groups'; // Child post type determined by the connection field selected
     private $post = null;
     private $items = [];
     private $post_field_settings = null;
@@ -36,11 +55,8 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
 
     public function __construct( $template = null ) {
 
-        /**
-         * Assuming a valid template, then capture header values
-         */
-
-        if ( empty( $template ) ) {
+        // only handle this template type
+        if ( empty( $template ) || $template['type'] !== $this->template_type ) {
             return;
         }
 
@@ -137,23 +153,20 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
         wp_enqueue_style( 'ml-post-connections-css', plugin_dir_url( __FILE__ ) . $css_path, null, filemtime( plugin_dir_path( __FILE__ ) . $css_path ) );
         wp_enqueue_script( 'ml-post-connections-js', plugin_dir_url( __FILE__ ) . $js_path, null, filemtime( plugin_dir_path( __FILE__ ) . $js_path ) );
 
-        $dtwc_version = '0.7.0-beta.2';
-        wp_enqueue_style( 'dt-web-components-css', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/styles/light.css", [], $dtwc_version );
+        $dtwc_version = '0.6.6';
+//        wp_enqueue_style( 'dt-web-components-css', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/styles/light.css", [], $dtwc_version );
+        wp_enqueue_style( 'dt-web-components-css', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/src/styles/light.css", [], $dtwc_version ); // remove 'src' after v0.7
         wp_enqueue_script( 'dt-web-components-js', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/dist/index.js", $dtwc_version );
-
-//        $path = '../../assets/dtwc/dist2/index.js';
-//        wp_enqueue_script( 'dt-web-components-js',
-//            plugin_dir_url( __FILE__ ) . $path,
-//            null,
-//            filemtime( plugin_dir_path( __FILE__ ) . $path )
-//        );
-//
-//        $css_path = '../../assets/dtwc/dist2/light.css';
-//        wp_enqueue_style( 'dt-web-components-css',
-//            plugin_dir_url( __FILE__ ) . $css_path,
-//            null,
-//            filemtime( plugin_dir_path( __FILE__ ) . $css_path )
-//        );
+        add_filter( 'script_loader_tag', 'add_module_type_to_script', 10, 3 );
+        function add_module_type_to_script( $tag, $handle, $src ) {
+            if ( 'dt-web-components-js' === $handle ) {
+                // @codingStandardsIgnoreStart
+                $tag = '<script type="module" src="' . esc_url( $src ) . '"></script>';
+                // @codingStandardsIgnoreEnd
+            }
+            return $tag;
+        }
+        wp_enqueue_script( 'dt-web-components-services-js', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/dist/services.min.js", array( 'jquery' ), true ); // not needed after v0.7
 
         $mdi_version = '6.6.96';
         wp_enqueue_style( 'material-font-icons-css', "https://cdn.jsdelivr.net/npm/@mdi/font@$mdi_version/css/materialdesignicons.min.css", [], $mdi_version );
@@ -246,8 +259,10 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
             <div id="list" class="is-expanded">
                 <header>
                     <h1><?php echo $has_title ? esc_html( $this->template['title'] ) : '&nbsp;' ?></h1>
+                    <button class="mdi mdi-information-outline" onclick="document.getElementById('post-detail-modal')._openModal()"></button>
                 </header>
                 <div id="search-filter">
+                    <!--
                     <div id="search-bar">
                         <input type="text" id="search" placeholder="Search" />
                         <button class="filter-button mdi mdi-filter-variant" onclick="toggleFilters()"></button>
@@ -270,6 +285,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                             </label>
                         </div>
                     </div>
+                    -->
                 </div>
                 <ul id="list-items" class="items"></ul>
                 <template id="list-item-template">
@@ -278,8 +294,9 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                     </li>
                 </template>
             </div>
-            <div id="detail" class="-is-expanded">
-                <form onsubmit="saveItem(event)">
+            <div id="detail" class="">
+                <!-- <form onsubmit="saveItem(event)"> -->
+                <form>
                     <header>
                         <button type="button" class="details-toggle mdi mdi-arrow-left" onclick="togglePanels()"></button>
                         <h2 id="detail-title"></h2>
@@ -287,13 +304,29 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
 
                     <div id="detail-content"></div>
                     <footer>
-                        <button type="submit"><?php esc_html_e( 'Submit Update', 'disciple_tools' ) ?></button>
+                        <dt-button onclick="saveItem(event)" type="submit" context="primary"><?php esc_html_e( 'Submit Update', 'disciple_tools' ) ?></dt-button>
                     </footer>
                 </form>
+
+                <template id="comment-header-template">
+                    <div class="comment-header">
+                        <span><strong id="comment-author"></strong></span>
+                        <span class="comment-date" id="comment-date"></span>
+                    </div>
+                </template>
+                <template id="comment-content-template">
+                    <div class="activity-text">
+                        <div dir="auto" class="" data-comment-id="" id="comment-id">
+                            <div class="comment-text" title="" dir="auto" id="comment-content">
+                            </div>
+                        </div>
+                    </div>
+                </template>
 
                 <template id="post-detail-template">
                     <input type="hidden" name="id" id="post-id" />
                     <input type="hidden" name="type" id="post-type" />
+
                     <dt-tile id="all-fields" open>
                     <?php
                     $post_field_settings = DT_Posts::get_post_field_settings( $this->template['record_type'] );
@@ -315,18 +348,32 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                                     ? 'dt-textarea'
                                     : 'dt-text';
                                 $label = ( ! empty( $field['translations'] ) && isset( $field['translations'][ determine_locale() ] ) ) ? $field['translations'][ determine_locale() ]['translation'] : $field['label'];
-                                ?>
+                            ?>
                                 <<?php echo esc_html( $tag ) ?>
-                                    id="<?php echo esc_html( $field['id'] ) ?>"
-                                    name="<?php echo esc_html( $field['id'] ) ?>"
-                                    data-type="<?php echo esc_attr( $field['type'] ) ?>"
+                                    id="<?php esc_html_e( $field['id'] ) ?>"
+                                    name="<?php esc_html_e( $field['id'] ) ?>"
+                                    data-type="<?php esc_attr_e( $field['type'] ) ?>"
                                     label="<?php echo esc_attr( $label ) ?>"
                                 ></<?php echo esc_html( $tag ) ?>>
-                                <?php
+                            <?php
                             }
                         }
                     }
                     ?>
+                    </dt-tile>
+
+                    <dt-tile id="comments-tile" title="Comments">
+                        <div>
+                            <textarea id="comments-text-area"
+                                      style="resize: none;"
+                                      placeholder="<?php echo esc_html_x( 'Write your comment or note here', 'input field placeholder', 'disciple_tools' ) ?>"
+                            ></textarea>
+                        </div>
+                        <div class="comment-button-container">
+                            <button class="button loader" type="button" id="comment-button">
+                                <?php esc_html_e( 'Submit comment', 'disciple_tools' ) ?>
+                            </button>
+                        </div>
                     </dt-tile>
                 </template>
             </div>
@@ -335,6 +382,12 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                 <div class="snackbar-item"></div>
             </template>
         </main>
+        <dt-modal id="post-detail-modal" buttonlabel="Open Modal" hideheader hidebutton closebutton>
+            <span slot="content" id="post-detail-modal-content">
+                <span class="post-name"><?php echo esc_html( $this->post['name'] ) ?></span>
+                <span class="post-id">ID: <?php echo esc_html( $this->post['ID'] ) ?></span>
+            </span>
+        </dt-modal>
         <?php
     }
 
@@ -344,10 +397,10 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
      */
     public function add_endpoints() {
         $namespace = $this->root . '/v1';
-        /*register_rest_route(
+        register_rest_route(
             $namespace, '/' . $this->type . '/post', [
                 [
-                    'methods'             => 'GET',
+                    'methods'             => 'POST',
                     'callback'            => [ $this, 'get_post' ],
                     'permission_callback' => function ( WP_REST_Request $request ) {
                         $magic = new DT_Magic_URL( $this->root );
@@ -356,12 +409,25 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                     },
                 ],
             ]
-        );*/
+        );
         register_rest_route(
             $namespace, '/' . $this->type . '/update', [
                 [
                     'methods'             => 'POST',
                     'callback'            => [ $this, 'update_record' ],
+                    'permission_callback' => function ( WP_REST_Request $request ) {
+                        $magic = new DT_Magic_URL( $this->root );
+
+                        return $magic->verify_rest_endpoint_permissions_on_post( $request );
+                    },
+                ],
+            ]
+        );
+        register_rest_route(
+            $namespace, '/' . $this->type . '/comment', [
+                [
+                    'methods'             => 'POST',
+                    'callback'            => [ $this, 'new_comment' ],
                     'permission_callback' => function ( WP_REST_Request $request ) {
                         $magic = new DT_Magic_URL( $this->root );
 
@@ -538,6 +604,31 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
             'success' => true,
             'message' => '',
             'post' => $updated_post,
+        ];
+    }
+
+    public function new_comment( WP_REST_Request $request ){
+        $params = $request->get_params();
+        if ( !isset( $params['post_type'], $params['post_id'], $params['parts'], $params['action'] ) ){
+            return new WP_Error( __METHOD__, 'Missing parameters', [ 'status' => 400 ] );
+        }
+
+        // Sanitize and fetch user id
+        $params = dt_recursive_sanitize_array( $params );
+
+        // Update logged-in user state, if required
+        if ( !is_user_logged_in() ){
+            DT_ML_Helper::update_user_logged_in_state();
+        }
+
+        $post = DT_Posts::get_post( $params['post_type'], $params['post_id'], false, false );
+        //$params['comment']
+        DT_Posts::add_post_comment( $post['post_type'], $post['ID'], $params['comment'], 'comment', [], false );
+
+        return [
+            'success' => true,
+            'message' => '',
+            'post' => $post,
         ];
     }
 }

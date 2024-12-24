@@ -2,7 +2,7 @@
 
 button.mdi {
     background-color: transparent;
-    border: 1px solid gray;
+    border: 0px;
     aspect-ratio: 1;
 }
 
@@ -26,7 +26,7 @@ code { display: block !important; }
 
 /* ===== List Panel ===== */
 #list {
-    --header-height: 2rem;
+    --header-height: 3rem;
     --search-margin-block: 1rem;
     --search-border-width: 2px;
     --search-input-height: 2.5rem;
@@ -34,15 +34,21 @@ code { display: block !important; }
         var(--search-margin-block) + var(--search-margin-block) +
         var(--search-input-height) + 1rem
     );
+    --search-height: var(--search-margin-block); /* temporary until search/filter is implemented */
     background-color: var(--primary-color, #3f729b);
     padding: 0;
     position: relative;
     flex: 0 1 auto;
     flex-shrink: 1;
-    overflow-y: hidden;
+    overflow-y: auto;
     width: 100%;
     -webkit-transition: flex .2s ease-out;
     transition: flex .2s ease-out;
+}
+@media print, screen and (min-width: 40em) {
+    #list {
+        --header-height: 3.5rem;
+    }
 }
 #list.is-expanded {
     flex-shrink: 0;
@@ -51,9 +57,27 @@ code { display: block !important; }
 }
 
 #list > header {
+    --icon-size: 2rem;
+    display: flex;
+    align-items: center;
     background-color: #fff;
     text-align: center;
     height: var(--header-height);
+    padding-block-start: 1rem;
+    position: absolute;
+    width: 100%;
+    z-index: 1;
+}
+
+#list > header > h1 {
+    flex-grow: 1;
+    margin: 0;
+    margin-inline-start: calc( var(--icon-size) + 1rem );
+}
+
+#list > header > button.mdi {
+    font-size: var(--icon-size);
+    margin-inline-end: 1rem;
 }
 
 #list .items {
@@ -99,6 +123,12 @@ code { display: block !important; }
     grid-template-rows: var(--search-height) 1fr;
     transition: grid-template-rows 500ms;
     z-index: 1;
+    position: absolute;
+    width: 100%;
+    top: var(--header-height);
+}
+#search-filter:not(:has(.filters)) {
+    border-bottom: 4px solid lightgray;
 }
 
 #search-filter:has(.filters.hidden) {
@@ -108,6 +138,10 @@ code { display: block !important; }
 #search-bar,
 .filters {
     width: 100%;
+}
+#search-filter,
+#search-bar,
+.filters {
     background: #fff;
 }
 #search-bar {
@@ -230,10 +264,44 @@ code { display: block !important; }
     overflow-y: auto;
     flex-grow: 1;
 }
+#detail-content dt-tile {
+    --dt-tile-margin: 1rem 0rem;
+}
 #detail footer {
     background: #fff;
     z-index: 1;
     box-shadow: 0px -3px 4px rgb(0 0 0 / 25%);
+}
+
+/* ===== Comments ==== */
+#comments-tile {
+    --dt-tile-font-weight: normal;
+}
+/* override the tile's responsive layout so that it is only a single column */
+#comments-tile > * {
+    grid-column: 1 / 3;
+}
+
+#comments-tile .comment-button-container {
+    display: flex;
+    justify-content: end;
+}
+
+#comments-tile .activity-block {
+    margin-top: 15px;
+}
+#comments-tile .comment-date {
+    font-size: 12px;
+    margin-right: 20px;
+}
+#comments-tile .comment-bubble {
+    word-wrap: break-word;
+    padding-bottom: 2px;
+}
+#comments-tile .comment-bubble, #comments-tile .comment-controls {
+    margin: 0 0 0 2em;
+    padding: 0 0 0 15px;
+    text-align: left;
 }
 
 /* ===== Snackbar ===== */
@@ -279,6 +347,10 @@ code { display: block !important; }
 
 /* ===== Misc ===== */
 label {
+    font-weight: bold;
+    display: block;
+}
+#post-detail-modal-content .post-name {
     font-weight: bold;
     display: block;
 }
