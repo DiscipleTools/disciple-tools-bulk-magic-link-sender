@@ -280,20 +280,24 @@ function setComments(commentsTile, id) {
       return response.json();
     })
     .then((json) => {
-      const actionBlock = document.createElement('div');
-      actionBlock.className = "action-block";
-
-      const activityBlock = document.createElement("div");
-      activityBlock.className = "activity-block";
-
       for (const val of json['comments']['comments']) {
+        const actionBlock = document.createElement('div');
+        actionBlock.className = "action-block";
+
+        const activityBlock = document.createElement("div");
+        activityBlock.className = "activity-block";
+
         const commentHeaderTemplate = document.getElementById('comment-header-template').content;
         const commentHeader = commentHeaderTemplate.cloneNode(true);
         const commentAuthor = commentHeader.getElementById('comment-author');
         const commentDate = commentHeader.getElementById('comment-date');
 
         commentAuthor.innerText = val['comment_author'];
-        commentDate.innerText = val['comment_date'];
+        const commentDateTime = window.moment(val.comment_date_gmt + 'Z');
+        commentDate.innerText = window.SHAREDFUNCTIONS.formatDate(
+          moment(commentDateTime).unix(),
+          true,
+        );
 
         const commentContentTemplate = document.getElementById('comment-content-template').content;
         const commentContent = commentContentTemplate.cloneNode(true);
@@ -307,10 +311,10 @@ function setComments(commentsTile, id) {
 
         activityBlock.appendChild(commentHeader);
         activityBlock.appendChild(commentContent);
-      }
 
-      commentsTile.appendChild(actionBlock);
-      commentsTile.appendChild(activityBlock);
+        commentsTile.appendChild(actionBlock);
+        commentsTile.appendChild(activityBlock);
+      }
 
 
     })

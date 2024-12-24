@@ -309,7 +309,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                 </form>
 
                 <template id="comment-header-template">
-                    <div class="comment-header" style="">
+                    <div class="comment-header">
                         <span><strong id="comment-author"></strong></span>
                         <span class="comment-date" id="comment-date"></span>
                     </div>
@@ -364,9 +364,16 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
 
                     <dt-tile id="comments-tile" title="Comments">
                         <div>
-                            <textarea id="comments-text-area" style="resize: none;"></textarea>
+                            <textarea id="comments-text-area"
+                                      style="resize: none;"
+                                      placeholder="<?php echo esc_html_x( 'Write your comment or note here', 'input field placeholder', 'disciple_tools' ) ?>"
+                            ></textarea>
                         </div>
-                        <button class="button loader" type="button" id="comment-button">Submit</button>
+                        <div class="comment-button-container">
+                            <button class="button loader" type="button" id="comment-button">
+                                <?php esc_html_e( 'Submit comment', 'disciple_tools' ) ?>
+                            </button>
+                        </div>
                     </dt-tile>
                 </template>
             </div>
