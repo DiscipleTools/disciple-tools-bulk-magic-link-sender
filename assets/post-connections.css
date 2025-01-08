@@ -320,3 +320,26 @@ label {
     font-weight: bold;
     display: block;
 }
+
+#post-locale-modal-content {
+    display: block;
+    overflow: auto;
+    max-height: 70vh;
+}
+.language-select {
+    overflow-y: auto;
+    margin: 0;
+}
+.language-select li {
+    list-style: none;
+    padding: 0.75rem;
+}
+.language-select li:nth-child(even) {
+    background-color: #eee;
+}
+.language-select li.active,
+.language-select li:hover {
+    background-color: var(--primary-color);
+    color: white;
+    cursor: pointer;
+}

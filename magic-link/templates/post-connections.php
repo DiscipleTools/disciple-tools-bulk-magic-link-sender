@@ -361,14 +361,18 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
         </dt-modal>
         <?php
         $lang = dt_get_available_languages();
+        $current_lang = trim( wp_get_current_user()->locale );
         ?>
         <dt-modal id="post-locale-modal" buttonlabel="Open Modal" hideheader hidebutton closebutton>
             <span slot="content" id="post-locale-modal-content">
-            <ul style="height: 200px; overflow: auto">
+            <ul class="language-select">
                 <?php
                 foreach ($lang as $language) {
                 ?>
-                    <li onclick="assignLanguage('<?php echo esc_html( $language['language'] ); ?>')"><?php echo $language['native_name']; ?></li>
+                    <li
+                        class="<?php echo $language['language'] === $current_lang ? esc_attr('active') : null ?>"
+                        onclick="assignLanguage('<?php echo esc_html( $language['language'] ); ?>')"
+                    ><?php echo $language['native_name']; ?></li>
                 <?php
                 }
                 ?>
