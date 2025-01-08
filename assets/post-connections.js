@@ -19,6 +19,13 @@ function loadPostDetail(id) {
   content.getElementById('post-id').value = id;
   setInputValues(content, item);
 
+  const button = content.getElementById('comment-button');
+  button.addEventListener('click', () => {
+    submitComment(id);
+  });
+  const commentTile = content.getElementById('comments-tile');
+  setComments(commentTile, item.ID);
+
   // insert templated content into detail panel
   detailContainer.replaceChildren(content);
 
@@ -246,3 +253,112 @@ function toggleFilters() {
 function assignLanguage(lang) {
   window.location.assign('?lang=' + lang);
 }
+
+function setComments(commentsTile, id) {
+  let payload = {
+    action: 'get',
+    parts: jsObject.parts,
+    sys_type: jsObject.sys_type,
+    post_id: id,
+    post_type: jsObject.template.record_type,
+    comment_count: 2,
+  }
+
+  const commentURL = jsObject.root + jsObject.parts.root + '/v1/' + jsObject.parts.type + '/post';
+  const comments = commentsTile.querySelectorAll('.activity-block, .action-block');
+  if (comments.length) {
+    for (const comment of comments) {
+      comment.parentNode.removeChild(comment);
+    }
+  }
+  fetch(commentURL,{
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "X-WP-Nonce": jsObject.nonce,
+    },
+    body: JSON.stringify(payload),
+  })
+    .then((response) => {
+      console.log(response);
+      return response.json();
+    })
+    .then((json) => {
+      for (const val of json['comments']['comments']) {
+        const actionBlock = document.createElement('div');
+        actionBlock.className = "action-block";
+
+        const activityBlock = document.createElement("div");
+        activityBlock.className = "activity-block";
+
+        const commentHeaderTemplate = document.getElementById('comment-header-template').content;
+        const commentHeader = commentHeaderTemplate.cloneNode(true);
+        const commentAuthor = commentHeader.getElementById('comment-author');
+        const commentDate = commentHeader.getElementById('comment-date');
+
+        commentAuthor.innerText = val['comment_author'];
+        const commentDateTime = window.moment(val.comment_date_gmt + 'Z');
+        commentDate.innerText = window.SHAREDFUNCTIONS.formatDate(
+          moment(commentDateTime).unix(),
+          true,
+        );
+
+        const commentContentTemplate = document.getElementById('comment-content-template').content;
+        const commentContent = commentContentTemplate.cloneNode(true);
+        const commentId = commentContent.getElementById('comment-id');
+        const commentText = commentContent.getElementById('comment-content');
+
+        commentId.className = "comment-bubble " + val['comment_ID'];
+        commentId.setAttribute("data-comment-id", val['comment_ID']);
+        commentText.setAttribute("title", val['comment_date']);
+        commentText.innerText = val['comment_content'];
+
+        activityBlock.appendChild(commentHeader);
+        activityBlock.appendChild(commentContent);
+
+        commentsTile.appendChild(actionBlock);
+        commentsTile.appendChild(activityBlock);
+      }
+
+
+    })
+    .catch((reason) => {
+      console.log(reason);
+    });
+}
+
+  function submitComment(id) {
+
+    const textArea = document.getElementById('comments-text-area');
+
+
+    let payload = {
+      action: 'post',
+      parts: jsObject.parts,
+      sys_type: jsObject.sys_type,
+      post_id: id,
+      post_type: jsObject.template.record_type,
+      comment: textArea.value,
+    }
+
+    const url = jsObject.root + jsObject.parts.root + '/v1/' + jsObject.parts.type + '/comment';
+
+    fetch(url,{
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        "X-WP-Nonce": jsObject.nonce,
+      },
+      body: JSON.stringify(payload),
+    })
+      .then((response) => {
+        textArea.value = '';
+        const commentTile = document.getElementById('comments-tile');
+        setComments(commentTile, id);
+        return response.json();
+      })
+      .catch((reason) => {
+        console.log("reason:");
+        console.log(reason);
+      });
+  }
