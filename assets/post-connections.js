@@ -242,3 +242,7 @@ function toggleFilters() {
     el.classList.toggle('hidden');
   })
 }
+
+function assignLanguage(lang) {
+  window.location.assign('?lang=' + lang);
+}
