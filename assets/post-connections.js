@@ -244,10 +244,87 @@ function togglePanels() {
   })
 }
 
+function clearSearch() {
+  document.getElementById('search').value = '';
+}
+
 function toggleFilters() {
   document.querySelectorAll('.filters').forEach((el) => {
     el.classList.toggle('hidden');
   })
+}
+
+const searchData = id => {
+  let payload = {
+    action: 'get',
+    parts: jsObject.parts,
+    sys_type: jsObject.sys_type,
+    post_id: id,
+    post_type: jsObject.template.record_type,
+    text: document.getElementById('search').value,
+    sort: document.querySelector('input[name="sort"]:checked').value,
+  }
+  
+  let temp_spinner = document.getElementById('temp-spinner');
+  temp_spinner.setAttribute('class', 'loading-spinner active');
+  let contact_list = document.getElementById('list-items');
+
+  const url = jsObject.root + jsObject.parts.root + '/v1/' + jsObject.parts.type + '/sort_post';
+
+  fetch(url,{
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "X-WP-Nonce": jsObject.nonce,
+    },
+    body: JSON.stringify(payload),
+  })
+    .then((response) => {
+      
+      //replace html post list with this list
+      //console.log(response.json());
+      return response.json();
+      
+    }).then((json) => {
+
+      temp_spinner.setAttribute('class', 'loading-spinner inactive');
+
+      let list_children = contact_list.children;
+
+      for (const num of list_children) {
+        contact_list.removeChild(num);
+      }
+
+      for (const val of json['posts']) {
+        const list_item = document.createElement('li');
+        list_item.setAttribute('id', 'item-'+val['ID']);
+
+        const list_name = document.createElement('a');
+        list_name.setAttribute('href', 'javascript:loadPostDetail('+val['ID']+')');
+        list_name.innerText = val['post_title'];
+
+        list_item.appendChild(list_name);
+        contact_list.appendChild(list_item);
+      }
+
+    })
+    .catch((reason) => {
+      console.log("reason:");
+      console.log(reason);
+    });
+}
+
+const searchChange = debounce(searchData);
+
+function debounce(callback) {
+  let delay = 1000
+  let timer
+  return function(...args) {
+    clearTimeout(timer)
+    timer = setTimeout(() => {
+      callback(...args);
+    }, delay)
+  }
 }
 
 function assignLanguage(lang) {

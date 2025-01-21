@@ -263,9 +263,9 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                     <button type="button" class="mdi mdi-information-outline" onclick="document.getElementById('post-detail-modal')._openModal()"></button>
                 </header>
                 <div id="search-filter">
-                    <!--
                     <div id="search-bar">
-                        <input type="text" id="search" placeholder="Search" />
+                    <input type="text" id="search" placeholder="Search" onkeyup="searchChange(<?php echo esc_html( $this->post['ID'] ) ?>)" />
+                        <button class="clear-button mdi mdi-close" onclick="clearSearch()"></button>
                         <button class="filter-button mdi mdi-filter-variant" onclick="toggleFilters()"></button>
 
                     </div>
@@ -273,22 +273,24 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                         <div class="container">
                             <h3>Sort By</h3>
                             <label>
-                                <input type="radio" name="sort" value="-updated_at" checked />
+                                <input type="radio" name="sort" value="-updated_at" onclick="toggleFilters()" onchange="searchChange(<?php echo esc_html( $this->post['ID'] ) ?>)" checked />
                                 Last Updated
                             </label>
                             <label>
-                                <input type="radio" name="sort" value="name" />
+                                <input type="radio" name="sort" value="name" onclick="toggleFilters()" onchange="searchChange(<?php echo esc_html( $this->post['ID'] ) ?>)" />
                                 Name (A-Z)
                             </label>
                             <label>
-                                <input type="radio" name="sort" value="-name" />
+                                <input type="radio" name="sort" value="-name" onclick="toggleFilters()" onchange="searchChange(<?php echo esc_html( $this->post['ID'] ) ?>)" />
                                 Name (Z-A)
                             </label>
                         </div>
                     </div>
-                    -->
                 </div>
                 <ul id="list-items" class="items"></ul>
+                <div id="spinner-div" style="justify-content: center; display: flex;">
+                    <span id="temp-spinner" class="loading-spinner inactive" style="margin: 0; position: absolute; top: 50%; -ms-transform: translateY(-50%); transform: translateY(-50%); height: 100px; width: 100px; z-index: 100;"></span>
+                </div>
                 <template id="list-item-template">
                     <li>
                         <a href="javascript:loadPostDetail()"></a>
@@ -449,6 +451,19 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                 [
                     'methods'             => 'POST',
                     'callback'            => [ $this, 'new_comment' ],
+                    'permission_callback' => function ( WP_REST_Request $request ) {
+                        $magic = new DT_Magic_URL( $this->root );
+
+                        return $magic->verify_rest_endpoint_permissions_on_post( $request );
+                    },
+                ],
+            ]
+        );
+        register_rest_route(
+            $namespace, '/' . $this->type . '/sort_post', [
+                [
+                    'methods'             => 'POST',
+                    'callback'            => [ $this, 'sorted_list_posts' ],
                     'permission_callback' => function ( WP_REST_Request $request ) {
                         $magic = new DT_Magic_URL( $this->root );
 
@@ -651,5 +666,40 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
             'message' => '',
             'post' => $post,
         ];
+    }
+
+    public function sorted_list_posts( WP_REST_Request $request ){
+        $params = $request->get_params();
+        if ( !isset( $params['post_type'], $params['post_id'], $params['parts'], $params['action'] ) ){
+            return new WP_Error( __METHOD__, 'Missing parameters', [ 'status' => 400 ] );
+        }
+
+        // Sanitize and fetch user id
+        $params = dt_recursive_sanitize_array( $params );
+
+        // Update logged-in user state, if required
+        if ( !is_user_logged_in() ){
+            DT_ML_Helper::update_user_logged_in_state();
+        }
+
+        $this->post = DT_Posts::get_post( $this->post_type, $params['post_id'], true, false );
+
+        $query_fields = [];
+        if ( !empty( $this->template['connection_fields'] ) ) {
+            foreach ( $this->template['connection_fields'] as $field ) {
+                $query_fields[][$field] = [ $params['post_id'] ];
+            }
+        }
+
+        $sorted_items = DT_Posts::list_posts( $this->record_post_type, [
+            'text' => $params['text'],
+            'sort' => $params['sort'],
+            'limit' => 1000,
+            'fields' => [
+                $query_fields
+            ]
+        ], false );
+
+        return $sorted_items;
     }
 }

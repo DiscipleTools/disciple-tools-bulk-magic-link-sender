@@ -160,6 +160,15 @@ code { display: block !important; }
     height: var(--search-input-height);
 }
 
+#search-bar button.clear-button {
+    position: absolute;
+    right: 3.25rem;
+    top: calc(var(--search-margin-block) + var(--search-border-width));
+    border: 0;
+    background-color: transparent;
+    height: var(--search-input-height);
+}
+
 #search-bar button.filter-button {
     position: absolute;
     right: 1.25rem;
