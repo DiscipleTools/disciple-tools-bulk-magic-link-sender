@@ -34,7 +34,6 @@ code { display: block !important; }
         var(--search-margin-block) + var(--search-margin-block) +
         var(--search-input-height) + 1rem
     );
-    --search-height: var(--search-margin-block); /* temporary until search/filter is implemented */
     background-color: var(--primary-color, #3f729b);
     padding: 0;
     position: relative;
