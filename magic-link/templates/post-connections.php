@@ -351,14 +351,14 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                                     ? 'dt-textarea'
                                     : 'dt-text';
                                 $label = ( ! empty( $field['translations'] ) && isset( $field['translations'][ determine_locale() ] ) ) ? $field['translations'][ determine_locale() ]['translation'] : $field['label'];
-                            ?>
+                                ?>
                                 <<?php echo esc_html( $tag ) ?>
-                                    id="<?php esc_html_e( $field['id'] ) ?>"
-                                    name="<?php esc_html_e( $field['id'] ) ?>"
-                                    data-type="<?php esc_attr_e( $field['type'] ) ?>"
+                                    id="<?php echo esc_html( $field['id'] ) ?>"
+                                    name="<?php echo esc_html( $field['id'] ) ?>"
+                                    data-type="<?php echo esc_attr_e( $field['type'] ) ?>"
                                     label="<?php echo esc_attr( $label ) ?>"
                                 ></<?php echo esc_html( $tag ) ?>>
-                            <?php
+                                <?php
                             }
                         }
                     }
@@ -399,13 +399,13 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
             <span slot="content" id="post-locale-modal-content">
             <ul class="language-select">
                 <?php
-                foreach ($lang as $language) {
-                ?>
+                foreach ( $lang as $language ) {
+                    ?>
                     <li
-                        class="<?php echo $language['language'] === $current_lang ? esc_attr('active') : null ?>"
+                        class="<?php echo $language['language'] === $current_lang ? esc_attr( 'active' ) : null ?>"
                         onclick="assignLanguage('<?php echo esc_html( $language['language'] ); ?>')"
-                    ><?php echo $language['native_name']; ?></li>
-                <?php
+                    ><?php echo esc_html( $language['native_name'] ); ?></li>
+                    <?php
                 }
                 ?>
                 </ul>
