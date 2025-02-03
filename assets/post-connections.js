@@ -45,21 +45,26 @@ function loadPostDetail(id) {
 /**
  * Load the list items into the UI from the jsObject.items property
  */
-function loadListItems() {
-  if ( !jsObject.items || !jsObject.items.posts ) {
+function loadListItems(posts) {
+  if ( (!jsObject.items || !jsObject.items.posts) && !posts ) {
     return;
+  }
+
+  if (!posts) {
+    posts = jsObject.items.posts;
   }
 
   const itemList = document.getElementById('list-items');
   itemList.replaceChildren([]);
   const itemTemplate = document.getElementById('list-item-template').content;
 
-  for (const item of jsObject.items.posts) {
+  for (const item of posts) {
     const itemEl = itemTemplate.cloneNode(true);
     itemEl.querySelector('li').id = `item-${item.ID}`;
     populateListItemTemplate(itemEl, item);
     itemList.append(itemEl);
   }
+
 }
 
 function populateListItemTemplate(itemEl, item) {
@@ -244,8 +249,9 @@ function togglePanels() {
   })
 }
 
-function clearSearch() {
+function clearSearch(id) {
   document.getElementById('search').value = '';
+  searchData(id);
 }
 
 function toggleFilters() {
@@ -255,19 +261,25 @@ function toggleFilters() {
 }
 
 const searchData = id => {
+  const text = document.getElementById('search').value;
+  let clear_button = document.getElementById('clear-button');
+  if (!text && clear_button.style.display == 'block'){
+    clear_button.setAttribute('style', 'display: none;');
+  }else if (text && clear_button.style.display == 'none'){
+    clear_button.setAttribute('style', 'display: block;');
+  }
   let payload = {
     action: 'get',
     parts: jsObject.parts,
     sys_type: jsObject.sys_type,
     post_id: id,
     post_type: jsObject.template.record_type,
-    text: document.getElementById('search').value,
+    text: text,
     sort: document.querySelector('input[name="sort"]:checked').value,
   }
   
   let temp_spinner = document.getElementById('temp-spinner');
   temp_spinner.setAttribute('class', 'loading-spinner active');
-  let contact_list = document.getElementById('list-items');
 
   const url = jsObject.root + jsObject.parts.root + '/v1/' + jsObject.parts.type + '/sort_post';
 
@@ -281,31 +293,13 @@ const searchData = id => {
   })
     .then((response) => {
       
-      //replace html post list with this list
-      //console.log(response.json());
       return response.json();
       
     }).then((json) => {
 
       temp_spinner.setAttribute('class', 'loading-spinner inactive');
 
-      let list_children = contact_list.children;
-
-      for (const num of list_children) {
-        contact_list.removeChild(num);
-      }
-
-      for (const val of json['posts']) {
-        const list_item = document.createElement('li');
-        list_item.setAttribute('id', 'item-'+val['ID']);
-
-        const list_name = document.createElement('a');
-        list_name.setAttribute('href', 'javascript:loadPostDetail('+val['ID']+')');
-        list_name.innerText = val['post_title'];
-
-        list_item.appendChild(list_name);
-        contact_list.appendChild(list_item);
-      }
+      loadListItems(json['posts']);
 
     })
     .catch((reason) => {

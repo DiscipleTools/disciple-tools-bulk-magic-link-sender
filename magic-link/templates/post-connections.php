@@ -265,7 +265,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                 <div id="search-filter">
                     <div id="search-bar">
                     <input type="text" id="search" placeholder="Search" onkeyup="searchChange(<?php echo esc_html( $this->post['ID'] ) ?>)" />
-                        <button class="clear-button mdi mdi-close" onclick="clearSearch()"></button>
+                    <button id="clear-button" style="display: none;" class="clear-button mdi mdi-close" onclick="clearSearch(<?php echo esc_html( $this->post['ID'] ) ?>)"></button>
                         <button class="filter-button mdi mdi-filter-variant" onclick="toggleFilters()"></button>
 
                     </div>
