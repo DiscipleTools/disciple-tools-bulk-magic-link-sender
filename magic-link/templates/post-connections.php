@@ -355,7 +355,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                                 <<?php echo esc_html( $tag ) ?>
                                     id="<?php echo esc_html( $field['id'] ) ?>"
                                     name="<?php echo esc_html( $field['id'] ) ?>"
-                                    data-type="<?php echo esc_attr_e( $field['type'] ) ?>"
+                                    data-type="<?php echo esc_attr( $field['type'] ) ?>"
                                     label="<?php echo esc_attr( $label ) ?>"
                                 ></<?php echo esc_html( $tag ) ?>>
                                 <?php
