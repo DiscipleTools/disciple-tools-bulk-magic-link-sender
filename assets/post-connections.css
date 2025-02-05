@@ -34,7 +34,6 @@ code { display: block !important; }
         var(--search-margin-block) + var(--search-margin-block) +
         var(--search-input-height) + 1rem
     );
-    --search-height: var(--search-margin-block); /* temporary until search/filter is implemented */
     background-color: var(--primary-color, #3f729b);
     padding: 0;
     position: relative;
@@ -157,6 +156,15 @@ code { display: block !important; }
     font-size: 1.25rem;
     padding-left: 10px;
     padding-right: 10px;
+    height: var(--search-input-height);
+}
+
+#search-bar button.clear-button {
+    position: absolute;
+    right: 3.25rem;
+    top: calc(var(--search-margin-block) + var(--search-border-width));
+    border: 0;
+    background-color: transparent;
     height: var(--search-input-height);
 }
 
