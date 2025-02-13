@@ -77,9 +77,17 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
          *      - class_type:   Flag indicating template class type.
          */
 
+        $show_in_apps = false;
+
+        if ( $template['post_type'] == 'contacts' ) {
+            $show_in_apps = true;
+        }
+
         $this->meta = [
             'app_type'   => 'magic_link',
-            'class_type' => 'template'
+            'class_type' => 'template',
+            'show_in_home_apps' => $show_in_apps,
+            'icon' => 'mdi mdi-account-network',
         ];
 
         /**
