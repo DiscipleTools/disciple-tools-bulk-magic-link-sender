@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Disciple Tools - Magic Links
  * Plugin URI: https://github.com/DiscipleTools/disciple-tools-bulk-magic-link-sender
- * Description: Disciple Tools - Magic Links for users, contacts, groups and teams assignment + schedule management for magic links dispatching over configured sending channels.
+ * Description: Create individual magic links for updating contacts and groups. Schedule sending magic links via email or sms.
  * Text Domain: disciple-tools-bulk-magic-link-sender
  * Domain Path: /languages
  * Version:  1.25.3
