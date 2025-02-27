@@ -971,9 +971,9 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                 $updates['assigned_to'] = 'user-' . $params['parts']['post_id'];
             }
 
-            $updated_post = DT_Posts::create_post( 'contacts', $updates, false, false );
+            $updated_post = DT_Posts::create_post( 'contacts', $updates );
         } else {
-            $updated_post = DT_Posts::update_post( 'contacts', $params['post_id'], $updates, false, false );
+            $updated_post = DT_Posts::update_post( 'contacts', $params['post_id'], $updates );
         }
         if ( empty( $updated_post ) || is_wp_error( $updated_post ) ) {
             return [
@@ -985,7 +985,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
 
         // Add any available comments
         if ( isset( $params['comments'] ) && ! empty( $params['comments'] ) ) {
-            $updated_comment = DT_Posts::add_post_comment( $updated_post['post_type'], $updated_post['ID'], $params['comments'], 'comment', [], false );
+            $updated_comment = DT_Posts::add_post_comment( $updated_post['post_type'], $updated_post['ID'], $params['comments'] );
             if ( empty( $updated_comment ) || is_wp_error( $updated_comment ) ) {
                 return [
                     'id' => $updated_post['ID'],
