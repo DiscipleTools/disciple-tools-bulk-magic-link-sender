@@ -234,6 +234,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
      * @todo remove if not needed
      */
     public function footer_javascript() {
+        $fields = DT_Posts::get_post_field_settings( 'contacts' );
         ?>
         <script>
             let jsObject = [<?php echo json_encode( [
@@ -241,9 +242,9 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                 'root'                    => esc_url_raw( rest_url() ),
                 'nonce'                   => wp_create_nonce( 'wp_rest' ),
                 'parts'                   => $this->parts,
-                'milestones'              => DT_Posts::get_post_field_settings( 'contacts' )['milestones']['default'],
-                'overall_status'          => DT_Posts::get_post_field_settings( 'contacts' )['overall_status']['default'],
-                'faith_status'            => DT_Posts::get_post_field_settings( 'contacts' )['faith_status']['default'],
+                'milestones'              => $fields['milestones']['default'] ?? [],
+                'overall_status'          => $fields['overall_status']['default'] ?? [],
+                'faith_status'            => $fields['faith_status']['default'] ?? [],
                 'link_obj_id'             => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $this->fetch_incoming_link_param( 'id' ) ),
                 'sys_type'                => $this->fetch_incoming_link_param( 'type' ),
                 'translations'            => [
@@ -598,7 +599,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                         payload['overall_status'] = String(jQuery('#post_overall_status').val()).trim();
                     }
                     if (window.is_field_enabled('faith_status')) {
-                        payload['faith_status'] = String(jQuery('#post_faith_status').val()).trim();
+                        payload['faith_status'] = jQuery('#post_faith_status').val()?.trim();
                     }
                     if (window.is_field_enabled('contact_phone')) {
                         // Ignored, as field currently shown in a read-only capacity!
@@ -714,21 +715,27 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                                 <b><?php echo esc_attr( $field_settings['name']['name'] ); ?></b></td>
                             <td id="form_content_name_td"></td>
                         </tr>
+                        <?php if ( ! empty( $field_settings['milestones'] ) ): ?>
                         <tr id="form_content_milestones_tr">
                             <td style="vertical-align: top;">
                                 <b><?php echo esc_attr( $field_settings['milestones']['name'] ); ?></b></td>
                             <td id="form_content_milestones_td"></td>
                         </tr>
+                        <?php endif; ?>
+                        <?php if ( ! empty( $field_settings['overall_status'] ) ): ?>
                         <tr id="form_content_overall_status_tr">
                             <td style="vertical-align: top;">
                                 <b><?php echo esc_attr( $field_settings['overall_status']['name'] ); ?></b></td>
                             <td id="form_content_overall_status_td"></td>
                         </tr>
+                        <?php endif; ?>
+                        <?php if ( ! empty( $field_settings['faith_status'] ) ): ?>
                         <tr id="form_content_faith_status_tr">
                             <td style="vertical-align: top;">
                                 <b><?php echo esc_attr( $field_settings['faith_status']['name'] ); ?></b></td>
                             <td id="form_content_faith_status_td"></td>
                         </tr>
+                        <?php endif; ?>
                         <tr id="form_content_contact_phone_tr">
                             <td style="vertical-align: top;">
                                 <b><?php echo esc_attr( $field_settings['contact_phone']['name'] ); ?></b></td>
@@ -964,9 +971,9 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                 $updates['assigned_to'] = 'user-' . $params['parts']['post_id'];
             }
 
-            $updated_post = DT_Posts::create_post( 'contacts', $updates, false, false );
+            $updated_post = DT_Posts::create_post( 'contacts', $updates );
         } else {
-            $updated_post = DT_Posts::update_post( 'contacts', $params['post_id'], $updates, false, false );
+            $updated_post = DT_Posts::update_post( 'contacts', $params['post_id'], $updates );
         }
         if ( empty( $updated_post ) || is_wp_error( $updated_post ) ) {
             return [
@@ -978,7 +985,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
 
         // Add any available comments
         if ( isset( $params['comments'] ) && ! empty( $params['comments'] ) ) {
-            $updated_comment = DT_Posts::add_post_comment( $updated_post['post_type'], $updated_post['ID'], $params['comments'], 'comment', [], false );
+            $updated_comment = DT_Posts::add_post_comment( $updated_post['post_type'], $updated_post['ID'], $params['comments'] );
             if ( empty( $updated_comment ) || is_wp_error( $updated_comment ) ) {
                 return [
                     'id' => $updated_post['ID'],
