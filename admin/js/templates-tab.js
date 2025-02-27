@@ -93,6 +93,14 @@ jQuery(function ($) {
 
     // show record-post-type and connection field only for post-connections
     $('tr.record-post-type-row, tr.connection-field-row').css('display', template_type === 'post-connections' ? 'revert' : 'none');
+
+    if (template_type === 'post-connections') {
+      const firstRecordType = $('#ml_main_col_template_details_record_type option:first').val();
+      $('#ml_main_col_template_details_record_type').val(firstRecordType);
+
+      const postType = $('#templates_management_section_selected_post_type').val();
+      refresh_connections_fields_list(postType, firstRecordType);
+    }
   });
 
   $(document).on('change', '#ml_main_col_template_details_record_type', function (evt) {

@@ -1,0 +1,13 @@
+Have you been looking for a way to create a minimal interface for Disciple Tools that is tailored towards mobile device users so they can access all of the contacts you've assigned to them without them getting overwhelmed by the powerful Disciple Tools interface?
+
+Well the Post Connections magic link template has just what you need. Create a magic link for each type of user that interacts with your system, showing only the data and fields that are relevant to them. You can keep them from getting overwhelmed with the power of DT while they still can enter the data they need to - all while using a magic link that means they don't even have to login if you don't want them to.
+
+Using the Magic Links plugin, you can go to the admin interface to create a new template. Choose contact to create a link that is specific to a given contact or user, and then choose the Post Connections template. Then you can choose which type of posts related to that contact should be listed: other contacts, groups, or any other post type in your system. Just select the field from the second type that refers to the contact to set the relationship. You could use Baptized By to get all the contacts that an individual has baptized. Or Coached By to get everyone that a person is coaching. Or group leaders to show all the groups that an individual is leading. Every relationship field is available to create just the list you need.
+
+After you determine the relationship, select only the fields that your user needs to see or edit. You can even mark some fields as readonly if you want them to see the information but not change it.
+
+After you've created your template, you can go to any contact and get a link specific to that individual that shows the related posts that you have selected. Share the link with your users so they can quickly and easily feedback the data you're looking for.
+
+If you're using the Home Screen plugin, every template that you create related to contacts will be available when users login to their home screen. So you don't even have to send users their link if they regularly check their home screen.
+
+Download the Magic Links plugin for Disciple Tools now! And start using the Post Connections template to begin creating your own custom interfaces for your users!
