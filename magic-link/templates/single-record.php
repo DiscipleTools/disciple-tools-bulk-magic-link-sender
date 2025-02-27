@@ -1557,6 +1557,21 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
         $response = [];
         if ( $params['post_id'] > 0 ){
             $post = DT_Posts::get_post( $params['post_type'], $params['post_id'], false, false );
+            $verified = false;
+            if ( $params['post_id'] === $params['parts']['post_id'] ){
+                $verified = true;
+            } else if ( in_array( (int) $params['parts']['post_id'], array_column( $post['subassigned'] ?? [], 'ID' ), true ) ){
+                $verified = true;
+            } else {
+                $user_id = get_post_meta( $params['parts']['post_id'], 'corresponds_to_user', true );
+                if ( ( $post['assigned_to']['id'] ?? false ) === $user_id ){
+                    $verified = true;
+                }
+            }
+            if ( !$verified ){
+                $response['success'] = false;
+                return $response;
+            }
         } else {
             $post = [
                 'ID' => 0,
@@ -1745,7 +1760,21 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
 
             $updated_post = DT_Posts::create_post( $params['post_type'], $updates, false, false );
         } else {
-            $updated_post = DT_Posts::update_post( $params['post_type'], $params['post_id'], $updates, false, false );
+            $post = DT_Posts::get_post( $params['post_type'], $params['post_id'], false, false );
+            $verified = false;
+            if ( $params['post_id'] === $params['parts']['post_id'] ){
+                $verified = true;
+            } else if ( in_array( (int) $params['parts']['post_id'], array_column( $post['subassigned'] ?? [], 'ID' ), true ) ){
+                $verified = true;
+            } else {
+                $user_id = get_post_meta( $params['parts']['post_id'], 'corresponds_to_user', true );
+                if ( ( $post['assigned_to']['id'] ?? false ) === $user_id ){
+                    $verified = true;
+                }
+            }
+            if ( $verified ){
+                $updated_post = DT_Posts::update_post( $params['post_type'], $params['post_id'], $updates, false, false );
+            }
         }
 
         if ( empty( $updated_post ) || is_wp_error( $updated_post ) ) {
