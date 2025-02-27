@@ -1716,9 +1716,9 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                 $updates['assigned_to'] = $params['parts']['post_id'];
             }
 
-            $updated_post = DT_Posts::create_post( $params['post_type'], $updates, false, false );
+            $updated_post = DT_Posts::create_post( $params['post_type'], $updates );
         } else {
-            $updated_post = DT_Posts::update_post( $params['post_type'], $params['post_id'], $updates, false, false );
+            $updated_post = DT_Posts::update_post( $params['post_type'], $params['post_id'], $updates );
         }
         if ( empty( $updated_post ) || is_wp_error( $updated_post ) ) {
             if ( is_wp_error( $updated_post ) ) {
@@ -1735,7 +1735,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         if ( !empty( $comments ) ) {
             foreach ( $comments as $comment ) {
                 if ( !empty( $comment ) ) {
-                    $updated_comment = DT_Posts::add_post_comment( $updated_post['post_type'], $updated_post['ID'], $comment, 'comment', [], false );
+                    $updated_comment = DT_Posts::add_post_comment( $updated_post['post_type'], $updated_post['ID'], $comment );
                     if ( empty( $updated_comment ) || is_wp_error( $updated_comment ) ) {
                         return [
                             'id' => $updated_post['ID'],
