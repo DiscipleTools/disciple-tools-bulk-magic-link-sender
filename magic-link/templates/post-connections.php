@@ -453,7 +453,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
 
                         $denied = $this->check_permissions( $params['parts']['post_id'], $params['post_id'] );
                         if ($denied) {
-                            return 'error';
+                            return false;
                         }
 
                         return $magic->verify_rest_endpoint_permissions_on_post( $request );
@@ -473,7 +473,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
 
                         $denied = $this->check_permissions( $params['parts']['post_id'], $params['post_id'] );
                         if ($denied) {
-                            return 'error';
+                            return false;
                         }
 
                         return $magic->verify_rest_endpoint_permissions_on_post( $request );
