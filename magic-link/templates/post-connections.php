@@ -451,8 +451,8 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
 
                         $params = $request->get_params();
 
-                        $denied = $this->check_permissions( $params['parts']['post_id'], $params['post_id'] );
-                        if ( $denied ) {
+                        $permissions = $this->check_permissions( $params['parts']['post_id'], $params['post_id'] );
+                        if ( !$permissions ) {
                             return false;
                         }
 
@@ -471,8 +471,8 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
 
                         $params = $request->get_params();
 
-                        $denied = $this->check_permissions( $params['parts']['post_id'], $params['post_id'] );
-                        if ( $denied ) {
+                        !$permissions = $this->check_permissions( $params['parts']['post_id'], $params['post_id'] );
+                        if ( !$permissions ) {
                             return false;
                         }
 
@@ -513,13 +513,13 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
             ]
         ], false );
 
-        //return 'error' if the post_id in the request is not in the list
+        //return true if the post_id in the request is in the list
         foreach ( $this->items['posts'] as $item ) {
             if ( $connection_id === $item['ID'] ) {
-                return false;
+                return true;
             }
         }
-        return true;
+        return false;
     }
 
     public function get_post( WP_REST_Request $request ){
