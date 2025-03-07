@@ -471,7 +471,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
 
                         $params = $request->get_params();
 
-                        !$permissions = $this->check_permissions( $params['parts']['post_id'], $params['post_id'] );
+                        $permissions = $this->check_permissions( $params['parts']['post_id'], $params['post_id'] );
                         if ( !$permissions ) {
                             return false;
                         }
