@@ -452,7 +452,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                         $params = $request->get_params();
 
                         $denied = $this->check_permissions( $params['parts']['post_id'], $params['post_id'] );
-                        if ($denied) {
+                        if ( $denied ) {
                             return false;
                         }
 
@@ -472,7 +472,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                         $params = $request->get_params();
 
                         $denied = $this->check_permissions( $params['parts']['post_id'], $params['post_id'] );
-                        if ($denied) {
+                        if ( $denied ) {
                             return false;
                         }
 
@@ -519,7 +519,6 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                 return false;
             }
         }
-        
         return true;
     }
 
