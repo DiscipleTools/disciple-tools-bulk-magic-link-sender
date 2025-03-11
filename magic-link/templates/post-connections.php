@@ -449,6 +449,13 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                     'permission_callback' => function ( WP_REST_Request $request ) {
                         $magic = new DT_Magic_URL( $this->root );
 
+                        $params = $request->get_params();
+
+                        $permissions = $this->check_permissions( $params['parts']['post_id'], $params['post_id'] );
+                        if ( !$permissions ) {
+                            return false;
+                        }
+
                         return $magic->verify_rest_endpoint_permissions_on_post( $request );
                     },
                 ],
@@ -461,6 +468,13 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                     'callback'            => [ $this, 'new_comment' ],
                     'permission_callback' => function ( WP_REST_Request $request ) {
                         $magic = new DT_Magic_URL( $this->root );
+
+                        $params = $request->get_params();
+
+                        $permissions = $this->check_permissions( $params['parts']['post_id'], $params['post_id'] );
+                        if ( !$permissions ) {
+                            return false;
+                        }
 
                         return $magic->verify_rest_endpoint_permissions_on_post( $request );
                     },
@@ -480,6 +494,32 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                 ],
             ]
         );
+    }
+
+    public function check_permissions( $post_id, $connection_id ) {
+        //set query fields to search for our post_id
+        $query_fields = [];
+        if ( !empty( $this->template['connection_fields'] ) ) {
+            foreach ( $this->template['connection_fields'] as $field ) {
+                $query_fields[][$field] = [ $post_id ];
+            }
+        }
+
+        //get related records that have our query fields
+        $this->items = DT_Posts::list_posts( $this->record_post_type, [
+            'limit' => 1000,
+            'fields' => [
+                $query_fields
+            ]
+        ], false );
+
+        //return true if the post_id in the request is in the list
+        foreach ( $this->items['posts'] as $item ) {
+            if ( $connection_id === $item['ID'] ) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public function get_post( WP_REST_Request $request ){
