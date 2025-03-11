@@ -722,6 +722,11 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
             return new WP_Error( __METHOD__, 'Missing parameters', [ 'status' => 400 ] );
         }
 
+        $permissions = $this->check_permissions( $params['parts']['post_id'], $params['post_id'] );
+            if ( !$permissions ) {
+                return false;
+            }
+
         // Sanitize and fetch user id
         $params = dt_recursive_sanitize_array( $params );
 
