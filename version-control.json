@@ -23,7 +23,7 @@
     "high": "https://raw.githubusercontent.com/DiscipleTools/disciple-tools-bulk-magic-link-sender/master/documentation/banner.png"
   },
   "sections": {
-    "description": "Disciple Tools - Magic Links for users, contacts, groups and teams assignment + schedule management for magic links dispatching over configured sending channels.",
+    "description": "Create individual magic links for updating contacts and groups. Schedule sending magic links via email or sms.",
     "installation": "(Required) You must have Disciple.Tools Theme installed before using this plugin. Once Disciple.Tools is installed, you can use the normal Plugin system to install the plugin.",
     "changelog": ""
   }
