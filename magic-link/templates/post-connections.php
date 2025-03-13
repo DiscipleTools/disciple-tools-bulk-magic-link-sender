@@ -489,6 +489,13 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                     'permission_callback' => function ( WP_REST_Request $request ) {
                         $magic = new DT_Magic_URL( $this->root );
 
+                        $params = $request->get_params();
+
+                        $permissions = $this->check_permissions( $params['parts']['post_id'], $params['post_id'] );
+                        if ( !$permissions ) {
+                            return false;
+                        }
+
                         return $magic->verify_rest_endpoint_permissions_on_post( $request );
                     },
                 ],

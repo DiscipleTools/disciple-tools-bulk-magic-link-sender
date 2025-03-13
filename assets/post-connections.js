@@ -136,6 +136,7 @@ function saveItem(event) {
   console.log(data);
 
   const id = formdata.get('id');
+  submitComment(id);
   let payload = {
     action: 'get',
     parts: jsObject.parts,
@@ -401,7 +402,9 @@ function setComments(commentsTile, id) {
   function submitComment(id) {
 
     const textArea = document.getElementById('comments-text-area');
-
+    if (!textArea.value) {
+      return false;
+    }
 
     let payload = {
       action: 'post',
