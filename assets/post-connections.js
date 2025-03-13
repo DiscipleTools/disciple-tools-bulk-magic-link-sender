@@ -6,11 +6,13 @@ function loadPostDetail(id) {
   const item = listItems.get(id.toString());
 
   const detailTitle = document.getElementById('detail-title');
+  const detailPostId = document.getElementById('detail-title-post-id');
   const detailTemplate = document.getElementById('post-detail-template').content;
   const detailContainer = document.getElementById('detail-content');
 
   // Set detail title
   detailTitle.innerText = item.name;
+  detailPostId.innerText = `(#${item.ID})`;
 
   // clone detail template
   const content = detailTemplate.cloneNode(true);
@@ -70,7 +72,12 @@ function loadListItems(posts) {
 function populateListItemTemplate(itemEl, item) {
   const link = itemEl.querySelector('a');
   link.href = `javascript:loadPostDetail(${item.ID})`;
-  link.innerText = item.name;
+
+  itemEl.querySelector('.post-id').innerText = `(#${item.ID})`;
+  itemEl.querySelector('.post-title').innerText = item.name;
+  itemEl.querySelector('.post-updated-date').innerText = window.SHAREDFUNCTIONS.formatDate(
+    item.last_modified?.timestamp
+  );
 }
 
 /**
@@ -278,7 +285,7 @@ const searchData = id => {
     text: text,
     sort: document.querySelector('input[name="sort"]:checked').value,
   }
-  
+
   let temp_spinner = document.getElementById('temp-spinner');
   temp_spinner.setAttribute('class', 'loading-spinner active');
 
@@ -293,9 +300,9 @@ const searchData = id => {
     body: JSON.stringify(payload),
   })
     .then((response) => {
-      
+
       return response.json();
-      
+
     }).then((json) => {
 
       temp_spinner.setAttribute('class', 'loading-spinner inactive');

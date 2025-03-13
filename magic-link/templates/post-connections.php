@@ -301,7 +301,11 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                 </div>
                 <template id="list-item-template">
                     <li>
-                        <a href="javascript:loadPostDetail()"></a>
+                        <a href="javascript:loadPostDetail()">
+                            <span class="post-id"></span>
+                            <span class="post-title"></span>
+                            <span class="post-updated-date"></span>
+                        </a>
                     </li>
                 </template>
             </div>
@@ -311,6 +315,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                     <header>
                         <button type="button" class="details-toggle mdi mdi-arrow-left" onclick="togglePanels()"></button>
                         <h2 id="detail-title"></h2>
+                        <span id="detail-title-post-id"></span>
                     </header>
 
                     <div id="detail-content"></div>
