@@ -161,7 +161,7 @@ code { display: block !important; }
 
 #search-bar button.clear-button {
     position: absolute;
-    right: 3.25rem;
+    inset-inline-end: 3.25rem;
     top: calc(var(--search-margin-block) + var(--search-border-width));
     border: 0;
     background-color: transparent;
@@ -170,7 +170,7 @@ code { display: block !important; }
 
 #search-bar button.filter-button {
     position: absolute;
-    right: 1.25rem;
+    inset-inline-end: 1.25rem;
     top: calc(var(--search-margin-block) + var(--search-border-width));
     border: 0;
     background-color: transparent;
@@ -244,6 +244,9 @@ code { display: block !important; }
     border: 0;
     margin-inline-end: 1rem;
 }
+[dir=rtl] #detail header button.details-toggle.mdi-arrow-left::before {
+    content: "\F0054";
+}
 #detail header .tabs {
     list-style: none;
     padding: 0;
@@ -297,6 +300,8 @@ code { display: block !important; }
 
 #comments-tile .activity-block {
     margin-top: 15px;
+
+    .comment-header > span { display: inline-block; }
 }
 #comments-tile .comment-date {
     font-size: 12px;
