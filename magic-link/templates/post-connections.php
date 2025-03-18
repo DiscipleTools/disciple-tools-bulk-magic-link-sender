@@ -509,6 +509,12 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
     }
 
     public function check_permissions( $post_id, $connection_id ) {
+
+        // if connection is actually the main post id, we're good
+        if ( strval( $post_id ) === strval( $connection_id ) ) {
+            return true;
+        }
+
         //set query fields to search for our post_id
         $query_fields = [];
         if ( !empty( $this->template['connection_fields'] ) ) {
