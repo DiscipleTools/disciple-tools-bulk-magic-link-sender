@@ -6,11 +6,13 @@ function loadPostDetail(id) {
   const item = listItems.get(id.toString());
 
   const detailTitle = document.getElementById('detail-title');
+  const detailPostId = document.getElementById('detail-title-post-id');
   const detailTemplate = document.getElementById('post-detail-template').content;
   const detailContainer = document.getElementById('detail-content');
 
   // Set detail title
   detailTitle.innerText = item.name;
+  detailPostId.innerText = `(#${item.ID})`;
 
   // clone detail template
   const content = detailTemplate.cloneNode(true);
@@ -18,6 +20,13 @@ function loadPostDetail(id) {
   // set value of all inputs in the template
   content.getElementById('post-id').value = id;
   setInputValues(content, item);
+
+  const button = content.getElementById('comment-button');
+  button.addEventListener('click', () => {
+    submitComment(id);
+  });
+  const commentTile = content.getElementById('comments-tile');
+  setComments(commentTile, item.ID);
 
   // insert templated content into detail panel
   detailContainer.replaceChildren(content);
@@ -38,27 +47,37 @@ function loadPostDetail(id) {
 /**
  * Load the list items into the UI from the jsObject.items property
  */
-function loadListItems() {
-  if ( !jsObject.items || !jsObject.items.posts ) {
+function loadListItems(posts) {
+  if ( (!jsObject.items || !jsObject.items.posts) && !posts ) {
     return;
+  }
+
+  if (!posts) {
+    posts = jsObject.items.posts;
   }
 
   const itemList = document.getElementById('list-items');
   itemList.replaceChildren([]);
   const itemTemplate = document.getElementById('list-item-template').content;
 
-  for (const item of jsObject.items.posts) {
+  for (const item of posts) {
     const itemEl = itemTemplate.cloneNode(true);
     itemEl.querySelector('li').id = `item-${item.ID}`;
     populateListItemTemplate(itemEl, item);
     itemList.append(itemEl);
   }
+
 }
 
 function populateListItemTemplate(itemEl, item) {
   const link = itemEl.querySelector('a');
   link.href = `javascript:loadPostDetail(${item.ID})`;
-  link.innerText = item.name;
+
+  itemEl.querySelector('.post-id').innerText = `(#${item.ID})`;
+  itemEl.querySelector('.post-title').innerText = item.name;
+  itemEl.querySelector('.post-updated-date').innerText = window.SHAREDFUNCTIONS.formatDate(
+    item.last_modified?.timestamp
+  );
 }
 
 /**
@@ -124,6 +143,7 @@ function saveItem(event) {
   console.log(data);
 
   const id = formdata.get('id');
+  submitComment(id);
   let payload = {
     action: 'get',
     parts: jsObject.parts,
@@ -237,8 +257,189 @@ function togglePanels() {
   })
 }
 
+function clearSearch(id) {
+  document.getElementById('search').value = '';
+  searchData(id);
+}
+
 function toggleFilters() {
   document.querySelectorAll('.filters').forEach((el) => {
     el.classList.toggle('hidden');
   })
 }
+
+const searchData = id => {
+  const text = document.getElementById('search').value;
+  let clear_button = document.getElementById('clear-button');
+  if (!text && clear_button.style.display == 'block'){
+    clear_button.setAttribute('style', 'display: none;');
+  }else if (text && clear_button.style.display == 'none'){
+    clear_button.setAttribute('style', 'display: block;');
+  }
+  let payload = {
+    action: 'get',
+    parts: jsObject.parts,
+    sys_type: jsObject.sys_type,
+    post_id: id,
+    post_type: jsObject.template.record_type,
+    text: text,
+    sort: document.querySelector('input[name="sort"]:checked').value,
+  }
+
+  let temp_spinner = document.getElementById('temp-spinner');
+  temp_spinner.setAttribute('class', 'loading-spinner active');
+
+  const url = jsObject.root + jsObject.parts.root + '/v1/' + jsObject.parts.type + '/sort_post';
+
+  fetch(url,{
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "X-WP-Nonce": jsObject.nonce,
+    },
+    body: JSON.stringify(payload),
+  })
+    .then((response) => {
+
+      return response.json();
+
+    }).then((json) => {
+
+      temp_spinner.setAttribute('class', 'loading-spinner inactive');
+
+      loadListItems(json['posts']);
+
+    })
+    .catch((reason) => {
+      console.log("reason:");
+      console.log(reason);
+    });
+}
+
+const searchChange = debounce(searchData);
+
+function debounce(callback) {
+  let delay = 1000
+  let timer
+  return function(...args) {
+    clearTimeout(timer)
+    timer = setTimeout(() => {
+      callback(...args);
+    }, delay)
+  }
+}
+
+function assignLanguage(lang) {
+  window.location.assign('?lang=' + lang);
+}
+
+function setComments(commentsTile, id) {
+  let payload = {
+    action: 'get',
+    parts: jsObject.parts,
+    sys_type: jsObject.sys_type,
+    post_id: id,
+    post_type: jsObject.template.record_type,
+    comment_count: 2,
+  }
+
+  const commentURL = jsObject.root + jsObject.parts.root + '/v1/' + jsObject.parts.type + '/post';
+  const comments = commentsTile.querySelectorAll('.activity-block, .action-block');
+  if (comments.length) {
+    for (const comment of comments) {
+      comment.parentNode.removeChild(comment);
+    }
+  }
+  fetch(commentURL,{
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "X-WP-Nonce": jsObject.nonce,
+    },
+    body: JSON.stringify(payload),
+  })
+    .then((response) => {
+      console.log(response);
+      return response.json();
+    })
+    .then((json) => {
+      for (const val of json['comments']['comments']) {
+        const actionBlock = document.createElement('div');
+        actionBlock.className = "action-block";
+
+        const activityBlock = document.createElement("div");
+        activityBlock.className = "activity-block";
+
+        const commentHeaderTemplate = document.getElementById('comment-header-template').content;
+        const commentHeader = commentHeaderTemplate.cloneNode(true);
+        const commentAuthor = commentHeader.getElementById('comment-author');
+        const commentDate = commentHeader.getElementById('comment-date');
+
+        commentAuthor.innerText = val['comment_author'];
+        const commentDateTime = window.moment(val.comment_date_gmt + 'Z');
+        commentDate.innerText = window.SHAREDFUNCTIONS.formatDate(
+          moment(commentDateTime).unix(),
+          true,
+        );
+
+        const commentContentTemplate = document.getElementById('comment-content-template').content;
+        const commentContent = commentContentTemplate.cloneNode(true);
+        const commentId = commentContent.getElementById('comment-id');
+        const commentText = commentContent.getElementById('comment-content');
+
+        commentId.className = "comment-bubble " + val['comment_ID'];
+        commentId.setAttribute("data-comment-id", val['comment_ID']);
+        commentText.setAttribute("title", val['comment_date']);
+        commentText.innerText = val['comment_content'];
+
+        activityBlock.appendChild(commentHeader);
+        activityBlock.appendChild(commentContent);
+
+        commentsTile.appendChild(actionBlock);
+        commentsTile.appendChild(activityBlock);
+      }
+
+
+    })
+    .catch((reason) => {
+      console.log(reason);
+    });
+}
+
+  function submitComment(id) {
+
+    const textArea = document.getElementById('comments-text-area');
+    if (!textArea.value) {
+      return false;
+    }
+
+    let payload = {
+      action: 'post',
+      parts: jsObject.parts,
+      sys_type: jsObject.sys_type,
+      post_id: id,
+      post_type: jsObject.template.record_type,
+      comment: textArea.value,
+    }
+
+    const url = jsObject.root + jsObject.parts.root + '/v1/' + jsObject.parts.type + '/comment';
+
+    fetch(url,{
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        "X-WP-Nonce": jsObject.nonce,
+      },
+      body: JSON.stringify(payload),
+    })
+      .then((response) => {
+        textArea.value = '';
+        const commentTile = document.getElementById('comments-tile');
+        setComments(commentTile, id);
+        return response.json();
+      })
+      .catch((reason) => {
+        console.log("reason:");
+        console.log(reason);
+      });
+  }

@@ -6,11 +6,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 add_filter('dt_magic_link_template_types', function( $types ) {
     $types['contacts'][] = [
         'value' => 'post-connections',
-        'text' => 'Post Connections (beta)',
+        'text' => 'Post Connections',
     ];
     $types['default-options'][] = [
         'value' => 'post-connections',
-        'text' => 'Post Connections (beta)',
+        'text' => 'Post Connections',
     ];
     return $types;
 });
@@ -77,9 +77,17 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
          *      - class_type:   Flag indicating template class type.
          */
 
+        $show_in_apps = false;
+
+        if ( $template['post_type'] == 'contacts' ) {
+            $show_in_apps = true;
+        }
+
         $this->meta = [
             'app_type'   => 'magic_link',
-            'class_type' => 'template'
+            'class_type' => 'template',
+            'show_in_home_apps' => $show_in_apps,
+            'icon' => 'mdi mdi-account-network',
         ];
 
         /**
@@ -259,12 +267,13 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
             <div id="list" class="is-expanded">
                 <header>
                     <h1><?php echo $has_title ? esc_html( $this->template['title'] ) : '&nbsp;' ?></h1>
-                    <button class="mdi mdi-information-outline" onclick="document.getElementById('post-detail-modal')._openModal()"></button>
+                    <button type="button" class="mdi mdi-web" onclick="document.getElementById('post-locale-modal')._openModal()"></button>
+                    <button type="button" class="mdi mdi-information-outline" onclick="document.getElementById('post-detail-modal')._openModal()"></button>
                 </header>
                 <div id="search-filter">
-                    <!--
                     <div id="search-bar">
-                        <input type="text" id="search" placeholder="Search" />
+                    <input type="text" id="search" placeholder="Search" onkeyup="searchChange(<?php echo esc_html( $this->post['ID'] ) ?>)" />
+                    <button id="clear-button" style="display: none;" class="clear-button mdi mdi-close" onclick="clearSearch(<?php echo esc_html( $this->post['ID'] ) ?>)"></button>
                         <button class="filter-button mdi mdi-filter-variant" onclick="toggleFilters()"></button>
 
                     </div>
@@ -272,25 +281,31 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                         <div class="container">
                             <h3>Sort By</h3>
                             <label>
-                                <input type="radio" name="sort" value="-updated_at" checked />
+                                <input type="radio" name="sort" value="-updated_at" onclick="toggleFilters()" onchange="searchChange(<?php echo esc_html( $this->post['ID'] ) ?>)" checked />
                                 Last Updated
                             </label>
                             <label>
-                                <input type="radio" name="sort" value="name" />
+                                <input type="radio" name="sort" value="name" onclick="toggleFilters()" onchange="searchChange(<?php echo esc_html( $this->post['ID'] ) ?>)" />
                                 Name (A-Z)
                             </label>
                             <label>
-                                <input type="radio" name="sort" value="-name" />
+                                <input type="radio" name="sort" value="-name" onclick="toggleFilters()" onchange="searchChange(<?php echo esc_html( $this->post['ID'] ) ?>)" />
                                 Name (Z-A)
                             </label>
                         </div>
                     </div>
-                    -->
                 </div>
                 <ul id="list-items" class="items"></ul>
+                <div id="spinner-div" style="justify-content: center; display: flex;">
+                    <span id="temp-spinner" class="loading-spinner inactive" style="margin: 0; position: absolute; top: 50%; -ms-transform: translateY(-50%); transform: translateY(-50%); height: 100px; width: 100px; z-index: 100;"></span>
+                </div>
                 <template id="list-item-template">
                     <li>
-                        <a href="javascript:loadPostDetail()"></a>
+                        <a href="javascript:loadPostDetail()">
+                            <span class="post-id"></span>
+                            <span class="post-title"></span>
+                            <span class="post-updated-date"></span>
+                        </a>
                     </li>
                 </template>
             </div>
@@ -300,6 +315,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                     <header>
                         <button type="button" class="details-toggle mdi mdi-arrow-left" onclick="togglePanels()"></button>
                         <h2 id="detail-title"></h2>
+                        <span id="detail-title-post-id"></span>
                     </header>
 
                     <div id="detail-content"></div>
@@ -308,9 +324,25 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                     </footer>
                 </form>
 
+                <template id="comment-header-template">
+                    <div class="comment-header">
+                        <span><strong id="comment-author"></strong></span>
+                        <span class="comment-date" id="comment-date"></span>
+                    </div>
+                </template>
+                <template id="comment-content-template">
+                    <div class="activity-text">
+                        <div dir="auto" class="" data-comment-id="" id="comment-id">
+                            <div class="comment-text" title="" dir="auto" id="comment-content">
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
                 <template id="post-detail-template">
                     <input type="hidden" name="id" id="post-id" />
                     <input type="hidden" name="type" id="post-type" />
+
                     <dt-tile id="all-fields" open>
                     <?php
                     $post_field_settings = DT_Posts::get_post_field_settings( $this->template['record_type'] );
@@ -345,6 +377,20 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                     }
                     ?>
                     </dt-tile>
+
+                    <dt-tile id="comments-tile" title="Comments">
+                        <div>
+                            <textarea id="comments-text-area"
+                                      style="resize: none;"
+                                      placeholder="<?php echo esc_html_x( 'Write your comment or note here', 'input field placeholder', 'disciple_tools' ) ?>"
+                            ></textarea>
+                        </div>
+                        <div class="comment-button-container">
+                            <button class="button loader" type="button" id="comment-button">
+                                <?php esc_html_e( 'Submit comment', 'disciple_tools' ) ?>
+                            </button>
+                        </div>
+                    </dt-tile>
                 </template>
             </div>
             <div id="snackbar-area"></div>
@@ -359,6 +405,26 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
             </span>
         </dt-modal>
         <?php
+        $lang = dt_get_available_languages();
+        $current_lang = trim( wp_get_current_user()->locale );
+        ?>
+        <dt-modal id="post-locale-modal" buttonlabel="Open Modal" hideheader hidebutton closebutton>
+            <span slot="content" id="post-locale-modal-content">
+            <ul class="language-select">
+                <?php
+                foreach ( $lang as $language ) {
+                    ?>
+                    <li
+                        class="<?php echo $language['language'] === $current_lang ? esc_attr( 'active' ) : null ?>"
+                        onclick="assignLanguage('<?php echo esc_html( $language['language'] ); ?>')"
+                    ><?php echo esc_html( $language['native_name'] ); ?></li>
+                    <?php
+                }
+                ?>
+                </ul>
+            </span>
+        </dt-modal>
+        <?php
     }
 
     /**
@@ -367,10 +433,10 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
      */
     public function add_endpoints() {
         $namespace = $this->root . '/v1';
-        /*register_rest_route(
+        register_rest_route(
             $namespace, '/' . $this->type . '/post', [
                 [
-                    'methods'             => 'GET',
+                    'methods'             => 'POST',
                     'callback'            => [ $this, 'get_post' ],
                     'permission_callback' => function ( WP_REST_Request $request ) {
                         $magic = new DT_Magic_URL( $this->root );
@@ -379,7 +445,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                     },
                 ],
             ]
-        );*/
+        );
         register_rest_route(
             $namespace, '/' . $this->type . '/update', [
                 [
@@ -388,11 +454,90 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                     'permission_callback' => function ( WP_REST_Request $request ) {
                         $magic = new DT_Magic_URL( $this->root );
 
+                        $params = $request->get_params();
+
+                        $permissions = $this->check_permissions( $params['parts']['post_id'], $params['post_id'] );
+                        if ( !$permissions ) {
+                            return false;
+                        }
+
                         return $magic->verify_rest_endpoint_permissions_on_post( $request );
                     },
                 ],
             ]
         );
+        register_rest_route(
+            $namespace, '/' . $this->type . '/comment', [
+                [
+                    'methods'             => 'POST',
+                    'callback'            => [ $this, 'new_comment' ],
+                    'permission_callback' => function ( WP_REST_Request $request ) {
+                        $magic = new DT_Magic_URL( $this->root );
+
+                        $params = $request->get_params();
+
+                        $permissions = $this->check_permissions( $params['parts']['post_id'], $params['post_id'] );
+                        if ( !$permissions ) {
+                            return false;
+                        }
+
+                        return $magic->verify_rest_endpoint_permissions_on_post( $request );
+                    },
+                ],
+            ]
+        );
+        register_rest_route(
+            $namespace, '/' . $this->type . '/sort_post', [
+                [
+                    'methods'             => 'POST',
+                    'callback'            => [ $this, 'sorted_list_posts' ],
+                    'permission_callback' => function ( WP_REST_Request $request ) {
+                        $magic = new DT_Magic_URL( $this->root );
+
+                        $params = $request->get_params();
+
+                        $permissions = $this->check_permissions( $params['parts']['post_id'], $params['post_id'] );
+                        if ( !$permissions ) {
+                            return false;
+                        }
+
+                        return $magic->verify_rest_endpoint_permissions_on_post( $request );
+                    },
+                ],
+            ]
+        );
+    }
+
+    public function check_permissions( $post_id, $connection_id ) {
+
+        // if connection is actually the main post id, we're good
+        if ( strval( $post_id ) === strval( $connection_id ) ) {
+            return true;
+        }
+
+        //set query fields to search for our post_id
+        $query_fields = [];
+        if ( !empty( $this->template['connection_fields'] ) ) {
+            foreach ( $this->template['connection_fields'] as $field ) {
+                $query_fields[][$field] = [ $post_id ];
+            }
+        }
+
+        //get related records that have our query fields
+        $this->items = DT_Posts::list_posts( $this->record_post_type, [
+            'limit' => 1000,
+            'fields' => [
+                $query_fields
+            ]
+        ], false );
+
+        //return true if the post_id in the request is in the list
+        foreach ( $this->items['posts'] as $item ) {
+            if ( $connection_id === $item['ID'] ) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public function get_post( WP_REST_Request $request ){
@@ -562,5 +707,65 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
             'message' => '',
             'post' => $updated_post,
         ];
+    }
+
+    public function new_comment( WP_REST_Request $request ){
+        $params = $request->get_params();
+        if ( !isset( $params['post_type'], $params['post_id'], $params['parts'], $params['action'] ) ){
+            return new WP_Error( __METHOD__, 'Missing parameters', [ 'status' => 400 ] );
+        }
+
+        // Sanitize and fetch user id
+        $params = dt_recursive_sanitize_array( $params );
+
+        // Update logged-in user state, if required
+        if ( !is_user_logged_in() ){
+            DT_ML_Helper::update_user_logged_in_state();
+        }
+
+        $post = DT_Posts::get_post( $params['post_type'], $params['post_id'], false, false );
+        //$params['comment']
+        DT_Posts::add_post_comment( $post['post_type'], $post['ID'], $params['comment'], 'comment', [], false );
+
+        return [
+            'success' => true,
+            'message' => '',
+            'post' => $post,
+        ];
+    }
+
+    public function sorted_list_posts( WP_REST_Request $request ){
+        $params = $request->get_params();
+        if ( !isset( $params['post_type'], $params['post_id'], $params['parts'], $params['action'] ) ){
+            return new WP_Error( __METHOD__, 'Missing parameters', [ 'status' => 400 ] );
+        }
+
+        // Sanitize and fetch user id
+        $params = dt_recursive_sanitize_array( $params );
+
+        // Update logged-in user state, if required
+        if ( !is_user_logged_in() ){
+            DT_ML_Helper::update_user_logged_in_state();
+        }
+
+        $this->post = DT_Posts::get_post( $this->post_type, $params['post_id'], true, false );
+
+        $query_fields = [];
+        if ( !empty( $this->template['connection_fields'] ) ) {
+            foreach ( $this->template['connection_fields'] as $field ) {
+                $query_fields[][$field] = [ $params['post_id'] ];
+            }
+        }
+
+        $sorted_items = DT_Posts::list_posts( $this->record_post_type, [
+            'text' => $params['text'],
+            'sort' => $params['sort'],
+            'limit' => 1000,
+            'fields' => [
+                $query_fields
+            ]
+        ], false );
+
+        return $sorted_items;
     }
 }
