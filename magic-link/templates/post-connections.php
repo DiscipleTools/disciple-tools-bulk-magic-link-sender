@@ -533,7 +533,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
 
         //return true if the post_id in the request is in the list
         foreach ( $this->items['posts'] as $item ) {
-            if ( $connection_id === $item['ID'] ) {
+            if ( strval( $connection_id ) === strval( $item['ID'] ) ) {
                 return true;
             }
         }
