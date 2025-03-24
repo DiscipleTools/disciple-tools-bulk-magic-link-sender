@@ -131,13 +131,19 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
         }
 
         // Support Typeahead APIs
-        $path     = '/dt-core/dependencies/typeahead/dist/';
-        $path_js  = $path . 'jquery.typeahead.min.js';
-        $path_css = $path . 'jquery.typeahead.min.css';
-        wp_enqueue_script( 'jquery-typeahead', get_template_directory_uri() . $path_js, [ 'jquery' ], filemtime( get_template_directory() . $path_js ) );
-        wp_enqueue_style( 'jquery-typeahead-css', get_template_directory_uri() . $path_css, [], filemtime( get_template_directory() . $path_css ) );
+        $path     = '../../assets/';
 
-        wp_enqueue_style( 'material-font-icons-css', 'https://cdn.jsdelivr.net/npm/@mdi/font@6.6.96/css/materialdesignicons.min.css', [], '6.6.96' );
+        $path_js  = $path . 'single-connections.js';
+        $path_css = $path . 'single-connections.css';
+
+        wp_enqueue_script( 'single-connections', plugin_dir_url( __FILE__ ) . $path_js, [ 'jquery' ], filemtime(  __FILE__ ) . $path_js );
+
+        wp_enqueue_style( 'single-connections-css', plugin_dir_url( __FILE__ ) . $path_css, null, filemtime(  __FILE__ ) . $path_css ) ;
+
+
+        //wp_enqueue_style( 'material-font-icons-css', 'https://cdn.jsdelivr.net/npm/@mdi/font@6.6.96/css/materialdesignicons.min.css', [], '6.6.96' );
+        $mdi_version = '6.6.96';
+        wp_enqueue_style( 'material-font-icons-css', "https://cdn.jsdelivr.net/npm/@mdi/font@$mdi_version/css/materialdesignicons.min.css", [], $mdi_version );        
 
         Disciple_Tools_Bulk_Magic_Link_Sender_API::enqueue_magic_link_utilities_script();
     }
@@ -149,7 +155,8 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
         $allowed_js[] = 'mapbox-cookie';
         $allowed_js[] = 'mapbox-search-widget';
         $allowed_js[] = 'google-search-widget';
-        $allowed_js[] = 'jquery-typeahead';
+        $allowed_js[] = 'single-connections';    
+//        $allowed_js[] = 'jquery-typeahead';    
         $allowed_js[] = Disciple_Tools_Bulk_Magic_Link_Sender_API::get_magic_link_utilities_script_handle();
 
         return $allowed_js;
@@ -159,8 +166,9 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
         // @todo add or remove js files with this filter
         // example: $allowed_css[] = 'your-enqueue-handle';
         $allowed_css[] = 'mapbox-gl-css';
-        $allowed_css[] = 'jquery-typeahead-css';
-        $allowed_css[] = 'material-font-icons-css';
+        //$allowed_css[] = 'single-connections.css';      
+        $allowed_css[] = 'single-connections-css';
+        $allowed_css[] = 'material-font-icons-css';          
 
         return $allowed_css;
     }
@@ -1268,24 +1276,39 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
     public function body() {
         $has_title = ! empty( $this->template ) && ( isset( $this->template['title'] ) && ! empty( $this->template['title'] ) );
         ?>
-        <div id="custom-style"></div>
+        <main>        
+            <div id="custom-style">
+
+
         <div id="wrapper">
             <div class="grid-x">
                 <div class="cell center">
+                    <header>
                     <h2 id="title">
                         <b>
                             <?php echo esc_html( $has_title ? $this->adjust_template_title_translation( $this->template['title'], $this->template['title_translations'] ) : '' ); ?>
                         </b>
+        <button class="mdi mdi-information-outline" onclick="document.getElementById('single-record-locale-modal')._openModal()"></button> 
+
+                        
                     </h2>
+                    </header>
                 </div>
             </div>
-            <?php
-            if ( $has_title ) {
-                ?>
-                <hr/>
-                <?php
-            }
-            ?>
+            <?php 
+
+                if ( $has_title ) {
+                    ?>
+                    <hr/>
+
+                    <?php
+                }
+
+                $lang = dt_get_available_languages();
+                $current_lang = trim( wp_get_current_user()->locale );                  
+       
+            ?>      
+
             <div id="content">
                 <div id="alert_notice" style="display: none; border-style: solid; border-width: 2px; border-color: #4caf50; background-color: rgba(142,195,81,0.2); border-radius: 5px; padding: 2em; margin: 1em 0">
                     <div style="display: flex; grid-gap: 1em">
@@ -1453,6 +1476,31 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                 </button>
             </div>
         </div>
+        </div>
+        </main>
+        <dt-modal id="single-record-locale-modal" buttonLabel="Open Modal" hideheader hidebutton closebutton>
+            <span slot="content" id="single-record-locale-modal-content">
+            <ul class="language-select">
+                <?php
+                foreach ($lang as $language) {
+                ?>
+                <li
+                    class="<?php echo $language['language'] === $current_lang ? esc_attr('active') : null ?>"
+                    onclick="assignLanguage('<?php echo esc_html( $language['language'] ); ?>')"
+                ><?php echo $language['native_name']; ?></li>
+                <?php
+                }
+                ?>
+                </ul>
+            </span>
+        </dt-modal>          
+
+        <dt-modal id="post-detail-modal" buttonLabel="Open Modal" hideheader hidebutton closebutton>
+            <span slot="content" id="post-detail-modal-content">
+                <span class="post-name"><?php echo esc_html( $this->post['name'] ) ?></span>
+                <span class="post-id">ID: <?php echo esc_html( $this->post['ID'] ) ?></span>
+            </span>
+        </dt-modal>
         <?php
     }
 
