@@ -37,7 +37,7 @@ class Disciple_Tools_Magic_Links_Template_List_Sub_Assigned extends Disciple_Too
                         <b>
                             <?php echo esc_html( $has_title ? $this->adjust_template_title_translation( $this->template['title'], $this->template['title_translations'] ) : '' ); ?>
 
-                            <button class="mdi mdi mdi-web" onclick="document.getElementById('list-sub-assigned-locale-modal')._openModal()"></button>
+                            <button class="locale-button mdi mdi-web" onclick="document.getElementById('list-sub-assigned-locale-modal')._openModal()"></button>
                         </b>
                     </h2>
                 </div>
@@ -51,7 +51,7 @@ class Disciple_Tools_Magic_Links_Template_List_Sub_Assigned extends Disciple_Too
 
                 $lang = dt_get_available_languages();
                 $current_lang = trim( wp_get_current_user()->locale );   
-                            
+
             ?>
             <div id="content">
                 <div id="alert_notice" style="display: none; border-style: solid; border-width: 2px; border-color: #4caf50; background-color: rgba(142,195,81,0.2); border-radius: 5px; padding: 2em; margin: 1em 0">
