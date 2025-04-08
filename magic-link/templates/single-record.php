@@ -145,9 +145,9 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
         wp_enqueue_style( 'jquery-typeahead-css', get_template_directory_uri() . $path_css, [], filemtime( get_template_directory() . $path_css ) );
         wp_enqueue_style( 'material-font-icons-css', 'https://cdn.jsdelivr.net/npm/@mdi/font@6.6.96/css/materialdesignicons.min.css', [], '6.6.96' );
 
-        wp_enqueue_script( 'single-record', plugin_dir_url( __FILE__ ) . $path_sr_js, [ 'jquery' ], filemtime(  __FILE__ ) . $path_sr_js );
+        wp_enqueue_script( 'single-record', plugin_dir_url( __FILE__ ) . $path_sr_js, [ 'jquery' ], filemtime( __FILE__ ) . $path_sr_js );
 
-        wp_enqueue_style( 'single-record-css', plugin_dir_url( __FILE__ ) . $path_sr_css, null, filemtime(  __FILE__ ) . $path_sr_css ) ;
+        wp_enqueue_style( 'single-record-css', plugin_dir_url( __FILE__ ) . $path_sr_css, null, filemtime( __FILE__ ) . $path_sr_css );
 
         wp_enqueue_style( 'dt-web-components-css', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/styles/light.css", [], $dtwc_version );
 
@@ -1481,13 +1481,13 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
             <span slot="content" id="single-record-locale-modal-content">
             <ul class="language-select">
                 <?php
-                foreach ($lang as $language) {
-                ?>
-                <li
-                    class="<?php echo $language['language'] === $current_lang ? esc_attr('active') : null ?>"
-                    onclick="assignLanguage('<?php echo esc_html( $language['language'] ); ?>')"
-                ><?php echo $language['native_name']; ?></li>
-                <?php
+                foreach ( $lang as $language ){
+                    ?>
+                    <li
+                        class="<?php echo $language['language'] === $current_lang ? esc_attr( 'active' ) : null ?>"
+                        onclick="assignLanguage('<?php echo esc_html( $language['language'] ); ?>')"
+                    ><?php echo esc_html( $language['native_name'] ); ?></li>
+                    <?php
                 }
                 ?>
                 </ul>
