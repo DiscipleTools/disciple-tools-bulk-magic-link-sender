@@ -49,8 +49,8 @@ class Disciple_Tools_Magic_Links_Template_List_Sub_Assigned extends Disciple_Too
                 <?php
             }
 
-                $lang = dt_get_available_languages();
-                $current_lang = trim( wp_get_current_user()->locale );   
+            $lang = dt_get_available_languages();
+            $current_lang = trim( wp_get_current_user()->locale );
 
             ?>
             <div id="content">
@@ -297,18 +297,18 @@ class Disciple_Tools_Magic_Links_Template_List_Sub_Assigned extends Disciple_Too
             <span slot="content" id="list-sub-assigned-locale-modal-content">
             <ul class="language-select">
                 <?php
-                foreach ($lang as $language) {
-                ?>
-                <li
-                    class="<?php echo $language['language'] === $current_lang ? esc_attr('active') : null ?>"
-                    onclick="assignLanguage('<?php echo esc_html( $language['language'] ); ?>')"
-                ><?php echo $language['native_name']; ?></li>
-                <?php
+                foreach ( $lang as $language ){
+                    ?>
+                    <li
+                        class="<?php echo $language['language'] === $current_lang ? esc_attr( 'active' ) : null ?>"
+                        onclick="assignLanguage('<?php echo esc_html( $language['language'] ); ?>')"
+                    ><?php echo esc_html( $language['native_name'] ); ?></li>
+                    <?php
                 }
                 ?>
                 </ul>
             </span>
-        </dt-modal>        
+        </dt-modal>
         <?php
     }
 }

@@ -139,7 +139,7 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
         $path_sr_js  = $path_sr . 'single-record.js';
         $path_sr_css = $path_sr . 'single-record.css';
 
-        $dtwc_version = '0.7.4';        
+        $dtwc_version = '0.7.4';
 
         wp_enqueue_script( 'jquery-typeahead', get_template_directory_uri() . $path_js, [ 'jquery' ], filemtime( get_template_directory() . $path_js ) );
         wp_enqueue_style( 'jquery-typeahead-css', get_template_directory_uri() . $path_css, [], filemtime( get_template_directory() . $path_css ) );
@@ -150,8 +150,8 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
         wp_enqueue_style( 'single-record-css', plugin_dir_url( __FILE__ ) . $path_sr_css, null, filemtime(  __FILE__ ) . $path_sr_css ) ;
 
         wp_enqueue_style( 'dt-web-components-css', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/styles/light.css", [], $dtwc_version );
-        
-        wp_enqueue_script( 'dt-web-components-js', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/dist/index.js", $dtwc_version );      
+
+        wp_enqueue_script( 'dt-web-components-js', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/dist/index.js", $dtwc_version );
 
         Disciple_Tools_Bulk_Magic_Link_Sender_API::enqueue_magic_link_utilities_script();
     }
@@ -163,9 +163,9 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
         $allowed_js[] = 'mapbox-cookie';
         $allowed_js[] = 'mapbox-search-widget';
         $allowed_js[] = 'google-search-widget';
-        $allowed_js[] = 'jquery-typeahead';        
-        $allowed_js[] = 'single-record';           
-        $allowed_js[] = 'dt-web-components-js';               
+        $allowed_js[] = 'jquery-typeahead';
+        $allowed_js[] = 'single-record';
+        $allowed_js[] = 'dt-web-components-js';
 
         $allowed_js[] = Disciple_Tools_Bulk_Magic_Link_Sender_API::get_magic_link_utilities_script_handle();
 
@@ -177,8 +177,8 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
         // example: $allowed_css[] = 'your-enqueue-handle';
         $allowed_css[] = 'mapbox-gl-css';
         $allowed_css[] = 'jquery-typeahead-css';
-        $allowed_css[] = 'material-font-icons-css';        
-        $allowed_css[] = 'single-record-css';   
+        $allowed_css[] = 'material-font-icons-css';
+        $allowed_css[] = 'single-record-css';
         $allowed_css[] = 'dt-web-components-css';
 
         return $allowed_css;
@@ -1295,7 +1295,7 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                         <b>
                             <?php echo esc_html( $has_title ? $this->adjust_template_title_translation( $this->template['title'], $this->template['title_translations'] ) : '' ); ?>
 
-                            <button class="locale-button mdi mdi-web" onclick="document.getElementById('single-record-locale-modal')._openModal()"></button> 
+                            <button class="locale-button mdi mdi-web" onclick="document.getElementById('single-record-locale-modal')._openModal()"></button>
                         </b>
                     </h2>
                 </div>
@@ -1305,10 +1305,9 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                 ?>
                 <hr/>
                 <?php
-                
             }
-                $lang = dt_get_available_languages();
-                $current_lang = trim( wp_get_current_user()->locale ); 
+            $lang = dt_get_available_languages();
+            $current_lang = trim( wp_get_current_user()->locale );
 
             ?>
             <div id="content">
@@ -1493,7 +1492,7 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                 ?>
                 </ul>
             </span>
-        </dt-modal>             
+        </dt-modal>
         <?php
     }
 
