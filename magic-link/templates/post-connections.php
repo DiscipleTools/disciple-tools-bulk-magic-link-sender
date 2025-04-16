@@ -142,7 +142,8 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
         $this->layout = new Disciple_Tools_Magic_Links_Layout_List_Detail(
             $this->template,
             $this->post,
-            $this->link_obj );
+            $this->link_obj
+        );
 
         /**
          * Load if valid url

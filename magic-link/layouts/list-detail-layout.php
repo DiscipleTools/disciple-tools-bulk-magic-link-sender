@@ -12,16 +12,20 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
     private $template = null;
     private $link_obj = null;
 
-    public $sort_options = [[
+    public $sort_options = [
+    [
         'name' => 'Last Updated',
         'value' => '-updated_at',
-    ], [
+    ],
+    [
         'name' => 'Name (A-Z)',
         'value' => 'name',
-    ], [
+    ],
+    [
         'name' => 'Name (Z-A)',
         'value' => '-name',
-    ]];
+    ]
+    ];
 
     public function __construct( $template = null, $post = null, $link_obj = null ) {
 
@@ -175,7 +179,7 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
                                 <input type="radio" name="sort" value="<?php echo esc_attr( $option['value'] ) ?>" onclick="toggleFilters()" onchange="searchChange()" checked />
                                 <?php echo esc_html( $option['name'] ); ?>
                             </label>
-                        <?php
+                            <?php
                         }
                     }
                     ?>
