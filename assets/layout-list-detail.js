@@ -257,7 +257,8 @@ function togglePanels() {
   })
 }
 
-function clearSearch(id) {
+function clearSearch() {
+  const id = jsObject.post.ID;
   document.getElementById('search').value = '';
   searchData(id);
 }
@@ -268,7 +269,8 @@ function toggleFilters() {
   })
 }
 
-const searchData = id => {
+const searchData = () => {
+  const id = jsObject.post.ID;
   const text = document.getElementById('search').value;
   let clear_button = document.getElementById('clear-button');
   if (!text && clear_button.style.display == 'block'){
