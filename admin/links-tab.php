@@ -45,6 +45,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
                 'dt_magic_link_templates'       => null,
                 'dt_magic_link_objects'         => null,
                 'dt_sending_channels'           => null,
+                'dt_template_messages'          => null,
                 'dt_endpoint_setup_payload'     => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_endpoint_setup_payload_url(),
                 'dt_endpoint_send_now'          => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_endpoint_send_now_url(),
                 'dt_endpoint_next_scheduled_run'          => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_endpoint_next_scheduled_run_url(),
@@ -610,7 +611,10 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Links {
 
     private function main_column_message() {
         ?>
-        <input style="min-width: 100%;" type="text" id="ml_main_col_msg_textarea_subject" value="" placeholder="Message Subject"/><br>
+        <input style="min-width: 100%;" type="text" id="ml_main_col_msg_textarea_subject" value="" placeholder="Message Subject"/><br><br>
+
+        <select style="min-width: 100%;" id="ml_main_col_msg_template_messages"></select><br><br>
+
         <textarea style="min-width: 100%;" id="ml_main_col_msg_textarea" rows="10"></textarea>
         <?php
     }

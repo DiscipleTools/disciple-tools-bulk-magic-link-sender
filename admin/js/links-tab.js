@@ -84,7 +84,8 @@ jQuery(function ($) {
       'dt_magic_link_types': !window.dt_magic_links.dt_magic_link_types || refresh,
       'dt_magic_link_templates': !window.dt_magic_links.dt_magic_link_templates || refresh,
       'dt_magic_link_objects': !window.dt_magic_links.dt_magic_link_objects || refresh,
-      'dt_sending_channels': !window.dt_magic_links.dt_sending_channels || refresh
+      'dt_sending_channels': !window.dt_magic_links.dt_sending_channels || refresh,
+      'dt_template_messages': !window.dt_magic_links.dt_template_messages || refresh
     };
     $.ajax({
       url: window.dt_magic_links.dt_endpoint_setup_payload,
@@ -102,6 +103,9 @@ jQuery(function ($) {
         }
         if ( data['dt_sending_channels'] ) {
           reset_section_schedules_sending_channels( data['dt_sending_channels'] );
+        }
+        if ( data['dt_template_messages'] ) {
+          reset_section_msg_template_messages( data['dt_template_messages'] );
         }
 
         callback();
@@ -332,9 +336,10 @@ jQuery(function ($) {
     }
   }
 
-  function reset_section_message(subject, message) {
+  function reset_section_message(subject, message, template_message = '') {
     $('#ml_main_col_msg_textarea_subject').val(subject);
     $('#ml_main_col_msg_textarea').val(message);
+    $('#ml_main_col_msg_template_messages').val(template_message);
   }
 
   function reset_section_schedules(enabled, freq_amount, freq_time_unit, sending_channel, last_schedule_run, last_success_send, links_refreshed_before_send, send_now) {
@@ -403,6 +408,23 @@ jQuery(function ($) {
 
     // Update global variables.
     window.dt_magic_links.dt_sending_channels = sending_channels;
+  }
+
+  function reset_section_msg_template_messages(template_messages) {
+    let template_messages_select = $('#ml_main_col_msg_template_messages');
+    $(template_messages_select).empty();
+    $(template_messages_select).append($('<option/>').prop('disabled', false).prop('selected', true).val('').text('-- select template message --'));
+
+    if ( template_messages ) {
+      for (const [key, value] of Object.entries(template_messages)) {
+        $(template_messages_select).append($('<option/>').val(window.dt_admin_shared.escape(value['id'])).text(window.dt_admin_shared.escape(value['name'])));
+      }
+    }
+
+    $(template_messages_select).val('');
+
+    // Update global variables.
+    window.dt_magic_links.dt_template_messages = template_messages;
   }
 
   function reset_section(display, section, reset_element_func) {
@@ -1435,6 +1457,7 @@ jQuery(function ($) {
     let assigned_users_teams = fetch_assigned_users_teams();
 
     let message_subject = $('#ml_main_col_msg_textarea_subject').val().trim();
+    let template_message_id = $('#ml_main_col_msg_template_messages').val();
     let message = $('#ml_main_col_msg_textarea').val().trim();
 
     let scheduling_enabled = $('#ml_main_col_schedules_enabled').prop('checked');
@@ -1511,6 +1534,7 @@ jQuery(function ($) {
         },
 
         'message_subject': message_subject,
+        'template_message_id': template_message_id,
         'message': message,
 
         'schedule': {
@@ -1635,7 +1659,7 @@ jQuery(function ($) {
       });
 
       reset_section(true, $('#ml_main_col_message'), function () {
-        reset_section_message(link_obj['message_subject'], link_obj['message']);
+        reset_section_message( link_obj['message_subject'], link_obj['message'], link_obj['template_message_id'] ? link_obj['template_message_id'] : '' );
       });
 
       reset_section(true, $('#ml_main_col_schedules'), function () {
