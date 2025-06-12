@@ -561,6 +561,10 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
         return null;
     }
 
+    public static function fetch_template_messages(): array {
+        return apply_filters( 'dt_magic_link_template_messages', [] );
+    }
+
     public static function logging_load(): array {
         return ! empty( get_option( self::$option_dt_magic_links_logging ) ) ? json_decode( get_option( self::$option_dt_magic_links_logging ) ) : [];
     }
@@ -663,7 +667,8 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
                     $send_result = call_user_func( $sending_channel['send'], [
                         'user'    => $user,
                         'message_subject' => $link_obj->message_subject,
-                        'message' => $message
+                        'message' => $message,
+                        'template_message_id' => !empty( $link_obj->template_message_id ) ? $link_obj->template_message_id : '',
                     ] );
 
                     // A successful outcome....?
