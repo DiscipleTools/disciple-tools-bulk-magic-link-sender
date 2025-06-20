@@ -75,6 +75,10 @@ jQuery(function ($) {
     handle_enable_connection_fields_config_selection(evt.currentTarget);
   });
 
+  $(document).on('change', '#ml_main_col_msg_template_messages', function (evt) {
+    handle_msg_template_messages_change();
+  });
+
   // Helper Functions
   function setup_widgets(refresh = true, callback) {
     $('#ml_main_col_assign_users_teams_table_notice').fadeOut('fast');
@@ -338,8 +342,11 @@ jQuery(function ($) {
 
   function reset_section_message(subject, message, template_message = '') {
     $('#ml_main_col_msg_textarea_subject').val(subject);
-    $('#ml_main_col_msg_textarea').val(message);
     $('#ml_main_col_msg_template_messages').val(template_message);
+
+    const msg_textarea = $('#ml_main_col_msg_textarea');
+    msg_textarea.val(message);
+    msg_textarea.prop('disabled', template_message ? true : false);
   }
 
   function reset_section_schedules(enabled, freq_amount, freq_time_unit, sending_channel, last_schedule_run, last_success_send, links_refreshed_before_send, send_now) {
@@ -417,7 +424,7 @@ jQuery(function ($) {
 
     if ( template_messages ) {
       for (const [key, value] of Object.entries(template_messages)) {
-        $(template_messages_select).append($('<option/>').val(window.dt_admin_shared.escape(value['id'])).text(window.dt_admin_shared.escape(value['name'])));
+        $(template_messages_select).append($('<option/>').val(window.dt_admin_shared.escape(key)).text(window.dt_admin_shared.escape(value['name'])));
       }
     }
 
@@ -438,6 +445,19 @@ jQuery(function ($) {
         section.fadeIn('fast');
       }
     });
+  }
+
+  function handle_msg_template_messages_change() {
+    const msg_textarea = $('#ml_main_col_msg_textarea');
+    const template_message_id = $('#ml_main_col_msg_template_messages').val();
+
+    if ( window.dt_magic_links.dt_template_messages[template_message_id] ) {
+      msg_textarea.val(window.dt_magic_links.dt_template_messages[template_message_id]['ml_msg']);
+      msg_textarea.prop('disabled', true);
+    } else {
+      msg_textarea.val('');
+      msg_textarea.prop('disabled', false);
+    }
   }
 
   function toggle_schedule_manage_element_states() {

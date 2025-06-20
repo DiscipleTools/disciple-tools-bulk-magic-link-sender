@@ -661,13 +661,14 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
 
                 // Construct message to be sent
                 $message = self::build_send_msg( $link_obj, $user, $magic_link_type['url_base'] );
-                if ( $message !== '' ) {
+                if ( !empty( $message['message'] ) ) {
 
                     // Dispatch message using specified sending channel
                     $send_result = call_user_func( $sending_channel['send'], [
                         'user'    => $user,
                         'message_subject' => $link_obj->message_subject,
-                        'message' => $message,
+                        'message' => $message['message'],
+                        'placeholders' => $message['placeholders'] ?? [],
                         'template_message_id' => !empty( $link_obj->template_message_id ) ? $link_obj->template_message_id : '',
                     ] );
 
@@ -745,8 +746,9 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
         return $name;
     }
 
-    private static function build_send_msg( $link_obj, $user, $magic_link_url_base ): string {
+    private static function build_send_msg( $link_obj, $user, $magic_link_url_base ): array {
         $msg = '';
+        $placeholders = [];
 
         // First, build magic link url
         $link_url = self::build_magic_link_url( $link_obj, $user, $magic_link_url_base );
@@ -757,6 +759,10 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
 
             // Construct message, having replaced placeholders
             $expiry_point = self::determine_links_expiry_point( $link_obj->link_manage->links_expire_within_amount, $link_obj->link_manage->links_expire_within_time_unit, $user->links_expire_within_base_ts );
+            $assigned_user_name = self::determine_assigned_user_name( $user );
+            $relative_date = ( $expiry_point === false ) ? '' : self::determine_relative_date( $expiry_point );
+
+            // Replace placeholders.
             $msg = str_replace(
                 [
                     '{{name}}',
@@ -765,16 +771,25 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
                     '{{time_relative}}'
                 ],
                 [
-                    self::determine_assigned_user_name( $user ),
+                    $assigned_user_name,
                     $link_url,
                     $expire_on,
-                    ( $expiry_point === false ) ? '' : self::determine_relative_date( $expiry_point )
+                    $relative_date
                 ],
                 $link_obj->message
             );
+
+            // Extract placeholders.
+            $placeholders['name'] = $assigned_user_name;
+            $placeholders['link'] = $link_url;
+            $placeholders['time'] = $expire_on;
+            $placeholders['time_relative'] = $relative_date;
         }
 
-        return $msg;
+        return [
+            'message' => $msg,
+            'placeholders' => $placeholders
+        ];
     }
 
     public static function fetch_default_send_msg(): string {
