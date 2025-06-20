@@ -120,6 +120,9 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
         if ( isset( $params['dt_sending_channels'] ) && filter_var( $params['dt_sending_channels'], FILTER_VALIDATE_BOOLEAN ) ){
             $response['dt_sending_channels'] = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_sending_channels();
         }
+        if ( isset( $params['dt_template_messages'] ) && filter_var( $params['dt_template_messages'], FILTER_VALIDATE_BOOLEAN ) ){
+            $response['dt_template_messages'] = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_template_messages();
+        }
 
         return $response;
     }
