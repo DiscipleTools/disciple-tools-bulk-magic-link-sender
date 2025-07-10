@@ -3,10 +3,18 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 } // Exit if accessed directly.
 
+
+function dt_get_magic_link_templates() {
+    $templates = apply_filters( 'dt_magic_link_templates', [] );
+    $templates_options = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_templates );
+    $templates = array_merge( $templates, $templates_options );
+    return $templates;
+}
+
 function fetch_magic_link_templates(): array {
 
     $templates            = [];
-    $magic_link_templates = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_templates );
+    $magic_link_templates = dt_get_magic_link_templates();
 
     if ( ! empty( $magic_link_templates ) ) {
         foreach ( $magic_link_templates as $post_type ) {
