@@ -65,7 +65,7 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
         $this->template         = $template;
         $this->post_type        = $template['post_type'];
         $this->record_type      = $template['record_type'] ?? $template['post_type'];
-        
+
         $this->type = array_map( 'sanitize_key', wp_unslash( explode( '_', $template['id'] ) ) )[1];
 
         $this->type_name        = $template['name'];
@@ -94,10 +94,10 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
 
         $this->meta_key = $this->root . '_' . $this->type . '_magic_key';
         parent::__construct();
-        
+
         // Get field settings for the record type
         $this->post_field_settings = DT_Posts::get_post_field_settings( $this->record_type, false );
-        
+
         add_action( 'rest_api_init', [ $this, 'add_endpoints' ] );
 
         /**
@@ -112,7 +112,8 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
          * require user login
          */
         if ( ! isset( $this->parts['post_id'] ) && ! is_user_logged_in() ) {
-            wp_redirect( wp_login_url( $_SERVER['REQUEST_URI'] ) );
+            $request_uri = !empty( $_SERVER['REQUEST_URI'] ) ? sanitize_url( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
+            wp_redirect( wp_login_url( $request_uri ) );
             exit;
         }
 
@@ -746,7 +747,7 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
 
                     // Revert back to dt translations like in single-record.php
                     $this->hard_switch_to_default_dt_text_domain();
-                    
+
                     // Display selected fields from template configuration
                     if ( isset( $this->template['fields'] ) && is_array( $this->template['fields'] ) ) {
                         foreach ( $this->template['fields'] as $field ) {
@@ -755,12 +756,12 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
                             }
 
                             $field_id = $field['id'];
-                            
+
                             if ( $field['type'] === 'dt' ) {
                                 // Handle DT fields
                                 if ( isset( $this->post_field_settings[$field_id] ) ) {
                                     $field_type = $this->post_field_settings[$field_id]['type'];
-                                    
+
                                     // Field types to be supported (same as other templates)
                                     if ( ! in_array( $field_type, [
                                         'text',
@@ -777,19 +778,19 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
                                     ] ) ) {
                                         continue;
                                     }
-                                    
+
                                     ?>
                                     <div class="form-field" data-field-id="<?php echo esc_attr( $field_id ); ?>" data-field-type="<?php echo esc_attr( $field_type ); ?>" data-template-type="dt">
                                         <?php
                                         // Capture rendered field html
                                         $this->post_field_settings[$field_id]['custom_display'] = false;
                                         $this->post_field_settings[$field_id]['readonly'] = false;
-                                        
+
                                         // Set required flag for name field
                                         if ( $field_id === 'name' ) {
                                             $this->post_field_settings[$field_id]['required'] = true;
                                         }
-                                        
+
                                         // Check if function exists
                                         if ( function_exists( 'render_field_for_display' ) ) {
                                             render_field_for_display( $field_id, $this->post_field_settings, $empty_post, null, null, null, [] );
@@ -818,7 +819,7 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
                                 $this->post_field_settings['name']['custom_display'] = false;
                                 $this->post_field_settings['name']['readonly'] = false;
                                 $this->post_field_settings['name']['required'] = true;
-                                
+
                                 if ( function_exists( 'render_field_for_display' ) ) {
                                     render_field_for_display( 'name', $this->post_field_settings, $empty_post );
                                 } else if ( class_exists( 'Disciple_Tools_Magic_Links_Helper' ) ) {
@@ -864,7 +865,7 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
 
     public function create_record( WP_REST_Request $request ){
         $params = $request->get_params();
-        
+
         if ( !isset( $params['fields'] ) || !isset( $params['fields']['dt'] ) ) {
             return new WP_Error( __METHOD__, 'Missing field data', [ 'status' => 400 ] );
         }
@@ -875,10 +876,10 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
 
         // Determine the actual record type to create
         $record_type = $params['record_type'] ?? $this->record_type;
-        
+
         // Prepare record fields for DT_Posts::create_post
         $updates = [];
-        
+
         // Process DT field values using the same approach as create-contact.php
         foreach ( $params['fields']['dt'] ?? [] as $field ) {
             switch ( $field['dt_type'] ) {
@@ -888,14 +889,14 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
                         $updates[$field['id']] = sanitize_text_field( $field['value'] );
                     }
                     break;
-                    
+
                 case 'textarea':
                     if ( !empty( $field['value'] ) ) {
                         // For textarea, preserve newlines and use sanitize_textarea_field
                         $updates[$field['id']] = sanitize_textarea_field( $field['value'] );
                     }
                     break;
-                    
+
                 case 'communication_channel':
                     if ( !empty( $field['value'] ) && is_array( $field['value'] ) ) {
                         $updates[$field['id']] = [];
@@ -908,7 +909,7 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
                         }
                     }
                     break;
-                    
+
                 case 'multi_select':
                     if ( !empty( $field['value'] ) && is_array( $field['value'] ) ) {
                         $options = [];
@@ -924,12 +925,12 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
                         }
                     }
                     break;
-                    
+
                 case 'date':
                     if ( !empty( $field['value'] ) && is_string( $field['value'] ) ) {
                         // Handle date field - value should be in 'yyyy-mm-dd' format
                         $date_value = sanitize_text_field( $field['value'] );
-                        
+
                         // Validate date format and store as yyyy-mm-dd
                         if ( preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date_value ) ) {
                             // Verify it's a valid date
@@ -940,14 +941,14 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
                         }
                     }
                     break;
-                    
+
                 case 'number':
                     if ( isset( $field['value'] ) && is_numeric( $field['value'] ) ) {
                         // Handle number field - store as numeric value
                         $updates[$field['id']] = floatval( $field['value'] );
                     }
                     break;
-                    
+
                 case 'link':
                     if ( !empty( $field['value'] ) ) {
                         // Handle link field - can be single URL or array of links
@@ -973,13 +974,13 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
                         }
                     }
                     break;
-                    
+
                 default:
                     // Handle other field types as needed
                     break;
             }
         }
-        
+
         // Handle custom fields by saving them as comments
         $custom_field_comments = [];
         foreach ( $params['fields']['custom'] ?? [] as $field ) {
@@ -990,7 +991,7 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
                 } else {
                     $sanitized_value = sanitize_text_field( $field['value'] );
                 }
-                
+
                 // Get field label from template configuration
                 $field_label = $field['id']; // Default to ID if label not found
                 if ( isset( $this->template['fields'] ) && is_array( $this->template['fields'] ) ) {
@@ -1002,11 +1003,11 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
                         }
                     }
                 }
-                
+
                 $custom_field_comments[] = $field_label . ': ' . $sanitized_value;
             }
         }
-        
+
         // Validate that we have a name
         if ( empty( $updates['name'] ) ) {
             return [
@@ -1014,17 +1015,17 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
                 'message' => 'Record name is required'
             ];
         }
-        
+
         // Create the record
         $result = DT_Posts::create_post( $record_type, $updates, true, false );
-        
+
         if ( is_wp_error( $result ) ) {
             return [
                 'success' => false,
                 'message' => $result->get_error_message()
             ];
         }
-        
+
         // Add custom field comments if any
         if ( !empty( $custom_field_comments ) ) {
             // Add each custom field as a separate comment
@@ -1032,11 +1033,11 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
                 DT_Posts::add_post_comment( $record_type, $result['ID'], $comment, 'comment', [], false );
             }
         }
-        
+
         return [
             'success' => true,
             'record_id' => $result['ID'],
             'message' => 'Record created successfully!'
         ];
     }
-} 
+}
