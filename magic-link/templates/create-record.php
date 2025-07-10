@@ -659,10 +659,11 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
                             });
                             jQuery('.form-field dt-multi-select-button-group').attr('value', '[]');
                             jQuery('.form-field dt-tags').attr('value', '[]');
-                            jQuery('.form-field dt-date').attr('value', '');
+                            document.querySelector('dt-date').updateTimestamp('')
                             jQuery('.form-field dt-number').attr('value', '');
                             jQuery('.form-field dt-location').attr('value', '');
                             jQuery('.form-field input, .form-field textarea').val('');
+
                             
                             // Clear any link input fields that were dynamically added
                             jQuery('.link-input').val('');
