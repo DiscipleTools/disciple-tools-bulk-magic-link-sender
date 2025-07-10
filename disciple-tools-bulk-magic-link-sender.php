@@ -96,6 +96,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender {
         require_once( 'magic-link/magic-links-cron.php' );
         require_once( 'magic-link/magic-links-helper.php' );
         require_once( 'magic-link/templates/single-record.php' );
+        require_once( 'magic-link/templates/create-record.php' );
         require_once( 'magic-link/templates/list-sub-assigned.php' );
         require_once( 'magic-link/templates/post-connections.php' );
         require_once( 'magic-link/layouts/list-detail-layout.php' );
