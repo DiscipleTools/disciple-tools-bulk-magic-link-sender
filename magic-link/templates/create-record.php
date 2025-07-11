@@ -140,6 +140,7 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
         add_filter( 'dt_magic_url_base_allowed_css', [ $this, 'dt_magic_url_base_allowed_css' ], 10, 1 );
         add_filter( 'dt_magic_url_base_allowed_js', [ $this, 'dt_magic_url_base_allowed_js' ], 10, 1 );
         add_action( 'wp_enqueue_scripts', [ $this, 'wp_enqueue_scripts' ], 200 );
+        add_filter( 'dt_settings_apps_list', [ $this, 'dt_settings_apps_list' ], 10, 1 );
     }
 
     public function wp_enqueue_scripts() {
@@ -158,6 +159,17 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
                 'root' => esc_url_raw( rest_url() )
             ]
         );
+    }
+
+    public function dt_settings_apps_list( $apps_list ) {
+        $apps_list[$this->meta_key] = [
+            'key' => $this->meta_key,
+            'url_base' => $this->root . '/' . $this->type,
+            'label' => $this->page_title,
+            'description' => $this->page_description,
+            'settings_display' => true
+        ];
+        return $apps_list;
     }
 
     public function dt_magic_url_base_allowed_js( $allowed_js ) {
