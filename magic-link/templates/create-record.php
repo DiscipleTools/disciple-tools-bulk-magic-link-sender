@@ -66,7 +66,7 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
         $this->post_type        = $template['post_type'];
         $this->record_type      = $template['record_type'] ?? $template['post_type'];
 
-        $this->type = array_map( 'sanitize_key', wp_unslash( explode( '_', $template['id'] ) ) )[1];
+        $this->type = array_map( 'sanitize_key', wp_unslash( explode( '/', $template['url_base'] ) ) )[1];
 
         $this->type_name        = $template['name'];
         $this->page_title       = $template['name'];
@@ -230,6 +230,9 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
     public function header_style() {
         ?>
         <style>
+            html {
+                height: 100%;
+            }
             body {
                 background-color: white;
                 padding: 1em;
@@ -1011,7 +1014,7 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
         }
 
         // Create the record
-        $result = DT_Posts::create_post( $record_type, $updates, true, false );
+        $result = DT_Posts::create_post( $record_type, $updates );
 
         if ( is_wp_error( $result ) ) {
             return [
@@ -1024,7 +1027,7 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
         if ( !empty( $custom_field_comments ) ) {
             // Add each custom field as a separate comment
             foreach ( $custom_field_comments as $comment ) {
-                DT_Posts::add_post_comment( $record_type, $result['ID'], $comment, 'comment', [], false );
+                DT_Posts::add_post_comment( $record_type, $result['ID'], $comment );
             }
         }
 
