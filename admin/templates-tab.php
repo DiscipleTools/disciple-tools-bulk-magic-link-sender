@@ -43,10 +43,11 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
             'contacts' => [],
             'default-options' => [],
         ]);
+        $templates = dt_get_magic_link_templates();
         wp_localize_script(
             'dt_magic_links_script', 'dt_magic_links', array(
                 'dt_post_types'                 => $this->fetch_post_types(),
-                'dt_magic_links_templates'      => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_templates ),
+                'dt_magic_links_templates'      => $templates,
                 'dt_magic_links_template_types' => $template_types,
                 'dt_previous_updated_template'  => $this->fetch_previous_updated_template(),
                 'dt_languages_icon'             => esc_html( get_template_directory_uri() . '/dt-assets/images/languages.svg' )
