@@ -7,7 +7,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 function dt_get_magic_link_templates() {
     $templates = apply_filters( 'dt_magic_link_templates', [] );
     $templates_options = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_templates );
-    $templates = array_merge( $templates, $templates_options );
+    
+    // Simple merge: options overwrite filter templates if same template ID exists
+    if ( ! empty( $templates_options ) ) {
+        foreach ( $templates_options as $post_type => $post_type_templates ) {
+            if ( ! isset( $templates[$post_type] ) ) {
+                $templates[$post_type] = [];
+            }
+            
+            foreach ( $post_type_templates as $template_id => $template_config ) {
+                // Overwrite if template ID exists, otherwise add new template
+                $templates[$post_type][$template_id] = $template_config;
+            }
+        }
+    }
+    
     return $templates;
 }
 

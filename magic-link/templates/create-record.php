@@ -51,9 +51,9 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
         'contact'
     ]; // Order of translatable flags to be checked. Translate on first hit..!
 
-    protected $template = null;
-    protected $link_obj = null;
-    protected $record_type = null;
+    private $template = null;
+    private $link_obj = null;
+    private $record_type = null;
 
     public function __construct( $template = null )
     {
@@ -111,7 +111,7 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
          * If this is accessed without a magic link key (i.e., without proper user binding),
          * require user login
          */
-        if ( ! isset( $this->parts['post_id'] ) && ! is_user_logged_in() ) {
+        if ( ! is_user_logged_in() ) {
             $request_uri = !empty( $_SERVER['REQUEST_URI'] ) ? sanitize_url( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
             wp_redirect( wp_login_url( $request_uri ) );
             exit;
@@ -230,9 +230,6 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
     public function header_style() {
         ?>
         <style>
-            html {
-                height: 100%;
-            }
             body {
                 background-color: white;
                 padding: 1em;
@@ -734,7 +731,7 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
                 </div>
 
                 <!-- TEMPLATE MESSAGE -->
-                <p id="template_msg">
+                <p id="template_msg" style="text-align: center;">
                     <?php echo nl2br( esc_html( ! empty( $this->template ) && isset( $this->template['message'] ) ? $this->template['message'] : 'Use this form to create a new ' . $this->record_type . ' record.' ) ); ?>
                 </p>
 
@@ -1010,10 +1007,7 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
 
         // Validate that we have a name
         if ( empty( $updates['name'] ) ) {
-            return [
-                'success' => false,
-                'message' => 'Record name is required'
-            ];
+            return new WP_Error( __METHOD__, 'Record name is required', [ 'status' => 400 ] );
         }
 
         // Create the record
