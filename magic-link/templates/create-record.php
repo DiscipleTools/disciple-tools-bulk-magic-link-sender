@@ -85,7 +85,7 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
             'app_type'   => 'magic_link',
             'class_type' => 'template',
             'show_in_home_apps' => true,
-            'icon' => 'mdi mdi-plus-circle',
+            'icon' => $template['icon'] ?? 'mdi mdi-plus-circle',
         ];
 
         /**
@@ -347,25 +347,25 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
                     if (!linkType || !fieldKey) {
                         return;
                     }
-                    
+
                     // Find the template for this link type
                     const template = jQuery(`#link-template-${fieldKey}-${linkType}`);
                     if (template.length === 0) {
                         return;
                     }
-                    
+
                     // Clone the template content
                     const newLinkInput = template.html();
-                    
+
                     // Find the target section for this link type
                     const targetSection = jQuery(`.link-section--${linkType}`);
                     if (targetSection.length === 0) {
                         return;
                     }
-                    
+
                     // Append the new input to the target section
                     targetSection.append(newLinkInput);
-                    
+
                     // Focus the new input
                     targetSection.find('input').last().focus();
                 }
@@ -602,7 +602,7 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
                     jQuery('.form-field[data-template-type="custom"]').each(function (idx, fieldDiv) {
                         let field_id = jQuery(fieldDiv).data('field-id');
                         let fieldInput = jQuery(fieldDiv).find('input, textarea');
-                        
+
                         if (fieldInput.length > 0) {
                             let value = fieldInput.val();
                             if (value && value.trim() !== '') {
@@ -677,7 +677,7 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
                             jQuery('.form-field dt-location').attr('value', '');
                             jQuery('.form-field input, .form-field textarea').val('');
 
-                            
+
                             // Clear any link input fields that were dynamically added
                             jQuery('.link-input').val('');
                             jQuery('.link-section').remove();
