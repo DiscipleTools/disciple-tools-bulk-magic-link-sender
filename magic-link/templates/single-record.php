@@ -866,7 +866,7 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                     }
 
                     // Collect fields using helper
-                    const collected = window.SHAREDFUNCTIONS.collectFields({ template: jsObject.template });
+                    const collected = window.SHAREDFUNCTIONS.collectFields({ template: jsObject.template, post: jsObject.post });
                     payload['fields']['dt'] = payload['fields']['dt'].concat(collected.dt);
                     payload['fields']['custom'] = payload['fields']['custom'].concat(collected.custom);
 
@@ -1301,6 +1301,8 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
 
         $updates = [];
 
+        $params['fields'] = dt_recursive_sanitize_array( $params['fields'] );
+
         // First, capture and package incoming DT field values
         foreach ( $params['fields']['dt'] ?? [] as $field ){
             switch ( $field['dt_type'] ) {
@@ -1309,39 +1311,11 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                 case 'text':
                 case 'date':
                 case 'boolean':
-                    $field = dt_recursive_sanitize_array( $field );
-                    $updates[$field['id']] = $field['value'];
-                    break;
+                case 'communication_channel':
                 case 'key_select':
                     $updates[$field['id']] = $field['value'];
                     break;
-                case 'communication_channel':
-                    $field = dt_recursive_sanitize_array( $field );
-                    $updates[$field['id']] = [];
-
-                    // First, capture additions and updates
-                    foreach ( $field['value'] ?? [] as $value ){
-                        $comm = [];
-                        $comm['value'] = $value['value'];
-
-                        if ( $value['key'] !== 'new' ){
-                            $comm['key'] = $value['key'];
-                        }
-
-                        $updates[$field['id']][] = $comm;
-                    }
-
-                    // Next, capture deletions
-                    foreach ( $field['deleted'] ?? [] as $delete_key ){
-                        $updates[$field['id']][] = [
-                            'delete' => true,
-                            'key' => $delete_key
-                        ];
-                    }
-                    break;
-
                 case 'multi_select':
-                    $field = dt_recursive_sanitize_array( $field );
                     $options = [];
                     foreach ( $field['value'] ?? [] as $option ){
                         $entry = [];
@@ -1359,7 +1333,6 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                     break;
 
                 case 'location':
-                    $field = dt_recursive_sanitize_array( $field );
                     $locations = [];
                     foreach ( $field['value'] ?? [] as $location ){
                         $entry = [];
@@ -1384,7 +1357,6 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                     break;
 
                 case 'location_meta':
-                    $field = dt_recursive_sanitize_array( $field );
                     $locations = [];
 
                     // Capture selected location, if available; or prepare shape
@@ -1412,7 +1384,6 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                     break;
 
                 case 'tags':
-                    $field = dt_recursive_sanitize_array( $field );
                     $tags = [];
                     foreach ( $field['value'] ?? [] as $tag ){
                         $entry = [];
@@ -1448,7 +1419,14 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                                 if ( !empty( $link['value'] ) ) {
                                     $links[] = [
                                         'value' => sanitize_text_field( $link['value'] ),
-                                        'type' => sanitize_text_field( $link['type'] ?? '' )
+                                        'type' => sanitize_text_field( $link['type'] ?? '' ),
+                                        'meta_id' => $link['meta_id'] ?? null,
+                                        'delete' => $link['delete'] ?? false
+                                    ];
+                                } else if ( !empty( $link['delete'] ) ) {
+                                    $links[] = [
+                                        'meta_id' => $link['meta_id'],
+                                        'delete' => true
                                     ];
                                 }
                             }

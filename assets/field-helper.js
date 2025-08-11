@@ -54,7 +54,7 @@ jQuery(document).on('click', '.add-link__option', function(event) {
 
 // Handle link delete button clicks
 jQuery(document).on('click', '.link-delete-button', function() {
-    jQuery(this).closest('.link-section').remove();
+    jQuery(this).closest('.input-group').remove();
 });
 
 // Handle add button clicks for link fields
@@ -174,14 +174,13 @@ if (!window.SHAREDFUNCTIONS.collectFields) {
                         const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
                         let rawValue = dtComponent.attr('value');
                         let values = [];
-                        let deleted = field_meta.val() ? JSON.parse(field_meta.val()) : [];
                         if (rawValue) {
                             try {
                                 const parsed = JSON.parse(rawValue);
                                 if (Array.isArray(parsed)) {
                                     parsed.forEach(function (item) {
                                         if (item && item.value && String(item.value).trim() !== '') {
-                                            values.push({ value: String(item.value).trim() });
+                                            values.push({ value: String(item.value).trim(), delete: item.delete, key: item.key });
                                         }
                                     });
                                 }
@@ -200,7 +199,6 @@ if (!window.SHAREDFUNCTIONS.collectFields) {
                             dt_type: field_type,
                             template_type: field_template_type,
                             value: values,
-                            deleted: deleted
                         });
                         break;
                     }
@@ -213,8 +211,9 @@ if (!window.SHAREDFUNCTIONS.collectFields) {
                                 const parsed = JSON.parse(rawValue);
                                 if (Array.isArray(parsed) && parsed.length > 0) {
                                     parsed.forEach(function (selectedKey) {
+                                        const to_delete = selectedKey.includes('-')
                                         if (selectedKey && String(selectedKey).trim() !== '') {
-                                            options.push({ value: String(selectedKey).trim(), delete: false });
+                                            options.push({ value: String(selectedKey).trim().replace('-', ''), delete: to_delete });
                                         }
                                     });
                                 }
@@ -246,29 +245,6 @@ if (!window.SHAREDFUNCTIONS.collectFields) {
                             template_type: field_template_type,
                             value: dateValue
                         });
-                        break;
-                    }
-                    case 'link': {
-                        const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
-                        let rawValue = dtComponent.attr('value') || jQuery(tr).find(selector).val();
-                        if (rawValue && String(rawValue).trim() !== '') {
-                            try {
-                                const parsed = JSON.parse(rawValue);
-                                payloadFields.dt.push({
-                                    id: field_id,
-                                    dt_type: field_type,
-                                    template_type: field_template_type,
-                                    value: parsed
-                                });
-                            } catch (e) {
-                                payloadFields.dt.push({
-                                    id: field_id,
-                                    dt_type: field_type,
-                                    template_type: field_template_type,
-                                    value: String(rawValue).trim()
-                                });
-                            }
-                        }
                         break;
                     }
                     case 'tags': {
@@ -340,9 +316,11 @@ if (!window.SHAREDFUNCTIONS.collectFields) {
         // Handle dynamically added link inputs (create-record pattern)
         jQuery('.link-input').each(function (index, entry) {
             let fieldKey = jQuery(entry).data('field-key');
+            const existing_link_values = options.post[fieldKey] || [];
+            const meta_id = parseInt(jQuery(entry).data('meta-id'));
             let type = jQuery(entry).data('type');
+            let existingField = payloadFields.dt.find(function (f) { return f.id === fieldKey; });
             if (jQuery(entry).val()) {
-                let existingField = payloadFields.dt.find(function (f) { return f.id === fieldKey; });
                 if (!existingField) {
                     existingField = { id: fieldKey, dt_type: 'link', template_type: 'dt', value: { values: [] } };
                     payloadFields.dt.push(existingField);
@@ -350,8 +328,14 @@ if (!window.SHAREDFUNCTIONS.collectFields) {
                 if (!existingField.value.values) {
                     existingField.value = { values: [] };
                 }
-                existingField.value.values.push({ value: jQuery(entry).val(), type: type });
+                existingField.value.values.push({ value: jQuery(entry).val(), type: type, meta_id: meta_id });
             }
+            //set delete:true to existing values that are not in payloadFields
+            existing_link_values.forEach(function(value) {
+                if (!payloadFields.dt.find(f => f.id === fieldKey && f.value.values.find(v => v.meta_id === parseInt(value.meta_id)))) {
+                    existingField.value.values.push({ meta_id: parseInt(value.meta_id), delete: true });
+                }
+            });
         });
 
         // Handle custom fields (create-record pattern)
