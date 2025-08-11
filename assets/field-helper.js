@@ -435,7 +435,7 @@ if (!window.SHAREDFUNCTIONS.setFieldsFromPost) {
                 case 'communication_channel': {
                     const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
                     if (dtComponent.length) {
-                        const values = Array.isArray(post[field_id]) ? post[field_id].map(function (v) { return { value: v.value || '' }; }) : [];
+                        const values = Array.isArray(post[field_id]) ? post[field_id].map(function (v) { return { value: v.value || '', key: v.key || '' }; }) : [];
                         dtComponent.attr('value', JSON.stringify(values));
                         field_meta.val('');
                     } else {
