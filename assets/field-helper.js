@@ -398,28 +398,33 @@ if (!window.SHAREDFUNCTIONS.setFieldsFromPost) {
                     break;
                 }
                 case 'link': {
-                    const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
-                    let valueToSet = '';
-                    if (post[field_id] !== undefined && post[field_id] !== null) {
-                        const v = post[field_id];
-                        if (typeof v === 'string') {
-                            valueToSet = v;
-                        } else if (Array.isArray(v)) {
-                            // expect array of { value, type? }
-                            valueToSet = JSON.stringify({ values: v });
-                        } else if (typeof v === 'object') {
-                            // object shape, use as-is
-                            try { valueToSet = JSON.stringify(v); } catch (e) { valueToSet = ''; }
+                    const linkList = jQuery(tr).find('.link-list-' + field_id);
+                    const values = Array.isArray(post[field_id]) ? post[field_id] : [];
+
+                    // Clear previous input rows but keep section containers/templates intact
+                    linkList.find('.link-section .input-group').remove();
+
+                    // Populate inputs per existing values using templates
+                    values.forEach(function (entry) {
+                        const type = entry.type || 'default';
+                        const template = jQuery(`#link-template-${field_id}-${type}`).find('.input-group').first();
+                        const section = linkList.find(`.link-section--${type}`);
+                        if (template.length && section.length) {
+                            const group = template.clone(true);
+                            const input = group.find('input');
+                            input.val(entry.value || '');
+                            input.addClass('link-input');
+                            input.attr('data-field-key', field_id);
+                            input.attr('data-type', type);
+                            if (entry.meta_id !== undefined && entry.meta_id !== null) {
+                                input.attr('data-meta-id', parseInt(entry.meta_id));
+                            }
+                            section.append(group);
                         }
-                    }
-                    if (dtComponent.length) {
-                        dtComponent.attr('value', valueToSet);
-                    } else {
-                        jQuery(tr).find(selector).val(typeof valueToSet === 'string' ? valueToSet : '');
-                    }
-                    // Clear any dynamic link inputs/sections for a clean slate
-                    jQuery(tr).find('.link-input').val('');
-                    jQuery(tr).find('.link-section').remove();
+                    });
+
+                    // Ensure meta helper is cleared
+                    field_meta.val('');
                     break;
                 }
                 case 'key_select': {
