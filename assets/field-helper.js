@@ -394,9 +394,8 @@ if (!window.SHAREDFUNCTIONS.setFieldsFromPost) {
 
             // If a DT web component is present, reset it before populating
             const existingComponent = jQuery(tr).find('[id="' + field_id + '"]');
-            if (existingComponent.length) {
+            if (existingComponent.length && field_id !== 'name') {
                 const el = existingComponent.get(0);
-                console.log('el', el);
                 if (el && typeof el.reset === 'function') {
                     try { el.reset(); } catch (e) {}
                 }
