@@ -392,6 +392,16 @@ if (!window.SHAREDFUNCTIONS.setFieldsFromPost) {
                 return;
             }
 
+            // If a DT web component is present, reset it before populating
+            const existingComponent = jQuery(tr).find('[id="' + field_id + '"]');
+            if (existingComponent.length) {
+                const el = existingComponent.get(0);
+                console.log('el', el);
+                if (el && typeof el.reset === 'function') {
+                    try { el.reset(); } catch (e) {}
+                }
+            }
+
             switch (field_type) {
                 case 'number':
                 case 'textarea':
@@ -490,7 +500,6 @@ if (!window.SHAREDFUNCTIONS.setFieldsFromPost) {
                 }
                 case 'date': {
                     const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
-                    document.querySelector('dt-date').updateTimestamp('')
                     if (dtComponent.length) {
                         const formatted = (post[field_id] && post[field_id]['formatted']) ? post[field_id]['formatted'] : '';
                         dtComponent.attr('value', formatted);
