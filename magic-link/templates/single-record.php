@@ -139,12 +139,13 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
         $path_sr_js  = $path_sr . 'single-record.js';
         $path_sr_css = $path_sr . 'single-record.css';
 
-        $dtwc_version = '0.7.4';
+        $dtwc_version = '0.7.9';
 
         wp_enqueue_script( 'jquery-typeahead', get_template_directory_uri() . $path_js, [ 'jquery' ], filemtime( get_template_directory() . $path_js ) );
         wp_enqueue_style( 'jquery-typeahead-css', get_template_directory_uri() . $path_css, [], filemtime( get_template_directory() . $path_css ) );
         wp_enqueue_style( 'material-font-icons-css', 'https://cdn.jsdelivr.net/npm/@mdi/font@6.6.96/css/materialdesignicons.min.css', [], '6.6.96' );
 
+        wp_enqueue_script( 'field-helper', plugin_dir_url( __FILE__ ) . '../../assets/field-helper.js', [ 'jquery' ], filemtime( __FILE__ ) . '../../assets/field-helper.js' );
         wp_enqueue_script( 'single-record', plugin_dir_url( __FILE__ ) . $path_sr_js, [ 'jquery' ], filemtime( __FILE__ ) . $path_sr_js );
 
         wp_enqueue_style( 'single-record-css', plugin_dir_url( __FILE__ ) . $path_sr_css, null, filemtime( __FILE__ ) . $path_sr_css );
@@ -166,7 +167,7 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
         $allowed_js[] = 'jquery-typeahead';
         $allowed_js[] = 'single-record';
         $allowed_js[] = 'dt-web-components-js';
-
+        $allowed_js[] = 'field-helper';
         $allowed_js[] = Disciple_Tools_Bulk_Magic_Link_Sender_API::get_magic_link_utilities_script_handle();
 
         return $allowed_js;
@@ -354,46 +355,6 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
 
                     if (field_template_type && field_template_type === 'dt') {
                         switch (field_type) {
-                            case 'communication_channel':
-
-                                /**
-                                 * Add
-                                 */
-
-                                jQuery(tr).find('button.add-button').on('click', evt => {
-                                    let field = jQuery(evt.currentTarget).data('list-class');
-                                    let list = jQuery(tr).find(`#edit-${field}`);
-
-                                    list.append(`
-                                        <div class="input-group">
-                                            <input type="text" data-field="${window.lodash.escape(field)}" class="dt-communication-channel input-group-field" dir="auto" />
-                                            <div class="input-group-button">
-                                                <button class="button alert input-height delete-button-style channel-delete-button delete-button new-${window.lodash.escape(field)}" data-key="new" data-field="${window.lodash.escape(field)}">&times;</button>
-                                            </div>
-                                        </div>`);
-                                });
-
-                                /**
-                                 * Remove
-                                 */
-
-                                jQuery(tr).on('click', '.channel-delete-button', evt => {
-                                    let field = jQuery(evt.currentTarget).data('field');
-                                    let key = jQuery(evt.currentTarget).data('key');
-
-                                    // If needed, keep a record of key for future api removal.
-                                    if (key !== 'new') {
-                                        let deleted_keys = (field_meta.val()) ? JSON.parse(field_meta.val()) : [];
-                                        deleted_keys.push(key);
-                                        field_meta.val(JSON.stringify(deleted_keys));
-                                    }
-
-                                    // Final removal of input group
-                                    jQuery(evt.currentTarget).parent().parent().remove();
-                                });
-
-                                break;
-
                             case 'location_meta':
 
                                 /**
@@ -611,70 +572,6 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
 
                                 break;
 
-                            case 'multi_select':
-
-                                /**
-                                 * Handle Selections
-                                 */
-
-                                jQuery(tr).find('.dt_multi_select').on("click", function (evt) {
-                                    let multi_select = jQuery(evt.currentTarget);
-                                    if (multi_select.hasClass('empty-select-button')) {
-                                        multi_select.removeClass('empty-select-button');
-                                        multi_select.addClass('selected-select-button');
-                                    } else {
-                                        multi_select.removeClass('selected-select-button');
-                                        multi_select.addClass('empty-select-button');
-                                    }
-                                });
-
-                                break;
-
-                            case 'date':
-
-                                /**
-                                 * Load Date Range Picker
-                                 */
-
-                                let date_config = {
-                                    singleDatePicker: true,
-                                    timePicker: false,
-                                    autoUpdateInput: false,
-                                    showDropdowns: true,
-                                    locale: {
-                                        format: 'MMMM D, YYYY'
-                                    }
-                                };
-                                let post_date = jsObject['post'][field_id];
-                                const formatted_date = (post_date?.timestamp !== undefined) ? window.SHAREDFUNCTIONS.formatDate(post_date['timestamp']) : '';
-
-                                jQuery(tr).find('#' + field_id).val(formatted_date);
-                                field_meta.val(post_date?.formatted || '');
-
-                                jQuery(tr).find('#' + field_id).daterangepicker(date_config, function (start, end, label) {
-                                  if (start) {
-                                        jQuery(tr).find('#' + field_id).val(start.format('MMMM D, YYYY'));
-                                        field_meta.val(moment.unix(start.unix()).format('YYYY-MM-DD'));
-                                    }
-                                });
-
-                                /**
-                                 * Clear Date
-                                 */
-
-                                jQuery(tr).find('.clear-date-button').on('click', evt => {
-                                    let input_id = jQuery(evt.currentTarget).data('inputid');
-
-                                    if (input_id) {
-                                        jQuery(tr).find('#' + input_id).val('');
-                                        field_meta.val('');
-                                    }
-                                });
-
-                                break;
-
-                            case 'tags':
-
                                 /**
                                  * Activate
                                  */
@@ -841,7 +738,7 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                             post_type: post_type,
                             post_id: post_id,
                             comment_count: comment_count,
-                            ts: moment().unix() // Alter url shape, to force cache refresh!
+                             ts: Math.floor(Date.now() / 1000) // Alter url shape, to force cache refresh!
                         },
                         contentType: "application/json; charset=utf-8",
                         dataType: "json",
@@ -855,177 +752,10 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                         if (data['success'] && data['post']) {
                             let post = data['post'];
 
-                            // Iterate over form fields, updating values accordingly based on returned post shape.
-                            jQuery('.form-content-table > tbody > tr').each(function (idx, tr) {
-                                let field_id = jQuery(tr).find('#form_content_table_field_id').val();
-                                let field_type = jQuery(tr).find('#form_content_table_field_type').val();
-                                let field_template_type = jQuery(tr).find('#form_content_table_field_template_type').val();
-                                let field_meta = jQuery(tr).find('#form_content_table_field_meta');
-
-                                let selector = '#' + field_id;
-                                if (field_template_type === 'dt') {
-                                    switch (field_type) {
-                                        case 'number':
-                                        case 'textarea':
-                                        case 'text': {
-                                            jQuery(tr).find(selector).val(post[field_id] ? post[field_id]:'');
-                                            break;
-                                        }
-                                        case 'key_select': {
-                                            jQuery(tr).find(selector).val((post[field_id] && post[field_id]['key']) ? post[field_id]['key']:'');
-                                            break;
-                                        }
-                                        case 'communication_channel': {
-
-                                            // Remove any stale communication_channel fields, without delete metadata update.
-                                            jQuery(tr).find('.channel-delete-button[data-field="' + field_id + '"]').each(function (idx, del_button) {
-                                                jQuery(del_button).parent().parent().remove();
-                                            });
-
-                                            // Display any new post communication_channel fields.
-                                            if (post[field_id]) {
-                                                post[field_id].forEach(function (option) {
-                                                    jQuery(tr).find('button.add-button').trigger('click');
-
-                                                    // Insert field value and update key.
-                                                    jQuery(tr).find('.input-group').last().find('input').val(option['value']);
-                                                    if (option['key']) {
-                                                        jQuery(tr).find('.input-group').last().find('button').attr('data-key', window.lodash.escape(option['key']));
-                                                    }
-                                                });
-                                            }
-
-                                            // Reset row meta field!
-                                            field_meta.val('');
-
-                                            break;
-                                        }
-                                        case 'multi_select': {
-                                            jQuery(tr).find('button').each(function () {
-                                                jQuery(this).addClass('empty-select-button');
-                                                jQuery(this).removeClass('selected-select-button');
-
-                                                if (post[field_id] && (jQuery(this).data('field-key') === field_id) && post[field_id].includes(jQuery(this).attr('id'))) {
-                                                    jQuery(this).removeClass('empty-select-button');
-                                                    jQuery(this).addClass('selected-select-button');
-                                                }
-                                            });
-                                            break;
-                                        }
-                                        case 'boolean': {
-                                            jQuery(tr).find(selector).prop('checked', post[field_id]);
-                                            break;
-                                        }
-                                        case 'date': {
-                                            if (post[field_id] && post[field_id]['timestamp']) {
-                                                let timestamp = post[field_id]['timestamp'];
-                                                jQuery(tr).find(selector).data('daterangepicker').setStartDate(moment.unix(timestamp));
-                                                jQuery(tr).find(selector).val(moment.unix(timestamp).format('MMMM D, YYYY'));
-                                                field_meta.val(moment.unix(timestamp).format('YYYY-MM-DD'));
-
-                                            } else {
-                                                jQuery(tr).find(selector).val('');
-                                                field_meta.val('');
-                                            }
-                                            break;
-                                        }
-                                        case 'tags': {
-                                            jQuery(tr).find('span.typeahead__cancel-button').trigger('click');
-                                            let typeahead_tags_field_input = '.js-typeahead-' + field_id;
-                                            let typeahead_tags = window.Typeahead[typeahead_tags_field_input];
-
-                                            typeahead_tags.items = [];
-                                            typeahead_tags.comparedItems = [];
-                                            typeahead_tags.label.container.empty();
-
-                                            if (post[field_id] && typeahead_tags) {
-                                                post[field_id].forEach(function (tag) {
-                                                    typeahead_tags.addMultiselectItemLayout({
-                                                        name: window.lodash.escape(tag)
-                                                    });
-                                                    typeahead_tags.adjustInputSize();
-                                                });
-                                            }
-
-                                            // Reset meta field!
-                                            field_meta.val('');
-
-                                            break;
-                                        }
-                                        case 'location': {
-                                            //.....jQuery(tr).find('span.typeahead__cancel-button').trigger('click');
-                                            let typeahead_location_field_input = '.js-typeahead-' + field_id;
-                                            let typeahead_location = window.Typeahead[typeahead_location_field_input];
-
-                                            if ( typeahead_location ) {
-                                                typeahead_location.items = [];
-                                                typeahead_location.comparedItems = [];
-                                                typeahead_location.label.container.empty();
-
-                                                if (post[field_id] ) {
-                                                    post[field_id].forEach(function (location) {
-                                                        typeahead_location.addMultiselectItemLayout({
-                                                            ID: location['id'],
-                                                            name: window.lodash.escape(location['label'])
-                                                        });
-
-                                                    });
-                                                }
-                                                setTimeout(() => {
-                                                    typeahead_location.adjustInputSize();
-                                                }, 1);
-                                            }
-
-                                            // Reset meta field!
-                                            field_meta.val('');
-
-                                            break;
-                                        }
-                                        case 'location_meta': {
-                                            jQuery(tr).find('.mapbox-delete-button').trigger('click');
-
-                                            // Display previously saved locations
-                                            let lgm_results = jQuery(tr).find('#location-grid-meta-results');
-                                            if (post[field_id] !== undefined && post[field_id].length !== 0) {
-                                                jQuery.each(post[field_id], function (i, v) {
-                                                    if (v.grid_meta_id) {
-                                                        lgm_results.append(`<div class="input-group">
-                                                            <input type="text" class="active-location input-group-field" id="location-${window.lodash.escape(v.grid_meta_id)}" dir="auto" value="${window.lodash.escape(v.label)}" readonly />
-                                                            <div class="input-group-button">
-                                                              <button type="button" class="button success delete-button-style open-mapping-grid-modal" title="${window.lodash.escape(jsObject['mapbox']['translations']['open_modal'])}" data-id="${window.lodash.escape(v.grid_meta_id)}"><i class="fi-map"></i></button>
-                                                              <button type="button" class="button alert delete-button-style delete-button mapbox-delete-button" title="${window.lodash.escape(jsObject['mapbox']['translations']['delete_location'])}" data-id="${window.lodash.escape(v.grid_meta_id)}">&times;</button>
-                                                            </div>
-                                                          </div>`);
-                                                    } else {
-                                                        lgm_results.append(`<div class="input-group">
-                                                            <input type="text" class="dt-communication-channel input-group-field" id="${window.lodash.escape(v.key)}" value="${window.lodash.escape(v.label)}" dir="auto" data-field="contact_address" />
-                                                            <div class="input-group-button">
-                                                              <button type="button" class="button success delete-button-style open-mapping-address-modal"
-                                                                  title="${window.lodash.escape(jsObject['mapbox']['translations']['open_modal'])}"
-                                                                  data-id="${window.lodash.escape(v.key)}"
-                                                                  data-field="contact_address"
-                                                                  data-key="${window.lodash.escape(v.key)}">
-                                                                  <i class="fi-pencil"></i>
-                                                              </button>
-                                                              <button type="button" class="button alert input-height delete-button-style channel-delete-button delete-button" title="${window.lodash.escape(jsObject['mapbox']['translations']['delete_location'])}" data-id="${window.lodash.escape(v.key)}" data-field="contact_address" data-key="${window.lodash.escape(v.key)}">&times;</button>
-                                                            </div>
-                                                          </div>`);
-                                                    }
-                                                })
-                                            }
-
-                                            // Reset meta field!
-                                            field_meta.val('');
-
-                                            break;
-                                        }
-                                        default:
-                                            break;
-                                    }
-                                } else if (field_template_type === 'custom') {
-                                    jQuery(tr).find(selector).val('');
-                                }
-                            });
+                            // Set field values using helper
+                            if (window.SHAREDFUNCTIONS && typeof window.SHAREDFUNCTIONS.setFieldsFromPost === 'function') {
+                                window.SHAREDFUNCTIONS.setFieldsFromPost(post);
+                            }
 
                             // Update Comments -> First, removing any previous comments, before capturing new ones!
                             form_content_table.find('.dt-comment-tr').remove();
@@ -1050,6 +780,32 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                             jQuery('#post_id').val(post['ID']);
                             jQuery('#post_type').val(post['post_type']);
                             jsObject.post = post;
+
+                             // If flagged as a newly created record and the assigned contacts list exists
+                             // (list-sub-assigned template), append the new record and update the count once.
+                             const assignedDiv = jQuery('#assigned_contacts_div');
+                             if (window.__ml_is_new_record && assignedDiv.length && post['ID'] > 0) {
+                                 const tbody = assignedDiv.find('.api-content-table tbody');
+                                 if (tbody.length) {
+                                     const existing = tbody.find(`tr[data-assigned-id="${window.lodash.escape(post['ID'])}"]`);
+                                     if (existing.length === 0) {
+                                     const nameForOnClick = String(post['name'] || '').replace(/'/g, "&apos;");
+                                     const rowHtml = `
+                                         <tr data-assigned-id="${window.lodash.escape(post['ID'])}" onclick="get_assigned_details('${window.lodash.escape(post['post_type'])}','${window.lodash.escape(post['ID'])}','${nameForOnClick}')">
+                                             <td>${window.lodash.escape(post['name'] || '')}</td>
+                                         </tr>
+                                     `;
+                                     tbody.append(rowHtml);
+                                     const totalSpan = assignedDiv.find('#total');
+                                     if (totalSpan.length) {
+                                         const current = parseInt(totalSpan.text(), 10) || 0;
+                                         totalSpan.text(String(current + 1));
+                                     }
+                                     }
+                                     // Clear the flag to avoid duplicates on subsequent updates
+                                     window.__ml_is_new_record = false;
+                                 }
+                             }
 
                             // Display updated form fields.
                             form_content_table.fadeIn('fast');
@@ -1081,6 +837,7 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                 const submit_but = jQuery('#content_submit_but');
                 let id = jQuery('#post_id').val();
                 let post_type = jQuery('#post_type').val();
+                const isNewRecord = Number(id) === 0;
 
                 alert_notice.fadeOut('fast');
 
@@ -1108,114 +865,10 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                         }
                     }
 
-                    // Iterate over form fields, capturing values accordingly.
-                    jQuery('.form-content-table > tbody > tr').each(function (idx, tr) {
-
-                        let field_id = jQuery(tr).find('#form_content_table_field_id').val();
-                        let field_type = jQuery(tr).find('#form_content_table_field_type').val();
-                        let field_template_type = jQuery(tr).find('#form_content_table_field_template_type').val();
-                        let field_meta = jQuery(tr).find('#form_content_table_field_meta');
-
-                        let template_fields = jsObject.template.fields.filter(f => f.id === field_id);
-                        if (template_fields && template_fields.length && template_fields[0].readonly) {
-                            return;
-                        }
-                        let selector = '#' + field_id;
-                        if (field_template_type === 'dt') {
-                            switch (field_type) {
-
-                                case 'number':
-                                case 'textarea':
-                                case 'text':
-                                case 'key_select':
-                                case 'boolean':
-                                    payload['fields']['dt'].push({
-                                        id: field_id,
-                                        dt_type: field_type,
-                                        template_type: field_template_type,
-                                        value: jQuery(tr).find(selector).val()
-                                    });
-                                    break;
-
-                                case 'communication_channel':
-                                    let values = [];
-                                    jQuery(tr).find('.input-group').each(function () {
-                                        values.push({
-                                            'key': jQuery(this).find('button').data('key'),
-                                            'value': jQuery(this).find('input').val()
-                                        });
-                                    });
-                                    payload['fields']['dt'].push({
-                                        id: field_id,
-                                        dt_type: field_type,
-                                        template_type: field_template_type,
-                                        value: values,
-                                        deleted: field_meta.val() ? JSON.parse(field_meta.val()) : []
-                                    });
-                                    break;
-
-                                case 'multi_select':
-                                    let options = [];
-                                    jQuery(tr).find('button').each(function () {
-                                        options.push({
-                                            'value': jQuery(this).attr('id'),
-                                            'delete': jQuery(this).hasClass('empty-select-button')
-                                        });
-                                    });
-                                    payload['fields']['dt'].push({
-                                        id: field_id,
-                                        dt_type: field_type,
-                                        template_type: field_template_type,
-                                        value: options
-                                    });
-                                    break;
-
-                                case 'date':
-                                    payload['fields']['dt'].push({
-                                        id: field_id,
-                                        dt_type: field_type,
-                                        template_type: field_template_type,
-                                        value: field_meta.val()
-                                    });
-                                    break;
-
-                                case 'tags':
-                                case 'location':
-                                    let typeahead = window.Typeahead['.js-typeahead-' + field_id];
-                                    if (typeahead) {
-                                        payload['fields']['dt'].push({
-                                            id: field_id,
-                                            dt_type: field_type,
-                                            template_type: field_template_type,
-                                            value: typeahead.items,
-                                            deletions: field_meta.val() ? JSON.parse(field_meta.val()) : []
-                                        });
-                                    }
-                                    break;
-
-                                case 'location_meta':
-                                    payload['fields']['dt'].push({
-                                        id: field_id,
-                                        dt_type: field_type,
-                                        template_type: field_template_type,
-                                        value: (window.selected_location_grid_meta !== undefined) ? window.selected_location_grid_meta : '',
-                                        deletions: field_meta.val() ? JSON.parse(field_meta.val()) : []
-                                    });
-                                    break;
-
-                                default:
-                                    break;
-                            }
-
-                        } else if (field_template_type === 'custom') {
-                            payload['fields']['custom'].push({
-                                id: field_id,
-                                dt_type: field_type,
-                                template_type: field_template_type,
-                                value: jQuery(tr).find(selector).val() ? jQuery(tr).find('.section-subheader').html() + ': ' + jQuery(tr).find(selector).val() : ''
-                            });
-                        }
-                    });
+                    // Collect fields using helper
+                    const collected = window.SHAREDFUNCTIONS.collectFields({ template: jsObject.template, post: jsObject.post });
+                    payload['fields']['dt'] = payload['fields']['dt'].concat(collected.dt);
+                    payload['fields']['custom'] = payload['fields']['custom'].concat(collected.custom);
 
                     // Disable submission button during this process.
                     submit_but.prop('disabled', true);
@@ -1262,6 +915,8 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
 
                                 // Refresh any identified record ids.
                                 if (data?.id > 0) {
+                                    // Flag if this operation created a new record, so the list can be updated once
+                                    window.__ml_is_new_record = isNewRecord === true;
                                     window.get_assigned_post(payload['post_type'], data['id']);
                                 }
                             });
@@ -1381,7 +1036,8 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                                             'link',
                                             'communication_channel',
                                             'location',
-                                            'location_meta'
+                                            'location_meta',
+                                            'tags'
                                     ] ) ) {
                                         continue;
                                     }
@@ -1645,6 +1301,8 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
 
         $updates = [];
 
+        $params['fields'] = dt_recursive_sanitize_array( $params['fields'] );
+
         // First, capture and package incoming DT field values
         foreach ( $params['fields']['dt'] ?? [] as $field ){
             switch ( $field['dt_type'] ) {
@@ -1653,39 +1311,11 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                 case 'text':
                 case 'date':
                 case 'boolean':
-                    $field = dt_recursive_sanitize_array( $field );
-                    $updates[$field['id']] = $field['value'];
-                    break;
+                case 'communication_channel':
                 case 'key_select':
                     $updates[$field['id']] = $field['value'];
                     break;
-                case 'communication_channel':
-                    $field = dt_recursive_sanitize_array( $field );
-                    $updates[$field['id']] = [];
-
-                    // First, capture additions and updates
-                    foreach ( $field['value'] ?? [] as $value ){
-                        $comm = [];
-                        $comm['value'] = $value['value'];
-
-                        if ( $value['key'] !== 'new' ){
-                            $comm['key'] = $value['key'];
-                        }
-
-                        $updates[$field['id']][] = $comm;
-                    }
-
-                    // Next, capture deletions
-                    foreach ( $field['deleted'] ?? [] as $delete_key ){
-                        $updates[$field['id']][] = [
-                            'delete' => true,
-                            'key' => $delete_key
-                        ];
-                    }
-                    break;
-
                 case 'multi_select':
-                    $field = dt_recursive_sanitize_array( $field );
                     $options = [];
                     foreach ( $field['value'] ?? [] as $option ){
                         $entry = [];
@@ -1703,7 +1333,6 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                     break;
 
                 case 'location':
-                    $field = dt_recursive_sanitize_array( $field );
                     $locations = [];
                     foreach ( $field['value'] ?? [] as $location ){
                         $entry = [];
@@ -1728,7 +1357,6 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                     break;
 
                 case 'location_meta':
-                    $field = dt_recursive_sanitize_array( $field );
                     $locations = [];
 
                     // Capture selected location, if available; or prepare shape
@@ -1756,7 +1384,6 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                     break;
 
                 case 'tags':
-                    $field = dt_recursive_sanitize_array( $field );
                     $tags = [];
                     foreach ( $field['value'] ?? [] as $tag ){
                         $entry = [];
@@ -1777,6 +1404,38 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                         $updates[$field['id']] = [
                             'values' => $tags
                         ];
+                    }
+                    break;
+                case 'link':
+                    if ( !empty( $field['value'] ) ) {
+                        // Handle link field - can be single URL or array of links
+                        if ( is_string( $field['value'] ) ) {
+                            // Simple URL string
+                            $updates[$field['id']] = sanitize_text_field( $field['value'] );
+                        } elseif ( is_array( $field['value'] ) && isset( $field['value']['values'] ) ) {
+                            // DT format with values array
+                            $links = [];
+                            foreach ( $field['value']['values'] as $link ) {
+                                if ( !empty( $link['value'] ) ) {
+                                    $links[] = [
+                                        'value' => sanitize_text_field( $link['value'] ),
+                                        'type' => sanitize_text_field( $link['type'] ?? '' ),
+                                        'meta_id' => $link['meta_id'] ?? null,
+                                        'delete' => $link['delete'] ?? false
+                                    ];
+                                } else if ( !empty( $link['delete'] ) ) {
+                                    $links[] = [
+                                        'meta_id' => $link['meta_id'],
+                                        'delete' => true
+                                    ];
+                                }
+                            }
+                            if ( !empty( $links ) ) {
+                                $updates[$field['id']] = [
+                                    'values' => $links
+                                ];
+                            }
+                        }
                     }
                     break;
             }
