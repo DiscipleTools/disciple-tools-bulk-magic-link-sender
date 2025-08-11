@@ -781,6 +781,32 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                             jQuery('#post_type').val(post['post_type']);
                             jsObject.post = post;
 
+                             // If flagged as a newly created record and the assigned contacts list exists
+                             // (list-sub-assigned template), append the new record and update the count once.
+                             const assignedDiv = jQuery('#assigned_contacts_div');
+                             if (window.__ml_is_new_record && assignedDiv.length && post['ID'] > 0) {
+                                 const tbody = assignedDiv.find('.api-content-table tbody');
+                                 if (tbody.length) {
+                                     const existing = tbody.find(`tr[data-assigned-id="${window.lodash.escape(post['ID'])}"]`);
+                                     if (existing.length === 0) {
+                                     const nameForOnClick = String(post['name'] || '').replace(/'/g, "&apos;");
+                                     const rowHtml = `
+                                         <tr data-assigned-id="${window.lodash.escape(post['ID'])}" onclick="get_assigned_details('${window.lodash.escape(post['post_type'])}','${window.lodash.escape(post['ID'])}','${nameForOnClick}')">
+                                             <td>${window.lodash.escape(post['name'] || '')}</td>
+                                         </tr>
+                                     `;
+                                     tbody.append(rowHtml);
+                                     const totalSpan = assignedDiv.find('#total');
+                                     if (totalSpan.length) {
+                                         const current = parseInt(totalSpan.text(), 10) || 0;
+                                         totalSpan.text(String(current + 1));
+                                     }
+                                     }
+                                     // Clear the flag to avoid duplicates on subsequent updates
+                                     window.__ml_is_new_record = false;
+                                 }
+                             }
+
                             // Display updated form fields.
                             form_content_table.fadeIn('fast');
                         }
@@ -811,6 +837,7 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                 const submit_but = jQuery('#content_submit_but');
                 let id = jQuery('#post_id').val();
                 let post_type = jQuery('#post_type').val();
+                const isNewRecord = Number(id) === 0;
 
                 alert_notice.fadeOut('fast');
 
@@ -888,6 +915,8 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
 
                                 // Refresh any identified record ids.
                                 if (data?.id > 0) {
+                                    // Flag if this operation created a new record, so the list can be updated once
+                                    window.__ml_is_new_record = isNewRecord === true;
                                     window.get_assigned_post(payload['post_type'], data['id']);
                                 }
                             });
