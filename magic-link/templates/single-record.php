@@ -355,46 +355,6 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
 
                     if (field_template_type && field_template_type === 'dt') {
                         switch (field_type) {
-                            case 'communication_channel':
-
-                                /**
-                                 * Add
-                                 */
-
-                                jQuery(tr).find('button.add-button').on('click', evt => {
-                                    let field = jQuery(evt.currentTarget).data('list-class');
-                                    let list = jQuery(tr).find(`#edit-${field}`);
-
-                                    list.append(`
-                                        <div class="input-group">
-                                            <input type="text" data-field="${window.lodash.escape(field)}" class="dt-communication-channel input-group-field" dir="auto" />
-                                            <div class="input-group-button">
-                                                <button class="button alert input-height delete-button-style channel-delete-button delete-button new-${window.lodash.escape(field)}" data-key="new" data-field="${window.lodash.escape(field)}">&times;</button>
-                                            </div>
-                                        </div>`);
-                                });
-
-                                /**
-                                 * Remove
-                                 */
-
-                                jQuery(tr).on('click', '.channel-delete-button', evt => {
-                                    let field = jQuery(evt.currentTarget).data('field');
-                                    let key = jQuery(evt.currentTarget).data('key');
-
-                                    // If needed, keep a record of key for future api removal.
-                                    if (key !== 'new') {
-                                        let deleted_keys = (field_meta.val()) ? JSON.parse(field_meta.val()) : [];
-                                        deleted_keys.push(key);
-                                        field_meta.val(JSON.stringify(deleted_keys));
-                                    }
-
-                                    // Final removal of input group
-                                    jQuery(evt.currentTarget).parent().parent().remove();
-                                });
-
-                                break;
-
                             case 'location_meta':
 
                                 /**
@@ -612,70 +572,6 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
 
                                 break;
 
-                            case 'multi_select':
-
-                                /**
-                                 * Handle Selections
-                                 */
-
-                                jQuery(tr).find('.dt_multi_select').on("click", function (evt) {
-                                    let multi_select = jQuery(evt.currentTarget);
-                                    if (multi_select.hasClass('empty-select-button')) {
-                                        multi_select.removeClass('empty-select-button');
-                                        multi_select.addClass('selected-select-button');
-                                    } else {
-                                        multi_select.removeClass('selected-select-button');
-                                        multi_select.addClass('empty-select-button');
-                                    }
-                                });
-
-                                break;
-
-                            case 'date':
-
-                                /**
-                                 * Load Date Range Picker
-                                 */
-
-                                let date_config = {
-                                    singleDatePicker: true,
-                                    timePicker: false,
-                                    autoUpdateInput: false,
-                                    showDropdowns: true,
-                                    locale: {
-                                        format: 'MMMM D, YYYY'
-                                    }
-                                };
-                                let post_date = jsObject['post'][field_id];
-                                const formatted_date = (post_date?.timestamp !== undefined) ? window.SHAREDFUNCTIONS.formatDate(post_date['timestamp']) : '';
-
-                                jQuery(tr).find('#' + field_id).val(formatted_date);
-                                field_meta.val(post_date?.formatted || '');
-
-                                jQuery(tr).find('#' + field_id).daterangepicker(date_config, function (start, end, label) {
-                                  if (start) {
-                                        jQuery(tr).find('#' + field_id).val(start.format('MMMM D, YYYY'));
-                                        field_meta.val(moment.unix(start.unix()).format('YYYY-MM-DD'));
-                                    }
-                                });
-
-                                /**
-                                 * Clear Date
-                                 */
-
-                                jQuery(tr).find('.clear-date-button').on('click', evt => {
-                                    let input_id = jQuery(evt.currentTarget).data('inputid');
-
-                                    if (input_id) {
-                                        jQuery(tr).find('#' + input_id).val('');
-                                        field_meta.val('');
-                                    }
-                                });
-
-                                break;
-
-                            case 'tags':
-
                                 /**
                                  * Activate
                                  */
@@ -869,121 +765,142 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                                         case 'number':
                                         case 'textarea':
                                         case 'text': {
-                                            jQuery(tr).find(selector).val(post[field_id] ? post[field_id]:'');
+                                            const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
+                                            if (dtComponent.length) {
+                                                dtComponent.attr('value', post[field_id] ? post[field_id] : '');
+                                            } else {
+                                                jQuery(tr).find(selector).val(post[field_id] ? post[field_id] : '');
+                                            }
                                             break;
                                         }
                                         case 'key_select': {
-                                            jQuery(tr).find(selector).val((post[field_id] && post[field_id]['key']) ? post[field_id]['key']:'');
+                                            const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
+                                            const keyValue = (post[field_id] && post[field_id]['key']) ? post[field_id]['key'] : '';
+                                            if (dtComponent.length) {
+                                                dtComponent.attr('value', keyValue);
+                                            } else {
+                                                jQuery(tr).find(selector).val(keyValue);
+                                            }
                                             break;
                                         }
                                         case 'communication_channel': {
-
-                                            // Remove any stale communication_channel fields, without delete metadata update.
-                                            jQuery(tr).find('.channel-delete-button[data-field="' + field_id + '"]').each(function (idx, del_button) {
-                                                jQuery(del_button).parent().parent().remove();
-                                            });
-
-                                            // Display any new post communication_channel fields.
-                                            if (post[field_id]) {
-                                                post[field_id].forEach(function (option) {
-                                                    jQuery(tr).find('button.add-button').trigger('click');
-
-                                                    // Insert field value and update key.
-                                                    jQuery(tr).find('.input-group').last().find('input').val(option['value']);
-                                                    if (option['key']) {
-                                                        jQuery(tr).find('.input-group').last().find('button').attr('data-key', window.lodash.escape(option['key']));
-                                                    }
-                                                });
-                                            }
-
-                                            // Reset row meta field!
-                                            field_meta.val('');
-
-                                            break;
-                                        }
-                                        case 'multi_select': {
-                                            jQuery(tr).find('button').each(function () {
-                                                jQuery(this).addClass('empty-select-button');
-                                                jQuery(this).removeClass('selected-select-button');
-
-                                                if (post[field_id] && (jQuery(this).data('field-key') === field_id) && post[field_id].includes(jQuery(this).attr('id'))) {
-                                                    jQuery(this).removeClass('empty-select-button');
-                                                    jQuery(this).addClass('selected-select-button');
-                                                }
-                                            });
-                                            break;
-                                        }
-                                        case 'boolean': {
-                                            jQuery(tr).find(selector).prop('checked', post[field_id]);
-                                            break;
-                                        }
-                                        case 'date': {
-                                            if (post[field_id] && post[field_id]['timestamp']) {
-                                                let timestamp = post[field_id]['timestamp'];
-                                                jQuery(tr).find(selector).data('daterangepicker').setStartDate(moment.unix(timestamp));
-                                                jQuery(tr).find(selector).val(moment.unix(timestamp).format('MMMM D, YYYY'));
-                                                field_meta.val(moment.unix(timestamp).format('YYYY-MM-DD'));
-
+                                            const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
+                                            if (dtComponent.length) {
+                                                const values = Array.isArray(post[field_id]) ? post[field_id].map(function (v) { return { value: v.value || '' }; }) : [];
+                                                dtComponent.attr('value', JSON.stringify(values));
+                                                field_meta.val('');
                                             } else {
-                                                jQuery(tr).find(selector).val('');
+                                                // Fallback to legacy DOM approach
+                                                jQuery(tr).find('.channel-delete-button[data-field="' + field_id + '"]').each(function (idx, del_button) {
+                                                    jQuery(del_button).parent().parent().remove();
+                                                });
+                                                if (post[field_id]) {
+                                                    post[field_id].forEach(function (option) {
+                                                        jQuery(tr).find('button.add-button').trigger('click');
+                                                        jQuery(tr).find('.input-group').last().find('input').val(option['value']);
+                                                        if (option['key']) {
+                                                            jQuery(tr).find('.input-group').last().find('button').attr('data-key', window.lodash.escape(option['key']));
+                                                        }
+                                                    });
+                                                }
                                                 field_meta.val('');
                                             }
                                             break;
                                         }
-                                        case 'tags': {
-                                            jQuery(tr).find('span.typeahead__cancel-button').trigger('click');
-                                            let typeahead_tags_field_input = '.js-typeahead-' + field_id;
-                                            let typeahead_tags = window.Typeahead[typeahead_tags_field_input];
-
-                                            typeahead_tags.items = [];
-                                            typeahead_tags.comparedItems = [];
-                                            typeahead_tags.label.container.empty();
-
-                                            if (post[field_id] && typeahead_tags) {
-                                                post[field_id].forEach(function (tag) {
-                                                    typeahead_tags.addMultiselectItemLayout({
-                                                        name: window.lodash.escape(tag)
-                                                    });
-                                                    typeahead_tags.adjustInputSize();
+                                        case 'multi_select': {
+                                            const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
+                                            if (dtComponent.length) {
+                                                const selected = Array.isArray(post[field_id]) ? post[field_id] : [];
+                                                dtComponent.attr('value', JSON.stringify(selected));
+                                            } else {
+                                                jQuery(tr).find('button').each(function () {
+                                                    jQuery(this).addClass('empty-select-button');
+                                                    jQuery(this).removeClass('selected-select-button');
+                                                    if (post[field_id] && (jQuery(this).data('field-key') === field_id) && post[field_id].includes(jQuery(this).attr('id'))) {
+                                                        jQuery(this).removeClass('empty-select-button');
+                                                        jQuery(this).addClass('selected-select-button');
+                                                    }
                                                 });
                                             }
-
-                                            // Reset meta field!
-                                            field_meta.val('');
-
+                                            break;
+                                        }
+                                        case 'boolean': {
+                                            const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
+                                            if (dtComponent.length) {
+                                                dtComponent.attr('value', !!post[field_id]);
+                                            } else {
+                                                jQuery(tr).find(selector).prop('checked', post[field_id]);
+                                            }
+                                            break;
+                                        }
+                                        case 'date': {
+                                            const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
+                                            if (dtComponent.length) {
+                                                const formatted = (post[field_id] && post[field_id]['formatted']) ? post[field_id]['formatted'] : '';
+                                                dtComponent.attr('value', formatted);
+                                                field_meta.val(formatted);
+                                            } else {
+                                                if (post[field_id] && post[field_id]['timestamp']) {
+                                                    let timestamp = post[field_id]['timestamp'];
+                                                    jQuery(tr).find(selector).data('daterangepicker').setStartDate(moment.unix(timestamp));
+                                                    jQuery(tr).find(selector).val(moment.unix(timestamp).format('MMMM D, YYYY'));
+                                                    field_meta.val(moment.unix(timestamp).format('YYYY-MM-DD'));
+                                                } else {
+                                                    jQuery(tr).find(selector).val('');
+                                                    field_meta.val('');
+                                                }
+                                            }
+                                            break;
+                                        }
+                                        case 'tags': {
+                                            const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
+                                            if (dtComponent.length) {
+                                                const tags = Array.isArray(post[field_id]) ? post[field_id] : [];
+                                                dtComponent.attr('value', JSON.stringify(tags));
+                                                field_meta.val('');
+                                            } else {
+                                                jQuery(tr).find('span.typeahead__cancel-button').trigger('click');
+                                                let typeahead_tags_field_input = '.js-typeahead-' + field_id;
+                                                let typeahead_tags = window.Typeahead[typeahead_tags_field_input];
+                                                typeahead_tags.items = [];
+                                                typeahead_tags.comparedItems = [];
+                                                typeahead_tags.label.container.empty();
+                                                if (post[field_id] && typeahead_tags) {
+                                                    post[field_id].forEach(function (tag) {
+                                                        typeahead_tags.addMultiselectItemLayout({ name: window.lodash.escape(tag) });
+                                                        typeahead_tags.adjustInputSize();
+                                                    });
+                                                }
+                                                field_meta.val('');
+                                            }
                                             break;
                                         }
                                         case 'location': {
-                                            //.....jQuery(tr).find('span.typeahead__cancel-button').trigger('click');
+                                            // Keep legacy Typeahead behavior
                                             let typeahead_location_field_input = '.js-typeahead-' + field_id;
                                             let typeahead_location = window.Typeahead[typeahead_location_field_input];
-
                                             if ( typeahead_location ) {
                                                 typeahead_location.items = [];
                                                 typeahead_location.comparedItems = [];
                                                 typeahead_location.label.container.empty();
-
                                                 if (post[field_id] ) {
                                                     post[field_id].forEach(function (location) {
-                                                        typeahead_location.addMultiselectItemLayout({
-                                                            ID: location['id'],
-                                                            name: window.lodash.escape(location['label'])
-                                                        });
-
+                                                        typeahead_location.addMultiselectItemLayout({ ID: location['id'], name: window.lodash.escape(location['label']) });
                                                     });
                                                 }
-                                                setTimeout(() => {
-                                                    typeahead_location.adjustInputSize();
-                                                }, 1);
+                                                setTimeout(() => { typeahead_location.adjustInputSize(); }, 1);
                                             }
-
-                                            // Reset meta field!
                                             field_meta.val('');
-
                                             break;
                                         }
                                         case 'location_meta': {
-                                            jQuery(tr).find('.mapbox-delete-button').trigger('click');
+                                            jQuery(tr).find('#mapbox-search').val('');
+                                            const deleteButtons = jQuery(tr).find('#location-grid-meta-results .mapbox-delete-button');
+                                            if (deleteButtons.length) {
+                                                deleteButtons.each(function(idx, button) {
+                                                    jQuery(button).parent().parent().remove();
+                                                });
+                                            }
 
                                             // Display previously saved locations
                                             let lgm_results = jQuery(tr).find('#location-grid-meta-results');
@@ -1109,313 +1026,10 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                         }
                     }
 
-                    // Iterate over form fields, capturing values accordingly.
-                    jQuery('.form-content-table > tbody > tr').each(function (idx, tr) {
-
-                        let field_id = jQuery(tr).find('#form_content_table_field_id').val();
-                        let field_type = jQuery(tr).find('#form_content_table_field_type').val();
-                        let field_template_type = jQuery(tr).find('#form_content_table_field_template_type').val();
-                        let field_meta = jQuery(tr).find('#form_content_table_field_meta');
-
-                        let template_fields = jsObject.template.fields.filter(f => f.id === field_id);
-                        if (template_fields && template_fields.length && template_fields[0].readonly) {
-                            return;
-                        }
-                        let selector = '#' + field_id;
-                        if (field_template_type === 'dt') {
-                            switch (field_type) {
-
-                                case 'text':
-                                case 'textarea': {
-                                    const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
-                                    let rawValue = dtComponent.attr('value') || jQuery(tr).find(selector).val();
-                                    if (rawValue && String(rawValue).trim() !== '') {
-                                        payload['fields']['dt'].push({
-                                            id: field_id,
-                                            dt_type: field_type,
-                                            template_type: field_template_type,
-                                            value: String(rawValue).trim()
-                                        });
-                                    }
-                                    break;
-                                }
-
-                                case 'key_select': {
-                                    const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
-                                    let rawValue = dtComponent.attr('value') || jQuery(tr).find(selector).val();
-                                    if (rawValue && String(rawValue).trim() !== '') {
-                                        payload['fields']['dt'].push({
-                                            id: field_id,
-                                            dt_type: field_type,
-                                            template_type: field_template_type,
-                                            value: String(rawValue).trim()
-                                        });
-                                    }
-                                    break;
-                                }
-
-                                case 'number': {
-                                    const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
-                                    let rawValue = dtComponent.attr('value') || jQuery(tr).find(selector).val();
-                                    if (rawValue !== undefined && rawValue !== null && String(rawValue).trim() !== '') {
-                                        const numericValue = parseFloat(String(rawValue).trim());
-                                        if (!isNaN(numericValue)) {
-                                            payload['fields']['dt'].push({
-                                                id: field_id,
-                                                dt_type: field_type,
-                                                template_type: field_template_type,
-                                                value: numericValue
-                                            });
-                                        }
-                                    }
-                                    break;
-                                }
-
-                                case 'boolean': {
-                                    const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
-                                    let rawValue = dtComponent.attr('value');
-                                    let boolValue;
-                                    if (rawValue !== undefined) {
-                                        boolValue = (rawValue === true || rawValue === 'true' || rawValue === '1' || rawValue === 1 || rawValue === 'on');
-                                    } else {
-                                        boolValue = jQuery(tr).find(selector).is(':checked');
-                                    }
-                                    payload['fields']['dt'].push({
-                                        id: field_id,
-                                        dt_type: field_type,
-                                        template_type: field_template_type,
-                                        value: !!boolValue
-                                    });
-                                    break;
-                                }
-
-                                case 'communication_channel': {
-                                    // Prefer DT component value (JSON array of { value })
-                                    const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
-                                    let rawValue = dtComponent.attr('value');
-                                    let values = [];
-                                    let deleted = field_meta.val() ? JSON.parse(field_meta.val()) : [];
-                                    if (rawValue) {
-                                        try {
-                                            const parsed = JSON.parse(rawValue);
-                                            if (Array.isArray(parsed)) {
-                                                parsed.forEach(function (item) {
-                                                    if (item && item.value && String(item.value).trim() !== '') {
-                                                        values.push({ value: String(item.value).trim() });
-                                                    }
-                                                });
-                                            }
-                                        } catch (e) {
-                                            // Fallback to existing DOM inputs if parsing fails
-                                        }
-                                    }
-                                    if (values.length === 0) {
-                                        jQuery(tr).find('.input-group').each(function () {
-                                            values.push({
-                                                'key': jQuery(this).find('button').data('key'),
-                                                'value': jQuery(this).find('input').val()
-                                            });
-                                        });
-                                    }
-                                    payload['fields']['dt'].push({
-                                        id: field_id,
-                                        dt_type: field_type,
-                                        template_type: field_template_type,
-                                        value: values,
-                                        deleted: deleted
-                                    });
-                                    break;
-                                }
-
-                                case 'multi_select': {
-                                    // Prefer DT component value (JSON array of selected keys)
-                                    const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
-                                    let rawValue = dtComponent.attr('value');
-                                    let options = [];
-                                    if (rawValue) {
-                                        try {
-                                            const parsed = JSON.parse(rawValue);
-                                            if (Array.isArray(parsed) && parsed.length > 0) {
-                                                parsed.forEach(function (selectedKey) {
-                                                    if (selectedKey && String(selectedKey).trim() !== '') {
-                                                        options.push({ value: String(selectedKey).trim(), delete: false });
-                                                    }
-                                                });
-                                            }
-                                        } catch (e) {
-                                            // ignore and fallback
-                                        }
-                                    }
-                                    if (options.length === 0) {
-                                        jQuery(tr).find('button').each(function () {
-                                            options.push({
-                                                'value': jQuery(this).attr('id'),
-                                                'delete': jQuery(this).hasClass('empty-select-button')
-                                            });
-                                        });
-                                    }
-                                    payload['fields']['dt'].push({
-                                        id: field_id,
-                                        dt_type: field_type,
-                                        template_type: field_template_type,
-                                        value: options
-                                    });
-                                    break;
-                                }
-
-                                case 'date': {
-                                    // Prefer DT component value (YYYY-MM-DD); fallback to meta
-                                    const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
-                                    let rawValue = dtComponent.attr('value') || '';
-                                    let dateValue = String(rawValue).trim() || field_meta.val();
-                                    payload['fields']['dt'].push({
-                                        id: field_id,
-                                        dt_type: field_type,
-                                        template_type: field_template_type,
-                                        value: dateValue
-                                    });
-                                    break;
-                                }
-
-                                case 'link': {
-                                    const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
-                                    let rawValue = dtComponent.attr('value') || jQuery(tr).find(selector).val();
-                                    if (rawValue && String(rawValue).trim() !== '') {
-                                        try {
-                                            // Allow both simple string and DT values array formats
-                                            const parsed = JSON.parse(rawValue);
-                                            payload['fields']['dt'].push({
-                                                id: field_id,
-                                                dt_type: field_type,
-                                                template_type: field_template_type,
-                                                value: parsed
-                                            });
-                                        } catch (e) {
-                                            payload['fields']['dt'].push({
-                                                id: field_id,
-                                                dt_type: field_type,
-                                                template_type: field_template_type,
-                                                value: String(rawValue).trim()
-                                            });
-                                        }
-                                    }
-                                    break;
-                                }
-
-                                case 'tags': {
-                                    // Prefer DT tags component value (JSON array of tag names)
-                                    const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
-                                    let rawValue = dtComponent.attr('value');
-                                    let values = [];
-                                    if (rawValue) {
-                                        try {
-                                            const parsed = JSON.parse(rawValue);
-                                            if (Array.isArray(parsed)) {
-                                                parsed.forEach(function (tagName) {
-                                                    if (tagName && String(tagName).trim() !== '') {
-                                                        values.push({ name: String(tagName).trim() });
-                                                    }
-                                                });
-                                            }
-                                        } catch (e) {
-                                            // ignore
-                                        }
-                                    }
-                                    // Fallback to typeahead if component not present
-                                    if (values.length === 0) {
-                                        let typeahead = window.Typeahead['.js-typeahead-' + field_id];
-                                        if (typeahead) {
-                                            payload['fields']['dt'].push({
-                                                id: field_id,
-                                                dt_type: field_type,
-                                                template_type: field_template_type,
-                                                value: typeahead.items,
-                                                deletions: field_meta.val() ? JSON.parse(field_meta.val()) : []
-                                            });
-                                            break;
-                                        }
-                                    }
-                                    payload['fields']['dt'].push({
-                                        id: field_id,
-                                        dt_type: field_type,
-                                        template_type: field_template_type,
-                                        value: values
-                                    });
-                                    break;
-                                }
-                                case 'location':
-                                    let typeahead = window.Typeahead['.js-typeahead-' + field_id];
-                                    if (typeahead) {
-                                        payload['fields']['dt'].push({
-                                            id: field_id,
-                                            dt_type: field_type,
-                                            template_type: field_template_type,
-                                            value: typeahead.items,
-                                            deletions: field_meta.val() ? JSON.parse(field_meta.val()) : []
-                                        });
-                                    }
-                                    break;
-
-                                case 'location_meta':
-                                    payload['fields']['dt'].push({
-                                        id: field_id,
-                                        dt_type: field_type,
-                                        template_type: field_template_type,
-                                        value: (window.selected_location_grid_meta !== undefined) ? window.selected_location_grid_meta : '',
-                                        deletions: field_meta.val() ? JSON.parse(field_meta.val()) : []
-                                    });
-                                    break;
-
-                                default:
-                                    break;
-                            }
-
-                        }
-                    });
-
-                    // Handle link input fields (created by addLink function)
-                    jQuery('.link-input').each(function(index, entry) {
-                        let fieldKey = jQuery(entry).data('field-key');
-                        let type = jQuery(entry).data('type');
-                        if (jQuery(entry).val()) {
-                            // Find if this field already exists in payload
-                            let existingField = payload['fields']['dt'].find(f => f.id === fieldKey);
-                            if (!existingField) {
-                                existingField = {
-                                    id: fieldKey,
-                                    dt_type: 'link',
-                                    template_type: 'dt',
-                                    value: { values: [] }
-                                };
-                                payload['fields']['dt'].push(existingField);
-                            }
-                            if (!existingField.value.values) {
-                                existingField.value = { values: [] };
-                            }
-                            existingField.value.values.push({
-                                value: jQuery(entry).val(),
-                                type: type
-                            });
-                        }
-                    });
-
-                    // Handle custom fields
-                    jQuery('.form-field[data-template-type="custom"]').each(function (idx, fieldDiv) {
-                        let field_id = jQuery(fieldDiv).data('field-id');
-                        let fieldInput = jQuery(fieldDiv).find('input, textarea');
-
-                        if (fieldInput.length > 0) {
-                            let value = fieldInput.val();
-                            if (value && value.trim() !== '') {
-                                payload['fields']['custom'].push({
-                                    id: field_id,
-                                    template_type: 'custom',
-                                    value: value, // Don't trim newlines for custom fields (especially textareas)
-                                    field_type: fieldInput.is('textarea') ? 'textarea' : 'text'
-                                });
-                            }
-                        }
-                    });
+                    // Collect fields using helper
+                    const collected = window.SHAREDFUNCTIONS.collectFields({ template: jsObject.template });
+                    payload['fields']['dt'] = payload['fields']['dt'].concat(collected.dt);
+                    payload['fields']['custom'] = payload['fields']['custom'].concat(collected.custom);
 
                     // Disable submission button during this process.
                     submit_but.prop('disabled', true);
@@ -1581,7 +1195,8 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                                             'link',
                                             'communication_channel',
                                             'location',
-                                            'location_meta'
+                                            'location_meta',
+                                            'tags'
                                     ] ) ) {
                                         continue;
                                     }
@@ -1977,6 +1592,31 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                         $updates[$field['id']] = [
                             'values' => $tags
                         ];
+                    }
+                    break;
+                case 'link':
+                    if ( !empty( $field['value'] ) ) {
+                        // Handle link field - can be single URL or array of links
+                        if ( is_string( $field['value'] ) ) {
+                            // Simple URL string
+                            $updates[$field['id']] = sanitize_text_field( $field['value'] );
+                        } elseif ( is_array( $field['value'] ) && isset( $field['value']['values'] ) ) {
+                            // DT format with values array
+                            $links = [];
+                            foreach ( $field['value']['values'] as $link ) {
+                                if ( !empty( $link['value'] ) ) {
+                                    $links[] = [
+                                        'value' => sanitize_text_field( $link['value'] ),
+                                        'type' => sanitize_text_field( $link['type'] ?? '' )
+                                    ];
+                                }
+                            }
+                            if ( !empty( $links ) ) {
+                                $updates[$field['id']] = [
+                                    'values' => $links
+                                ];
+                            }
+                        }
                     }
                     break;
             }
