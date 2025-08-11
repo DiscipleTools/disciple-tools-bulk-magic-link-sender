@@ -495,9 +495,14 @@ if (!window.SHAREDFUNCTIONS.setFieldsFromPost) {
                     } else {
                         if (post[field_id] && post[field_id]['timestamp']) {
                             let timestamp = post[field_id]['timestamp'];
-                            jQuery(tr).find(selector).data('daterangepicker').setStartDate(moment.unix(timestamp));
-                            jQuery(tr).find(selector).val(moment.unix(timestamp).format('MMMM D, YYYY'));
-                            field_meta.val(moment.unix(timestamp).format('YYYY-MM-DD'));
+                            const dateObj = new Date(timestamp * 1000);
+                            jQuery(tr).find(selector).data('daterangepicker').setStartDate(dateObj);
+                            const display = dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                            jQuery(tr).find(selector).val(display);
+                            const yyyy = dateObj.getFullYear();
+                            const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+                            const dd = String(dateObj.getDate()).padStart(2, '0');
+                            field_meta.val(`${yyyy}-${mm}-${dd}`);
                         } else {
                             jQuery(tr).find(selector).val('');
                             field_meta.val('');

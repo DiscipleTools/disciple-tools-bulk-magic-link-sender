@@ -738,7 +738,7 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                             post_type: post_type,
                             post_id: post_id,
                             comment_count: comment_count,
-                            ts: moment().unix() // Alter url shape, to force cache refresh!
+                             ts: Math.floor(Date.now() / 1000) // Alter url shape, to force cache refresh!
                         },
                         contentType: "application/json; charset=utf-8",
                         dataType: "json",
