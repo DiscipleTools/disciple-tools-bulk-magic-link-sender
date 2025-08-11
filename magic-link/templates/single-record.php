@@ -139,12 +139,13 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
         $path_sr_js  = $path_sr . 'single-record.js';
         $path_sr_css = $path_sr . 'single-record.css';
 
-        $dtwc_version = '0.7.4';
+        $dtwc_version = '0.7.9';
 
         wp_enqueue_script( 'jquery-typeahead', get_template_directory_uri() . $path_js, [ 'jquery' ], filemtime( get_template_directory() . $path_js ) );
         wp_enqueue_style( 'jquery-typeahead-css', get_template_directory_uri() . $path_css, [], filemtime( get_template_directory() . $path_css ) );
         wp_enqueue_style( 'material-font-icons-css', 'https://cdn.jsdelivr.net/npm/@mdi/font@6.6.96/css/materialdesignicons.min.css', [], '6.6.96' );
 
+        wp_enqueue_script( 'field-helper', plugin_dir_url( __FILE__ ) . '../../assets/field-helper.js', [ 'jquery' ], filemtime( __FILE__ ) . '../../assets/field-helper.js' );
         wp_enqueue_script( 'single-record', plugin_dir_url( __FILE__ ) . $path_sr_js, [ 'jquery' ], filemtime( __FILE__ ) . $path_sr_js );
 
         wp_enqueue_style( 'single-record-css', plugin_dir_url( __FILE__ ) . $path_sr_css, null, filemtime( __FILE__ ) . $path_sr_css );
@@ -166,7 +167,7 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
         $allowed_js[] = 'jquery-typeahead';
         $allowed_js[] = 'single-record';
         $allowed_js[] = 'dt-web-components-js';
-
+        $allowed_js[] = 'field-helper';
         $allowed_js[] = Disciple_Tools_Bulk_Magic_Link_Sender_API::get_magic_link_utilities_script_handle();
 
         return $allowed_js;
@@ -1124,44 +1125,135 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                         if (field_template_type === 'dt') {
                             switch (field_type) {
 
-                                case 'number':
-                                case 'textarea':
                                 case 'text':
-                                case 'key_select':
-                                case 'boolean':
+                                case 'textarea': {
+                                    const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
+                                    let rawValue = dtComponent.attr('value') || jQuery(tr).find(selector).val();
+                                    if (rawValue && String(rawValue).trim() !== '') {
+                                        payload['fields']['dt'].push({
+                                            id: field_id,
+                                            dt_type: field_type,
+                                            template_type: field_template_type,
+                                            value: String(rawValue).trim()
+                                        });
+                                    }
+                                    break;
+                                }
+
+                                case 'key_select': {
+                                    const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
+                                    let rawValue = dtComponent.attr('value') || jQuery(tr).find(selector).val();
+                                    if (rawValue && String(rawValue).trim() !== '') {
+                                        payload['fields']['dt'].push({
+                                            id: field_id,
+                                            dt_type: field_type,
+                                            template_type: field_template_type,
+                                            value: String(rawValue).trim()
+                                        });
+                                    }
+                                    break;
+                                }
+
+                                case 'number': {
+                                    const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
+                                    let rawValue = dtComponent.attr('value') || jQuery(tr).find(selector).val();
+                                    if (rawValue !== undefined && rawValue !== null && String(rawValue).trim() !== '') {
+                                        const numericValue = parseFloat(String(rawValue).trim());
+                                        if (!isNaN(numericValue)) {
+                                            payload['fields']['dt'].push({
+                                                id: field_id,
+                                                dt_type: field_type,
+                                                template_type: field_template_type,
+                                                value: numericValue
+                                            });
+                                        }
+                                    }
+                                    break;
+                                }
+
+                                case 'boolean': {
+                                    const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
+                                    let rawValue = dtComponent.attr('value');
+                                    let boolValue;
+                                    if (rawValue !== undefined) {
+                                        boolValue = (rawValue === true || rawValue === 'true' || rawValue === '1' || rawValue === 1 || rawValue === 'on');
+                                    } else {
+                                        boolValue = jQuery(tr).find(selector).is(':checked');
+                                    }
                                     payload['fields']['dt'].push({
                                         id: field_id,
                                         dt_type: field_type,
                                         template_type: field_template_type,
-                                        value: jQuery(tr).find(selector).val()
+                                        value: !!boolValue
                                     });
                                     break;
+                                }
 
-                                case 'communication_channel':
+                                case 'communication_channel': {
+                                    // Prefer DT component value (JSON array of { value })
+                                    const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
+                                    let rawValue = dtComponent.attr('value');
                                     let values = [];
-                                    jQuery(tr).find('.input-group').each(function () {
-                                        values.push({
-                                            'key': jQuery(this).find('button').data('key'),
-                                            'value': jQuery(this).find('input').val()
+                                    let deleted = field_meta.val() ? JSON.parse(field_meta.val()) : [];
+                                    if (rawValue) {
+                                        try {
+                                            const parsed = JSON.parse(rawValue);
+                                            if (Array.isArray(parsed)) {
+                                                parsed.forEach(function (item) {
+                                                    if (item && item.value && String(item.value).trim() !== '') {
+                                                        values.push({ value: String(item.value).trim() });
+                                                    }
+                                                });
+                                            }
+                                        } catch (e) {
+                                            // Fallback to existing DOM inputs if parsing fails
+                                        }
+                                    }
+                                    if (values.length === 0) {
+                                        jQuery(tr).find('.input-group').each(function () {
+                                            values.push({
+                                                'key': jQuery(this).find('button').data('key'),
+                                                'value': jQuery(this).find('input').val()
+                                            });
                                         });
-                                    });
+                                    }
                                     payload['fields']['dt'].push({
                                         id: field_id,
                                         dt_type: field_type,
                                         template_type: field_template_type,
                                         value: values,
-                                        deleted: field_meta.val() ? JSON.parse(field_meta.val()) : []
+                                        deleted: deleted
                                     });
                                     break;
+                                }
 
-                                case 'multi_select':
+                                case 'multi_select': {
+                                    // Prefer DT component value (JSON array of selected keys)
+                                    const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
+                                    let rawValue = dtComponent.attr('value');
                                     let options = [];
-                                    jQuery(tr).find('button').each(function () {
-                                        options.push({
-                                            'value': jQuery(this).attr('id'),
-                                            'delete': jQuery(this).hasClass('empty-select-button')
+                                    if (rawValue) {
+                                        try {
+                                            const parsed = JSON.parse(rawValue);
+                                            if (Array.isArray(parsed) && parsed.length > 0) {
+                                                parsed.forEach(function (selectedKey) {
+                                                    if (selectedKey && String(selectedKey).trim() !== '') {
+                                                        options.push({ value: String(selectedKey).trim(), delete: false });
+                                                    }
+                                                });
+                                            }
+                                        } catch (e) {
+                                            // ignore and fallback
+                                        }
+                                    }
+                                    if (options.length === 0) {
+                                        jQuery(tr).find('button').each(function () {
+                                            options.push({
+                                                'value': jQuery(this).attr('id'),
+                                                'delete': jQuery(this).hasClass('empty-select-button')
+                                            });
                                         });
-                                    });
+                                    }
                                     payload['fields']['dt'].push({
                                         id: field_id,
                                         dt_type: field_type,
@@ -1169,17 +1261,88 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                                         value: options
                                     });
                                     break;
+                                }
 
-                                case 'date':
+                                case 'date': {
+                                    // Prefer DT component value (YYYY-MM-DD); fallback to meta
+                                    const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
+                                    let rawValue = dtComponent.attr('value') || '';
+                                    let dateValue = String(rawValue).trim() || field_meta.val();
                                     payload['fields']['dt'].push({
                                         id: field_id,
                                         dt_type: field_type,
                                         template_type: field_template_type,
-                                        value: field_meta.val()
+                                        value: dateValue
                                     });
                                     break;
+                                }
 
-                                case 'tags':
+                                case 'link': {
+                                    const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
+                                    let rawValue = dtComponent.attr('value') || jQuery(tr).find(selector).val();
+                                    if (rawValue && String(rawValue).trim() !== '') {
+                                        try {
+                                            // Allow both simple string and DT values array formats
+                                            const parsed = JSON.parse(rawValue);
+                                            payload['fields']['dt'].push({
+                                                id: field_id,
+                                                dt_type: field_type,
+                                                template_type: field_template_type,
+                                                value: parsed
+                                            });
+                                        } catch (e) {
+                                            payload['fields']['dt'].push({
+                                                id: field_id,
+                                                dt_type: field_type,
+                                                template_type: field_template_type,
+                                                value: String(rawValue).trim()
+                                            });
+                                        }
+                                    }
+                                    break;
+                                }
+
+                                case 'tags': {
+                                    // Prefer DT tags component value (JSON array of tag names)
+                                    const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
+                                    let rawValue = dtComponent.attr('value');
+                                    let values = [];
+                                    if (rawValue) {
+                                        try {
+                                            const parsed = JSON.parse(rawValue);
+                                            if (Array.isArray(parsed)) {
+                                                parsed.forEach(function (tagName) {
+                                                    if (tagName && String(tagName).trim() !== '') {
+                                                        values.push({ name: String(tagName).trim() });
+                                                    }
+                                                });
+                                            }
+                                        } catch (e) {
+                                            // ignore
+                                        }
+                                    }
+                                    // Fallback to typeahead if component not present
+                                    if (values.length === 0) {
+                                        let typeahead = window.Typeahead['.js-typeahead-' + field_id];
+                                        if (typeahead) {
+                                            payload['fields']['dt'].push({
+                                                id: field_id,
+                                                dt_type: field_type,
+                                                template_type: field_template_type,
+                                                value: typeahead.items,
+                                                deletions: field_meta.val() ? JSON.parse(field_meta.val()) : []
+                                            });
+                                            break;
+                                        }
+                                    }
+                                    payload['fields']['dt'].push({
+                                        id: field_id,
+                                        dt_type: field_type,
+                                        template_type: field_template_type,
+                                        value: values
+                                    });
+                                    break;
+                                }
                                 case 'location':
                                     let typeahead = window.Typeahead['.js-typeahead-' + field_id];
                                     if (typeahead) {
@@ -1207,13 +1370,50 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                                     break;
                             }
 
-                        } else if (field_template_type === 'custom') {
-                            payload['fields']['custom'].push({
-                                id: field_id,
-                                dt_type: field_type,
-                                template_type: field_template_type,
-                                value: jQuery(tr).find(selector).val() ? jQuery(tr).find('.section-subheader').html() + ': ' + jQuery(tr).find(selector).val() : ''
+                        }
+                    });
+
+                    // Handle link input fields (created by addLink function)
+                    jQuery('.link-input').each(function(index, entry) {
+                        let fieldKey = jQuery(entry).data('field-key');
+                        let type = jQuery(entry).data('type');
+                        if (jQuery(entry).val()) {
+                            // Find if this field already exists in payload
+                            let existingField = payload['fields']['dt'].find(f => f.id === fieldKey);
+                            if (!existingField) {
+                                existingField = {
+                                    id: fieldKey,
+                                    dt_type: 'link',
+                                    template_type: 'dt',
+                                    value: { values: [] }
+                                };
+                                payload['fields']['dt'].push(existingField);
+                            }
+                            if (!existingField.value.values) {
+                                existingField.value = { values: [] };
+                            }
+                            existingField.value.values.push({
+                                value: jQuery(entry).val(),
+                                type: type
                             });
+                        }
+                    });
+
+                    // Handle custom fields
+                    jQuery('.form-field[data-template-type="custom"]').each(function (idx, fieldDiv) {
+                        let field_id = jQuery(fieldDiv).data('field-id');
+                        let fieldInput = jQuery(fieldDiv).find('input, textarea');
+
+                        if (fieldInput.length > 0) {
+                            let value = fieldInput.val();
+                            if (value && value.trim() !== '') {
+                                payload['fields']['custom'].push({
+                                    id: field_id,
+                                    template_type: 'custom',
+                                    value: value, // Don't trim newlines for custom fields (especially textareas)
+                                    field_type: fieldInput.is('textarea') ? 'textarea' : 'text'
+                                });
+                            }
                         }
                     });
 
