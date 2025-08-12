@@ -158,8 +158,6 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
     }
 
     public function dt_magic_url_base_allowed_js( $allowed_js ) {
-        // @todo add or remove js files with this filter
-        // example: $allowed_js[] = 'your-enqueue-handle';
         $allowed_js[] = 'mapbox-gl';
         $allowed_js[] = 'mapbox-cookie';
         $allowed_js[] = 'mapbox-search-widget';
@@ -174,8 +172,6 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
     }
 
     public function dt_magic_url_base_allowed_css( $allowed_css ) {
-        // @todo add or remove js files with this filter
-        // example: $allowed_css[] = 'your-enqueue-handle';
         $allowed_css[] = 'mapbox-gl-css';
         $allowed_css[] = 'jquery-typeahead-css';
         $allowed_css[] = 'material-font-icons-css';
@@ -1088,7 +1084,7 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                                                 echo $hidden_values_html;
                                                 // phpcs:enable
                                                 ?>
-                                                <td>
+                                                <td class="form-field" data-field-id="<?php echo esc_attr( $field['id'] ); ?>" data-template-type="custom">
                                                     <?php
                                                     $this->render_custom_field_for_display( $field );
                                                     ?>
@@ -1301,8 +1297,6 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
 
         $updates = [];
 
-        $params['fields'] = dt_recursive_sanitize_array( $params['fields'] );
-
         // First, capture and package incoming DT field values
         foreach ( $params['fields']['dt'] ?? [] as $field ){
             switch ( $field['dt_type'] ) {
@@ -1313,9 +1307,11 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                 case 'boolean':
                 case 'communication_channel':
                 case 'key_select':
+                    $field = dt_recursive_sanitize_array( $field );
                     $updates[$field['id']] = $field['value'];
                     break;
                 case 'multi_select':
+                    $field = dt_recursive_sanitize_array( $field );
                     $options = [];
                     foreach ( $field['value'] ?? [] as $option ){
                         $entry = [];
@@ -1333,6 +1329,7 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                     break;
 
                 case 'location':
+                    $field = dt_recursive_sanitize_array( $field );
                     $locations = [];
                     foreach ( $field['value'] ?? [] as $location ){
                         $entry = [];
@@ -1357,6 +1354,7 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                     break;
 
                 case 'location_meta':
+                    $field = dt_recursive_sanitize_array( $field );
                     $locations = [];
 
                     // Capture selected location, if available; or prepare shape
@@ -1384,6 +1382,7 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                     break;
 
                 case 'tags':
+                    $field = dt_recursive_sanitize_array( $field );
                     $tags = [];
                     foreach ( $field['value'] ?? [] as $tag ){
                         $entry = [];
@@ -1407,6 +1406,7 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                     }
                     break;
                 case 'link':
+                    $field = dt_recursive_sanitize_array( $field );
                     if ( !empty( $field['value'] ) ) {
                         // Handle link field - can be single URL or array of links
                         if ( is_string( $field['value'] ) ) {
@@ -1484,12 +1484,32 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
             ];
         }
 
-        // Next, any identified custom fields, are to be added as comments
+        // Handle custom fields by saving them as comments
+        $custom_field_comments = [];
         foreach ( $params['fields']['custom'] ?? [] as $field ) {
-            $field = dt_recursive_sanitize_array( $field );
-            if ( ! empty( $field['value'] ) ) {
-                $updated_comment = DT_Posts::add_post_comment( $updated_post['post_type'], $updated_post['ID'], $field['value'], 'comment', [], false );
-                if ( empty( $updated_comment ) || is_wp_error( $updated_comment ) ) {
+            if ( !empty( $field['value'] ) ) {
+                // Use appropriate sanitization based on field type
+                if ( isset( $field['field_type'] ) && $field['field_type'] === 'textarea' ) {
+                    $sanitized_value = sanitize_textarea_field( $field['value'] );
+                } else {
+                    $sanitized_value = sanitize_text_field( $field['value'] );
+                }
+
+                // Get field label from template configuration
+                $field_label = $field['id']; // Default to ID if label not found
+                if ( isset( $this->template['fields'] ) && is_array( $this->template['fields'] ) ) {
+                    foreach ( $this->template['fields'] as $template_field ) {
+                        if ( (int) $template_field['id'] === $field['id'] && $template_field['type'] === 'custom' ) {
+                            // Support custom field label translations; or simply default to initial label entry.
+                            $field_label = ( ! empty( $template_field['translations'] ) && isset( $template_field['translations'][ determine_locale() ] ) ) ? $template_field['translations'][ determine_locale() ]['translation'] : $template_field['label'];
+                            break;
+                        }
+                    }
+                }
+
+                $comment = $field_label . ': ' . $sanitized_value;
+                $created_comment = DT_Posts::add_post_comment( $updated_post['post_type'], $updated_post['ID'], $comment, 'comment', [], false );
+                if ( empty( $created_comment ) || is_wp_error( $created_comment ) ) {
                     return [
                         'id' => $updated_post['ID'],
                         'success' => false,

@@ -248,7 +248,7 @@ class Disciple_Tools_Magic_Links_Template_List_Sub_Assigned extends Disciple_Too
                                                 echo $hidden_values_html;
                                                 // phpcs:enable
                                                 ?>
-                                                <td>
+                                                <td class="form-field" data-field-id="<?php echo esc_attr( $field['id'] ); ?>" data-template-type="custom">
                                                     <?php
                                                     $this->render_custom_field_for_display( $field );
                                                     ?>

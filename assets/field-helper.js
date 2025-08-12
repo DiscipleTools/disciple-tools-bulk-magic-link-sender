@@ -338,7 +338,7 @@ if (!window.SHAREDFUNCTIONS.collectFields) {
             });
         });
 
-        // Handle custom fields (create-record pattern)
+        // Handle custom fields
         jQuery('.form-field[data-template-type="custom"]').each(function (idx, fieldDiv) {
             let field_id = jQuery(fieldDiv).data('field-id');
             let fieldInput = jQuery(fieldDiv).find('input, textarea');
