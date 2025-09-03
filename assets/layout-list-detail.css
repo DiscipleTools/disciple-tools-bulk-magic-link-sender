@@ -130,6 +130,27 @@ code { display: block !important; }
     opacity: 1;
 }
 
+#list .items:has(+ #fab-container) {
+    padding-bottom: 5rem;
+}
+
+
+/* ===== FAB ====== */
+#fab-container {
+    position: absolute;
+    inset-block-end: 2rem;
+    inset-inline-end: 2rem;
+
+    #fab-button {
+        color: var(--text-color-inverse);
+        background-color: var(--success-color);
+        padding: 1rem;
+        font-size: 1.5rem;
+        border-radius: 50%;
+        box-shadow: var(--shadow-1);
+    }
+}
+
 /* ===== Search & Filter ===== */
 #search-filter {
     display: grid;

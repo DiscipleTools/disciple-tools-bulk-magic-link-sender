@@ -28,6 +28,7 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
     ];
 
     public $filter_options = [];
+    public $allow_new_records = false;
 
     public function __construct( $template = null, $post = null, $link_obj = null ) {
 
@@ -39,6 +40,15 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
         $this->template         = $template;
         $this->post             = $post;
         $this->link_obj         = $link_obj;
+
+        if ( isset( $template['supports_create'] ) && boolval( $template['supports_create'] ) ) {
+            $this->allow_new_records = true;
+        } else if ( isset( $link_obj ) &&
+                property_exists( $link_obj, 'type_config' ) &&
+                property_exists( $link_obj->type_config, 'supports_create' ) &&
+                $link_obj->type_config->supports_create ) {
+            $this->allow_new_records = true;
+        }
     }
 
     public function wp_enqueue_scripts(): void
@@ -104,6 +114,7 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
                 'template'                => $this->template,
                 'fieldSettings' => $localized_template_field_settings, //todo: should be for sub-type
                 'translations'            => [
+                    'new_record' => __( 'New Record', 'disciple_tools' ),
                     'regions_of_focus' => __( 'Regions of Focus', 'disciple_tools' ),
                     'all_locations'    => __( 'All Locations', 'disciple_tools' ),
                     'update_success' => __( 'Update Successful!', 'disciple_tools' ),
@@ -364,6 +375,13 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
                 <?php $this->list_filters(); ?>
 
                 <ul id="list-items" class="items"></ul>
+
+                <?php if ( $this->allow_new_records ): ?>
+                <div id="fab-container">
+                    <button id="fab-button" class="fab-button mdi mdi-plus" onclick="loadPostDetail(0)"></button>
+                </div>
+                <?php endif; ?>
+
                 <div id="spinner-div" style="justify-content: center; display: flex;">
                     <span id="temp-spinner" class="loading-spinner inactive" style="margin: 0; position: absolute; top: 50%; -ms-transform: translateY(-50%); transform: translateY(-50%); height: 100px; width: 100px; z-index: 100;"></span>
                 </div>

@@ -3,38 +3,49 @@
  * @param id
  */
 function loadPostDetail(id) {
-  const item = listItems.get(id.toString());
 
   const detailTitle = document.getElementById('detail-title');
   const detailPostId = document.getElementById('detail-title-post-id');
   const detailTemplate = document.getElementById('post-detail-template').content;
   const detailContainer = document.getElementById('detail-content');
 
-  // Set detail title
-  detailTitle.innerText = item.name;
-  detailPostId.innerText = `(#${item.ID})`;
-
   // clone detail template
   const content = detailTemplate.cloneNode(true);
-
-  // set value of all inputs in the template
-  content.getElementById('post-id').value = id;
-  setInputValues(content, item);
-
-  const button = content.getElementById('comment-button');
-  button.addEventListener('click', () => {
-    submitComment(id);
-  });
   const commentTile = content.getElementById('comments-tile');
-  setComments(commentTile, item.ID);
+
+  const postLoadEventDetail = { id };
+
+  if (id > 0) {
+    const item = listItems.get(id.toString());
+    postLoadEventDetail.post = item;
+
+    // Set detail title
+    detailTitle.innerText = item.name;
+    detailPostId.innerText = `(#${item.ID})`;
+
+    // set value of all inputs in the template
+    content.getElementById('post-id').value = id;
+    setInputValues(content, item);
+
+    const button = content.getElementById('comment-button');
+    button.addEventListener('click', () => {
+      submitComment(id);
+    });
+    setComments(commentTile, item.ID);
+  } else {
+    detailTitle.innerText = jsObject.translations.new_record;
+    detailPostId.innerText = ``;
+
+    content.getElementById('post-id').value = id;
+
+    // hide comment container
+    commentTile.style.display = 'none';
+  }
 
   // insert templated content into detail panel
   detailContainer.replaceChildren(content);
   detailContainer.dispatchEvent(new CustomEvent('dt:post-load', {
-    detail: {
-      id,
-      post: item,
-    },
+    detail: postLoadEventDetail,
   }));
 
   // open detail panel
@@ -223,12 +234,18 @@ function saveItem(event) {
         const idx = jsObject.items.posts.findIndex((i) => i.ID === json.post.ID);
         if (idx > -1) {
           jsObject.items.posts[idx] = json.post;
+        } else {
+          jsObject.items.posts.splice(0, 0, json.post);
         }
         listItems.set(json.post.ID.toString(), json.post);
 
-        // update list item
-        const itemEl = document.getElementById(`item-${json.post.ID}`);
-        populateListItemTemplate(itemEl, json.post);
+        if (id === "0") {
+          loadListItems();
+        } else {
+          // update list item
+          const itemEl = document.getElementById(`item-${json.post.ID}`);
+          populateListItemTemplate(itemEl, json.post);
+        }
 
         // go back to list
         togglePanels();
