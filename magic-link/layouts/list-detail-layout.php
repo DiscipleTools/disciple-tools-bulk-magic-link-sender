@@ -58,28 +58,21 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
 
         wp_enqueue_style( 'ml-layout-list-detail-css', plugin_dir_url( __FILE__ ) . $css_path, null, filemtime( plugin_dir_path( __FILE__ ) . $css_path ) );
         wp_enqueue_script( 'ml-layout-list-detail-js', plugin_dir_url( __FILE__ ) . $js_path, null, filemtime( plugin_dir_path( __FILE__ ) . $js_path ) );
-
-        $dtwc_version = '0.7.9';
-        wp_enqueue_style( 'dt-web-components-css', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/src/styles/light.css", [], $dtwc_version ); // remove 'src' after v0.7
-        wp_enqueue_script( 'dt-web-components-js', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/dist/index.js", $dtwc_version );
-
-        $mdi_version = '6.6.96';
-        wp_enqueue_style( 'material-font-icons-css', "https://cdn.jsdelivr.net/npm/@mdi/font@$mdi_version/css/materialdesignicons.min.css", [], $mdi_version );
     }
 
     public function allowed_js( $allowed_js ) {
         $allowed = array_filter( $allowed_js, function ( $js ) {
             return $js !== 'site-js';
         });
-        $allowed[] = 'dt-web-components-js';
+        $allowed[] = 'web-components';
         $allowed[] = 'ml-layout-list-detail-js';
 
         return $allowed;
     }
 
     public function allowed_css( $allowed_css ) {
-        $allowed_css[] = 'material-font-icons-css';
-        $allowed_css[] = 'dt-web-components-css';
+        $allowed_css[] = 'material-font-icons';
+        $allowed_css[] = 'web-components-css';
         $allowed_css[] = 'ml-layout-list-detail-css';
 
         return $allowed_css;
@@ -199,6 +192,11 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
                     <?php if ( is_array( $this->filter_options ) && !empty( $this->filter_options ) ): ?>
                         <h3><?php esc_html_e('Filter', 'disciple_tools'); ?></h3>
                         <?php foreach ( $this->filter_options as $filter ): ?>
+                        <?php
+                        if ( !isset( $post_field_settings[ $filter['id'] ]['default']['blank'] ) ) {
+                            $post_field_settings[ $filter['id'] ]['default']['blank'] = [ 'label' => '(blank)' ];
+                        }
+                        ?>
                         <?php switch ( $filter['type'] ) {
                                 case 'multi_select':
                                     DT_Components::render_multi_select(
@@ -303,7 +301,39 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
                     $post_field_settings[$field['id']]['custom_display'] = false;
                     $post_field_settings[$field['id']]['readonly'] = !empty( $field['readonly'] ) && boolval( $field['readonly'] );
 
-                    Disciple_Tools_Magic_Links_Helper::render_field_for_display( $field['id'], $post_field_settings, [] );
+                    // Set required flag for name field
+                    if ( $field['id'] === 'name' ) {
+                        $post_field_settings[$field['id']]['required'] = true;
+                    }
+
+                    $empty_post = [
+                        'post_type' => $this->template['record_type']
+                    ];
+
+                    if ( in_array( $field['type'], [
+                        'text',
+                        'textarea',
+                        'date',
+                        'boolean',
+                        'key_select',
+                        'multi_select',
+                        'number',
+//                        'link',
+                        'communication_channel',
+                        'connection',
+//                        'location',
+//                        'location_meta'
+                    ] ) ) {
+                        // Check if function exists
+                        if ( function_exists( 'render_field_for_display' ) ) {
+                            render_field_for_display( $field['id'], $post_field_settings, $empty_post, null, null, null, [] );
+                        } else {
+                            echo '<p>Error: Field rendering function not found</p>';
+                        }
+                    } else {
+                        // These haven't been implemented in the theme yet but are implemented in the MagicLinkHelper
+                        Disciple_Tools_Magic_Links_Helper::render_field_for_display( $field['id'], $post_field_settings, [] );
+                    }
                 } else {
                     // display custom field for this magic link
                     $tag = isset( $field['custom_form_field_type'] ) && $field['custom_form_field_type'] == 'textarea'

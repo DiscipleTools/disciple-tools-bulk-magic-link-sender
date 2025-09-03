@@ -173,7 +173,7 @@ function saveItem(event) {
   };
   formdata.forEach((value, key) => (data.form[key] = value));
   Array.from(form.elements).forEach((el) => {
-    if (el.localName.startsWith('dt-')) {
+    if (el.localName.startsWith('dt-') && el.name) {
       data.el[el.name] = el.value;
     }
   });
