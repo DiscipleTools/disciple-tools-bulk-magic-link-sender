@@ -27,6 +27,8 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
     ]
     ];
 
+    public $filter_options = [];
+
     public function __construct( $template = null, $post = null, $link_obj = null ) {
 
         // only handle this template type
@@ -47,31 +49,22 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
         wp_enqueue_style( 'ml-layout-list-detail-css', plugin_dir_url( __FILE__ ) . $css_path, null, filemtime( plugin_dir_path( __FILE__ ) . $css_path ) );
         wp_enqueue_script( 'ml-layout-list-detail-js', plugin_dir_url( __FILE__ ) . $js_path, null, filemtime( plugin_dir_path( __FILE__ ) . $js_path ) );
 
-        $dtwc_version = '0.6.6';
-//        wp_enqueue_style( 'dt-web-components-css', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/styles/light.css", [], $dtwc_version );
+        $dtwc_version = '0.7.9';
         wp_enqueue_style( 'dt-web-components-css', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/src/styles/light.css", [], $dtwc_version ); // remove 'src' after v0.7
         wp_enqueue_script( 'dt-web-components-js', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/dist/index.js", $dtwc_version );
-        add_filter( 'script_loader_tag', 'add_module_type_to_script', 10, 3 );
-        function add_module_type_to_script( $tag, $handle, $src ) {
-            if ( 'dt-web-components-js' === $handle ) {
-                // @codingStandardsIgnoreStart
-                $tag = '<script type="module" src="' . esc_url( $src ) . '"></script>';
-                // @codingStandardsIgnoreEnd
-            }
-            return $tag;
-        }
-        wp_enqueue_script( 'dt-web-components-services-js', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/dist/services.min.js", array( 'jquery' ), true ); // not needed after v0.7
 
         $mdi_version = '6.6.96';
         wp_enqueue_style( 'material-font-icons-css', "https://cdn.jsdelivr.net/npm/@mdi/font@$mdi_version/css/materialdesignicons.min.css", [], $mdi_version );
     }
 
     public function allowed_js( $allowed_js ) {
-        $allowed_js[] = 'dt-web-components-js';
-        $allowed_js[] = 'dt-web-components-services-js';
-        $allowed_js[] = 'ml-layout-list-detail-js';
+        $allowed = array_filter( $allowed_js, function ( $js ) {
+            return $js !== 'site-js';
+        });
+        $allowed[] = 'dt-web-components-js';
+        $allowed[] = 'ml-layout-list-detail-js';
 
-        return $allowed_js;
+        return $allowed;
     }
 
     public function allowed_css( $allowed_css ) {
@@ -162,27 +155,52 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
      */
     public function list_filters(): void
     {
+        $post_field_settings = DT_Posts::get_post_field_settings( $this->template['record_type'] );
         ?>
         <div id="search-filter">
             <div id="search-bar">
                 <input type="text" id="search" placeholder="Search" onkeyup="searchChange()" />
                 <button id="clear-button" style="display: none;" class="clear-button mdi mdi-close" onclick="clearSearch()"></button>
                 <button class="filter-button mdi mdi-filter-variant" onclick="toggleFilters()"></button>
+
+                <div id="results-count">
+                    <span id="results-count-number">0</span> <?php esc_html_e('Records', 'disciple_tools'); ?>
+                </div>
             </div>
             <div class="filters hidden">
                 <div class="container">
-                    <h3>Sort By</h3>
-                    <?php
-                    if ( is_array( $this->sort_options ) && !empty( $this->sort_options ) ) {
-                        foreach ( $this->sort_options as $option ) { ?>
+                    <?php if ( is_array( $this->sort_options ) && !empty( $this->sort_options ) ): ?>
+                    <h3><?php esc_html_e('Sort', 'disciple_tools'); ?></h3>
+                        <?php foreach ( $this->sort_options as $option ): ?>
                             <label>
-                                <input type="radio" name="sort" value="<?php echo esc_attr( $option['value'] ) ?>" onclick="toggleFilters()" onchange="searchChange()" checked />
+                                <input type="radio"
+                                       name="sort"
+                                       value="<?php echo esc_attr( $option['value'] ) ?>"
+                                       onclick="toggleFilters()"
+                                       onchange="searchChange()"
+                                       <?php echo ( isset( $option['active'] ) && $option['active'] === true ) ? 'checked' : null ?>
+                                />
                                 <?php echo esc_html( $option['name'] ); ?>
                             </label>
-                            <?php
-                        }
-                    }
-                    ?>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+
+                    <?php if ( is_array( $this->filter_options ) && !empty( $this->filter_options ) ): ?>
+                        <h3><?php esc_html_e('Filter', 'disciple_tools'); ?></h3>
+                        <?php foreach ( $this->filter_options as $filter ): ?>
+                        <?php switch ( $filter['type'] ) {
+                                case 'multi_select':
+                                    DT_Components::render_multi_select(
+                                        $filter['id'],
+                                        $post_field_settings,
+                                        [
+                                            $filter['id'] => $filter['value'],
+                                        ]
+                                    );
+                                    break;
+                        } ?>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -201,6 +219,7 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
                 <span class="post-id"></span>
                 <span class="post-title"></span>
                 <span class="post-updated-date"></span>
+                <span class="post-meta"></span>
             </a>
         </li>
         <?php

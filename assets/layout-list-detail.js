@@ -30,6 +30,12 @@ function loadPostDetail(id) {
 
   // insert templated content into detail panel
   detailContainer.replaceChildren(content);
+  detailContainer.dispatchEvent(new CustomEvent('dt:post-load', {
+    detail: {
+      id,
+      post: item,
+    },
+  }));
 
   // open detail panel
   document.getElementById('list').classList.remove('is-expanded');
@@ -56,6 +62,9 @@ function loadListItems(posts) {
     posts = jsObject.items.posts;
   }
 
+  const resultCount = document.getElementById('results-count-number');
+  resultCount.innerText = posts.length;
+
   const itemList = document.getElementById('list-items');
   itemList.replaceChildren([]);
   const itemTemplate = document.getElementById('list-item-template').content;
@@ -65,6 +74,10 @@ function loadListItems(posts) {
     itemEl.querySelector('li').id = `item-${item.ID}`;
     populateListItemTemplate(itemEl, item);
     itemList.append(itemEl);
+    if (!listItems.has(item.ID.toString())) {
+      listItems.set(item.ID.toString(), item);
+    }
+
   }
 
 }
@@ -78,6 +91,10 @@ function populateListItemTemplate(itemEl, item) {
   itemEl.querySelector('.post-updated-date').innerText = window.SHAREDFUNCTIONS.formatDate(
     item.last_modified?.timestamp
   );
+
+  if (item.meta) {
+    itemEl.querySelector('.post-meta').innerText = item.meta;
+  }
 }
 
 /**
@@ -98,6 +115,15 @@ function setInputValues(parent, post) {
     const postValue = post[name];
 
     switch (tagName) {
+      case 'dt-connection':
+        element.value = DtWebComponents.ComponentService.convertApiValue(tagName, postValue);
+        break;
+      case 'dt-location':
+        element.value = postValue?.map(val => ({
+          ...val,
+          id: val.id.toString(),
+        }));
+        break;
       case 'dt-date':
         if (postValue && postValue.timestamp) {
           const date = new Date(postValue.timestamp * 1000);
@@ -167,8 +193,7 @@ function saveItem(event) {
     const field_id = el.name;
     const type = el.dataset.type;
 
-    // const value = DtWebComponents.ComponentService.convertValue(el.localName, el.value);
-    const value = window.WebComponentServices.ComponentService.convertValue(el.localName, el.value);
+    const value = DtWebComponents.ComponentService.convertValue(el.localName, el.value);
     const fieldType = type === 'custom' ? 'custom' : 'dt';
     payload['fields'][fieldType].push({
       id: field_id,
@@ -177,7 +202,7 @@ function saveItem(event) {
     });
   });
 
-  const url = jsObject.root + jsObject.parts.root + '/v1/' + jsObject.parts.type + '/update';
+  const url = window.apiRoot + '/update';
   fetch(url,{
     method: "POST", // *GET, POST, PUT, DELETE, etc.
     headers: {
@@ -286,12 +311,30 @@ const searchData = () => {
     post_type: jsObject.template.record_type,
     text: text,
     sort: document.querySelector('input[name="sort"]:checked').value,
+    fields: {},
+  }
+
+  // Get filter values
+  const filterContainer = document.querySelector('.filters .container');
+  const filterComponents = Array.from(filterContainer.children).filter(el =>
+    el.tagName.toLowerCase().startsWith('dt-')
+  );
+  for(const el of filterComponents) {
+    switch (el.localName) {
+      case 'dt-multi-select':
+      case 'dt-multi-select-button-group':
+        payload.fields[el.name] = (el.value || []).filter(x => !x.startsWith('-'));
+        break;
+      default:
+        payload.fields[el.name] = DtWebComponents.ComponentService.convertValue(el.localName, el.value)
+        break;
+    }
   }
 
   let temp_spinner = document.getElementById('temp-spinner');
   temp_spinner.setAttribute('class', 'loading-spinner active');
 
-  const url = jsObject.root + jsObject.parts.root + '/v1/' + jsObject.parts.type + '/sort_post';
+  const url = window.apiRoot + '/sort_post';
 
   fetch(url,{
     method: "POST",
@@ -345,7 +388,7 @@ function setComments(commentsTile, id) {
     comment_count: 2,
   }
 
-  const commentURL = jsObject.root + jsObject.parts.root + '/v1/' + jsObject.parts.type + '/post';
+  const commentURL = window.apiRoot + '/post';
   const comments = commentsTile.querySelectorAll('.activity-block, .action-block');
   if (comments.length) {
     for (const comment of comments) {
@@ -361,11 +404,14 @@ function setComments(commentsTile, id) {
     body: JSON.stringify(payload),
   })
     .then((response) => {
-      console.log(response);
+      // console.log(response);
       return response.json();
     })
     .then((json) => {
       for (const val of json['comments']['comments']) {
+        if (!val['comment_content']) {
+          continue;
+        }
         const actionBlock = document.createElement('div');
         actionBlock.className = "action-block";
 
@@ -392,7 +438,9 @@ function setComments(commentsTile, id) {
         commentId.className = "comment-bubble " + val['comment_ID'];
         commentId.setAttribute("data-comment-id", val['comment_ID']);
         commentText.setAttribute("title", val['comment_date']);
-        commentText.innerText = val['comment_content'];
+        const decoder = document.createElement('div');
+        decoder.innerHTML = val['comment_content'];
+        commentText.innerText = decoder.textContent;
 
         activityBlock.appendChild(commentHeader);
         activityBlock.appendChild(commentContent);
@@ -408,40 +456,60 @@ function setComments(commentsTile, id) {
     });
 }
 
-  function submitComment(id) {
+function submitComment(id) {
 
-    const textArea = document.getElementById('comments-text-area');
-    if (!textArea.value) {
-      return false;
-    }
-
-    let payload = {
-      action: 'post',
-      parts: jsObject.parts,
-      sys_type: jsObject.sys_type,
-      post_id: id,
-      post_type: jsObject.template.record_type,
-      comment: textArea.value,
-    }
-
-    const url = jsObject.root + jsObject.parts.root + '/v1/' + jsObject.parts.type + '/comment';
-
-    fetch(url,{
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        "X-WP-Nonce": jsObject.nonce,
-      },
-      body: JSON.stringify(payload),
-    })
-      .then((response) => {
-        textArea.value = '';
-        const commentTile = document.getElementById('comments-tile');
-        setComments(commentTile, id);
-        return response.json();
-      })
-      .catch((reason) => {
-        console.log("reason:");
-        console.log(reason);
-      });
+  const textArea = document.getElementById('comments-text-area');
+  if (!textArea.value) {
+    return false;
   }
+
+  let payload = {
+    action: 'post',
+    parts: jsObject.parts,
+    sys_type: jsObject.sys_type,
+    post_id: id,
+    post_type: jsObject.template.record_type,
+    comment: textArea.value,
+  }
+
+  const url = window.apiRoot + '/comment';
+
+  fetch(url,{
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "X-WP-Nonce": jsObject.nonce,
+    },
+    body: JSON.stringify(payload),
+  })
+    .then((response) => {
+      textArea.value = '';
+      const commentTile = document.getElementById('comments-tile');
+      setComments(commentTile, id);
+      return response.json();
+    })
+    .catch((reason) => {
+      console.log("reason:");
+      console.log(reason);
+    });
+}
+
+function attachFilterListeners() {
+  const filterContainer = document.querySelector('.filters .container');
+  if (!filterContainer) return;
+
+
+  const filterComponents = Array.from(filterContainer.children).filter(el =>
+    el.tagName.toLowerCase().startsWith('dt-')
+  );
+  filterComponents.forEach(element => {
+    element.addEventListener('change', searchChange);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', attachFilterListeners);
+
+window.addEventListener('load', () => {
+  const apiVersion = jsObject.parts.version ?? 'v1';
+  window.apiRoot = jsObject.root + jsObject.parts.root + '/' + apiVersion + '/' + jsObject.parts.type;
+});

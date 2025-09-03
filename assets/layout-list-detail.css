@@ -102,19 +102,21 @@ code { display: block !important; }
     transition: opacity .5s ease;
 }
 #list .items li a {
-    display: flex;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
     column-gap: 0.5rem;
-    align-items: center;
     width: 100%;
     color: inherit;
     text-decoration: none;
     padding: 1rem;
 
-    .post-title {
-        flex-grow: 1;
+    .post-title, .post-meta {
+        grid-column-start: 2;
     }
 
-    .post-id, .post-updated-date {
+    .post-id,
+    .post-updated-date,
+    .post-meta {
         color: var(--inactive-color);
         font-size: 0.75rem;
     }
@@ -171,26 +173,32 @@ code { display: block !important; }
     height: var(--search-input-height);
 }
 
-#search-bar button.clear-button {
-    position: absolute;
-    inset-inline-end: 3.25rem;
-    top: calc(var(--search-margin-block) + var(--search-border-width));
-    border: 0;
-    background-color: transparent;
-    height: var(--search-input-height);
-}
-
+#search-bar button.clear-button,
 #search-bar button.filter-button {
     position: absolute;
-    inset-inline-end: 1.25rem;
     top: calc(var(--search-margin-block) + var(--search-border-width));
     border: 0;
     background-color: transparent;
     height: var(--search-input-height);
+    font-size: 1.75rem;
+}
+#search-bar button.clear-button {
+    inset-inline-end: 3.25rem;
+}
+#search-bar button.filter-button {
+    inset-inline-end: 1.25rem;
+}
+#search-bar #results-count {
+    position: absolute;
+    bottom: 0.75rem;
+    left: var(--search-margin-block);
+    font-size: 0.75rem;
 }
 
 .filters .container {
-    padding: 1rem;
+    padding: 0 1rem 1rem;
+
+    h3 { margin-block-start: 1rem; }
 }
 
 .filters {
@@ -297,6 +305,9 @@ code { display: block !important; }
 }
 #detail-content dt-tile {
     --dt-tile-margin: 1rem 0rem;
+    &#all-fields > * {
+        margin-block-end: 1rem;
+    }
 }
 #detail footer {
     background: #fff;
