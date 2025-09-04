@@ -168,13 +168,13 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
                 <button class="filter-button mdi mdi-filter-variant" onclick="toggleFilters()"></button>
 
                 <div id="results-count">
-                    <span id="results-count-number">0</span> <?php esc_html_e('Records', 'disciple_tools'); ?>
+                    <span id="results-count-number">0</span> <?php esc_html_e( 'Records', 'disciple_tools' ); ?>
                 </div>
             </div>
             <div class="filters hidden">
                 <div class="container">
                     <?php if ( is_array( $this->sort_options ) && !empty( $this->sort_options ) ): ?>
-                    <h3><?php esc_html_e('Sort', 'disciple_tools'); ?></h3>
+                    <h3><?php esc_html_e( 'Sort', 'disciple_tools' ); ?></h3>
                         <?php foreach ( $this->sort_options as $option ): ?>
                             <label>
                                 <input type="radio"
@@ -190,19 +190,19 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
                     <?php endif; ?>
 
                     <?php if ( is_array( $this->filter_options ) && !empty( $this->filter_options ) ): ?>
-                        <h3><?php esc_html_e('Filter', 'disciple_tools'); ?></h3>
+                        <h3><?php esc_html_e( 'Filter', 'disciple_tools' ); ?></h3>
                         <?php foreach ( $this->filter_options as $filter ): ?>
-                        <?php
-                        if ( !isset( $post_field_settings[ $filter['id'] ]['default']['blank'] ) ) {
-                            $post_field_settings[ $filter['id'] ]['default']['blank'] = [ 'label' => '(blank)' ];
-                            if ( isset( $filter['display'] ) ) {
-                                $post_field_settings[$filter['id']]['display'] = $filter['display'];
-                            } else {
-                                unset( $post_field_settings[$filter['id']]['display'] );
+                            <?php
+                            if ( !isset( $post_field_settings[ $filter['id'] ]['default']['blank'] ) ) {
+                                $post_field_settings[ $filter['id'] ]['default']['blank'] = [ 'label' => '(blank)' ];
+                                if ( isset( $filter['display'] ) ) {
+                                    $post_field_settings[$filter['id']]['display'] = $filter['display'];
+                                } else {
+                                    unset( $post_field_settings[$filter['id']]['display'] );
+                                }
                             }
-                        }
-                        ?>
-                        <?php switch ( $filter['type'] ) {
+                            ?>
+                            <?php switch ( $filter['type'] ) {
                                 case 'multi_select':
                                     DT_Components::render_multi_select(
                                         $filter['id'],
@@ -212,7 +212,7 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
                                         ]
                                     );
                                     break;
-                        } ?>
+                            } ?>
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </div>
@@ -323,11 +323,11 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
                         'key_select',
                         'multi_select',
                         'number',
-//                        'link',
+                        //                        'link',
                         'communication_channel',
                         'connection',
-//                        'location',
-//                        'location_meta'
+                        //                        'location',
+                        //                        'location_meta'
                     ] ) ) {
                         // Check if function exists
                         if ( function_exists( 'render_field_for_display' ) ) {
