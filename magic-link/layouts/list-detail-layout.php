@@ -27,6 +27,9 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
     ]
     ];
 
+    public $filter_options = [];
+    public $allow_new_records = false;
+
     public function __construct( $template = null, $post = null, $link_obj = null ) {
 
         // only handle this template type
@@ -37,6 +40,15 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
         $this->template         = $template;
         $this->post             = $post;
         $this->link_obj         = $link_obj;
+
+        if ( isset( $template['supports_create'] ) && boolval( $template['supports_create'] ) ) {
+            $this->allow_new_records = true;
+        } else if ( isset( $link_obj ) &&
+                property_exists( $link_obj, 'type_config' ) &&
+                property_exists( $link_obj->type_config, 'supports_create' ) &&
+                $link_obj->type_config->supports_create ) {
+            $this->allow_new_records = true;
+        }
     }
 
     public function wp_enqueue_scripts(): void
@@ -46,37 +58,21 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
 
         wp_enqueue_style( 'ml-layout-list-detail-css', plugin_dir_url( __FILE__ ) . $css_path, null, filemtime( plugin_dir_path( __FILE__ ) . $css_path ) );
         wp_enqueue_script( 'ml-layout-list-detail-js', plugin_dir_url( __FILE__ ) . $js_path, null, filemtime( plugin_dir_path( __FILE__ ) . $js_path ) );
-
-        $dtwc_version = '0.6.6';
-//        wp_enqueue_style( 'dt-web-components-css', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/styles/light.css", [], $dtwc_version );
-        wp_enqueue_style( 'dt-web-components-css', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/src/styles/light.css", [], $dtwc_version ); // remove 'src' after v0.7
-        wp_enqueue_script( 'dt-web-components-js', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/dist/index.js", $dtwc_version );
-        add_filter( 'script_loader_tag', 'add_module_type_to_script', 10, 3 );
-        function add_module_type_to_script( $tag, $handle, $src ) {
-            if ( 'dt-web-components-js' === $handle ) {
-                // @codingStandardsIgnoreStart
-                $tag = '<script type="module" src="' . esc_url( $src ) . '"></script>';
-                // @codingStandardsIgnoreEnd
-            }
-            return $tag;
-        }
-        wp_enqueue_script( 'dt-web-components-services-js', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/dist/services.min.js", array( 'jquery' ), true ); // not needed after v0.7
-
-        $mdi_version = '6.6.96';
-        wp_enqueue_style( 'material-font-icons-css', "https://cdn.jsdelivr.net/npm/@mdi/font@$mdi_version/css/materialdesignicons.min.css", [], $mdi_version );
     }
 
     public function allowed_js( $allowed_js ) {
-        $allowed_js[] = 'dt-web-components-js';
-        $allowed_js[] = 'dt-web-components-services-js';
-        $allowed_js[] = 'ml-layout-list-detail-js';
+        $allowed = array_filter( $allowed_js, function ( $js ) {
+            return $js !== 'site-js';
+        });
+        $allowed[] = 'web-components';
+        $allowed[] = 'ml-layout-list-detail-js';
 
-        return $allowed_js;
+        return $allowed;
     }
 
     public function allowed_css( $allowed_css ) {
-        $allowed_css[] = 'material-font-icons-css';
-        $allowed_css[] = 'dt-web-components-css';
+        $allowed_css[] = 'material-font-icons';
+        $allowed_css[] = 'web-components-css';
         $allowed_css[] = 'ml-layout-list-detail-css';
 
         return $allowed_css;
@@ -111,6 +107,7 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
                 'template'                => $this->template,
                 'fieldSettings' => $localized_template_field_settings, //todo: should be for sub-type
                 'translations'            => [
+                    'new_record' => __( 'New Record', 'disciple_tools' ),
                     'regions_of_focus' => __( 'Regions of Focus', 'disciple_tools' ),
                     'all_locations'    => __( 'All Locations', 'disciple_tools' ),
                     'update_success' => __( 'Update Successful!', 'disciple_tools' ),
@@ -162,27 +159,62 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
      */
     public function list_filters(): void
     {
+        $post_field_settings = DT_Posts::get_post_field_settings( $this->template['record_type'] );
         ?>
         <div id="search-filter">
             <div id="search-bar">
                 <input type="text" id="search" placeholder="Search" onkeyup="searchChange()" />
                 <button id="clear-button" style="display: none;" class="clear-button mdi mdi-close" onclick="clearSearch()"></button>
                 <button class="filter-button mdi mdi-filter-variant" onclick="toggleFilters()"></button>
+
+                <div id="results-count">
+                    <span id="results-count-number">0</span> <?php esc_html_e( 'Records', 'disciple_tools' ); ?>
+                </div>
             </div>
             <div class="filters hidden">
                 <div class="container">
-                    <h3>Sort By</h3>
-                    <?php
-                    if ( is_array( $this->sort_options ) && !empty( $this->sort_options ) ) {
-                        foreach ( $this->sort_options as $option ) { ?>
+                    <?php if ( is_array( $this->sort_options ) && !empty( $this->sort_options ) ): ?>
+                    <h3><?php esc_html_e( 'Sort', 'disciple_tools' ); ?></h3>
+                        <?php foreach ( $this->sort_options as $option ): ?>
                             <label>
-                                <input type="radio" name="sort" value="<?php echo esc_attr( $option['value'] ) ?>" onclick="toggleFilters()" onchange="searchChange()" checked />
+                                <input type="radio"
+                                       name="sort"
+                                       value="<?php echo esc_attr( $option['value'] ) ?>"
+                                       onclick="toggleFilters()"
+                                       onchange="searchChange()"
+                                       <?php echo ( isset( $option['active'] ) && $option['active'] === true ) ? 'checked' : null ?>
+                                />
                                 <?php echo esc_html( $option['name'] ); ?>
                             </label>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+
+                    <?php if ( is_array( $this->filter_options ) && !empty( $this->filter_options ) ): ?>
+                        <h3><?php esc_html_e( 'Filter', 'disciple_tools' ); ?></h3>
+                        <?php foreach ( $this->filter_options as $filter ): ?>
                             <?php
-                        }
-                    }
-                    ?>
+                            if ( !isset( $post_field_settings[ $filter['id'] ]['default']['blank'] ) ) {
+                                $post_field_settings[ $filter['id'] ]['default']['blank'] = [ 'label' => '(blank)' ];
+                                if ( isset( $filter['display'] ) ) {
+                                    $post_field_settings[$filter['id']]['display'] = $filter['display'];
+                                } else {
+                                    unset( $post_field_settings[$filter['id']]['display'] );
+                                }
+                            }
+                            ?>
+                            <?php switch ( $filter['type'] ) {
+                                case 'multi_select':
+                                    DT_Components::render_multi_select(
+                                        $filter['id'],
+                                        $post_field_settings,
+                                        [
+                                            $filter['id'] => $filter['value'],
+                                        ]
+                                    );
+                                    break;
+                            } ?>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -201,6 +233,7 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
                 <span class="post-id"></span>
                 <span class="post-title"></span>
                 <span class="post-updated-date"></span>
+                <span class="post-meta"></span>
             </a>
         </li>
         <?php
@@ -273,7 +306,39 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
                     $post_field_settings[$field['id']]['custom_display'] = false;
                     $post_field_settings[$field['id']]['readonly'] = !empty( $field['readonly'] ) && boolval( $field['readonly'] );
 
-                    Disciple_Tools_Magic_Links_Helper::render_field_for_display( $field['id'], $post_field_settings, [] );
+                    // Set required flag for name field
+                    if ( $field['id'] === 'name' ) {
+                        $post_field_settings[$field['id']]['required'] = true;
+                    }
+
+                    $empty_post = [
+                        'post_type' => $this->template['record_type']
+                    ];
+
+                    if ( in_array( $field['type'], [
+                        'text',
+                        'textarea',
+                        'date',
+                        'boolean',
+                        'key_select',
+                        'multi_select',
+                        'number',
+                        //                        'link',
+                        'communication_channel',
+                        'connection',
+                        //                        'location',
+                        //                        'location_meta'
+                    ] ) ) {
+                        // Check if function exists
+                        if ( function_exists( 'render_field_for_display' ) ) {
+                            render_field_for_display( $field['id'], $post_field_settings, $empty_post, null, null, null, [] );
+                        } else {
+                            echo '<p>Error: Field rendering function not found</p>';
+                        }
+                    } else {
+                        // These haven't been implemented in the theme yet but are implemented in the MagicLinkHelper
+                        Disciple_Tools_Magic_Links_Helper::render_field_for_display( $field['id'], $post_field_settings, [] );
+                    }
                 } else {
                     // display custom field for this magic link
                     $tag = isset( $field['custom_form_field_type'] ) && $field['custom_form_field_type'] == 'textarea'
@@ -344,7 +409,16 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
 
                 <?php $this->list_filters(); ?>
 
+                <div id="filter-backdrop" class="hidden" onclick="toggleFilters()"></div>
+
                 <ul id="list-items" class="items"></ul>
+
+                <?php if ( $this->allow_new_records ): ?>
+                <div id="fab-container">
+                    <button id="fab-button" class="fab-button mdi mdi-plus" onclick="loadPostDetail(0)"></button>
+                </div>
+                <?php endif; ?>
+
                 <div id="spinner-div" style="justify-content: center; display: flex;">
                     <span id="temp-spinner" class="loading-spinner inactive" style="margin: 0; position: absolute; top: 50%; -ms-transform: translateY(-50%); transform: translateY(-50%); height: 100px; width: 100px; z-index: 100;"></span>
                 </div>
