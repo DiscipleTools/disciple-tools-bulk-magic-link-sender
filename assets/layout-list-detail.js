@@ -240,7 +240,7 @@ function saveItem(event) {
         listItems.set(json.post.ID.toString(), json.post);
 
         if (id === "0") {
-          loadListItems();
+          searchData();
         } else {
           // update list item
           const itemEl = document.getElementById(`item-${json.post.ID}`);

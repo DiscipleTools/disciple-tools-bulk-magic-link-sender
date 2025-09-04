@@ -27,6 +27,7 @@ code { display: block !important; }
 /* ===== List Panel ===== */
 #list {
     --header-height: 3rem;
+    --header-z-index: 5;
     --search-margin-block: 1rem;
     --search-border-width: 2px;
     --search-input-height: 2.5rem;
@@ -65,7 +66,7 @@ code { display: block !important; }
     padding-block-start: 1rem;
     position: absolute;
     width: 100%;
-    z-index: 1;
+    z-index: var(--header-z-index);
 }
 
 #list > header > h1 {
@@ -156,7 +157,7 @@ code { display: block !important; }
     display: grid;
     grid-template-rows: var(--search-height) 1fr;
     transition: grid-template-rows 500ms;
-    z-index: 1;
+    z-index: var(--header-z-index);
     position: absolute;
     width: 100%;
     top: var(--header-height);
@@ -167,6 +168,25 @@ code { display: block !important; }
 
 #search-filter:has(.filters.hidden) {
     grid-template-rows: var(--search-height) 0fr;
+
+    & + #filter-backdrop {
+        display: none;
+        opacity: 0;
+    }
+}
+#filter-backdrop {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: calc(var(--header-z-index) - 1);
+    display: block;
+    opacity: 1;
+    transition: opacity 0.5s ease, display 0.5s ease allow-discrete;
+}
+@starting-style {
+    #filter-backdrop {
+        opacity: 0;
+    }
 }
 
 #search-bar,

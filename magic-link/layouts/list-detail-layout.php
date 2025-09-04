@@ -195,6 +195,11 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
                         <?php
                         if ( !isset( $post_field_settings[ $filter['id'] ]['default']['blank'] ) ) {
                             $post_field_settings[ $filter['id'] ]['default']['blank'] = [ 'label' => '(blank)' ];
+                            if ( isset( $filter['display'] ) ) {
+                                $post_field_settings[$filter['id']]['display'] = $filter['display'];
+                            } else {
+                                unset( $post_field_settings[$filter['id']]['display'] );
+                            }
                         }
                         ?>
                         <?php switch ( $filter['type'] ) {
@@ -403,6 +408,8 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
                 <?php $this->list_header(); ?>
 
                 <?php $this->list_filters(); ?>
+
+                <div id="filter-backdrop" class="hidden" onclick="toggleFilters()"></div>
 
                 <ul id="list-items" class="items"></ul>
 
