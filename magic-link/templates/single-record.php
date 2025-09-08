@@ -139,7 +139,7 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
         $path_sr_js  = $path_sr . 'single-record.js';
         $path_sr_css = $path_sr . 'single-record.css';
 
-        $dtwc_version = '0.7.9';
+        $dtwc_version = '0.7.13';
 
         wp_enqueue_script( 'jquery-typeahead', get_template_directory_uri() . $path_js, [ 'jquery' ], filemtime( get_template_directory() . $path_js ) );
         wp_enqueue_style( 'jquery-typeahead-css', get_template_directory_uri() . $path_css, [], filemtime( get_template_directory() . $path_css ) );

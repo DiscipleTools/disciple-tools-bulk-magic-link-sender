@@ -1,5 +1,3 @@
-console.log('field-helper.js');
-
 if (typeof window.SHAREDFUNCTIONS === 'undefined') {
     window.SHAREDFUNCTIONS = {
         formatDate: function(timestamp) {
