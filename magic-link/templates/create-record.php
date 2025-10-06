@@ -108,16 +108,6 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
         }
 
         /**
-         * If this is accessed without a magic link key (i.e., without proper user binding),
-         * require user login
-         */
-        if ( ! is_user_logged_in() ) {
-            $request_uri = !empty( $_SERVER['REQUEST_URI'] ) ? sanitize_url( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
-            wp_redirect( wp_login_url( $request_uri ) );
-            exit;
-        }
-
-        /**
          * Initialize empty post for new record creation - no existing post needed
          */
 
@@ -672,7 +662,10 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
                             });
                             jQuery('.form-field dt-multi-select-button-group').attr('value', '[]');
                             jQuery('.form-field dt-tags').attr('value', '[]');
-                            document.querySelector('dt-date').updateTimestamp('')
+                            const date_fields = document.querySelector('dt-date')
+                            if ( date_fields ) {
+                                date_fields.updateTimestamp('')
+                            }
                             jQuery('.form-field dt-number').attr('value', '');
                             jQuery('.form-field dt-location').attr('value', '');
                             jQuery('.form-field input, .form-field textarea').val('');
@@ -883,7 +876,15 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
         }
 
         if ( !is_user_logged_in() ){
-            return new WP_Error( __METHOD__, 'User not logged in', [ 'status' => 401 ] );
+            $user_contact_id = $params['parts']['post_id'] ?? 0;
+            if ( !empty( $user_contact_id ) ) {
+                $corresponds_to_user = get_post_meta( $user_contact_id, 'corresponds_to_user', true );
+                if ( !empty( $corresponds_to_user ) ) {
+                    wp_set_current_user( (int) $corresponds_to_user );
+                } else {
+                    return new WP_Error( __METHOD__, 'User not found ', [ 'status' => 401 ] );
+                }
+            }
         }
 
         // Determine the actual record type to create
