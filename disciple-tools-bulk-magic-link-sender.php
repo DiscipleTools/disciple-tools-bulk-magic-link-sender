@@ -5,7 +5,7 @@
  * Description: Create individual magic links for updating contacts and groups. Schedule sending magic links via email or sms.
  * Text Domain: disciple-tools-bulk-magic-link-sender
  * Domain Path: /languages
- * Version:  1.30.2
+ * Version:  1.31.0
  * Author URI: https://github.com/DiscipleTools
  * GitHub Plugin URI: https://github.com/DiscipleTools/disciple-tools-bulk-magic-link-sender
  * Requires at least: 4.7.0
