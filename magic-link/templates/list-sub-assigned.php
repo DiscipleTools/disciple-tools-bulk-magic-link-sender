@@ -33,20 +33,20 @@ class Disciple_Tools_Magic_Links_Template_List_Sub_Assigned extends Disciple_Too
     public function wp_enqueue_scripts() {
         // Call parent to get all other scripts
         parent::wp_enqueue_scripts();
-        
+
         // Explicitly ensure field-helper.js is enqueued with correct path
         // Calculate path relative to this file (list-sub-assigned.php)
         $field_helper_path = plugin_dir_path( __FILE__ ) . '../../assets/field-helper.js';
         $field_helper_url = plugin_dir_url( __FILE__ ) . '../../assets/field-helper.js';
-        
+
         // Always enqueue field-helper.js if file exists (deregister first to avoid conflicts)
         if ( file_exists( $field_helper_path ) ) {
             wp_deregister_script( 'field-helper' );
-            wp_enqueue_script( 
-                'field-helper', 
-                $field_helper_url, 
-                [ 'jquery' ], 
-                filemtime( $field_helper_path ), 
+            wp_enqueue_script(
+                'field-helper',
+                $field_helper_url,
+                [ 'jquery' ],
+                filemtime( $field_helper_path ),
                 true // Load in footer to ensure it's available before footer_javascript runs
             );
         }
@@ -58,12 +58,12 @@ class Disciple_Tools_Magic_Links_Template_List_Sub_Assigned extends Disciple_Too
     public function dt_magic_url_base_allowed_js( $allowed_js ) {
         // Get parent's allowed JS
         $allowed_js = parent::dt_magic_url_base_allowed_js( $allowed_js );
-        
+
         // Ensure field-helper is in the list
         if ( ! in_array( 'field-helper', $allowed_js ) ) {
             $allowed_js[] = 'field-helper';
         }
-        
+
         return $allowed_js;
     }
 
@@ -362,7 +362,7 @@ class Disciple_Tools_Magic_Links_Template_List_Sub_Assigned extends Disciple_Too
     public function footer_javascript() {
         // Call parent footer_javascript to get all the JavaScript from single-record template
         parent::footer_javascript();
-        
+
         // Wrap the submit handler to ensure collectFields is available
         ?>
         <script>
