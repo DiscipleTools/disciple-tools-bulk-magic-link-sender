@@ -327,6 +327,11 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                         'number' => [
                             'out_of_range' => __( 'Value out of range!', 'disciple_tools' )
                         ]
+                    ],
+                    'error_messages' => [
+                        'missing_values' => __( 'Required fields are missing!', 'disciple_tools' ),
+                        'invalid_values' => __( 'Field values are invalid!', 'disciple_tools' ),
+                        'unable_to_collect_fields' => __( 'Unable to collect form fields. Please refresh the page and try again.', 'disciple_tools' )
                     ]
                 ],
                 'mapbox'                  => [

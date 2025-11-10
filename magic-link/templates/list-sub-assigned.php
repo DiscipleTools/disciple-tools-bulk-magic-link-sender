@@ -26,6 +26,47 @@ class Disciple_Tools_Magic_Links_Template_List_Sub_Assigned extends Disciple_Too
     public $page_title = 'List Sub-Assigned Contacts';
     public $page_description = 'List Sub-Assigned Contacts Description';
 
+    /**
+     * Override wp_enqueue_scripts to ensure field-helper.js is loaded
+     * This ensures the script is enqueued with the correct path
+     */
+    public function wp_enqueue_scripts() {
+        // Call parent to get all other scripts
+        parent::wp_enqueue_scripts();
+        
+        // Explicitly ensure field-helper.js is enqueued with correct path
+        // Calculate path relative to this file (list-sub-assigned.php)
+        $field_helper_path = plugin_dir_path( __FILE__ ) . '../../assets/field-helper.js';
+        $field_helper_url = plugin_dir_url( __FILE__ ) . '../../assets/field-helper.js';
+        
+        // Always enqueue field-helper.js if file exists (deregister first to avoid conflicts)
+        if ( file_exists( $field_helper_path ) ) {
+            wp_deregister_script( 'field-helper' );
+            wp_enqueue_script( 
+                'field-helper', 
+                $field_helper_url, 
+                [ 'jquery' ], 
+                filemtime( $field_helper_path ), 
+                true // Load in footer to ensure it's available before footer_javascript runs
+            );
+        }
+    }
+
+    /**
+     * Ensure field-helper is in the allowed JS list
+     */
+    public function dt_magic_url_base_allowed_js( $allowed_js ) {
+        // Get parent's allowed JS
+        $allowed_js = parent::dt_magic_url_base_allowed_js( $allowed_js );
+        
+        // Ensure field-helper is in the list
+        if ( ! in_array( 'field-helper', $allowed_js ) ) {
+            $allowed_js[] = 'field-helper';
+        }
+        
+        return $allowed_js;
+    }
+
     public function body() {
         $has_title = ! empty( $this->template ) && ( isset( $this->template['title'] ) && ! empty( $this->template['title'] ) );
         ?>
@@ -309,6 +350,127 @@ class Disciple_Tools_Magic_Links_Template_List_Sub_Assigned extends Disciple_Too
                 </ul>
             </span>
         </dt-modal>
+        <?php
+    }
+
+    /**
+     * Writes javascript to the footer
+     * Override to ensure field-helper.js is loaded and collectFields is available
+     *
+     * @see Disciple_Tools_Magic_Links_Template_Single_Record()->footer_javascript() for default state
+     */
+    public function footer_javascript() {
+        // Call parent footer_javascript to get all the JavaScript from single-record template
+        parent::footer_javascript();
+        
+        // Wrap the submit handler to ensure collectFields is available
+        ?>
+        <script>
+            jQuery(document).ready(function() {
+                // Wrap the existing submit handler to add a check for collectFields
+                jQuery('#content_submit_but').off('click').on('click', function() {
+                    // Check if collectFields is available
+                    if (typeof window.SHAREDFUNCTIONS === 'undefined' || typeof window.SHAREDFUNCTIONS.collectFields !== 'function') {
+                        console.error('SHAREDFUNCTIONS.collectFields is not available. field-helper.js may not be loaded.');
+                        jQuery('#error').html(jsObject.translations.error_messages.unable_to_collect_fields);
+                        return false;
+                    }
+                    
+                    // If collectFields is available, proceed with the original handler logic
+                    const alert_notice = jQuery('#alert_notice');
+                    const spinner = jQuery('.update-loading-spinner');
+                    const submit_but = jQuery('#content_submit_but');
+                    let id = jQuery('#post_id').val();
+                    let post_type = jQuery('#post_type').val();
+                    const isNewRecord = Number(id) === 0;
+
+                    alert_notice.fadeOut('fast');
+
+                    // Reset error message field
+                    let error = jQuery('#error');
+                    error.html('');
+
+                    // Sanity check content prior to submission
+                    if (!id || String(id).trim().length === 0) {
+                        error.html('Invalid post id detected!');
+                        return false;
+                    }
+
+                    // Build payload accordingly, based on enabled states
+                    let payload = {
+                        'action': 'get',
+                        'parts': jsObject.parts,
+                        'template_name': ( jsObject.template['name'] ) ? jsObject.template['name'] : '',
+                        'send_submission_notifications': ( jsObject.template['send_submission_notifications'] ) ? jsObject.template['send_submission_notifications'] : true,
+                        'post_id': id,
+                        'post_type': post_type,
+                        'fields': {
+                            'dt': [],
+                            'custom': []
+                        }
+                    }
+
+                    // Collect fields using helper
+                    const collected = window.SHAREDFUNCTIONS.collectFields({ template: jsObject.template, post: jsObject.post });
+                    payload['fields']['dt'] = payload['fields']['dt'].concat(collected.dt);
+                    payload['fields']['custom'] = payload['fields']['custom'].concat(collected.custom);
+
+                    // Disable submission button during this process.
+                    submit_but.prop('disabled', true);
+
+                    // Final sanity check of submitted payload fields.
+                    let validated = null;
+                    if (typeof window.ml_utility_submit_field_validation_function === "function") {
+                        validated = window.ml_utility_submit_field_validation_function(jsObject.field_settings, payload['fields']['dt'], {
+                                'id': 'id',
+                                'type': 'dt_type',
+                                'value': 'value'
+                            },
+                            jsObject.translations.validation);
+                    }
+                    if (validated && !validated['success']) {
+                        alert_notice.find('#alert_notice_content').text(validated['message']);
+                        alert_notice.fadeIn('slow', function () {
+                            spinner.removeClass('active');
+                            submit_but.prop('disabled', false);
+                            document.documentElement.scrollTop = 0;
+                        });
+                    } else {
+                        spinner.addClass('active');
+
+                        // Submit data for post update.
+                        jQuery.ajax({
+                            type: "POST",
+                            data: JSON.stringify(payload),
+                            contentType: "application/json; charset=utf-8",
+                            dataType: "json",
+                            url: jsObject.root + jsObject.parts.root + '/v1/' + jsObject.parts.type + '/update',
+                            beforeSend: function (xhr) {
+                                xhr.setRequestHeader('X-WP-Nonce', jsObject.nonce);
+                            }
+                        }).done(function (data) {
+                            if (data['success']) {
+                                alert_notice.find('#alert_notice_content').text(jsObject.translations.update_success);
+                                alert_notice.fadeIn('slow', function () {
+                                    spinner.removeClass('active');
+                                    submit_but.prop('disabled', false);
+                                    document.documentElement.scrollTop = 0;
+                                });
+                            } else {
+                                error.html(data['message'] || 'An error occurred while updating the record.');
+                                spinner.removeClass('active');
+                                submit_but.prop('disabled', false);
+                            }
+                        }).fail(function (e) {
+                            console.log(e);
+                            error.html('An error occurred while updating the record.');
+                            spinner.removeClass('active');
+                            submit_but.prop('disabled', false);
+                        });
+                    }
+                });
+            });
+        </script>
         <?php
     }
 }
