@@ -143,18 +143,18 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
         $path_sr_js  = $path_sr . 'single-record.js';
         $path_sr_css = $path_sr . 'single-record.css';
 
-        $dtwc_version = '0.7.13';
+        $dtwc_version = '0.8.0';
 
         wp_enqueue_script( 'jquery-typeahead', get_template_directory_uri() . $path_js, [ 'jquery' ], filemtime( get_template_directory() . $path_js ) );
         wp_enqueue_style( 'jquery-typeahead-css', get_template_directory_uri() . $path_css, [], filemtime( get_template_directory() . $path_css ) );
-        wp_enqueue_style( 'material-font-icons-css', 'https://cdn.jsdelivr.net/npm/@mdi/font@6.6.96/css/materialdesignicons.min.css', [], '6.6.96' );
+        wp_enqueue_style( 'material-font-icons-css', 'https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css', [], '7.4.47' );
 
         wp_enqueue_script( 'field-helper', plugin_dir_url( __FILE__ ) . '../../assets/field-helper.js', [ 'jquery' ], filemtime( __FILE__ ) . '../../assets/field-helper.js' );
         wp_enqueue_script( 'single-record', plugin_dir_url( __FILE__ ) . $path_sr_js, [ 'jquery' ], filemtime( __FILE__ ) . $path_sr_js );
 
         wp_enqueue_style( 'single-record-css', plugin_dir_url( __FILE__ ) . $path_sr_css, null, filemtime( __FILE__ ) . $path_sr_css );
 
-        wp_enqueue_style( 'dt-web-components-css', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/styles/light.css", [], $dtwc_version );
+        wp_enqueue_style( 'dt-web-components-css', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/src/styles/light.css", [], $dtwc_version );
 
         wp_enqueue_script( 'dt-web-components-js', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/dist/index.js", $dtwc_version );
 
