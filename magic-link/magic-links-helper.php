@@ -239,6 +239,15 @@ class Disciple_Tools_Magic_Links_Helper
                 >
                     <?php self::render_icon_slot( $fields[$field_key] ) ?>
                 </dt-comm-channel>
+
+            <?php elseif ( $field_type === 'user_select' ) :?>
+                <dt-users-connection
+                    <?php echo wp_kses_post( $shared_attributes ) ?>
+                    single
+                >
+                    <?php self::render_icon_slot( $fields[$field_key] ) ?>
+                </dt-users-connection>
+
             <?php else : ?>
                 <?php dt_write_log( "Skipping field type: $field_type" ); ?>
             <?php endif;

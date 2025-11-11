@@ -127,6 +127,7 @@ function setInputValues(parent, post) {
 
     switch (tagName) {
       case 'dt-connection':
+      case 'dt-users-connection':
         element.value = DtWebComponents.ComponentService.convertApiValue(tagName, postValue);
         break;
       case 'dt-location':

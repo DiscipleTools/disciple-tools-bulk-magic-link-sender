@@ -131,6 +131,39 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
 
             const listItems = new Map(jsObject.items.posts.map((obj) => [obj.ID.toString(), obj]));
 
+            // Initialize ComponentService for dt-connection to fetch users and other data
+            if (typeof DtWebComponents !== 'undefined' && DtWebComponents.ComponentService) {
+                window.componentService = new DtWebComponents.ComponentService(
+                    jsObject.template.post_type,
+                    jsObject.post.ID,
+                    jsObject.nonce
+                );
+                window.componentService.initialize();
+
+                // Add custom handler for user connections
+                document.addEventListener('dt:get-data', async (e) => {
+                    const element = e.target;
+                    const postType = element.getAttribute('data-posttype');
+                    const tagName = element.tagName.toLowerCase();
+
+                    // Handle both dt-connection with data-posttype="users" and dt-users-connection
+                    if (postType === 'users' || tagName === 'dt-users-connection') {
+                        const { query, onSuccess, onError } = e.detail;
+                        try {
+                            const users = await window.componentService.api.searchUsers(query || '', jsObject.template.post_type);
+                            const formattedUsers = users.map(u => ({
+                                id: u.ID,
+                                label: u.name,
+                                avatar: u.avatar || ''
+                            }));
+                            onSuccess(formattedUsers);
+                        } catch (error) {
+                            onError(error);
+                        }
+                    }
+                });
+            }
+
             // initialize the list of items
             loadListItems();
         </script>
