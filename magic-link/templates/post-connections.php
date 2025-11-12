@@ -382,6 +382,9 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                             'force_values' => true,
                         ];
                         break;
+                    case 'user_select':
+                        $updates[$field['id']] = $field['value'];
+                        break;
 //                    case 'location':
                     case 'location_meta':
                         $values = array_map(function ( $value ) {

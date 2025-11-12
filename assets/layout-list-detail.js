@@ -127,6 +127,7 @@ function setInputValues(parent, post) {
 
     switch (tagName) {
       case 'dt-connection':
+      case 'dt-users-connection':
         element.value = DtWebComponents.ComponentService.convertApiValue(tagName, postValue);
         break;
       case 'dt-location':
@@ -402,7 +403,7 @@ function setComments(commentsTile, id) {
     sys_type: jsObject.sys_type,
     post_id: id,
     post_type: jsObject.template.record_type,
-    comment_count: 2,
+    comment_count: jsObject.template.show_recent_comments || 2,
   }
 
   const commentURL = window.apiRoot + '/post';
