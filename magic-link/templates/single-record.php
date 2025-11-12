@@ -139,9 +139,8 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
         $path_js  = $path . 'jquery.typeahead.min.js';
         $path_css = $path . 'jquery.typeahead.min.css';
 
-        $path_sr     = '../../assets/';
-        $path_sr_js  = $path_sr . 'single-record.js';
-        $path_sr_css = $path_sr . 'single-record.css';
+        $plugin_dir_path = Disciple_Tools_Bulk_Magic_Link_Sender::dir_path();
+        $plugin_dir_url  = Disciple_Tools_Bulk_Magic_Link_Sender::dir_uri();
 
         $dtwc_version = '0.8.0';
 
@@ -149,10 +148,10 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
         wp_enqueue_style( 'jquery-typeahead-css', get_template_directory_uri() . $path_css, [], filemtime( get_template_directory() . $path_css ) );
         wp_enqueue_style( 'material-font-icons-css', 'https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css', [], '7.4.47' );
 
-        wp_enqueue_script( 'field-helper', plugin_dir_url( __FILE__ ) . '../../assets/field-helper.js', [ 'jquery' ], filemtime( __FILE__ ) . '../../assets/field-helper.js' );
-        wp_enqueue_script( 'single-record', plugin_dir_url( __FILE__ ) . $path_sr_js, [ 'jquery' ], filemtime( __FILE__ ) . $path_sr_js );
+        wp_enqueue_script( 'field-helper', $plugin_dir_url . 'assets/field-helper.js', [ 'jquery' ], filemtime( $plugin_dir_path . 'assets/field-helper.js' ) );
+        wp_enqueue_script( 'single-record', $plugin_dir_url . 'assets/single-record.js', [ 'jquery' ], filemtime( $plugin_dir_path . 'assets/single-record.js' ) );
 
-        wp_enqueue_style( 'single-record-css', plugin_dir_url( __FILE__ ) . $path_sr_css, null, filemtime( __FILE__ ) . $path_sr_css );
+        wp_enqueue_style( 'single-record-css', $plugin_dir_url . 'assets/single-record.css', null, filemtime( $plugin_dir_path . 'assets/single-record.css' ) );
 
         wp_enqueue_style( 'dt-web-components-css', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/src/styles/light.css", [], $dtwc_version );
 

@@ -78,6 +78,32 @@ class Disciple_Tools_Bulk_Magic_Link_Sender {
         return self::$_instance;
     }
 
+    /**
+     * Get plugin directory path
+     *
+     * @return string
+     */
+    public static function dir_path() {
+        static $dir_path = null;
+        if ( is_null( $dir_path ) ) {
+            $dir_path = trailingslashit( plugin_dir_path( __FILE__ ) );
+        }
+        return $dir_path;
+    }
+
+    /**
+     * Get plugin directory URL
+     *
+     * @return string
+     */
+    public static function dir_uri() {
+        static $dir_uri = null;
+        if ( is_null( $dir_uri ) ) {
+            $dir_uri = trailingslashit( plugin_dir_url( __FILE__ ) );
+        }
+        return $dir_uri;
+    }
+
     private function __construct() {
         require_once( 'magic-link/magic-links-default-filters.php' );
 
