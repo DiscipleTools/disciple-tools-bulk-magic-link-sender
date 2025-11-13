@@ -233,12 +233,13 @@ class Disciple_Tools_Magic_Links_Helper
                 <?php
                 $value = isset( $post[$field_key] ) ? $post[$field_key] : [];
                 ?>
-                <dt-comm-channel
+                <dt-multi-text
                     <?php echo wp_kses_post( $shared_attributes ) ?>
                     value="<?php echo esc_attr( json_encode( $value ) ) ?>"
+                    class="test"
                 >
                     <?php self::render_icon_slot( $fields[$field_key] ) ?>
-                </dt-comm-channel>
+            </dt-multi-text>
             <?php else : ?>
                 <?php dt_write_log( "Skipping field type: $field_type" ); ?>
             <?php endif;
