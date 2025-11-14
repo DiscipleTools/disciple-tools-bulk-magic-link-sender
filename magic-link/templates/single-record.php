@@ -342,6 +342,10 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
 
             /**
              * Activate various field controls.
+             *
+             * NOTE: This function is currently commented out due to stale typeahead logic
+             * that was causing errors. The dt-location web component now handles location
+             * fields directly via custom events.
              */
 
             window.activate_field_controls = () => {
@@ -468,232 +472,90 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                                 });
 
                                 break;
-
-                            case 'location':
-
-                                /**
-                                 * Load Typeahead
-                                 */
-
-                                let typeahead_field_input = '.js-typeahead-' + field_id;
-                                if (!window.Typeahead[typeahead_field_input]) {
-                                    jQuery(tr).find(typeahead_field_input).typeahead({
-                                        input: typeahead_field_input,
-                                        minLength: 0,
-                                        accent: true,
-                                        searchOnFocus: true,
-                                        maxItem: 20,
-                                        dropdownFilter: [{
-                                            key: 'group',
-                                            value: 'focus',
-                                            template: window.lodash.escape(jsObject['translations']['regions_of_focus']),
-                                            all: window.lodash.escape(jsObject['translations']['all_locations'])
-                                        }],
-                                        source: {
-                                            focus: {
-                                                display: "name",
-                                                ajax: {
-                                                    url: jsObject.root + jsObject.parts.root + '/v1/' + jsObject.parts.type + '/search_location_grid_by_name',
-                                                    data: {
-                                                        s: "{{query}}",
-                                                        filter: function () {
-                                                            return window.lodash.get(window.Typeahead[typeahead_field_input].filters.dropdown, 'value', 'all');
-                                                        },
-                                                        parts: jsObject.parts
-                                                    },
-                                                    beforeSend: function (xhr) {
-                                                        xhr.setRequestHeader('X-WP-Nonce', jsObject['nonce']);
-                                                    },
-                                                    callback: {
-                                                        done: function (data) {
-                                                            return data.location_grid;
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        },
-                                        display: "name",
-                                        templateValue: "{{name}}",
-                                        dynamic: true,
-                                        multiselect: {
-                                            matchOn: ["ID"],
-                                            data: function () {
-                                                return [];
-                                            }, callback: {
-                                                onCancel: function (node, item) {
-
-                                                    // Keep a record of deleted options
-                                                    let deleted_items = (field_meta.val()) ? JSON.parse(field_meta.val()) : [];
-                                                    deleted_items.push(item);
-                                                    field_meta.val(JSON.stringify(deleted_items));
-
-                                                }
-                                            }
-                                        },
-                                        callback: {
-                                            onClick: function (node, a, item, event) {
-                                                // If present, remove from deleted meta list.
-                                                let deleted_items = (field_meta.val()) ? JSON.parse(field_meta.val()) : [];
-                                                if (deleted_items.find(e => e.ID.toString() === item.ID.toString())) {
-                                                    let idx = deleted_items.findIndex(e => e.ID.toString() === item.ID.toString());
-                                                    if (idx > -1) {
-                                                        deleted_items.splice(idx, 1);
-                                                        field_meta.val(JSON.stringify(deleted_items));
-                                                    }
-                                                }
-                                            },
-                                            onReady() {
-                                                this.filters.dropdown = {
-                                                    key: "group",
-                                                    value: "focus",
-                                                    template: window.lodash.escape(jsObject['translations']['regions_of_focus'])
-                                                };
-                                                this.container
-                                                    .removeClass("filter")
-                                                    .find("." + this.options.selector.filterButton)
-                                                    .html(window.lodash.escape(jsObject['translations']['regions_of_focus']));
-                                            }
-                                        }
-                                    });
-                                }
-
-                                // If available, load previous post record locations
-                                let typeahead = window.Typeahead[typeahead_field_input];
-                                let post_locations = jsObject['post'][field_id];
-                                if ((post_locations !== undefined) && typeahead) {
-                                    jQuery.each(post_locations, function (idx, location) {
-                                        typeahead.addMultiselectItemLayout({
-                                            ID: location['id'],
-                                            name: window.lodash.escape(location['label'])
-                                        });
-                                    });
-                                }
-
-                                break;
-
-                                /**
-                                 * Activate
-                                 */
-
-                                // Hide new button and default to single entry
-                                jQuery(tr).find('.create-new-tag').hide();
-
-                                let typeahead_tags_field_input = '.js-typeahead-' + field_id;
-                                if (!window.Typeahead[typeahead_tags_field_input]) {
-                                    jQuery(tr).find(typeahead_tags_field_input).typeahead({
-                                        input: typeahead_tags_field_input,
-                                        minLength: 0,
-                                        maxItem: 20,
-                                        searchOnFocus: true,
-                                        source: {
-                                            tags: {
-                                                display: ["name"],
-                                                ajax: {
-                                                    url: jsObject['root'] + `dt-posts/v2/${jsObject['post']['post_type']}/multi-select-values`,
-                                                    data: {
-                                                        s: "{{query}}",
-                                                        field: field_id
-                                                    },
-                                                    beforeSend: function (xhr) {
-                                                        xhr.setRequestHeader('X-WP-Nonce', jsObject['nonce']);
-                                                    },
-                                                    callback: {
-                                                        done: function (data) {
-                                                            return (data || []).map(tag => {
-                                                                return {name: tag}
-                                                            })
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        },
-                                        display: "name",
-                                        templateValue: "{{name}}",
-                                        emptyTemplate: function (query) {
-                                            const {addNewTagText, tagExistsText} = this.node[0].dataset
-                                            if (this.comparedItems.includes(query)) {
-                                                return tagExistsText.replace('%s', query)
-                                            }
-                                            const liItem = jQuery('<li>')
-                                            const button = jQuery('<button>', {
-                                                class: "button primary",
-                                                text: addNewTagText.replace('%s', query),
-                                            })
-                                            const tag = this.query
-                                            button.on("click", function () {
-                                                window.Typeahead[typeahead_tags_field_input].addMultiselectItemLayout({name: tag});
-                                            })
-                                            liItem.append(button);
-                                            return liItem;
-                                        },
-                                        dynamic: true,
-                                        multiselect: {
-                                            matchOn: ["name"],
-                                            data: function () {
-                                                return (jsObject['post'][field_id] || []).map(t => {
-                                                    return {name: t}
-                                                })
-                                            },
-                                            callback: {
-                                                onCancel: function (node, item, event) {
-                                                    // Keep a record of deleted tags
-                                                    let deleted_items = (field_meta.val()) ? JSON.parse(field_meta.val()) : [];
-                                                    deleted_items.push(item);
-                                                    field_meta.val(JSON.stringify(deleted_items));
-                                                }
-                                            },
-                                            href: function (item) {
-                                            },
-                                        },
-                                        callback: {
-                                            onClick: function (node, a, item, event) {
-                                                event.preventDefault();
-                                                this.addMultiselectItemLayout({name: item.name});
-
-                                                // If present, remove from deleted meta list.
-                                                let deleted_items = (field_meta.val()) ? JSON.parse(field_meta.val()) : [];
-                                                if (deleted_items.find(e => e.name === item.name)) {
-                                                    let idx = deleted_items.findIndex(e => e.name === item.name);
-                                                    if (idx > -1) {
-                                                        deleted_items.splice(idx, 1);
-                                                        field_meta.val(JSON.stringify(deleted_items));
-                                                    }
-                                                }
-                                            },
-                                            onResult: function (node, query, result, resultCount) {
-                                                let text = TYPEAHEADS.typeaheadHelpText(resultCount, query, result)
-                                                jQuery(tr).find(`#${field_id}-result-container`).html(text);
-                                            },
-                                            onHideLayout: function () {
-                                                jQuery(tr).find(`#${field_id}-result-container`).html("");
-                                            },
-                                            onShowLayout() {
-                                            }
-                                        }
-                                    });
-                                }
-
-                                /**
-                                 * Load
-                                 */
-
-                                    // If available, load previous post record tags
-                                let typeahead_tags = window.Typeahead[typeahead_tags_field_input];
-                                let post_tags = jsObject['post'][field_id];
-                                if ((post_tags !== undefined) && typeahead_tags) {
-                                    jQuery.each(post_tags, function (idx, tag) {
-                                        typeahead_tags.addMultiselectItemLayout({
-                                            name: window.lodash.escape(tag)
-                                        });
-                                    });
-                                }
-
-                                break;
                         }
                     }
                 });
             };
             window.activate_field_controls();
+
+
+            /**
+             * Handle dt-location component events
+             * The dt-location web component dispatches 'dt:get-data' and 'change' events
+             * that bubble up through the DOM. We listen on document to catch all events.
+             */
+
+            // Handle dt:get-data events (for location search/autocomplete)
+            document.addEventListener('dt:get-data', function(e) {
+                // Only process events from dt-location components
+                if (e.target && e.target.tagName === 'DT-LOCATION' && e.detail) {
+                    const field = e.detail.field;
+                    const query = e.detail.query || '';
+                    const filter = e.detail.filter || 'all';
+                    const onSuccess = e.detail.onSuccess;
+                    const onError = e.detail.onError;
+
+                    // Construct URL using the same pattern as the typeahead example
+                    const url = jsObject.root + jsObject.parts.root + '/v1/' + jsObject.parts.type + '/search_location_grid_by_name';
+
+                    // Execute AJAX call to fetch location data
+                    jQuery.ajax({
+                        type: 'GET',
+                        url: url,
+                        data: {
+                            s: query,
+                            filter: filter,
+                            parts: jsObject.parts
+                        },
+                        contentType: 'application/json; charset=utf-8',
+                        dataType: 'json',
+                        beforeSend: function (xhr) {
+                            xhr.setRequestHeader('X-WP-Nonce', jsObject.nonce);
+                        }
+                    }).done(function (data) {
+                        // Transform response from backend format to dt-location expected format
+                        // Backend returns: { location_grid: [{ name: "...", ID: 123 }], total: 10 }
+                        // dt-location expects: [{ id: 123, label: "..." }]
+                        if (data && data.location_grid && Array.isArray(data.location_grid)) {
+                            const transformedData = data.location_grid.map(function (location) {
+                                return {
+                                    id: location.ID,
+                                    label: location.name
+                                };
+                            });
+
+                            // Call onSuccess callback with transformed data
+                            if (onSuccess && typeof onSuccess === 'function') {
+                                onSuccess(transformedData);
+                            }
+                        } else {
+                            // Invalid response structure
+                            if (onError && typeof onError === 'function') {
+                                onError(new Error('Invalid response format from server'));
+                            }
+                        }
+                    }).fail(function (xhr, status, error) {
+                        // Handle AJAX errors
+                        if (onError && typeof onError === 'function') {
+                            onError(new Error('Failed to fetch location data: ' + error));
+                        }
+                    });
+                }
+            });
+
+            // Handle change events (for location value updates)
+            document.addEventListener('change', function(e) {
+                // Only process events from dt-location components
+                if (e.target && e.target.tagName === 'DT-LOCATION' && e.detail) {
+                    const field = e.detail.field;
+                    const oldValue = e.detail.oldValue;
+                    const newValue = e.detail.newValue;
+
+                    // TODO: Implement logic to handle location value changes
+                    // This is where we'll track location field updates for form submission
+                    console.log('[change] Field:', field, 'Old:', oldValue, 'New:', newValue);
+                }
+            });
 
             /**
              * Handle fetch request for assigned details

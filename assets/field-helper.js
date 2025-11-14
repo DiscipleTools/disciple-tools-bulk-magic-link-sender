@@ -1,48 +1,55 @@
+// Ensure window.SHAREDFUNCTIONS exists (create if needed, but don't overwrite if it already exists)
 if (typeof window.SHAREDFUNCTIONS === 'undefined') {
-    window.SHAREDFUNCTIONS = {
-        formatDate: function(timestamp) {
-            return new Date(timestamp * 1000).toLocaleDateString();
-        },
-        formatComment: function(comment) {
-            return comment; // Simple implementation
-        },
-        addLink: function(event) {
-            // Handle add link functionality for link fields
-            const linkType = jQuery(event.target).data('link-type');
-            const fieldKey = jQuery(event.target).data('field-key');
-            if (!linkType || !fieldKey) {
-                return;
-            }
-
-            // Find the template for this link type
-            const template = jQuery(`#link-template-${fieldKey}-${linkType}`);
-            if (template.length === 0) {
-                return;
-            }
-
-            // Clone the template content
-            const newLinkInput = template.html();
-
-            // Find the target section for this link type
-            const targetSection = jQuery(`.link-section--${linkType}`);
-            if (targetSection.length === 0) {
-                return;
-            }
-
-            // Append the new input to the target section
-            targetSection.append(newLinkInput);
-
-            // Focus the new input
-            targetSection.find('input').last().focus();
-        }
-    };
+    window.SHAREDFUNCTIONS = {};
 }
+
+// Always add/update these methods to the existing SHAREDFUNCTIONS object
+// This ensures they're available even if shared-functions.js overwrites the object later
+window.SHAREDFUNCTIONS.formatDate = window.SHAREDFUNCTIONS.formatDate || function(timestamp) {
+    return new Date(timestamp * 1000).toLocaleDateString();
+};
+
+window.SHAREDFUNCTIONS.formatComment = window.SHAREDFUNCTIONS.formatComment || function(comment) {
+    return comment; // Simple implementation
+};
+
+window.SHAREDFUNCTIONS.addLink = window.SHAREDFUNCTIONS.addLink || function(event) {
+    // Handle add link functionality for link fields
+    const linkType = jQuery(event.target).data('link-type');
+    const fieldKey = jQuery(event.target).data('field-key');
+    if (!linkType || !fieldKey) {
+        return;
+    }
+
+    // Find the template for this link type
+    const template = jQuery(`#link-template-${fieldKey}-${linkType}`);
+    if (template.length === 0) {
+        return;
+    }
+
+    // Clone the template content
+    const newLinkInput = template.html();
+
+    // Find the target section for this link type
+    const targetSection = jQuery(`.link-section--${linkType}`);
+    if (targetSection.length === 0) {
+        return;
+    }
+
+    // Append the new input to the target section
+    targetSection.append(newLinkInput);
+
+    // Focus the new input
+    targetSection.find('input').last().focus();
+};
 
 /**
  * Link field event handlers
  */
 // Handle add link option clicks
 jQuery(document).on('click', '.add-link__option', function(event) {
+    event.stopPropagation(); // Prevent event from bubbling to avoid triggering modal close handlers
+    event.preventDefault(); // Prevent default behavior
     window.SHAREDFUNCTIONS.addLink(event);
     jQuery(event.target).parent().hide();
     setTimeout(() => {
@@ -86,8 +93,16 @@ jQuery(document).on('click', '.clear-date-button', function (evt) {
     tr.find('#form_content_table_field_meta').val('');
 });
 
-// Collect DT and custom fields from the Single Record UI
-if (!window.SHAREDFUNCTIONS.collectFields) {
+// Function to ensure our custom methods are always available on SHAREDFUNCTIONS
+// This function can be called multiple times to re-add methods if SHAREDFUNCTIONS gets overwritten
+function ensureSharedFunctionsMethods() {
+    // Ensure SHAREDFUNCTIONS exists
+    if (typeof window.SHAREDFUNCTIONS === 'undefined') {
+        window.SHAREDFUNCTIONS = {};
+    }
+
+    // Collect DT and custom fields from the Single Record UI
+    // Always add/update collectFields to ensure it's available even if SHAREDFUNCTIONS gets overwritten
     window.SHAREDFUNCTIONS.collectFields = function (options) {
         const template = (options && options.template) ? options.template : { fields: [] };
 
@@ -283,15 +298,52 @@ if (!window.SHAREDFUNCTIONS.collectFields) {
                         break;
                     }
                     case 'location': {
-                        let typeahead = window.Typeahead['.js-typeahead-' + field_id];
-                        if (typeahead) {
-                            payloadFields.dt.push({
-                                id: field_id,
-                                dt_type: field_type,
-                                template_type: field_template_type,
-                                value: typeahead.items,
-                                deletions: field_meta.val() ? JSON.parse(field_meta.val()) : []
-                            });
+                        // Read location values directly from dt-location component
+                        const dtLocationComponent = jQuery(tr).find('dt-location[id="' + field_id + '"]').get(0);
+                        if (dtLocationComponent) {
+                            // Get value from component (stored as JSON string in value attribute)
+                            let locationValue = dtLocationComponent.getAttribute('value');
+                            if (!locationValue) {
+                                // Try accessing the component's value property directly
+                                locationValue = dtLocationComponent.value;
+                            }
+
+                            if (locationValue) {
+                                let locationData = [];
+                                let deletions = [];
+
+                                try {
+                                    // Parse JSON string to object/array
+                                    const parsed = typeof locationValue === 'string' ? JSON.parse(locationValue) : locationValue;
+
+                                    if (Array.isArray(parsed)) {
+                                        parsed.forEach(function(location) {
+                                            if (location && location.id) {
+                                                if (location.delete) {
+                                                    // Add to deletions array
+                                                    deletions.push({ ID: location.id });
+                                                } else {
+                                                    // Add to values array (transform id to ID for endpoint)
+                                                    locationData.push({ ID: location.id });
+                                                }
+                                            }
+                                        });
+                                    }
+                                } catch (e) {
+                                    console.error('Error parsing location data for field ' + field_id + ':', e);
+                                }
+
+                                // Only add if we have data
+                                if (locationData.length > 0 || deletions.length > 0) {
+                                    payloadFields.dt.push({
+                                        id: field_id,
+                                        dt_type: field_type,
+                                        template_type: field_template_type,
+                                        value: locationData,
+                                        deletions: deletions
+                                    });
+                                }
+                            }
                         }
                         break;
                     }
@@ -355,10 +407,9 @@ if (!window.SHAREDFUNCTIONS.collectFields) {
 
         return payloadFields;
     };
-}
 
-// Set DT and custom field values in the Single Record UI from a post object
-if (!window.SHAREDFUNCTIONS.setFieldsFromPost) {
+    // Set DT and custom field values in the Single Record UI from a post object
+    // Always add/update setFieldsFromPost to ensure it's available even if SHAREDFUNCTIONS gets overwritten
     window.SHAREDFUNCTIONS.setFieldsFromPost = function (post) {
         if (!post) return;
 
@@ -532,20 +583,12 @@ if (!window.SHAREDFUNCTIONS.setFieldsFromPost) {
                     break;
                 }
                 case 'location': {
-                    let typeahead_location_field_input = '.js-typeahead-' + field_id;
-                    let typeahead_location = window.Typeahead[typeahead_location_field_input];
-                    if ( typeahead_location ) {
-                        typeahead_location.items = [];
-                        typeahead_location.comparedItems = [];
-                        typeahead_location.label.container.empty();
-                        if (post[field_id] ) {
-                            post[field_id].forEach(function (location) {
-                                typeahead_location.addMultiselectItemLayout({ ID: location['id'], name: window.lodash.escape(location['label']) });
-                            });
-                        }
-                        setTimeout(function () { typeahead_location.adjustInputSize(); }, 1);
+                    const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
+                    if (dtComponent.length) {
+                      const locations = Array.isArray(post[field_id]) ? post[field_id] : [];
+                      dtComponent.attr('value', JSON.stringify(locations));
+                      field_meta.val('');
                     }
-                    field_meta.val('');
                     break;
                 }
                 case 'location_meta': {
@@ -593,3 +636,11 @@ if (!window.SHAREDFUNCTIONS.setFieldsFromPost) {
         });
     };
 }
+
+// Call immediately to add methods
+ensureSharedFunctionsMethods();
+
+// Also call after DOM ready to re-add methods if shared-functions.js overwrites SHAREDFUNCTIONS
+jQuery(document).ready(function() {
+    ensureSharedFunctionsMethods();
+});
