@@ -543,20 +543,6 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                 }
             });
 
-            // Handle change events (for location value updates)
-            document.addEventListener('change', function(e) {
-                // Only process events from dt-location components
-                if (e.target && e.target.tagName === 'DT-LOCATION' && e.detail) {
-                    const field = e.detail.field;
-                    const oldValue = e.detail.oldValue;
-                    const newValue = e.detail.newValue;
-
-                    // TODO: Implement logic to handle location value changes
-                    // This is where we'll track location field updates for form submission
-                    console.log('[change] Field:', field, 'Old:', oldValue, 'New:', newValue);
-                }
-            });
-
             /**
              * Handle fetch request for assigned details
              */
