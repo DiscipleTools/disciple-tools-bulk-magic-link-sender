@@ -781,6 +781,26 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                 }
             });
 
+            /**
+             * Guard Foundation close calls for the missing mobile dropdown.
+             */
+            (function($) {
+                if (!$.fn.foundation || $.fn.__dt_ml_patched) {
+                    return;
+                }
+                const originalFoundation = $.fn.foundation;
+                $.fn.foundation = function(method) {
+                    if (
+                        method === 'close' &&
+                        (!this || this.length === 0)
+                    ) {
+                        return this;
+                    }
+                    return originalFoundation.apply(this, arguments);
+                };
+                $.fn.__dt_ml_patched = true;
+            })(jQuery);
+
         </script>
         <?php
         return true;
