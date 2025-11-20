@@ -54,20 +54,6 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends Disciple_Tools_Ma
                     <td class="last-update"><?php esc_html_e( 'Updated', 'disciple_tools' ) ?>: ${window.lodash.escape(post.last_modified.formatted)}</td>
                 </tr>`
             }
-
-            (function($) {
-                if (!$.fn.foundation || $.fn.__dt_ml_patched) {
-                    return;
-                }
-                const originalFoundation = $.fn.foundation;
-                $.fn.foundation = function(method) {
-                    if (method === 'close' && (!this || this.length === 0)) {
-                        return this;
-                    }
-                    return originalFoundation.apply(this, arguments);
-                };
-                $.fn.__dt_ml_patched = true;
-            })(jQuery);
         </script>
         <?php
         return true;

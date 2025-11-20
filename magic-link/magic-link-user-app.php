@@ -649,23 +649,6 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                     });
                 }
             });
-
-            /**
-             * Guard Foundation close calls that target missing dropdowns on magic link pages.
-             */
-            (function($) {
-                if (!$.fn.foundation || $.fn.__dt_ml_patched) {
-                    return;
-                }
-                const originalFoundation = $.fn.foundation;
-                $.fn.foundation = function(method) {
-                    if (method === 'close' && (!this || this.length === 0)) {
-                        return this;
-                    }
-                    return originalFoundation.apply(this, arguments);
-                };
-                $.fn.__dt_ml_patched = true;
-            })(jQuery);
         </script>
         <?php
         return true;
