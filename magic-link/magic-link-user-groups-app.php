@@ -26,6 +26,15 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends Disciple_Tools_Ma
 
     public function __construct() {
         parent::__construct();
+
+        /**
+         * Remove the Disciple.Tools global bundle when this magic link renders.
+         * `site-js` includes footer handlers that assume the standard UI chrome,
+         * which is absent on dt_blank_body pages. Dequeueing here keeps those
+         * handlers off the standalone magic link view without affecting the rest
+         * of the site.
+         */
+        add_action( 'wp_enqueue_scripts', [ $this, 'dequeue_site_js' ], 1000 );
         $this->meta['show_in_home_apps'] = true;
         $this->meta['icon'] = 'mdi mdi-account-group';
 
@@ -57,6 +66,21 @@ class Disciple_Tools_Magic_Links_Magic_User_Groups_App extends Disciple_Tools_Ma
         </script>
         <?php
         return true;
+    }
+
+    public function dequeue_site_js() {
+        if ( ! $this->is_active_magic_link_request() ) {
+            return;
+        }
+        wp_dequeue_script( 'site-js' );
+        wp_deregister_script( 'site-js' );
+    }
+
+    protected function is_active_magic_link_request(): bool {
+        if ( ( $this->parts['root'] ?? '' ) !== $this->root ) {
+            return false;
+        }
+        return ( $this->parts['type'] ?? '' ) === $this->type;
     }
 }
 

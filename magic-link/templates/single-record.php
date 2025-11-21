@@ -140,8 +140,23 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
      * Remove the theme's global site-js bundle on magic link pages.
      */
     public function dequeue_site_js() {
+        if ( ! $this->is_active_magic_link_request() ) {
+            return;
+        }
         wp_dequeue_script( 'site-js' );
         wp_deregister_script( 'site-js' );
+    }
+
+    protected function is_active_magic_link_request(): bool {
+        if ( empty( $this->template ) || empty( $this->parts ) ) {
+            return false;
+        }
+
+        if ( ( $this->template['type'] ?? '' ) !== $this->template_type ) {
+            return false;
+        }
+
+        return ( $this->parts['root'] ?? '' ) === $this->root;
     }
 
     // Ensure template fields remain editable

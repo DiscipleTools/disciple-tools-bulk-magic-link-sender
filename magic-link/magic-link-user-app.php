@@ -100,6 +100,15 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
         parent::__construct();
 
         /**
+         * Remove the Disciple.Tools global bundle when this magic link renders.
+         * `site-js` includes footer handlers that assume the standard UI chrome,
+         * which is absent on dt_blank_body pages. Dequeueing here keeps those
+         * handlers off the standalone magic link view without affecting the rest
+         * of the site.
+         */
+        add_action( 'wp_enqueue_scripts', [ $this, 'dequeue_site_js' ], 1000 );
+
+        /**
          * user_app and module section
          */
         add_filter( 'dt_settings_apps_list', [ $this, 'dt_settings_apps_list' ], 10, 1 );
@@ -151,6 +160,21 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
     }
 
     public function wp_enqueue_scripts() {
+    }
+
+    public function dequeue_site_js() {
+        if ( ! $this->is_active_magic_link_request() ) {
+            return;
+        }
+        wp_dequeue_script( 'site-js' );
+        wp_deregister_script( 'site-js' );
+    }
+
+    protected function is_active_magic_link_request(): bool {
+        if ( ( $this->parts['root'] ?? '' ) !== $this->root ) {
+            return false;
+        }
+        return ( $this->parts['type'] ?? '' ) === $this->type;
     }
 
     /**
