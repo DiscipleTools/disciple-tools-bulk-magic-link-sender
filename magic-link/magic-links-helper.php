@@ -288,10 +288,19 @@ class Disciple_Tools_Magic_Links_Helper
         }
     }
 
-    public static function update_user_logged_in_state() {
-        wp_set_current_user( 0 );
-        $current_user = wp_get_current_user();
-        $current_user->add_cap( 'magic_link' );
-        $current_user->display_name = sprintf( __( '%s Submission', 'disciple_tools' ), apply_filters( 'dt_magic_link_global_name', __( 'Magic Link', 'disciple_tools' ) ) );
+    public static function update_user_logged_in_state( $type = 'post', $auth_id = 0 ) {
+        switch ( $type ) {
+            case 'user':
+                wp_set_current_user( $auth_id );
+                break;
+
+            case 'post':
+            default:
+                wp_set_current_user( 0 );
+                $current_user = wp_get_current_user();
+                $current_user->add_cap( 'magic_link' );
+                $current_user->display_name = sprintf( __( '%s Submission', 'disciple_tools' ), apply_filters( 'dt_magic_link_global_name', __( 'Magic Link', 'disciple_tools' ) ) );
+                break;
+        }
     }
 }

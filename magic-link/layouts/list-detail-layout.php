@@ -140,7 +140,7 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
                 );
                 window.componentService.initialize();
 
-                // Add custom handler for user connections
+                // Add custom handler for user connections using magic link endpoint
                 document.addEventListener('dt:get-data', async (e) => {
                     const element = e.target;
                     const postType = element.getAttribute('data-posttype');
@@ -150,7 +150,19 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
                     if (postType === 'users' || tagName === 'dt-users-connection') {
                         const { query, onSuccess, onError } = e.detail;
                         try {
-                            const users = await window.componentService.api.searchUsers(query || '', jsObject.template.post_type);
+                            const url = `${jsObject.root}${jsObject.parts.root}/v1/${jsObject.parts.type}/search-users`;
+                            const response = await fetch(url, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-WP-Nonce': jsObject.nonce
+                                },
+                                body: JSON.stringify({
+                                    parts: jsObject.parts,
+                                    s: query || ''
+                                })
+                            });
+                            const users = await response.json();
                             const formattedUsers = users.map(u => ({
                                 id: u.ID,
                                 label: u.name,
