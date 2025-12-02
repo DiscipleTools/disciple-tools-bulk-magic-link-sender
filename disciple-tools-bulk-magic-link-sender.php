@@ -99,6 +99,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender {
         require_once( 'magic-link/templates/create-record.php' );
         require_once( 'magic-link/templates/list-sub-assigned.php' );
         require_once( 'magic-link/templates/post-connections.php' );
+        require_once( 'magic-link/templates/list-template.php' );
         require_once( 'magic-link/layouts/list-detail-layout.php' );
 
         class_alias( 'Disciple_Tools_Magic_Links_Helper', 'DT_ML_Helper' ); // make a shorter, easier alias for helper class
