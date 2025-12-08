@@ -85,6 +85,20 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
 
         $this->meta_key = $this->root . '_' . $this->type;
         parent::__construct();
+
+        /**
+         * Disciple.Tools enqueues its global bundle (`site-js`) for every request.
+         * That bundle includes `footer-scripts.js`, which assumes the standard UI
+         * chrome (e.g. the mobile add-new dropdown). Magic link pages render on a
+         * blank canvas via `dt_blank_body`, so those DOM elements do not exist and
+         * Foundation throws when `site-js` runs.
+         *
+         * To keep the theme’s behavior untouched elsewhere, we simply dequeue the
+         * bundle on this template after the theme enqueues it (priority > 999).
+         * The template enqueues only the scripts it actually needs (Mapbox, etc.),
+         * so nothing functional is lost.
+         */
+        add_action( 'wp_enqueue_scripts', [ $this, 'dequeue_site_js' ], 1000 );
         add_action( 'rest_api_init', [ $this, 'add_endpoints' ] );
 
         /**
@@ -120,6 +134,29 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
         add_filter( 'dt_magic_url_base_allowed_js', [ $this, 'dt_magic_url_base_allowed_js' ], 10, 1 );
         add_action( 'wp_enqueue_scripts', [ $this, 'wp_enqueue_scripts' ], 100 );
         add_filter( 'dt_can_update_permission', [ $this, 'can_update_permission_filter' ], 10, 3 );
+    }
+
+    /**
+     * Remove the theme's global site-js bundle on magic link pages.
+     */
+    public function dequeue_site_js() {
+        if ( ! $this->is_active_magic_link_request() ) {
+            return;
+        }
+        wp_dequeue_script( 'site-js' );
+        wp_deregister_script( 'site-js' );
+    }
+
+    protected function is_active_magic_link_request(): bool {
+        if ( empty( $this->template ) || empty( $this->parts ) ) {
+            return false;
+        }
+
+        if ( ( $this->template['type'] ?? '' ) !== $this->template_type ) {
+            return false;
+        }
+
+        return ( $this->parts['root'] ?? '' ) === $this->root;
     }
 
     // Ensure template fields remain editable
