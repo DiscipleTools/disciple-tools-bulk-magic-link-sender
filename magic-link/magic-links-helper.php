@@ -103,10 +103,7 @@ class Disciple_Tools_Magic_Links_Helper
 
             <?php elseif ( $field_type === 'tags' ) : ?>
                 <?php $value = array_map(function ( $value ) {
-                    return [
-                        'id' => $value,
-                        'label' => $value,
-                    ];
+                    return $value;
                 }, $post[$field_key] ?? []);
                 ?>
                 <dt-tags
