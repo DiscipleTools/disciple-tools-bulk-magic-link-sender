@@ -16,6 +16,10 @@ function loadPostDetail(id) {
   const postLoadEventDetail = { id };
 
   if (id > 0) {
+    // check if post exists in list items
+    if (!listItems.has(id.toString())) {
+      return;
+    }
     const item = listItems.get(id.toString());
     postLoadEventDetail.post = item;
 
