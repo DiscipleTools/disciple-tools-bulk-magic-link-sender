@@ -16,6 +16,10 @@ function loadPostDetail(id) {
   const postLoadEventDetail = { id };
 
   if (id > 0) {
+    // check if post exists in list items
+    if (!listItems.has(id.toString())) {
+      return;
+    }
     const item = listItems.get(id.toString());
     postLoadEventDetail.post = item;
 
@@ -529,4 +533,8 @@ document.addEventListener('DOMContentLoaded', attachFilterListeners);
 window.addEventListener('load', () => {
   const apiVersion = jsObject.parts.version ?? 'v1';
   window.apiRoot = jsObject.root + jsObject.parts.root + '/' + apiVersion + '/' + jsObject.parts.type;
+
+  if (jsObject.pid) {
+    loadPostDetail(jsObject.pid);
+  }
 });
