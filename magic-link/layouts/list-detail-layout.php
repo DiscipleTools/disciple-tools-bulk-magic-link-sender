@@ -432,7 +432,7 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
 
                     <div id="detail-content"></div>
                     <footer>
-                        <dt-button onclick="saveItem(event)" type="submit" context="primary"><?php esc_html_e( 'Submit Update', 'disciple_tools' ) ?></dt-button>
+                        <dt-button onclick="saveItem(event)" type="button" context="primary"><?php esc_html_e( 'Submit Update', 'disciple_tools' ) ?></dt-button>
                     </footer>
                 </form>
 
