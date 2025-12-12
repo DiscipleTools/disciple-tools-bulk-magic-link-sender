@@ -529,4 +529,8 @@ document.addEventListener('DOMContentLoaded', attachFilterListeners);
 window.addEventListener('load', () => {
   const apiVersion = jsObject.parts.version ?? 'v1';
   window.apiRoot = jsObject.root + jsObject.parts.root + '/' + apiVersion + '/' + jsObject.parts.type;
+
+  if (jsObject.pid) {
+    loadPostDetail(jsObject.pid);
+  }
 });

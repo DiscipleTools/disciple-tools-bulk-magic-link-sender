@@ -91,17 +91,49 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
     }
 
     /**
+     * Adjusts the permalink property of the data to be a link to the post detail page.
+     * @param $data
+     * @return void
+     */
+    private function adjust_permalink_property( &$data )
+    {
+        if ( is_array( $data ) || is_object( $data ) ) {
+            foreach ( $data as &$value ) {
+                if ( is_array( $value ) || is_object( $value ) ) {
+                    $this->adjust_permalink_property( $value );
+                }
+            }
+            if ( is_array( $data ) && isset( $data['permalink'] ) ) {
+                if ( isset( $data['ID'] ) ) {
+                    $data['permalink'] = '?pid=' . $data['ID'];
+                } else {
+                    unset( $data['permalink'] );
+                }
+            } elseif ( is_object( $data ) && isset( $data->permalink ) ) {
+                unset( $data->permalink );
+            }
+        }
+    }
+
+    /**
      * Writes javascript to the footer
      */
-    public function footer_javascript( $parts, $items ) {
+    public function footer_javascript( $parts, $items )
+    {
         $localized_template_field_settings = DT_ML_Helper::localized_template_selected_field_settings( $this->template );
         $localized_post_field_settings = DT_ML_Helper::localized_post_selected_field_settings( $this->post, $localized_template_field_settings, [ 'ID', 'post_type' ] );
+        $this->adjust_permalink_property( $items );
+
+        // connection field links use this pid, so we can possibly link to the correct post
+        $pid = isset( $_GET['pid'] ) ? sanitize_text_field( wp_unslash( $_GET['pid'] ) ) : null;
+
         ?>
         <script>
             let jsObject = [<?php echo json_encode( [
                 'root'                    => esc_url_raw( rest_url() ),
                 'nonce'                   => wp_create_nonce( 'wp_rest' ),
                 'parts'                   => $parts,
+                'pid'                     => $pid,
                 'post'                    => $localized_post_field_settings,
                 'items'                   => $items,
                 'template'                => $this->template,
