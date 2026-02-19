@@ -103,6 +103,33 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
                 }
             ]
         );
+        register_rest_route(
+            $namespace, '/set_link_expiration_direct', [
+                'methods'             => WP_REST_Server::CREATABLE,
+                'callback'            => [ $this, 'set_link_expiration_direct' ],
+                'permission_callback' => function ( WP_REST_Request $request ) {
+                    return $this->has_permission();
+                }
+            ]
+        );
+        register_rest_route(
+            $namespace, '/sync_expiration_hash', [
+                'methods'             => WP_REST_Server::CREATABLE,
+                'callback'            => [ $this, 'sync_expiration_hash' ],
+                'permission_callback' => function ( WP_REST_Request $request ) {
+                    return $this->has_permission();
+                }
+            ]
+        );
+        register_rest_route(
+            $namespace, '/clear_link_expiration', [
+                'methods'             => WP_REST_Server::CREATABLE,
+                'callback'            => [ $this, 'clear_link_expiration' ],
+                'permission_callback' => function ( WP_REST_Request $request ) {
+                    return $this->has_permission();
+                }
+            ]
+        );
     }
 
     public function setup_payload( WP_REST_Request $request ): array{
@@ -214,7 +241,15 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
 
                         // Iterate over all assigned and update their respective expiration timestamps
                         foreach ( $assigned ?? [] as &$member ) {
-                            $member = Disciple_Tools_Bulk_Magic_Link_Sender_API::refresh_user_links_expiration_values( $member, $base_ts, $amt, $time_unit, $never_expires );
+                            $member = Disciple_Tools_Bulk_Magic_Link_Sender_API::refresh_links_expiration_values( $member, $base_ts, $amt, $time_unit, $never_expires );
+                            
+                            // Store expiration settings in member for sync
+                            $member->links_expire_within_amount = $amt;
+                            $member->links_expire_within_time_unit = $time_unit;
+                            $member->links_never_expires = $never_expires;
+                            
+                            // Sync expiration to post_meta/user_option for consistency
+                            $this->sync_expiration_to_meta( $link_obj, $member );
                         }
                     }
                     break;
@@ -227,6 +262,9 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
                         $member->links_expire_within_base_ts  = '';
                         $member->links_expire_on_ts           = '';
                         $member->links_expire_on_ts_formatted = '';
+                        
+                        // Sync cleared expiration to post_meta/user_option
+                        $this->sync_expiration_to_meta( $link_obj, $member );
                     }
                     break;
             }
@@ -293,7 +331,15 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
                                 $time_unit     = $params['links_expire_within_time_unit'];
                                 $never_expires = in_array( strtolower( $params['links_never_expires'] ), [ 'true' ] );
 
-                                $record = Disciple_Tools_Bulk_Magic_Link_Sender_API::refresh_user_links_expiration_values( $record, $base_ts, $amt, $time_unit, $never_expires );
+                                $record = Disciple_Tools_Bulk_Magic_Link_Sender_API::refresh_links_expiration_values( $record, $base_ts, $amt, $time_unit, $never_expires );
+                                
+                                // Store expiration settings in record for sync
+                                $record->links_expire_within_amount = $amt;
+                                $record->links_expire_within_time_unit = $time_unit;
+                                $record->links_never_expires = $never_expires;
+                                
+                                // Sync expiration to post_meta/user_option for consistency
+                                $this->sync_expiration_to_meta( $link_obj, $record );
 
                             }
 
@@ -359,6 +405,72 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
                     } else {
                         $response['success'] = false;
                         $response['message'] = 'Unable to execute action[' . $params['action'] . '], due to invalid link object and/or record not already assigned.';
+                    }
+
+                    break;
+
+                case 'update_expiration':
+
+                    // Load link object
+                    $link_obj = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $params['link_obj_id'] );
+                    if ( ! empty( $link_obj ) && isset( $link_obj->id ) && Disciple_Tools_Bulk_Magic_Link_Sender_API::is_already_assigned( $record->id, $link_obj ) ) {
+
+                        // Find and update the matching assigned record
+                        $updated = false;
+                        foreach ( $link_obj->assigned ?? [] as &$assigned_record ) {
+                            if ( $assigned_record->id === $record->id ) {
+
+                                // Update expiration values if provided
+                                if ( isset( $params['links_expire_within_amount'], $params['links_expire_within_time_unit'], $params['links_never_expires'] ) ) {
+
+                                    $base_ts       = ! empty( $assigned_record->links_expire_within_base_ts ) ? $assigned_record->links_expire_within_base_ts : time();
+                                    $amt           = $params['links_expire_within_amount'];
+                                    $time_unit     = $params['links_expire_within_time_unit'];
+                                    $never_expires = in_array( strtolower( $params['links_never_expires'] ), [ 'true' ] );
+
+                                    // If never expires is false and we have amount/time_unit, use current time as base
+                                    if ( ! $never_expires && ! empty( $amt ) && ! empty( $time_unit ) ) {
+                                        $base_ts = time();
+                                    }
+
+                                    $assigned_record = Disciple_Tools_Bulk_Magic_Link_Sender_API::refresh_links_expiration_values( $assigned_record, $base_ts, $amt, $time_unit, $never_expires );
+                                    
+                                    // Sync expiration to post_meta/user_option for consistency
+                                    $this->sync_expiration_to_meta( $link_obj, $assigned_record );
+                                    
+                                    $updated = true;
+                                }
+
+                                // Return updated expiration info
+                                $magic_link_type = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_magic_link_type( $link_obj->type );
+                                $response['ml_links'][Disciple_Tools_Bulk_Magic_Link_Sender_API::generate_magic_link_type_key( $link_obj )] = [
+                                    'url' => Disciple_Tools_Bulk_Magic_Link_Sender_API::build_magic_link_url( $link_obj, $assigned_record, $magic_link_type['url_base'], false ),
+                                    'expires' => [
+                                        'ts' => $assigned_record->links_expire_on_ts ?? '',
+                                        'ts_formatted' => $assigned_record->links_expire_on_ts_formatted ?? '---',
+                                        'ts_base' => $assigned_record->links_expire_within_base_ts ?? ''
+                                    ]
+                                ];
+
+                                $response['record'] = $assigned_record;
+                                break;
+                            }
+                        }
+
+                        if ( $updated ) {
+                            // Save updated link object
+                            Disciple_Tools_Bulk_Magic_Link_Sender_API::update_option_link_obj( $link_obj );
+
+                            $response['success'] = true;
+                            $response['message'] = 'Expiration updated successfully.';
+                        } else {
+                            $response['success'] = false;
+                            $response['message'] = 'Unable to update expiration, due to missing parameters.';
+                        }
+
+                    } else {
+                        $response['success'] = false;
+                        $response['message'] = 'Unable to execute action[' . $params['action'] . '], due to invalid link object and/or record not assigned.';
                     }
 
                     break;
@@ -577,6 +689,246 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
             'dt_teams' => $dt_teams,
             'dt_groups' => $dt_groups
         ];
+    }
+
+    public function set_link_expiration_direct( WP_REST_Request $request ): array {
+        $response = [];
+        $params = $request->get_params();
+
+        // Validate required parameters
+        if ( ! isset( $params['meta_key'], $params['sys_type'] ) ) {
+            $response['success'] = false;
+            $response['message'] = 'Missing required parameters: meta_key and sys_type.';
+            return $response;
+        }
+
+        $meta_key = $params['meta_key'];
+        $sys_type = $params['sys_type'];
+        $id = null;
+
+        // Determine ID based on sys_type
+        if ( $sys_type === 'wp_user' ) {
+            if ( ! isset( $params['user_id'] ) ) {
+                $response['success'] = false;
+                $response['message'] = 'Missing required parameter: user_id.';
+                return $response;
+            }
+            $id = $params['user_id'];
+        } elseif ( $sys_type === 'post' ) {
+            if ( ! isset( $params['post_id'] ) ) {
+                $response['success'] = false;
+                $response['message'] = 'Missing required parameter: post_id.';
+                return $response;
+            }
+            $id = $params['post_id'];
+        } else {
+            $response['success'] = false;
+            $response['message'] = 'Invalid sys_type. Must be "post" or "wp_user".';
+            return $response;
+        }
+
+        // Get expiration parameters
+        $links_expire_within_amount = $params['links_expire_within_amount'] ?? '';
+        $links_expire_within_time_unit = $params['links_expire_within_time_unit'] ?? '';
+        $links_never_expires = isset( $params['links_never_expires'] ) && in_array( strtolower( $params['links_never_expires'] ), [ 'true', '1' ] );
+
+        // Calculate expiration values
+        $base_ts = time();
+        $expiration_data = [
+            'links_expire_within_base_ts' => $base_ts,
+            'links_expire_within_amount' => $links_expire_within_amount,
+            'links_expire_within_time_unit' => $links_expire_within_time_unit,
+            'links_never_expires' => $links_never_expires
+        ];
+
+        // Use refresh_links_expiration_values to calculate expiry timestamps
+        $temp_user = (object) $expiration_data;
+        $temp_user = Disciple_Tools_Bulk_Magic_Link_Sender_API::refresh_links_expiration_values(
+            $temp_user,
+            $base_ts,
+            $links_expire_within_amount,
+            $links_expire_within_time_unit,
+            $links_never_expires
+        );
+
+        // Prepare expiration data for storage
+        $expiration_data['links_expire_within_base_ts'] = $temp_user->links_expire_within_base_ts;
+        $expiration_data['links_expire_on_ts'] = $temp_user->links_expire_on_ts;
+        $expiration_data['links_expire_on_ts_formatted'] = $temp_user->links_expire_on_ts_formatted;
+
+        // Update expiration in meta storage
+        $success = Disciple_Tools_Bulk_Magic_Link_Sender_API::update_link_expiration_in_meta(
+            $meta_key,
+            $id,
+            $sys_type,
+            $expiration_data
+        );
+
+        if ( $success ) {
+            // Also update link_obj if it exists (for consistency)
+            $link_objs = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_objs();
+            foreach ( $link_objs as $link_obj ) {
+                $generated_key = Disciple_Tools_Bulk_Magic_Link_Sender_API::generate_magic_link_type_key( $link_obj );
+                if ( $generated_key === $meta_key ) {
+                    // Find matching assigned record and update expiration
+                    $updated = false;
+                    foreach ( $link_obj->assigned ?? [] as &$assigned_record ) {
+                        if ( isset( $assigned_record->dt_id ) && $assigned_record->dt_id == $id ) {
+                            $assigned_record->links_expire_within_base_ts = $expiration_data['links_expire_within_base_ts'];
+                            $assigned_record->links_expire_on_ts = $expiration_data['links_expire_on_ts'];
+                            $assigned_record->links_expire_on_ts_formatted = $expiration_data['links_expire_on_ts_formatted'];
+                            $updated = true;
+                            break;
+                        }
+                    }
+                    if ( $updated ) {
+                        Disciple_Tools_Bulk_Magic_Link_Sender_API::update_option_link_obj( $link_obj );
+                    }
+                    break;
+                }
+            }
+
+            $response['success'] = true;
+            $response['message'] = 'Expiration updated successfully.';
+            $response['expires'] = [
+                'ts' => $expiration_data['links_expire_on_ts'],
+                'ts_formatted' => $expiration_data['links_expire_on_ts_formatted'],
+                'ts_base' => $expiration_data['links_expire_within_base_ts']
+            ];
+        } else {
+            $response['success'] = false;
+            $response['message'] = 'Failed to update expiration.';
+        }
+
+        return $response;
+    }
+
+    public function sync_expiration_hash( WP_REST_Request $request ): array {
+        $response = [];
+        $params = $request->get_params();
+
+        // Validate required parameters
+        if ( ! isset( $params['meta_key'], $params['sys_type'], $params['old_hash'], $params['new_hash'] ) ) {
+            $response['success'] = false;
+            $response['message'] = 'Missing required parameters: meta_key, sys_type, old_hash, new_hash.';
+            return $response;
+        }
+
+        $meta_key = $params['meta_key'];
+        $sys_type = $params['sys_type'];
+        $old_hash = $params['old_hash'];
+        $new_hash = $params['new_hash'];
+        $id = null;
+
+        // Determine ID based on sys_type
+        if ( $sys_type === 'wp_user' ) {
+            $id = $params['user_id'] ?? null;
+        } elseif ( $sys_type === 'post' ) {
+            $id = $params['post_id'] ?? null;
+        }
+
+        if ( empty( $id ) ) {
+            $response['success'] = false;
+            $response['message'] = 'Missing required parameter: ' . ( $sys_type === 'wp_user' ? 'user_id' : 'post_id' ) . '.';
+            return $response;
+        }
+
+        // Sync expiration hash
+        $success = Disciple_Tools_Bulk_Magic_Link_Sender_API::sync_expiration_hash(
+            $meta_key,
+            $id,
+            $sys_type,
+            $old_hash,
+            $new_hash
+        );
+
+        $response['success'] = $success;
+        $response['message'] = $success ? 'Expiration hash synced successfully.' : 'Failed to sync expiration hash.';
+
+        return $response;
+    }
+
+    public function clear_link_expiration( WP_REST_Request $request ): array {
+        $response = [];
+        $params = $request->get_params();
+
+        // Validate required parameters
+        if ( ! isset( $params['meta_key'], $params['sys_type'] ) ) {
+            $response['success'] = false;
+            $response['message'] = 'Missing required parameters: meta_key, sys_type.';
+            return $response;
+        }
+
+        $meta_key = $params['meta_key'];
+        $sys_type = $params['sys_type'];
+        $id = null;
+
+        // Determine ID based on sys_type
+        if ( $sys_type === 'wp_user' ) {
+            $id = $params['user_id'] ?? null;
+        } elseif ( $sys_type === 'post' ) {
+            $id = $params['post_id'] ?? null;
+        }
+
+        if ( empty( $id ) ) {
+            $response['success'] = false;
+            $response['message'] = 'Missing required parameter: ' . ( $sys_type === 'wp_user' ? 'user_id' : 'post_id' ) . '.';
+            return $response;
+        }
+
+        // Clear expiration data
+        $success = Disciple_Tools_Bulk_Magic_Link_Sender_API::delete_link_expiration_from_meta(
+            $meta_key,
+            $id,
+            $sys_type
+        );
+
+        $response['success'] = $success;
+        $response['message'] = $success ? 'Expiration cleared successfully.' : 'Failed to clear expiration.';
+
+        return $response;
+    }
+
+    /**
+     * Helper function to sync expiration from link_obj to post_meta/user_option
+     *
+     * @param object $link_obj Link object
+     * @param object $member Assigned member record
+     * @return void
+     */
+    private function sync_expiration_to_meta( $link_obj, $member ) {
+        if ( empty( $link_obj ) || empty( $member ) || ! isset( $member->dt_id, $member->sys_type ) ) {
+            return;
+        }
+
+        // Get meta_key for this link_obj
+        $meta_key = Disciple_Tools_Bulk_Magic_Link_Sender_API::generate_magic_link_type_key( $link_obj );
+        if ( empty( $meta_key ) ) {
+            return;
+        }
+
+        // Get expiration settings from member if available, otherwise from link_obj
+        $links_expire_within_amount = $member->links_expire_within_amount ?? ( $link_obj->link_manage->links_expire_within_amount ?? '' );
+        $links_expire_within_time_unit = $member->links_expire_within_time_unit ?? ( $link_obj->link_manage->links_expire_within_time_unit ?? '' );
+        $links_never_expires = isset( $member->links_never_expires ) ? $member->links_never_expires : ( $link_obj->link_manage->links_never_expires ?? false );
+
+        // Prepare expiration data
+        $expiration_data = [
+            'links_expire_within_base_ts' => $member->links_expire_within_base_ts ?? '',
+            'links_expire_on_ts' => $member->links_expire_on_ts ?? '',
+            'links_expire_on_ts_formatted' => $member->links_expire_on_ts_formatted ?? '---',
+            'links_expire_within_amount' => $links_expire_within_amount,
+            'links_expire_within_time_unit' => $links_expire_within_time_unit,
+            'links_never_expires' => $links_never_expires
+        ];
+
+        // Sync to meta storage
+        Disciple_Tools_Bulk_Magic_Link_Sender_API::update_link_expiration_in_meta(
+            $meta_key,
+            $member->dt_id,
+            $member->sys_type,
+            $expiration_data
+        );
     }
 
     private static $_instance = null;

@@ -182,12 +182,58 @@ class ML_Send_Email_Job extends Job{
 
 add_filter( 'dt_magic_link_continue', 'dt_magic_link_continue', 10, 2 );
 function dt_magic_link_continue( bool $response, array $args ){
-    $link_obj_id = $args['instance_id'];
-    $post_id = $args['post_id'];
-    if ( isset( $link_obj_id, $post_id ) ){
+    // Extract required parameters from args
+    $meta_key = $args['meta_key'] ?? '';
+    $public_key = $args['public_key'] ?? '';
+    $post_id = $args['post_id'] ?? null;
+    $post_type = $args['post_type'] ?? '';
+    $link_obj_id = $args['instance_id'] ?? null;
+
+    // Ensure we have minimum required data
+    if ( empty( $meta_key ) || empty( $public_key ) || empty( $post_id ) ) {
+        return $response;
+    }
+
+    // Determine system type (wp_user or post)
+    $sys_type = ( $post_type === 'user' ) ? 'wp_user' : 'post';
+    $id = (int) $post_id;
+
+    // STEP 1: Check independent expiration from post_meta/user_option (if available)
+    if ( class_exists( 'Disciple_Tools_Bulk_Magic_Link_Sender_API' ) ) {
+        $expiration_data = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_link_expiration_from_meta( $meta_key, $id, $sys_type );
+
+        // If we have independent expiration data, check it first
+        if ( ! empty( $expiration_data ) && ( ! empty( $expiration_data['ts'] ) || ! empty( $expiration_data['ts_base'] ) || $expiration_data['links_never_expires'] === true ) ) {
+            // Verify hash matches (ensure expiration data is for current link, not a stale reset)
+            $current_hash = $expiration_data['current_hash'] ?? '';
+            if ( ! empty( $current_hash ) && $current_hash !== $public_key ) {
+                // Hash mismatch - link was reset, expiration data is stale
+                // Fall through to link_obj checking below
+            } else {
+                // Hash matches (or no hash stored yet) - check expiration
+                $never_expires = $expiration_data['links_never_expires'] ?? false;
+                $base_ts = $expiration_data['ts_base'] ?? '';
+                $amount = $expiration_data['links_expire_within_amount'] ?? '';
+                $time_unit = $expiration_data['links_expire_within_time_unit'] ?? '';
+
+                // Check if link has expired
+                if ( Disciple_Tools_Bulk_Magic_Link_Sender_API::has_links_expired( $never_expires, $base_ts, $amount, $time_unit ) === true ) {
+                    // Link has expired - return false to redirect to expired landing page
+                    return false;
+                }
+
+                // Link is still valid - return true
+                return true;
+            }
+        }
+    }
+
+    // STEP 2: Fallback to link_obj checking (backward compatibility)
+    if ( ! empty( $link_obj_id ) && class_exists( 'Disciple_Tools_Bulk_Magic_Link_Sender_API' ) ) {
         $link_obj = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $link_obj_id );
 
         if ( !empty( $link_obj ) ){
+            // Check if link_obj itself is enabled/expired
             if ( isset( $link_obj->enabled, $link_obj->never_expires, $link_obj->expires ) && ( ( $link_obj->enabled === false ) || Disciple_Tools_Bulk_Magic_Link_Sender_API::has_obj_expired( $link_obj->never_expires, $link_obj->expires ) ) ){
                 return false;
             }
@@ -211,6 +257,7 @@ function dt_magic_link_continue( bool $response, array $args ){
         }
     }
 
+    // If no expiration checks apply, return original response
     return $response;
 }
 
