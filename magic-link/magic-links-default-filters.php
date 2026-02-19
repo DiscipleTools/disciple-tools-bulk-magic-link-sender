@@ -206,10 +206,8 @@ function dt_magic_link_continue( bool $response, array $args ){
         if ( ! empty( $expiration_data ) && ( ! empty( $expiration_data['ts'] ) || ! empty( $expiration_data['ts_base'] ) || $expiration_data['links_never_expires'] === true ) ) {
             // Verify hash matches (ensure expiration data is for current link, not a stale reset)
             $current_hash = $expiration_data['current_hash'] ?? '';
-            if ( ! empty( $current_hash ) && $current_hash !== $public_key ) {
-                // Hash mismatch - link was reset, expiration data is stale
-                // Fall through to link_obj checking below
-            } else {
+            // If hash matches (or no hash stored yet), check expiration
+            if ( empty( $current_hash ) || $current_hash === $public_key ) {
                 // Hash matches (or no hash stored yet) - check expiration
                 $never_expires = $expiration_data['links_never_expires'] ?? false;
                 $base_ts = $expiration_data['ts_base'] ?? '';
@@ -225,6 +223,7 @@ function dt_magic_link_continue( bool $response, array $args ){
                 // Link is still valid - return true
                 return true;
             }
+            // Hash mismatch - link was reset, expiration data is stale - fall through to link_obj checking
         }
     }
 

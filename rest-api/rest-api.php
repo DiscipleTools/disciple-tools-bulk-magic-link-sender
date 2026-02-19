@@ -242,12 +242,12 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
                         // Iterate over all assigned and update their respective expiration timestamps
                         foreach ( $assigned ?? [] as &$member ) {
                             $member = Disciple_Tools_Bulk_Magic_Link_Sender_API::refresh_links_expiration_values( $member, $base_ts, $amt, $time_unit, $never_expires );
-                            
+
                             // Store expiration settings in member for sync
                             $member->links_expire_within_amount = $amt;
                             $member->links_expire_within_time_unit = $time_unit;
                             $member->links_never_expires = $never_expires;
-                            
+
                             // Sync expiration to post_meta/user_option for consistency
                             $this->sync_expiration_to_meta( $link_obj, $member );
                         }
@@ -262,7 +262,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
                         $member->links_expire_within_base_ts  = '';
                         $member->links_expire_on_ts           = '';
                         $member->links_expire_on_ts_formatted = '';
-                        
+
                         // Sync cleared expiration to post_meta/user_option
                         $this->sync_expiration_to_meta( $link_obj, $member );
                     }
@@ -332,12 +332,12 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
                                 $never_expires = in_array( strtolower( $params['links_never_expires'] ), [ 'true' ] );
 
                                 $record = Disciple_Tools_Bulk_Magic_Link_Sender_API::refresh_links_expiration_values( $record, $base_ts, $amt, $time_unit, $never_expires );
-                                
+
                                 // Store expiration settings in record for sync
                                 $record->links_expire_within_amount = $amt;
                                 $record->links_expire_within_time_unit = $time_unit;
                                 $record->links_never_expires = $never_expires;
-                                
+
                                 // Sync expiration to post_meta/user_option for consistency
                                 $this->sync_expiration_to_meta( $link_obj, $record );
 
@@ -434,10 +434,10 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
                                     }
 
                                     $assigned_record = Disciple_Tools_Bulk_Magic_Link_Sender_API::refresh_links_expiration_values( $assigned_record, $base_ts, $amt, $time_unit, $never_expires );
-                                    
+
                                     // Sync expiration to post_meta/user_option for consistency
                                     $this->sync_expiration_to_meta( $link_obj, $assigned_record );
-                                    
+
                                     $updated = true;
                                 }
 
@@ -467,7 +467,6 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
                             $response['success'] = false;
                             $response['message'] = 'Unable to update expiration, due to missing parameters.';
                         }
-
                     } else {
                         $response['success'] = false;
                         $response['message'] = 'Unable to execute action[' . $params['action'] . '], due to invalid link object and/or record not assigned.';
