@@ -726,10 +726,16 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
             return $response;
         }
 
-        // Get expiration parameters
+        // Get expiration parameters (frontend no longer sends "never expires"; require amount + unit)
         $links_expire_within_amount = $params['links_expire_within_amount'] ?? '';
         $links_expire_within_time_unit = $params['links_expire_within_time_unit'] ?? '';
-        $links_never_expires = isset( $params['links_never_expires'] ) && in_array( strtolower( $params['links_never_expires'] ), [ 'true', '1' ] );
+        $links_never_expires = false;
+
+        if ( empty( $links_expire_within_amount ) || empty( $links_expire_within_time_unit ) || (int) $links_expire_within_amount < 1 ) {
+            $response['success'] = false;
+            $response['message'] = 'Please enter a valid expiration amount and time unit.';
+            return $response;
+        }
 
         // Calculate expiration values
         $base_ts = time();
@@ -789,9 +795,11 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
 
             $response['success'] = true;
             $response['message'] = 'Expiration updated successfully.';
+            $ts = $expiration_data['links_expire_on_ts'] ?? '';
             $response['expires'] = [
-                'ts' => $expiration_data['links_expire_on_ts'],
+                'ts' => $ts,
                 'ts_formatted' => $expiration_data['links_expire_on_ts_formatted'],
+                'ts_formatted_short' => ! empty( $ts ) ? date_i18n( 'n/j/y G:i', (int) $ts ) : '',
                 'ts_base' => $expiration_data['links_expire_within_base_ts']
             ];
         } else {
