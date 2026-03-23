@@ -181,83 +181,12 @@ class ML_Send_Email_Job extends Job{
  */
 
 add_filter( 'dt_magic_link_continue', 'dt_magic_link_continue', 10, 2 );
-function dt_magic_link_continue( bool $response, array $args ){
-    // Extract required parameters from args
-    $meta_key = $args['meta_key'] ?? '';
-    $public_key = $args['public_key'] ?? '';
-    $post_id = $args['post_id'] ?? null;
-    $post_type = $args['post_type'] ?? '';
-    $link_obj_id = $args['instance_id'] ?? null;
-
-    // Ensure we have minimum required data
-    if ( empty( $meta_key ) || empty( $public_key ) || empty( $post_id ) ) {
+function dt_magic_link_continue( bool $response, array $args ) {
+    if ( ! class_exists( 'Disciple_Tools_Bulk_Magic_Link_Sender_API' ) ) {
         return $response;
     }
 
-    // Determine system type (wp_user or post)
-    $sys_type = ( $post_type === 'user' ) ? 'wp_user' : 'post';
-    $id = (int) $post_id;
-
-    // STEP 1: Check independent expiration from post_meta/user_option (if available)
-    if ( class_exists( 'Disciple_Tools_Bulk_Magic_Link_Sender_API' ) ) {
-        $expiration_data = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_link_expiration_from_meta( $meta_key, $id, $sys_type );
-
-        // If we have independent expiration data, check it first
-        if ( ! empty( $expiration_data ) && ( ! empty( $expiration_data['ts'] ) || ! empty( $expiration_data['ts_base'] ) || $expiration_data['links_never_expires'] === true ) ) {
-            // Verify hash matches (ensure expiration data is for current link, not a stale reset)
-            $current_hash = $expiration_data['current_hash'] ?? '';
-            // If hash matches (or no hash stored yet), check expiration
-            if ( empty( $current_hash ) || $current_hash === $public_key ) {
-                // Hash matches (or no hash stored yet) - check expiration
-                $never_expires = $expiration_data['links_never_expires'] ?? false;
-                $base_ts = $expiration_data['ts_base'] ?? '';
-                $amount = $expiration_data['links_expire_within_amount'] ?? '';
-                $time_unit = $expiration_data['links_expire_within_time_unit'] ?? '';
-
-                // Check if link has expired
-                if ( Disciple_Tools_Bulk_Magic_Link_Sender_API::has_links_expired( $never_expires, $base_ts, $amount, $time_unit ) === true ) {
-                    // Link has expired - return false to redirect to expired landing page
-                    return false;
-                }
-
-                // Link is still valid - return true
-                return true;
-            }
-            // Hash mismatch - link was reset, expiration data is stale - fall through to link_obj checking
-        }
-    }
-
-    // STEP 2: Fallback to link_obj checking (backward compatibility)
-    if ( ! empty( $link_obj_id ) && class_exists( 'Disciple_Tools_Bulk_Magic_Link_Sender_API' ) ) {
-        $link_obj = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $link_obj_id );
-
-        if ( !empty( $link_obj ) ){
-            // Check if link_obj itself is enabled/expired
-            if ( isset( $link_obj->enabled, $link_obj->never_expires, $link_obj->expires ) && ( ( $link_obj->enabled === false ) || Disciple_Tools_Bulk_Magic_Link_Sender_API::has_obj_expired( $link_obj->never_expires, $link_obj->expires ) ) ){
-                return false;
-            }
-
-            // Identify corresponding user's link object expiry status.
-            $has_expired = false;
-            foreach ( $link_obj->assigned ?? [] as $assigned ){
-                if ( $assigned->dt_id === $post_id ){
-                    if ( isset( $link_obj->link_manage->links_never_expires, $assigned->links_expire_within_base_ts, $link_obj->link_manage->links_expire_within_amount, $link_obj->link_manage->links_expire_within_time_unit ) ){
-                        if ( Disciple_Tools_Bulk_Magic_Link_Sender_API::has_links_expired( $link_obj->link_manage->links_never_expires, $assigned->links_expire_within_base_ts, $link_obj->link_manage->links_expire_within_amount, $link_obj->link_manage->links_expire_within_time_unit ) === true ){
-                            $has_expired = true;
-
-                            // Nuke any stale, expired magic links
-                            Disciple_Tools_Bulk_Magic_Link_Sender_API::update_magic_links( $link_obj, [ $assigned ], true );
-                        }
-                    }
-                }
-            }
-
-            return !$has_expired;
-        }
-    }
-
-    // If no expiration checks apply, return original response
-    return $response;
+    return Disciple_Tools_Bulk_Magic_Link_Sender_API::evaluate_magic_link_continue( $response, $args );
 }
 
 /**

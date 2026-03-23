@@ -796,11 +796,12 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
             $response['success'] = true;
             $response['message'] = 'Expiration updated successfully.';
             $ts = $expiration_data['links_expire_on_ts'] ?? '';
+            $ts_int = ( $ts !== '' && $ts !== null ) ? (int) $ts : 0;
             $response['expires'] = [
-                'ts' => $ts,
+                'ts' => $ts_int,
                 'ts_formatted' => $expiration_data['links_expire_on_ts_formatted'],
                 'ts_formatted_short' => ! empty( $ts ) ? date_i18n( 'n/j/y G:i', (int) $ts ) : '',
-                'ts_base' => $expiration_data['links_expire_within_base_ts']
+                'ts_base' => $expiration_data['links_expire_within_base_ts'],
             ];
         } else {
             $response['success'] = false;
