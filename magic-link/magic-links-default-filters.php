@@ -181,37 +181,12 @@ class ML_Send_Email_Job extends Job{
  */
 
 add_filter( 'dt_magic_link_continue', 'dt_magic_link_continue', 10, 2 );
-function dt_magic_link_continue( bool $response, array $args ){
-    $link_obj_id = $args['instance_id'];
-    $post_id = $args['post_id'];
-    if ( isset( $link_obj_id, $post_id ) ){
-        $link_obj = Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $link_obj_id );
-
-        if ( !empty( $link_obj ) ){
-            if ( isset( $link_obj->enabled, $link_obj->never_expires, $link_obj->expires ) && ( ( $link_obj->enabled === false ) || Disciple_Tools_Bulk_Magic_Link_Sender_API::has_obj_expired( $link_obj->never_expires, $link_obj->expires ) ) ){
-                return false;
-            }
-
-            // Identify corresponding user's link object expiry status.
-            $has_expired = false;
-            foreach ( $link_obj->assigned ?? [] as $assigned ){
-                if ( $assigned->dt_id === $post_id ){
-                    if ( isset( $link_obj->link_manage->links_never_expires, $assigned->links_expire_within_base_ts, $link_obj->link_manage->links_expire_within_amount, $link_obj->link_manage->links_expire_within_time_unit ) ){
-                        if ( Disciple_Tools_Bulk_Magic_Link_Sender_API::has_links_expired( $link_obj->link_manage->links_never_expires, $assigned->links_expire_within_base_ts, $link_obj->link_manage->links_expire_within_amount, $link_obj->link_manage->links_expire_within_time_unit ) === true ){
-                            $has_expired = true;
-
-                            // Nuke any stale, expired magic links
-                            Disciple_Tools_Bulk_Magic_Link_Sender_API::update_magic_links( $link_obj, [ $assigned ], true );
-                        }
-                    }
-                }
-            }
-
-            return !$has_expired;
-        }
+function dt_magic_link_continue( bool $response, array $args ) {
+    if ( ! class_exists( 'Disciple_Tools_Bulk_Magic_Link_Sender_API' ) ) {
+        return $response;
     }
 
-    return $response;
+    return Disciple_Tools_Bulk_Magic_Link_Sender_API::evaluate_magic_link_continue( $response, $args );
 }
 
 /**

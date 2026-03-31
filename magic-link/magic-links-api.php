@@ -131,15 +131,16 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
         $links = [];
         foreach ( self::fetch_option_link_objs() as $link_obj ) {
             if ( ! empty( $link_obj ) ) {
-                $hash = get_user_option( self::generate_magic_link_type_key( $link_obj ), $user_id );
+                $magic_key = self::generate_magic_link_type_key( $link_obj );
+                $hash = get_user_option( $magic_key, $user_id );
                 if ( ! empty( $hash ) ) {
                     $magic_link_type = self::fetch_magic_link_type( $link_obj->type );
                     if ( ! empty( $magic_link_type ) ) {
 
-                        // Package both url and identified expiry details.
-                        $links[self::generate_magic_link_type_key( $link_obj )] = [
+                        // Package both url and identified expiry details using unified wrapper
+                        $links[$magic_key] = [
                             'url' => trailingslashit( trailingslashit( site_url() ) . $magic_link_type['url_base'] ) . $hash,
-                            'expires' => self::capture_configured_expiry_details( $link_obj, $user_id )
+                            'expires' => self::capture_expiry_details( $magic_key, $user_id, 'wp_user', $link_obj )
                         ];
                     }
                 }
@@ -153,7 +154,8 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
         $links = [];
         foreach ( self::fetch_option_link_objs() as $link_obj ) {
             if ( ! empty( $link_obj ) ) {
-                $hash = get_post_meta( $post_id, self::generate_magic_link_type_key( $link_obj ), true );
+                $magic_key = self::generate_magic_link_type_key( $link_obj );
+                $hash = get_post_meta( $post_id, $magic_key, true );
                 if ( ! empty( $hash ) ) {
                     $magic_link_type = self::fetch_magic_link_type( $link_obj->type );
                     if ( ! empty( $magic_link_type ) ) {
@@ -164,10 +166,10 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
                             $magic_link_url_base = str_replace( '_magic_key', '', $magic_link_url_base );
                         }
 
-                        // Package both url and identified expiry details.
-                        $links[self::generate_magic_link_type_key( $link_obj )] = [
+                        // Package both url and identified expiry details using unified wrapper
+                        $links[$magic_key] = [
                             'url' => trailingslashit( trailingslashit( site_url() ) . $magic_link_url_base ) . $hash,
-                            'expires' => self::capture_configured_expiry_details( $link_obj, $post_id )
+                            'expires' => self::capture_expiry_details( $magic_key, $post_id, 'post', $link_obj )
                         ];
                     }
                 }
@@ -180,7 +182,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
     public static function capture_configured_expiry_details( $link_obj, $id ): array{
         $expires = [
             'ts' => '',
-            'ts_formatted' => '---',
+            'ts_formatted' => __( 'Does not expire', 'disciple_tools' ),
             'ts_base' => ''
         ];
         if ( !empty( $link_obj ) ){
@@ -188,7 +190,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
                 if ( isset( $assigned->dt_id ) && $assigned->dt_id == $id ){
                     $expires = [
                         'ts' => $assigned->links_expire_on_ts ?? '',
-                        'ts_formatted' => $assigned->links_expire_on_ts_formatted ?? '---',
+                        'ts_formatted' => $assigned->links_expire_on_ts_formatted ?? __( 'Does not expire', 'disciple_tools' ),
                         'ts_base' => $assigned->links_expire_within_base_ts ?? ''
                     ];
                 }
@@ -642,11 +644,11 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
                     // Ensure to handle non-expiring links a little differently
                     if ( ! $link_obj->link_manage->links_never_expires ) {
                         self::update_magic_links( $link_obj, [ $user ], false );
-                        $user   = self::refresh_user_links_expiration_values( $user, time(), $link_obj->link_manage->links_expire_within_amount, $link_obj->link_manage->links_expire_within_time_unit, $link_obj->link_manage->links_never_expires );
+                        $user   = self::refresh_links_expiration_values( $user, time(), $link_obj->link_manage->links_expire_within_amount, $link_obj->link_manage->links_expire_within_time_unit, $link_obj->link_manage->links_never_expires );
                         $logs[] = self::logging_create( 'Refreshed user [' . $user->name . '] magic link.' );
 
                     } else {
-                        $user = self::refresh_user_links_expiration_values( $user, $user->links_expire_within_base_ts, $link_obj->link_manage->links_expire_within_amount, $link_obj->link_manage->links_expire_within_time_unit, $link_obj->link_manage->links_never_expires );
+                        $user = self::refresh_links_expiration_values( $user, $user->links_expire_within_base_ts, $link_obj->link_manage->links_expire_within_amount, $link_obj->link_manage->links_expire_within_time_unit, $link_obj->link_manage->links_never_expires );
                     }
                 } else if ( self::has_links_expired( $link_obj->link_manage->links_never_expires, $user->links_expire_within_base_ts, $link_obj->link_manage->links_expire_within_amount, $link_obj->link_manage->links_expire_within_time_unit ) ) {
 
@@ -877,6 +879,76 @@ Thanks!';
         $expiry_point = self::determine_links_expiry_point( $amt, $time_unit, $base_ts );
 
         return !( $expiry_point === false ) && $expiry_point < time(); // In the past!
+    }
+
+    /**
+     * Evaluate whether a magic link request should proceed given expiration rules.
+     * Used by the dt_magic_link_continue filter and by theme REST permission checks.
+     *
+     * @param bool  $default_response Returned when no expiration rules apply (typically true).
+     * @param array $args             Keys: meta_key, public_key, post_id, post_type, instance_id (optional).
+     * @return bool False if access must be denied; otherwise true or the default response.
+     */
+    public static function evaluate_magic_link_continue( bool $default_response, array $args ): bool {
+        $meta_key = $args['meta_key'] ?? '';
+        $public_key = $args['public_key'] ?? '';
+        $post_id = $args['post_id'] ?? null;
+        $post_type = $args['post_type'] ?? '';
+        $link_obj_id = $args['instance_id'] ?? null;
+
+        if ( empty( $meta_key ) || empty( $public_key ) || empty( $post_id ) ) {
+            return $default_response;
+        }
+
+        $sys_type = ( $post_type === 'user' ) ? 'wp_user' : 'post';
+        $id = (int) $post_id;
+
+        // STEP 1: Independent expiration from post_meta / user_option.
+        $expiration_data = self::fetch_link_expiration_from_meta( $meta_key, $id, $sys_type );
+
+        if ( ! empty( $expiration_data ) && ( ! empty( $expiration_data['ts'] ) || ! empty( $expiration_data['ts_base'] ) || $expiration_data['links_never_expires'] === true ) ) {
+            $current_hash = $expiration_data['current_hash'] ?? '';
+            if ( empty( $current_hash ) || $current_hash === $public_key ) {
+                $never_expires = $expiration_data['links_never_expires'] ?? false;
+                $base_ts = $expiration_data['ts_base'] ?? '';
+                $amount = $expiration_data['links_expire_within_amount'] ?? '';
+                $time_unit = $expiration_data['links_expire_within_time_unit'] ?? '';
+
+                if ( self::has_links_expired( $never_expires, $base_ts, $amount, $time_unit ) === true ) {
+                    return false;
+                }
+
+                return true;
+            }
+        }
+
+        // STEP 2: Fallback to link_obj (backward compatibility).
+        if ( ! empty( $link_obj_id ) ) {
+            $link_obj = self::fetch_option_link_obj( $link_obj_id );
+
+            if ( ! empty( $link_obj ) ) {
+                if ( isset( $link_obj->enabled, $link_obj->never_expires, $link_obj->expires ) && ( ( $link_obj->enabled === false ) || self::has_obj_expired( $link_obj->never_expires, $link_obj->expires ) ) ) {
+                    return false;
+                }
+
+                $has_expired = false;
+                foreach ( $link_obj->assigned ?? [] as $assigned ) {
+                    if ( (int) $assigned->dt_id === (int) $post_id ) {
+                        if ( isset( $link_obj->link_manage->links_never_expires, $assigned->links_expire_within_base_ts, $link_obj->link_manage->links_expire_within_amount, $link_obj->link_manage->links_expire_within_time_unit ) ) {
+                            if ( self::has_links_expired( $link_obj->link_manage->links_never_expires, $assigned->links_expire_within_base_ts, $link_obj->link_manage->links_expire_within_amount, $link_obj->link_manage->links_expire_within_time_unit ) === true ) {
+                                $has_expired = true;
+
+                                self::update_magic_links( $link_obj, [ $assigned ], true );
+                            }
+                        }
+                    }
+                }
+
+                return ! $has_expired;
+            }
+        }
+
+        return $default_response;
     }
 
     public static function fetch_links_expired_formatted_date( $never_expires, $base_ts, $amt, $time_unit ): string {
@@ -1456,7 +1528,7 @@ Thanks!';
         }
     }
 
-    public static function refresh_user_links_expiration_values( $user, $base_ts, $amt, $time_unit, $never_expires ) {
+    public static function refresh_links_expiration_values( $user, $base_ts, $amt, $time_unit, $never_expires ) {
         $expiry_point = self::determine_links_expiry_point( $amt, $time_unit, $base_ts );
 
         $user->links_expire_within_base_ts  = $base_ts;
@@ -1464,5 +1536,167 @@ Thanks!';
         $user->links_expire_on_ts_formatted = self::fetch_links_expired_formatted_date( $never_expires, $base_ts, $amt, $time_unit );
 
         return $user;
+    }
+
+    /**
+     * Fetch expiration data from post_meta or user_option (independent storage)
+     *
+     * @param string $meta_key Magic link meta_key
+     * @param int $id Post ID or User ID
+     * @param string $sys_type 'post' or 'wp_user'
+     * @return array Expiration data array
+     */
+    public static function fetch_link_expiration_from_meta( $meta_key, $id, $sys_type ): array {
+        $default = [
+            'ts' => '',
+            'ts_formatted' => __( 'Does not expire', 'disciple_tools' ),
+            'ts_base' => '',
+            'links_expire_within_amount' => '',
+            'links_expire_within_time_unit' => '',
+            'links_never_expires' => false,
+            'current_hash' => ''
+        ];
+
+        $expiration_meta_key = $meta_key . '_expiration';
+
+        switch ( strtolower( trim( $sys_type ) ) ) {
+            case 'wp_user':
+                $stored_data = get_user_option( $expiration_meta_key, $id );
+                break;
+            case 'post':
+                $stored_data = get_post_meta( $id, $expiration_meta_key, true );
+                break;
+            default:
+                return $default;
+        }
+
+        if ( empty( $stored_data ) ) {
+            return $default;
+        }
+
+        // Handle both array and JSON string formats
+        if ( is_string( $stored_data ) ) {
+            $stored_data = json_decode( $stored_data, true );
+        }
+
+        if ( ! is_array( $stored_data ) ) {
+            return $default;
+        }
+
+        return [
+            'ts' => $stored_data['links_expire_on_ts'] ?? '',
+            'ts_formatted' => $stored_data['links_expire_on_ts_formatted'] ?? $default['ts_formatted'],
+            'ts_base' => $stored_data['links_expire_within_base_ts'] ?? '',
+            'links_expire_within_amount' => $stored_data['links_expire_within_amount'] ?? '',
+            'links_expire_within_time_unit' => $stored_data['links_expire_within_time_unit'] ?? '',
+            'links_never_expires' => $stored_data['links_never_expires'] ?? false,
+            'current_hash' => $stored_data['current_hash'] ?? ''
+        ];
+    }
+
+    /**
+     * Update expiration data in post_meta or user_option (independent storage)
+     *
+     * @param string $meta_key Magic link meta_key
+     * @param int $id Post ID or User ID
+     * @param string $sys_type 'post' or 'wp_user'
+     * @param array $expiration_data Expiration settings array
+     * @param string|null $current_hash Optional current hash (auto-fetched if not provided)
+     * @return bool Success status
+     */
+    public static function update_link_expiration_in_meta( $meta_key, $id, $sys_type, $expiration_data, $current_hash = null ): bool {
+        $expiration_meta_key = $meta_key . '_expiration';
+
+        // Fetch current hash if not provided
+        if ( $current_hash === null ) {
+            switch ( strtolower( trim( $sys_type ) ) ) {
+                case 'wp_user':
+                    $current_hash = get_user_option( $meta_key, $id );
+                    break;
+                case 'post':
+                    $current_hash = get_post_meta( $id, $meta_key, true );
+                    break;
+                default:
+                    $current_hash = '';
+            }
+        }
+
+        // Prepare data structure
+        $data_to_store = [
+            'links_expire_within_base_ts' => $expiration_data['links_expire_within_base_ts'] ?? '',
+            'links_expire_on_ts' => $expiration_data['links_expire_on_ts'] ?? '',
+            'links_expire_on_ts_formatted' => $expiration_data['links_expire_on_ts_formatted'] ?? __( 'Does not expire', 'disciple_tools' ),
+            'links_expire_within_amount' => $expiration_data['links_expire_within_amount'] ?? '',
+            'links_expire_within_time_unit' => $expiration_data['links_expire_within_time_unit'] ?? '',
+            'links_never_expires' => $expiration_data['links_never_expires'] ?? false,
+            'current_hash' => $current_hash
+        ];
+
+        // Store data
+        switch ( strtolower( trim( $sys_type ) ) ) {
+            case 'wp_user':
+                return update_user_option( $id, $expiration_meta_key, $data_to_store );
+            case 'post':
+                return update_post_meta( $id, $expiration_meta_key, $data_to_store );
+            default:
+                return false;
+        }
+    }
+
+
+    /**
+     * Delete expiration data from post_meta or user_option (when link is reset)
+     *
+     * @param string $meta_key Magic link meta_key
+     * @param int $id Post ID or User ID
+     * @param string $sys_type 'post' or 'wp_user'
+     * @return bool Success status
+     */
+    public static function delete_link_expiration_from_meta( $meta_key, $id, $sys_type ): bool {
+        $expiration_meta_key = $meta_key . '_expiration';
+
+        switch ( strtolower( trim( $sys_type ) ) ) {
+            case 'wp_user':
+                return delete_user_option( $id, $expiration_meta_key );
+            case 'post':
+                return delete_post_meta( $id, $expiration_meta_key );
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * Unified wrapper to capture expiry details from any source (meta storage or link_obj)
+     *
+     * @param string $meta_key Magic link meta_key
+     * @param int $id Post ID or User ID
+     * @param string $sys_type 'post' or 'wp_user'
+     * @param object|null $link_obj Optional link object for fallback
+     * @return array Expiration data array
+     */
+    public static function capture_expiry_details( $meta_key, $id, $sys_type, $link_obj = null ): array {
+        // First, try fetching from independent meta storage
+        $expiration_data = self::fetch_link_expiration_from_meta( $meta_key, $id, $sys_type );
+
+        // If we have valid expiration data from meta, return it
+        if ( ! empty( $expiration_data['ts'] ) || ! empty( $expiration_data['ts_base'] ) || $expiration_data['links_never_expires'] === true ) {
+            return [
+                'ts' => $expiration_data['ts'],
+                'ts_formatted' => $expiration_data['ts_formatted'],
+                'ts_base' => $expiration_data['ts_base']
+            ];
+        }
+
+        // Fallback to link_obj if provided (backward compatibility)
+        if ( ! empty( $link_obj ) ) {
+            return self::capture_configured_expiry_details( $link_obj, $id );
+        }
+
+        // Return default empty structure
+        return [
+            'ts' => '',
+            'ts_formatted' => __( 'Does not expire', 'disciple_tools' ),
+            'ts_base' => ''
+        ];
     }
 }
