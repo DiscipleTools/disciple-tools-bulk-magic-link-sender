@@ -349,7 +349,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
                                 'url' => Disciple_Tools_Bulk_Magic_Link_Sender_API::build_magic_link_url( $link_obj, $record, $magic_link_type['url_base'], false ),
                                 'expires' => [
                                     'ts' => $record->links_expire_on_ts ?? '',
-                                    'ts_formatted' => $record->links_expire_on_ts_formatted ?? '---',
+                                    'ts_formatted' => $record->links_expire_on_ts_formatted ?? __( 'Does not expire', 'disciple_tools' ),
                                     'ts_base' => $record->links_expire_within_base_ts ?? ''
                                 ]
                             ];
@@ -447,7 +447,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
                                     'url' => Disciple_Tools_Bulk_Magic_Link_Sender_API::build_magic_link_url( $link_obj, $assigned_record, $magic_link_type['url_base'], false ),
                                     'expires' => [
                                         'ts' => $assigned_record->links_expire_on_ts ?? '',
-                                        'ts_formatted' => $assigned_record->links_expire_on_ts_formatted ?? '---',
+                                        'ts_formatted' => $assigned_record->links_expire_on_ts_formatted ?? __( 'Does not expire', 'disciple_tools' ),
                                         'ts_base' => $assigned_record->links_expire_within_base_ts ?? ''
                                     ]
                                 ];
@@ -924,7 +924,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
         $expiration_data = [
             'links_expire_within_base_ts' => $member->links_expire_within_base_ts ?? '',
             'links_expire_on_ts' => $member->links_expire_on_ts ?? '',
-            'links_expire_on_ts_formatted' => $member->links_expire_on_ts_formatted ?? '---',
+            'links_expire_on_ts_formatted' => $member->links_expire_on_ts_formatted ?? __( 'Does not expire', 'disciple_tools' ),
             'links_expire_within_amount' => $links_expire_within_amount,
             'links_expire_within_time_unit' => $links_expire_within_time_unit,
             'links_never_expires' => $links_never_expires

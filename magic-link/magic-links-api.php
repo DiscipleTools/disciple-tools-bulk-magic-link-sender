@@ -182,7 +182,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
     public static function capture_configured_expiry_details( $link_obj, $id ): array{
         $expires = [
             'ts' => '',
-            'ts_formatted' => '---',
+            'ts_formatted' => __( 'Does not expire', 'disciple_tools' ),
             'ts_base' => ''
         ];
         if ( !empty( $link_obj ) ){
@@ -190,7 +190,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_API {
                 if ( isset( $assigned->dt_id ) && $assigned->dt_id == $id ){
                     $expires = [
                         'ts' => $assigned->links_expire_on_ts ?? '',
-                        'ts_formatted' => $assigned->links_expire_on_ts_formatted ?? '---',
+                        'ts_formatted' => $assigned->links_expire_on_ts_formatted ?? __( 'Does not expire', 'disciple_tools' ),
                         'ts_base' => $assigned->links_expire_within_base_ts ?? ''
                     ];
                 }
@@ -1560,7 +1560,7 @@ Thanks!';
             default:
                 return [
                     'ts' => '',
-                    'ts_formatted' => '---',
+                    'ts_formatted' => __( 'Does not expire', 'disciple_tools' ),
                     'ts_base' => '',
                     'links_expire_within_amount' => '',
                     'links_expire_within_time_unit' => '',
@@ -1578,7 +1578,7 @@ Thanks!';
             if ( is_array( $stored_data ) ) {
                 $expiration_data = [
                     'ts' => $stored_data['links_expire_on_ts'] ?? '',
-                    'ts_formatted' => $stored_data['links_expire_on_ts_formatted'] ?? '---',
+                    'ts_formatted' => $stored_data['links_expire_on_ts_formatted'] ?? __( 'Does not expire', 'disciple_tools' ),
                     'ts_base' => $stored_data['links_expire_within_base_ts'] ?? '',
                     'links_expire_within_amount' => $stored_data['links_expire_within_amount'] ?? '',
                     'links_expire_within_time_unit' => $stored_data['links_expire_within_time_unit'] ?? '',
@@ -1592,7 +1592,7 @@ Thanks!';
         if ( empty( $expiration_data ) ) {
             $expiration_data = [
                 'ts' => '',
-                'ts_formatted' => '---',
+                'ts_formatted' => __( 'Does not expire', 'disciple_tools' ),
                 'ts_base' => '',
                 'links_expire_within_amount' => '',
                 'links_expire_within_time_unit' => '',
@@ -1732,7 +1732,7 @@ Thanks!';
         // Return default empty structure
         return [
             'ts' => '',
-            'ts_formatted' => '---',
+            'ts_formatted' => __( 'Does not expire', 'disciple_tools' ),
             'ts_base' => ''
         ];
     }
