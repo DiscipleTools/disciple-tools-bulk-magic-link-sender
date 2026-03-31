@@ -113,15 +113,6 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
             ]
         );
         register_rest_route(
-            $namespace, '/sync_expiration_hash', [
-                'methods'             => WP_REST_Server::CREATABLE,
-                'callback'            => [ $this, 'sync_expiration_hash' ],
-                'permission_callback' => function ( WP_REST_Request $request ) {
-                    return $this->has_permission();
-                }
-            ]
-        );
-        register_rest_route(
             $namespace, '/clear_link_expiration', [
                 'methods'             => WP_REST_Server::CREATABLE,
                 'callback'            => [ $this, 'clear_link_expiration' ],
@@ -811,50 +802,6 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
         return $response;
     }
 
-    public function sync_expiration_hash( WP_REST_Request $request ): array {
-        $response = [];
-        $params = $request->get_params();
-
-        // Validate required parameters
-        if ( ! isset( $params['meta_key'], $params['sys_type'], $params['old_hash'], $params['new_hash'] ) ) {
-            $response['success'] = false;
-            $response['message'] = 'Missing required parameters: meta_key, sys_type, old_hash, new_hash.';
-            return $response;
-        }
-
-        $meta_key = $params['meta_key'];
-        $sys_type = $params['sys_type'];
-        $old_hash = $params['old_hash'];
-        $new_hash = $params['new_hash'];
-        $id = null;
-
-        // Determine ID based on sys_type
-        if ( $sys_type === 'wp_user' ) {
-            $id = $params['user_id'] ?? null;
-        } elseif ( $sys_type === 'post' ) {
-            $id = $params['post_id'] ?? null;
-        }
-
-        if ( empty( $id ) ) {
-            $response['success'] = false;
-            $response['message'] = 'Missing required parameter: ' . ( $sys_type === 'wp_user' ? 'user_id' : 'post_id' ) . '.';
-            return $response;
-        }
-
-        // Sync expiration hash
-        $success = Disciple_Tools_Bulk_Magic_Link_Sender_API::sync_expiration_hash(
-            $meta_key,
-            $id,
-            $sys_type,
-            $old_hash,
-            $new_hash
-        );
-
-        $response['success'] = $success;
-        $response['message'] = $success ? 'Expiration hash synced successfully.' : 'Failed to sync expiration hash.';
-
-        return $response;
-    }
 
     public function clear_link_expiration( WP_REST_Request $request ): array {
         $response = [];

@@ -1635,7 +1635,7 @@ Thanks!';
         $data_to_store = [
             'links_expire_within_base_ts' => $expiration_data['links_expire_within_base_ts'] ?? '',
             'links_expire_on_ts' => $expiration_data['links_expire_on_ts'] ?? '',
-            'links_expire_on_ts_formatted' => $expiration_data['links_expire_on_ts_formatted'] ?? '---',
+            'links_expire_on_ts_formatted' => $expiration_data['links_expire_on_ts_formatted'] ?? __( 'Does not expire', 'disciple_tools' ),
             'links_expire_within_amount' => $expiration_data['links_expire_within_amount'] ?? '',
             'links_expire_within_time_unit' => $expiration_data['links_expire_within_time_unit'] ?? '',
             'links_never_expires' => $expiration_data['links_never_expires'] ?? false,
@@ -1653,33 +1653,6 @@ Thanks!';
         }
     }
 
-    /**
-     * Sync expiration hash when magic link hash changes (e.g., on reset)
-     *
-     * @param string $meta_key Magic link meta_key
-     * @param int $id Post ID or User ID
-     * @param string $sys_type 'post' or 'wp_user'
-     * @param string $old_hash Previous hash
-     * @param string $new_hash New hash
-     * @return bool Success status
-     */
-    public static function sync_expiration_hash( $meta_key, $id, $sys_type, $old_hash, $new_hash ): bool {
-        $expiration_data = self::fetch_link_expiration_from_meta( $meta_key, $id, $sys_type );
-
-        // Only update if current_hash matches old_hash (ensures we're updating the right expiration)
-        if ( ! empty( $expiration_data['current_hash'] ) && $expiration_data['current_hash'] === $old_hash ) {
-            $expiration_data['current_hash'] = $new_hash;
-            return self::update_link_expiration_in_meta( $meta_key, $id, $sys_type, $expiration_data, $new_hash );
-        }
-
-        // If no current_hash stored or doesn't match, still update it (might be first time setting hash)
-        if ( empty( $expiration_data['current_hash'] ) ) {
-            $expiration_data['current_hash'] = $new_hash;
-            return self::update_link_expiration_in_meta( $meta_key, $id, $sys_type, $expiration_data, $new_hash );
-        }
-
-        return true; // Hash already synced or doesn't need syncing
-    }
 
     /**
      * Delete expiration data from post_meta or user_option (when link is reset)
