@@ -1547,8 +1547,17 @@ Thanks!';
      * @return array Expiration data array
      */
     public static function fetch_link_expiration_from_meta( $meta_key, $id, $sys_type ): array {
+        $default = [
+            'ts' => '',
+            'ts_formatted' => __( 'Does not expire', 'disciple_tools' ),
+            'ts_base' => '',
+            'links_expire_within_amount' => '',
+            'links_expire_within_time_unit' => '',
+            'links_never_expires' => false,
+            'current_hash' => ''
+        ];
+
         $expiration_meta_key = $meta_key . '_expiration';
-        $expiration_data = [];
 
         switch ( strtolower( trim( $sys_type ) ) ) {
             case 'wp_user':
@@ -1558,50 +1567,31 @@ Thanks!';
                 $stored_data = get_post_meta( $id, $expiration_meta_key, true );
                 break;
             default:
-                return [
-                    'ts' => '',
-                    'ts_formatted' => __( 'Does not expire', 'disciple_tools' ),
-                    'ts_base' => '',
-                    'links_expire_within_amount' => '',
-                    'links_expire_within_time_unit' => '',
-                    'links_never_expires' => false,
-                    'current_hash' => ''
-                ];
+                return $default;
         }
 
-        if ( ! empty( $stored_data ) ) {
-            // Handle both array and JSON string formats
-            if ( is_string( $stored_data ) ) {
-                $stored_data = json_decode( $stored_data, true );
-            }
-
-            if ( is_array( $stored_data ) ) {
-                $expiration_data = [
-                    'ts' => $stored_data['links_expire_on_ts'] ?? '',
-                    'ts_formatted' => $stored_data['links_expire_on_ts_formatted'] ?? __( 'Does not expire', 'disciple_tools' ),
-                    'ts_base' => $stored_data['links_expire_within_base_ts'] ?? '',
-                    'links_expire_within_amount' => $stored_data['links_expire_within_amount'] ?? '',
-                    'links_expire_within_time_unit' => $stored_data['links_expire_within_time_unit'] ?? '',
-                    'links_never_expires' => $stored_data['links_never_expires'] ?? false,
-                    'current_hash' => $stored_data['current_hash'] ?? ''
-                ];
-            }
+        if ( empty( $stored_data ) ) {
+            return $default;
         }
 
-        // Return default structure if no data found
-        if ( empty( $expiration_data ) ) {
-            $expiration_data = [
-                'ts' => '',
-                'ts_formatted' => __( 'Does not expire', 'disciple_tools' ),
-                'ts_base' => '',
-                'links_expire_within_amount' => '',
-                'links_expire_within_time_unit' => '',
-                'links_never_expires' => false,
-                'current_hash' => ''
-            ];
+        // Handle both array and JSON string formats
+        if ( is_string( $stored_data ) ) {
+            $stored_data = json_decode( $stored_data, true );
         }
 
-        return $expiration_data;
+        if ( ! is_array( $stored_data ) ) {
+            return $default;
+        }
+
+        return [
+            'ts' => $stored_data['links_expire_on_ts'] ?? '',
+            'ts_formatted' => $stored_data['links_expire_on_ts_formatted'] ?? $default['ts_formatted'],
+            'ts_base' => $stored_data['links_expire_within_base_ts'] ?? '',
+            'links_expire_within_amount' => $stored_data['links_expire_within_amount'] ?? '',
+            'links_expire_within_time_unit' => $stored_data['links_expire_within_time_unit'] ?? '',
+            'links_never_expires' => $stored_data['links_never_expires'] ?? false,
+            'current_hash' => $stored_data['current_hash'] ?? ''
+        ];
     }
 
     /**
