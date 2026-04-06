@@ -121,6 +121,29 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Endpoints {
                 }
             ]
         );
+        register_rest_route(
+            $namespace, '/get_rendered_fields', [
+                'methods'             => WP_REST_Server::READABLE,
+                'callback'            => [ $this, 'get_rendered_fields' ],
+                'permission_callback' => function ( WP_REST_Request $request ) {
+                    return $this->has_permission();
+                }
+            ]
+        );
+    }
+
+    public function get_rendered_fields( WP_REST_Request $request ): array {
+        $params = $request->get_params();
+        $post_type = $params['post_type'] ?? 'contacts';
+        $preset_values = $params['preset_values'] ?? [];
+        if ( is_string( $preset_values ) ) {
+            $preset_values = json_decode( $preset_values, true ) ?? [];
+        }
+
+        return [
+            'success' => true,
+            'html' => Disciple_Tools_Bulk_Magic_Link_Sender_API::render_all_fields_for_display( $post_type, $preset_values )
+        ];
     }
 
     public function setup_payload( WP_REST_Request $request ): array{

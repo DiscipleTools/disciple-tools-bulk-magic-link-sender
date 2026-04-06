@@ -108,13 +108,24 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
         }
 
         /**
-         * Initialize empty post for new record creation - no existing post needed
+         * Initialize empty post for new record creation, incorporating preset values if available.
          */
 
         $this->post = [
-            'ID' => 0,
             'post_type' => $this->record_type,
         ];
+
+        if ( ! empty( $this->template['preset_values'] ) && is_array( $this->template['preset_values'] ) ) {
+            foreach ( $this->template['preset_values'] as $key => $value ) {
+                if ( is_string( $value ) && ( strpos( $value, '[' ) === 0 || strpos( $value, '{' ) === 0 ) ) {
+                    $decoded = json_decode( htmlspecialchars_decode( $value ), true );
+                    if ( json_last_error() === JSON_ERROR_NONE ) {
+                        $value = $decoded;
+                    }
+                }
+                $this->post[$key] = $value;
+            }
+        }
 
         /**
          * Attempt to load corresponding link object, if a valid incoming id has been detected.
@@ -237,12 +248,12 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
         ?>
         <style>
             html {
-                height: 100%;
+                min-height: 100%;
             }
             body {
                 background-color: white;
                 padding: 1em;
-                height: 100%;
+                min-height: 100%;
             }
 
             .create-form {
@@ -783,7 +794,8 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
                                         'link',
                                         'communication_channel',
                                         'location',
-                                        'location_meta'
+                                        'location_meta',
+                                        'tags'
                                     ] ) ) {
                                         continue;
                                     }
@@ -802,7 +814,7 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
 
                                         // Check if function exists
                                         if ( function_exists( 'render_field_for_display' ) ) {
-                                            render_field_for_display( $field_id, $this->post_field_settings, $empty_post, null, null, null, [] );
+                                            render_field_for_display( $field_id, $this->post_field_settings, $this->post, null, null, null, [] );
                                         } else {
                                             echo '<p>Error: Field rendering function not found</p>';
                                         }
@@ -830,9 +842,9 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
                                 $this->post_field_settings['name']['required'] = true;
 
                                 if ( function_exists( 'render_field_for_display' ) ) {
-                                    render_field_for_display( 'name', $this->post_field_settings, $empty_post );
+                                    render_field_for_display( 'name', $this->post_field_settings, $this->post );
                                 } else if ( class_exists( 'Disciple_Tools_Magic_Links_Helper' ) ) {
-                                    Disciple_Tools_Magic_Links_Helper::render_field_for_display( 'name', $this->post_field_settings, $empty_post );
+                                    Disciple_Tools_Magic_Links_Helper::render_field_for_display( 'name', $this->post_field_settings, $this->post );
                                 }
                                 ?>
                             </div>
@@ -896,6 +908,17 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
 
         // Prepare record fields for DT_Posts::create_post
         $updates = [];
+        if ( ! empty( $this->template['preset_values'] ) && is_array( $this->template['preset_values'] ) ) {
+            foreach ( $this->template['preset_values'] as $key => $value ) {
+                if ( is_string( $value ) && ( strpos( $value, '[' ) === 0 || strpos( $value, '{' ) === 0 ) ) {
+                    $decoded = json_decode( htmlspecialchars_decode( $value ), true );
+                    if ( json_last_error() === JSON_ERROR_NONE ) {
+                        $value = $decoded;
+                    }
+                }
+                $updates[$key] = $value;
+            }
+        }
 
         // Process DT field values using the same approach as create-contact.php
         foreach ( $params['fields']['dt'] ?? [] as $field ) {

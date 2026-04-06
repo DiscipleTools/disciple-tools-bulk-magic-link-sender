@@ -1065,6 +1065,25 @@ Thanks!';
         }
     }
 
+    public static function render_all_fields_for_display( $post_type, $preset_values = [] ) {
+        $field_settings = DT_Posts::get_post_field_settings( $post_type, false );
+        $post = $preset_values;
+        $post['post_type'] = $post_type;
+
+        $excluded_types = [ 'connection', 'user_select', 'location', 'location_meta' ];
+
+        ob_start();
+        foreach ( $field_settings as $field_key => $field ) {
+            if ( in_array( $field['type'] ?? '', $excluded_types ) ) {
+                continue;
+            }
+            echo '<div style="margin-bottom: 1rem;">';
+            Disciple_Tools_Magic_Links_Helper::render_field_for_display( $field_key, $field_settings, $post );
+            echo '</div>';
+        }
+        return ob_get_clean();
+    }
+
     public static function fetch_endpoint_setup_payload_url(): string {
         return trailingslashit( site_url() ) . 'wp-json/disciple_tools_magic_links/v1/setup_payload';
     }
@@ -1091,6 +1110,10 @@ Thanks!';
 
     public static function fetch_endpoint_report_url(): string {
         return trailingslashit( site_url() ) . 'wp-json/disciple_tools_magic_links/v1/report';
+    }
+
+    public static function fetch_endpoint_get_rendered_fields_url(): string {
+        return trailingslashit( site_url() ) . 'wp-json/disciple_tools_magic_links/v1/get_rendered_fields';
     }
 
     public static function fetch_endpoint_typeahead_users_teams_groups_url(): string {
