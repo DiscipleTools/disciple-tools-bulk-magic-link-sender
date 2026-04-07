@@ -112,16 +112,10 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
 
         $this->post = DT_Posts::get_post( $this->post_type, $this->parts['post_id'], true, false );
 
-        $query_fields = [];
-        if ( !empty( $this->template['connection_fields'] ) ) {
-            foreach ( $this->template['connection_fields'] as $field ) {
-                $query_fields[][$field] = [ $this->post['ID'] ];
-            }
-        }
         $this->items = DT_Posts::list_posts( $this->record_post_type, [
             'limit' => 1000,
             'fields' => [
-                $query_fields
+                $this->get_query_fields( $this->post['ID'] )
             ]
         ], false );
 
@@ -283,18 +277,11 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
         }
 
         //set query fields to search for our post_id
-        $query_fields = [];
-        if ( !empty( $this->template['connection_fields'] ) ) {
-            foreach ( $this->template['connection_fields'] as $field ) {
-                $query_fields[][$field] = [ $post_id ];
-            }
-        }
-
         //get related records that have our query fields
         $this->items = DT_Posts::list_posts( $this->record_post_type, [
             'limit' => 1000,
             'fields' => [
-                $query_fields
+                $this->get_query_fields( $post_id )
             ]
         ], false );
 
@@ -517,22 +504,36 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
 
         $this->post = DT_Posts::get_post( $this->post_type, $params['post_id'], true, false );
 
-        $query_fields = [];
-        if ( !empty( $this->template['connection_fields'] ) ) {
-            foreach ( $this->template['connection_fields'] as $field ) {
-                $query_fields[][$field] = [ $params['post_id'] ];
-            }
-        }
-
         $sorted_items = DT_Posts::list_posts( $this->record_post_type, [
             'text' => $params['text'],
             'sort' => $params['sort'],
             'limit' => 1000,
             'fields' => [
-                $query_fields
+                $this->get_query_fields( $params['post_id'] )
             ]
         ], false );
 
         return $sorted_items;
+    }
+
+    private function get_query_fields( $post_id ) {
+        $query_fields = [];
+        if ( !empty( $this->template['connection_fields'] ) ) {
+            $record_post_type_settings = DT_Posts::get_post_settings( $this->record_post_type );
+            foreach ( $this->template['connection_fields'] as $field_id ) {
+                if ( isset( $record_post_type_settings['fields'][$field_id] ) ) {
+                    $field_type = $record_post_type_settings['fields'][$field_id]['type'];
+                    if ( in_array( $field_type, [ 'user_select', 'multi_select_user' ] ) ) {
+                        $user_id = get_post_meta( $post_id, 'corresponds_to_user', true );
+                        if ( !empty( $user_id ) ) {
+                            $query_fields[][$field_id] = [ (int) $user_id ];
+                        }
+                    } else {
+                        $query_fields[][$field_id] = [ (int) $post_id ];
+                    }
+                }
+            }
+        }
+        return $query_fields;
     }
 }
