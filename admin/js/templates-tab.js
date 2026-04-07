@@ -69,6 +69,10 @@ jQuery(function ($) {
     handle_selected_field_translation(evt);
   });
 
+  $(document).on('change', '#ml_main_col_selected_fields_sortable_field_enabled', function () {
+    update_preset_values_visibility();
+  });
+
   $(document).on('click', '#ml_main_col_update_but', function () {
     handle_update_request();
   });
@@ -247,6 +251,8 @@ jQuery(function ($) {
         placeholder: 'ui-state-highlight'
       }).disableSelection();
 
+      update_preset_values_visibility();
+
       view_selected_fields.fadeIn(fade_speed, function () {
         callback();
       });
@@ -281,6 +287,7 @@ jQuery(function ($) {
         success: function (response) {
           if (response.success) {
             $("#ml_main_col_preset_values_content").html(response.html);
+            update_preset_values_visibility();
           }
           view_preset_values.fadeIn(fade_speed, function () {
             callback();
@@ -580,6 +587,8 @@ jQuery(function ($) {
     if (field_id && field_label && !field_already_selected(field_id, field_label)) {
       $('.connected-sortable-fields').append(build_new_selected_field_html(field_id, field_label, field_type, field_enabled, field_translations));
 
+      update_preset_values_visibility();
+
       // Reset fields accordingly
       switch (field_type) {
         case 'dt' : {
@@ -597,6 +606,8 @@ jQuery(function ($) {
   function handle_selected_field_removal(evt) {
     let field_div = $(evt.currentTarget).parent().parent().parent().parent().parent();
     field_div.remove();
+
+    update_preset_values_visibility();
   }
 
   function handle_selected_field_translation(evt) {
@@ -928,6 +939,21 @@ jQuery(function ($) {
     });
 
     return fields;
+  }
+
+  function update_preset_values_visibility() {
+    const selectedFields = fetch_selected_fields()
+      .filter(field => field.type === 'dt' && field.enabled)
+      .map(field => field.id);
+
+    $('.preset-value-field-container').each(function (idx, element) {
+      const field_id = $(element).data('field-id');
+      if (selectedFields.includes(field_id)) {
+        $(element).show();
+      } else {
+        $(element).hide();
+      }
+    });
   }
 
 

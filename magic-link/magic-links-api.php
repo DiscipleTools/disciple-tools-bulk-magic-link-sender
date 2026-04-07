@@ -1077,7 +1077,7 @@ Thanks!';
             if ( in_array( $field['type'] ?? '', $excluded_types ) ) {
                 continue;
             }
-            echo '<div style="margin-bottom: 1rem;">';
+            echo '<div class="preset-value-field-container" data-field-id="' . esc_attr( $field_key ) . '" style="margin-bottom: 1rem;">';
             Disciple_Tools_Magic_Links_Helper::render_field_for_display( $field_key, $field_settings, $post );
             echo '</div>';
         }
