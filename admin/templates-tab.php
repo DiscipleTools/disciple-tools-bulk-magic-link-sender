@@ -408,8 +408,19 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
             <tr>
                 <td style="vertical-align: middle;">Template Name (for you to remember it by)</td>
                 <td>
-                    <input style="min-width: 100%;" type="text" id="ml_main_col_template_details_name"
+                    <input style="min-width: 80%;" type="text" id="ml_main_col_template_details_name"
                            value=""/>
+
+                    <span style="float:right;">
+                        <button type="submit"
+                                id="ml_main_col_template_details_name_translate_but"
+                                class="button float-right template-name-translate-but"
+                                data-field_translations="<?php echo esc_html( rawurlencode( '{}' ) ); ?>">
+                            <img style="height: 15px; width: 20px !important; vertical-align: middle;"
+                                 src="<?php echo esc_html( get_template_directory_uri() . '/dt-assets/images/languages.svg' ); ?>"/>
+                            (<span class="template-name-translate-but-label">0</span>)
+                        </button>
+                    </span>
                 </td>
             </tr>
             <tr>
