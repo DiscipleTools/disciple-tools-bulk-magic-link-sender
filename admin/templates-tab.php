@@ -83,7 +83,7 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
 
                 // Fetch newly updated link object
                 $sanitized_input = filter_var( wp_unslash( $_POST['ml_main_col_update_form_template'] ), FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_FLAG_NO_ENCODE_QUOTES );
-                $template        = json_decode( $this->final_post_param_sanitization( $sanitized_input ), true );
+                $template        = json_decode( $this->final_post_param_sanitization( $sanitized_input ), true ) || [];
 
                 // Ensure we have something to work with
                 if ( ! empty( $template ) && isset( $template['id'] ) ) {
