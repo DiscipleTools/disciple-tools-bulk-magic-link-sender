@@ -96,8 +96,27 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
                         $templates[ $template['post_type'] ] = [];
                     }
 
+                    // Process preset values if they exist
+                    if ( !empty( $template['preset_values'] ) && is_array( $template['preset_values'] ) ) {
+                        foreach ( $template['preset_values'] as $field_key => $preset_value ) {
+                            // Get field type from post type fields
+                            $post_type_fields = DT_Posts::get_post_field_settings( $template['post_type'] );
+                            if ( isset( $post_type_fields[$field_key] ) ) {
+                                $field_type = $post_type_fields[$field_key]['type'];
+
+                                // Transform value based on field type
+                                if ( $field_type === 'key_select' ) {
+                                    // Wrap value in object with 'key' property
+                                    $template['preset_values'][$field_key] = [
+                                        'key' => $preset_value
+                                    ];
+                                }
+                            }
+                        }
+                    }
+
                     // Update templates with the latest template version
-                    $templates[ $template['post_type'] ][ $template['id'] ] = $template;
+                    $templates[$template['post_type']][$template['id']] = $template;
 
                     // Finally, save updates
                     Disciple_Tools_Bulk_Magic_Link_Sender_API::update_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_templates, $templates );

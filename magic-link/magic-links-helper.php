@@ -93,7 +93,7 @@ class Disciple_Tools_Magic_Links_Helper
             ';
 
             if ( $field_type === 'key_select' ) :
-                if ( isset( $post[$field_key] ) && is_string( $post[$field_key] ) ) {
+                if ( isset( $post[$field_key] ) && !isset( $post[$field_key]['key']) ) {
                     // reformat post value to match expected syntax
                     $post[$field_key] = [
                         'key' => $post[$field_key],
