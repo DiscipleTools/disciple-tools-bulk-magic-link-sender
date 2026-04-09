@@ -476,6 +476,7 @@ jQuery(function ($) {
         'boolean',
         'key_select',
         'multi_select',
+        'tags',
         'number',
         'link',
         'communication_channel',

@@ -91,15 +91,16 @@ class Disciple_Tools_Magic_Links_Helper
                   ' . esc_html( $disabled ) . '
                   ' . ( $is_private ? 'private privateLabel=' . esc_attr( _x( "Private Field: Only I can see it\'s content", 'disciple_tools' ) ) : null ) . '
             ';
+
             if ( $field_type === 'key_select' ) :
+                if ( isset( $post[$field_key] ) && is_string( $post[$field_key] ) ) {
+                    // reformat post value to match expected syntax
+                    $post[$field_key] = [
+                        'key' => $post[$field_key],
+                    ];
+                }
+                DT_Components::render_key_select( $field_key, $fields, $post );
                 ?>
-                <dt-single-select class="select-field"
-                    <?php echo wp_kses_post( $shared_attributes ) ?>
-                                  value="<?php echo esc_attr( key_exists( $field_key, $post ) ? $post[$field_key]['key'] : null ) ?>"
-                                  options="<?php echo esc_attr( json_encode( self::assoc_to_array( $fields[$field_key]['default'] ) ) ) ?>"
-                >
-                    <?php self::render_icon_slot( $fields[$field_key] ) ?>
-                </dt-single-select>
 
             <?php elseif ( $field_type === 'tags' ) : ?>
                 <?php
