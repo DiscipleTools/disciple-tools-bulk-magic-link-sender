@@ -105,11 +105,23 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
                                 $field_type = $post_type_fields[$field_key]['type'];
 
                                 // Transform value based on field type
-                                if ( $field_type === 'key_select' ) {
-                                    // Wrap value in object with 'key' property
-                                    $template['preset_values'][$field_key] = [
-                                        'key' => $preset_value
-                                    ];
+                                switch ( $field_type ) {
+                                    case 'key_select':
+                                        // Wrap value in object with 'key' property
+                                        $template['preset_values'][$field_key] = [
+                                            'key' => $preset_value
+                                        ];
+                                        break;
+                                    case 'date':
+                                    case 'datetime':
+                                        // Convert date string (YYYY-MM-DD) to timestamp
+                                        $timestamp = strtotime( $preset_value );
+                                        if ( $timestamp !== false ) {
+                                            $template['preset_values'][$field_key] = [
+                                                'timestamp' => $timestamp
+                                            ];
+                                        }
+                                        break;
                                 }
                             }
                         }
