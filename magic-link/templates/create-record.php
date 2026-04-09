@@ -812,9 +812,15 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
                                             $this->post_field_settings[$field_id]['required'] = true;
                                         }
 
+                                        $options = [];
+
+                                        if ( $field_type === 'tags' ) {
+                                            $options['static_options'] = true;
+                                        }
+
                                         // Check if function exists
                                         if ( function_exists( 'render_field_for_display' ) ) {
-                                            render_field_for_display( $field_id, $this->post_field_settings, $this->post, null, null, null, [] );
+                                            render_field_for_display( $field_id, $this->post_field_settings, $this->post, null, null, null, $options );
                                         } else {
                                             echo '<p>Error: Field rendering function not found</p>';
                                         }
