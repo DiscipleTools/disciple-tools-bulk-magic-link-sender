@@ -65,7 +65,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
         $this->record_post_type = isset( $template['record_type'] ) ? $template['record_type'] : $template['post_type'];
         $this->type             = array_map( 'sanitize_key', wp_unslash( explode( '_', $template['id'] ) ) )[1];
         $this->type_name        = $template['name'];
-        $this->page_title       = $template['name'];
+        $this->page_title       = $this->adjust_template_title_translation( $template['title'] ?: $template['name'], $template['title_translations'] ?? [] );
         $this->page_description = '';
 
         /**
@@ -192,6 +192,10 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
 
     public function body() {
         $this->layout->body();
+    }
+
+    protected function adjust_template_title_translation( $title, $title_translations ) {
+        return ( ! empty( $title_translations ) && isset( $title_translations[ determine_locale() ] ) ) ? $title_translations[ determine_locale() ]['translation'] : $title;
     }
 
     /**

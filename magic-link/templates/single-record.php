@@ -62,7 +62,7 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
         $this->post_type        = $template['post_type'];
         $this->type             = array_map( 'sanitize_key', wp_unslash( explode( '_', $template['id'] ) ) )[1];
         $this->type_name        = $template['name'];
-        $this->page_title       = $template['name'];
+        $this->page_title       = $this->adjust_template_title_translation( $template['title'] ?: $template['name'], $template['title_translations'] ?? [] );
         $this->page_description = '';
 
         /**

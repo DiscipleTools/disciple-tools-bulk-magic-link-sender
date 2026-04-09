@@ -69,7 +69,8 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
         $this->type = array_map( 'sanitize_key', wp_unslash( explode( '/', $template['url_base'] ) ) )[1];
 
         $this->type_name        = $template['name'];
-        $this->page_title       = $template['name'];
+        $this->page_title       = $this->adjust_template_title_translation( $template['title'] ?: $template['name'], $template['title_translations'] ?? [] );
+
         $this->page_description = 'Create new ' . $this->record_type;
 
         /**
