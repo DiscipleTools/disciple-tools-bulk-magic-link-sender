@@ -42,7 +42,7 @@ class Disciple_Tools_Magic_Links_Helper
      * @return void
      */
     public static function render_field_for_display( $field_key, $fields, $post, $show_extra_controls = false, $show_hidden = false, $field_id_prefix = '' ) {
-        $disabled = $fields[$field_key]['readonly'] ? 'disabled' : '';
+        $disabled = ( isset( $fields[$field_key]['readonly'] ) && $fields[$field_key]['readonly'] ) ? 'disabled' : '';
 //        if ( isset( $post['post_type'] ) && isset( $post['ID'] ) && $post['ID'] !== 0 ) {
 //            $can_update = DT_Posts::can_update( $post['post_type'], $post['ID'] );
 //        } else {
@@ -91,24 +91,36 @@ class Disciple_Tools_Magic_Links_Helper
                   ' . esc_html( $disabled ) . '
                   ' . ( $is_private ? 'private privateLabel=' . esc_attr( _x( "Private Field: Only I can see it\'s content", 'disciple_tools' ) ) : null ) . '
             ';
+
             if ( $field_type === 'key_select' ) :
+                if ( isset( $post[$field_key] ) && !isset( $post[$field_key]['key'] ) ) {
+                    // reformat post value to match expected syntax
+                    $post[$field_key] = [
+                        'key' => $post[$field_key],
+                    ];
+                }
+                DT_Components::render_key_select( $field_key, $fields, $post );
                 ?>
-                <dt-single-select class="select-field"
-                    <?php echo wp_kses_post( $shared_attributes ) ?>
-                                  value="<?php echo esc_attr( key_exists( $field_key, $post ) ? $post[$field_key]['key'] : null ) ?>"
-                                  options="<?php echo esc_attr( json_encode( self::assoc_to_array( $fields[$field_key]['default'] ) ) ) ?>"
-                >
-                    <?php self::render_icon_slot( $fields[$field_key] ) ?>
-                </dt-single-select>
 
             <?php elseif ( $field_type === 'tags' ) : ?>
-                <?php $value = array_map(function ( $value ) {
-                    return $value;
-                }, $post[$field_key] ?? []);
+                <?php
+                $value = array_values( $post[$field_key] ?? [] );
+                $options = [];
+                $raw_options = DT_Posts::get_multi_select_options( $post['post_type'] ?? 'contacts', $field_key );
+                if ( is_array( $raw_options ) ) {
+                    foreach ( $raw_options as $option ) {
+                        if ( is_string( $option ) ) {
+                            $options[] = [ 'id' => $option ];
+                        } elseif ( is_array( $option ) && isset( $option['label'] ) ) {
+                            $options[] = [ 'id' => $option['label'] ];
+                        }
+                    }
+                }
                 ?>
                 <dt-tags
                     <?php echo wp_kses_post( $shared_attributes ) ?>
                     value="<?php echo esc_attr( json_encode( $value ) ) ?>"
+                    options="<?php echo esc_attr( json_encode( $options ) ) ?>"
                     placeholder="<?php echo esc_html( sprintf( _x( 'Search %s', "Search 'something'", 'disciple_tools' ), $fields[$field_key]['name'] ) )?>"
                     allowAdd
                 >

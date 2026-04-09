@@ -69,6 +69,10 @@ jQuery(function ($) {
     handle_selected_field_translation(evt);
   });
 
+  $(document).on('change', '#ml_main_col_selected_fields_sortable_field_enabled', function () {
+    update_preset_values_visibility();
+  });
+
   $(document).on('click', '#ml_main_col_update_but', function () {
     handle_update_request();
   });
@@ -94,6 +98,14 @@ jQuery(function ($) {
     // show record-post-type and connection field only for post-connections
     $('tr.record-post-type-row, tr.connection-field-row').css('display', template_type === 'post-connections' ? 'revert' : 'none');
 
+    // Show/hide Preset Values section
+    if (template_type === 'create-record') {
+      const record_type = $('#ml_main_col_template_details_record_type').val();
+      template_views_preset_values(false, 'slow', {post_type: record_type});
+    } else {
+      template_views_preset_values(true, 'slow');
+    }
+
     if (template_type === 'post-connections') {
       const firstRecordType = $('#ml_main_col_template_details_record_type option:first').val();
       $('#ml_main_col_template_details_record_type').val(firstRecordType);
@@ -114,6 +126,9 @@ jQuery(function ($) {
     // load connections dropdown
     let post_type = $('#templates_management_section_selected_post_type').val();
     refresh_connections_fields_list( post_type, record_type );
+
+    // refresh preset values
+    template_views_preset_values(false, 'slow', {post_type: record_type});
 
     // clear selected fields list since record type change and the existing ones aren't valid now
     template_views_selected_fields(true, 'slow', null, () => {
@@ -159,18 +174,20 @@ jQuery(function ($) {
     // Hide and reset various views back to default state
     template_views_update_and_delete_but(...Array(2), function () {
       template_views_message(...Array(3), function () {
-        template_views_selected_fields(...Array(3), function () {
-          template_views_template_details(...Array(3), function () {
-            template_views_templates_management(...Array(3), function () {
+        template_views_preset_values(...Array(3), function () {
+          template_views_selected_fields(...Array(3), function () {
+            template_views_template_details(...Array(3), function () {
+              template_views_templates_management(...Array(3), function () {
 
-              let post_type_id = $(evt.target).parent().find('#available_post_types_section_post_type_id').val();
+                let post_type_id = $(evt.target).parent().find('#available_post_types_section_post_type_id').val();
 
-              // Capture selected post type id for future reference
-              $('#templates_management_section_selected_post_type').val(post_type_id);
+                // Capture selected post type id for future reference
+                $('#templates_management_section_selected_post_type').val(post_type_id);
 
-              // Roll back to management view only, with corresponding post type templates
-              template_views_templates_management(false, 'slow', {'post_type': post_type_id});
+                // Roll back to management view only, with corresponding post type templates
+                template_views_templates_management(false, 'slow', {'post_type': post_type_id});
 
+              });
             });
           });
         });
@@ -234,8 +251,48 @@ jQuery(function ($) {
         placeholder: 'ui-state-highlight'
       }).disableSelection();
 
+      update_preset_values_visibility();
+
       view_selected_fields.fadeIn(fade_speed, function () {
         callback();
+      });
+    }
+  }
+
+  function template_views_preset_values(fade_out = true, fade_speed = 'fast', data = {post_type: 'contacts', preset_values: {}}, callback = function () {
+  }) {
+    let view_preset_values = $('#ml_main_col_preset_values');
+
+    if (fade_out) {
+      view_preset_values.fadeOut(fade_speed, function () {
+        view_preset_values.removeAttr('open');
+        $("#ml_main_col_preset_values_content").empty();
+        callback();
+      });
+
+    } else {
+      const post_type = data.post_type || $('#templates_management_section_selected_post_type').val();
+      const preset_values = data.preset_values || {};
+
+      $.ajax({
+        type: 'GET',
+        url: window.dt_magic_links.dt_get_rendered_fields_url,
+        data: {
+          post_type: post_type,
+          preset_values: JSON.stringify(preset_values)
+        },
+        beforeSend: (xhr) => {
+          xhr.setRequestHeader("X-WP-Nonce", window.dt_magic_links.dt_wp_nonce);
+        },
+        success: function (response) {
+          if (response.success) {
+            $("#ml_main_col_preset_values_content").html(response.html);
+            update_preset_values_visibility();
+          }
+          view_preset_values.fadeIn(fade_speed, function () {
+            callback();
+          });
+        }
       });
     }
   }
@@ -247,6 +304,9 @@ jQuery(function ($) {
     title: '',
     title_translations: {},
     type: 'single-record',
+    record_type: 'contacts',
+    connection_fields: [],
+    preset_values: {},
     custom_fields: '',
     show_recent_comments: 0,
     send_submission_notifications: true,
@@ -289,6 +349,13 @@ jQuery(function ($) {
         $(supports_create).prop('checked', data.support_creating_new_items);
         $(supports_create).prop( 'disabled', ( data.type === 'single-record' ) );
         $('tr.record-post-type-row, tr.connection-field-row').css('display', data.type === 'post-connections' ? 'revert' : 'none');
+
+        if (data.type === 'create-record') {
+          template_views_preset_values(false, 'slow');
+        } else {
+          template_views_preset_values(true, 'slow');
+        }
+
         callback();
       });
 
@@ -307,6 +374,12 @@ jQuery(function ($) {
       $(supports_create).prop('checked', data.support_creating_new_items);
       $(supports_create).prop( 'disabled', ( data.type !== 'list-sub-assigned-contacts' ) );
       $('tr.record-post-type-row, tr.connection-field-row').css('display', data.type === 'post-connections' ? 'revert' : 'none');
+
+      if (data.type === 'create-record') {
+        template_views_preset_values(false, 'slow', {post_type: data.record_type, preset_values: data.preset_values});
+      } else {
+        template_views_preset_values(true, 'slow');
+      }
 
       // Refresh post type fields list
       let post_types = window.dt_magic_links.dt_post_types;
@@ -403,6 +476,7 @@ jQuery(function ($) {
         'boolean',
         'key_select',
         'multi_select',
+        'tags',
         'number',
         'link',
         'communication_channel',
@@ -476,6 +550,7 @@ jQuery(function ($) {
                 type: template['type'] ?? 'single-record',
                 record_type: template['record_type'] ?? 'contacts',
                 connection_fields: template['connection_fields'] ?? [],
+                preset_values: template['preset_values'] ?? {},
                 custom_fields: '',
                 show_recent_comments: template['show_recent_comments'],
                 send_submission_notifications: template['send_submission_notifications'] ?? true,
@@ -513,6 +588,8 @@ jQuery(function ($) {
     if (field_id && field_label && !field_already_selected(field_id, field_label)) {
       $('.connected-sortable-fields').append(build_new_selected_field_html(field_id, field_label, field_type, field_enabled, field_translations));
 
+      update_preset_values_visibility();
+
       // Reset fields accordingly
       switch (field_type) {
         case 'dt' : {
@@ -530,6 +607,8 @@ jQuery(function ($) {
   function handle_selected_field_removal(evt) {
     let field_div = $(evt.currentTarget).parent().parent().parent().parent().parent();
     field_div.remove();
+
+    update_preset_values_visibility();
   }
 
   function handle_selected_field_translation(evt) {
@@ -768,6 +847,7 @@ jQuery(function ($) {
     let support_creating_new_items = $('#ml_main_col_template_details_supports_create').prop('checked');
     let message = $('#ml_main_col_msg_textarea').val();
     let fields = fetch_selected_fields();
+    let preset_values = fetch_preset_values();
 
     // Validate values, to ensure all is present and correct within that department! ;)
     let update_msg = null;
@@ -807,7 +887,8 @@ jQuery(function ($) {
         'send_submission_notifications': send_submission_notifications,
         'support_creating_new_items': support_creating_new_items,
         'message': message,
-        'fields': fields
+        'fields': fields,
+        'preset_values': preset_values
       };
       if (type === 'post-connections') {
         template_obj.record_type = record_type;
@@ -819,6 +900,19 @@ jQuery(function ($) {
       $('#ml_main_col_update_form').submit();
 
     }
+  }
+
+  function fetch_preset_values() {
+    let preset_values = {};
+    $('#ml_main_col_preset_values_content').find('[name]').each(function (idx, element) {
+      const field_id = $(element).attr('name');
+      // For DT web components, we often need to get the value attribute or property
+      const value = $(element).val() || $(element).attr('value');
+      if (value) {
+        preset_values[field_id] = value;
+      }
+    });
+    return preset_values;
   }
 
   function fetch_selected_fields() {
@@ -846,6 +940,21 @@ jQuery(function ($) {
     });
 
     return fields;
+  }
+
+  function update_preset_values_visibility() {
+    const selectedFields = fetch_selected_fields()
+      .filter(field => field.type === 'dt' && field.enabled)
+      .map(field => field.id);
+
+    $('.preset-value-field-container').each(function (idx, element) {
+      const field_id = $(element).data('field-id');
+      if (selectedFields.includes(field_id)) {
+        $(element).show();
+      } else {
+        $(element).hide();
+      }
+    });
   }
 
 

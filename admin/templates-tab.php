@@ -18,6 +18,9 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
     }
 
     private function process_scripts() {
+        dt_theme_enqueue_script( 'web-components', 'dt-assets/build/components/index.js', array(), false );
+        dt_theme_enqueue_style( 'web-components-css', 'dt-assets/build/css/light.min.css', array() );
+
         wp_register_style( 'daterangepicker-css', 'https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.css', [], '3.1.0' );
         wp_enqueue_style( 'daterangepicker-css' );
         wp_enqueue_script( 'daterangepicker-js', 'https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.js', [ 'moment' ], '3.1.0', true );
@@ -50,7 +53,9 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
                 'dt_magic_links_templates'      => $templates,
                 'dt_magic_links_template_types' => $template_types,
                 'dt_previous_updated_template'  => $this->fetch_previous_updated_template(),
-                'dt_languages_icon'             => esc_html( get_template_directory_uri() . '/dt-assets/images/languages.svg' )
+                'dt_languages_icon'             => esc_html( get_template_directory_uri() . '/dt-assets/images/languages.svg' ),
+                'dt_get_rendered_fields_url'    => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_endpoint_get_rendered_fields_url(),
+                'dt_wp_nonce'                   => wp_create_nonce( 'wp_rest' )
             )
         );
     }
@@ -91,8 +96,39 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
                         $templates[ $template['post_type'] ] = [];
                     }
 
+                    // Process preset values if they exist
+                    if ( !empty( $template['preset_values'] ) && is_array( $template['preset_values'] ) ) {
+                        foreach ( $template['preset_values'] as $field_key => $preset_value ) {
+                            // Get field type from post type fields
+                            $post_type_fields = DT_Posts::get_post_field_settings( $template['post_type'] );
+                            if ( isset( $post_type_fields[$field_key] ) ) {
+                                $field_type = $post_type_fields[$field_key]['type'];
+
+                                // Transform value based on field type
+                                switch ( $field_type ) {
+                                    case 'key_select':
+                                        // Wrap value in object with 'key' property
+                                        $template['preset_values'][$field_key] = [
+                                            'key' => $preset_value
+                                        ];
+                                        break;
+                                    case 'date':
+                                    case 'datetime':
+                                        // Convert date string (YYYY-MM-DD) to timestamp
+                                        $timestamp = strtotime( $preset_value );
+                                        if ( $timestamp !== false ) {
+                                            $template['preset_values'][$field_key] = [
+                                                'timestamp' => $timestamp
+                                            ];
+                                        }
+                                        break;
+                                }
+                            }
+                        }
+                    }
+
                     // Update templates with the latest template version
-                    $templates[ $template['post_type'] ][ $template['id'] ] = $template;
+                    $templates[$template['post_type']][$template['id']] = $template;
 
                     // Finally, save updates
                     Disciple_Tools_Bulk_Magic_Link_Sender_API::update_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_templates, $templates );
@@ -241,6 +277,17 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Templates {
                         </tbody>
                     </table>
                     <br>
+                    <!-- End Box -->
+
+                    <!-- Box -->
+                    <details style='display: none; background: #fff; border: 1px solid #ccd0d4; margin-bottom: 20px;' id='ml_main_col_preset_values'>
+                        <summary style="font-size: 14px; font-weight: 600; padding: 8px 12px; background: #f8f9fa; border-bottom: 1px solid #ccd0d4; cursor: pointer;">
+                            Preset Values
+                        </summary>
+                        <div style="padding: 12px;">
+                             <div id="ml_main_col_preset_values_content"></div>
+                        </div>
+                    </details>
                     <!-- End Box -->
 
                     <!-- Box -->
