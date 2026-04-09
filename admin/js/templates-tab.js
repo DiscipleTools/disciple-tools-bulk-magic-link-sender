@@ -443,7 +443,8 @@ jQuery(function ($) {
     // get connection fields between parent and child type
     const fields = post_types[record_post_type]['fields']
       .filter((field) => {
-        return field.type === 'connection' && field.post_type === post_type;
+        return ( field.type === 'connection' && field.post_type === post_type ) ||
+          ( field.type === 'user_select' && post_type === 'contacts' );
       });
 
     let fields_select = $('#ml_main_col_template_details_connection');
