@@ -171,6 +171,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         // @todo add or remove js files with this filter
         // example: $allowed_js[] = 'your-enqueue-handle';
         $allowed_js[] = 'mapbox-gl';
+        $allowed_js[] = 'jquery-cookie';
         $allowed_js[] = 'mapbox-cookie';
         $allowed_js[] = 'mapbox-search-widget';
         $allowed_js[] = 'jquery-typeahead';
