@@ -142,8 +142,6 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
         $plugin_dir_path = Disciple_Tools_Bulk_Magic_Link_Sender::dir_path();
         $plugin_dir_url  = Disciple_Tools_Bulk_Magic_Link_Sender::dir_uri();
 
-        $dtwc_version = '0.8.0';
-
         wp_enqueue_script( 'jquery-typeahead', get_template_directory_uri() . $path_js, [ 'jquery' ], filemtime( get_template_directory() . $path_js ) );
         wp_enqueue_style( 'jquery-typeahead-css', get_template_directory_uri() . $path_css, [], filemtime( get_template_directory() . $path_css ) );
         wp_enqueue_style( 'material-font-icons-css', 'https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css', [], '7.4.47' );
@@ -152,10 +150,6 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
         wp_enqueue_script( 'single-record', $plugin_dir_url . 'assets/single-record.js', [ 'jquery' ], filemtime( $plugin_dir_path . 'assets/single-record.js' ) );
 
         wp_enqueue_style( 'single-record-css', $plugin_dir_url . 'assets/single-record.css', null, filemtime( $plugin_dir_path . 'assets/single-record.css' ) );
-
-        wp_enqueue_style( 'dt-web-components-css', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/src/styles/light.css", [], $dtwc_version );
-
-        wp_enqueue_script( 'dt-web-components-js', "https://cdn.jsdelivr.net/npm/@disciple.tools/web-components@$dtwc_version/dist/index.js", $dtwc_version );
 
         Disciple_Tools_Bulk_Magic_Link_Sender_API::enqueue_magic_link_utilities_script();
     }
@@ -168,8 +162,8 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
         $allowed_js[] = 'google-search-widget';
         $allowed_js[] = 'jquery-typeahead';
         $allowed_js[] = 'single-record';
-        $allowed_js[] = 'dt-web-components-js';
         $allowed_js[] = 'field-helper';
+        $allowed_js[] = 'web-components';
         $allowed_js[] = 'toastify-js';
         $allowed_js[] = Disciple_Tools_Bulk_Magic_Link_Sender_API::get_magic_link_utilities_script_handle();
 
@@ -181,7 +175,7 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
         $allowed_css[] = 'jquery-typeahead-css';
         $allowed_css[] = 'material-font-icons-css';
         $allowed_css[] = 'single-record-css';
-        $allowed_css[] = 'dt-web-components-css';
+        $allowed_css[] = 'web-components-css';
         $allowed_css[] = 'toastify-js-css';
 
         return $allowed_css;
@@ -784,6 +778,17 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                 }
             });
 
+            if (typeof jsObject !== 'undefined' && window.DtWebComponents && window.DtWebComponents.ComponentService) {
+                const service = new window.DtWebComponents.ComponentService(
+                    jsObject.post.post_type,
+                    jsObject.post.ID,
+                    jsObject.nonce,
+                    jsObject.root,
+                );
+                service.attachFileUploadEvents();
+                service.attachGeocodeEvents();
+                window.componentService = service;
+            }
         </script>
         <?php
         return true;
@@ -902,11 +907,16 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                                     switch ( $field['type'] ) {
                                         case 'dt':
 
+                                            $options = [];
+                                            if ( $this->post_field_settings[$field['id']]['type'] === 'tags' ) {
+                                                $options['static_options'] = true;
+                                            }
+
                                             // Capture rendered field html
                                             ob_start();
                                             $this->post_field_settings[$field['id']]['custom_display'] = false;
                                             $this->post_field_settings[$field['id']]['readonly'] = !empty( $field['readonly'] );
-                                            render_field_for_display( $field['id'], $this->post_field_settings, $this->post, true );
+                                            render_field_for_display( $field['id'], $this->post_field_settings, $this->post, true, null, null, $options );
                                             $rendered_field_html = ob_get_contents();
                                             ob_end_clean();
 
@@ -1266,27 +1276,37 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                         if ( is_string( $field['value'] ) ) {
                             // Simple URL string
                             $updates[$field['id']] = sanitize_text_field( $field['value'] );
-                        } elseif ( is_array( $field['value'] ) && isset( $field['value']['values'] ) ) {
+                        } elseif ( is_array( $field['value'] ) ) {
                             // DT format with values array
                             $links = [];
-                            foreach ( $field['value']['values'] as $link ) {
+                            foreach ( $field['value'] as $link ) {
                                 if ( !empty( $link['value'] ) ) {
-                                    $links[] = [
-                                        'value' => sanitize_text_field( $link['value'] ),
-                                        'type' => sanitize_text_field( $link['type'] ?? '' ),
-                                        'meta_id' => $link['meta_id'] ?? null,
-                                        'delete' => $link['delete'] ?? false
-                                    ];
+                                    if ( $link['delete'] ) {
+                                        $links[] = [
+                                            'value' => sanitize_text_field( $link['value'] ),
+                                            'type' => sanitize_text_field( $link['type'] ?? '' ),
+                                            'verified' => false,
+                                            'meta_id' => $link['key'] ?? $link['meta_id'] ?? null,
+                                            'delete' => $link['delete'] ?? false,
+                                        ];
+                                    } else {
+                                        $links[] = [
+                                            'value' => sanitize_text_field( $link['value'] ),
+                                            'type' => sanitize_text_field( $link['type'] ?? '' ),
+                                            'verified' => false,
+                                        ];
+                                    }
                                 } else if ( !empty( $link['delete'] ) ) {
                                     $links[] = [
-                                        'meta_id' => $link['meta_id'],
+                                        'meta_id' => $link['key'] ?? $link['meta_id'] ?? null,
                                         'delete' => true
                                     ];
                                 }
                             }
                             if ( !empty( $links ) ) {
                                 $updates[$field['id']] = [
-                                    'values' => $links
+                                    'values' => $links,
+                                    'force_values' => true
                                 ];
                             }
                         }

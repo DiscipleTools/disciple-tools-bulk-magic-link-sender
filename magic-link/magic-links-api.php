@@ -1078,7 +1078,11 @@ Thanks!';
                 continue;
             }
             echo '<div class="preset-value-field-container" data-field-id="' . esc_attr( $field_key ) . '" style="margin-bottom: 1rem;">';
-            Disciple_Tools_Magic_Links_Helper::render_field_for_display( $field_key, $field_settings, $post );
+            if ( function_exists( 'render_field_for_display' ) ) {
+                render_field_for_display( $field_key, $field_settings, $post );
+            } else {
+                echo '<p>Error: Field rendering function not found</p>';
+            }
             echo '</div>';
         }
         return ob_get_clean();

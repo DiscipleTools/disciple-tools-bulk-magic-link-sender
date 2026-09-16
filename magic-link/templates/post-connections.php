@@ -367,10 +367,11 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                     case 'boolean':
                     case 'key_select':
                     case 'multi_select':
-//                    case 'tags':
+                    case 'tags':
                         $updates[$field['id']] = $field['value'];
                         break;
                     case 'communication_channel':
+                    case 'link':
                         $updates[$field['id']] = [
                             'values' => $field['value'],
                             'force_values' => true,

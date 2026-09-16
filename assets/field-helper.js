@@ -167,8 +167,8 @@ function ensureSharedFunctionsMethods() {
                         break;
                     }
                     case 'boolean': {
-                        const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
-                        let rawValue = dtComponent.attr('value');
+                        const dtComponent = document.getElementById(field_id);
+                        let rawValue = dtComponent.value;
                         let boolValue;
                         if (rawValue !== undefined) {
                             boolValue = (rawValue === true || rawValue === 'true' || rawValue === '1' || rawValue === 1 || rawValue === 'on');
@@ -261,52 +261,46 @@ function ensureSharedFunctionsMethods() {
                         break;
                     }
                     case 'tags': {
-                        const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
-                        let rawValue = dtComponent.attr('value');
-                        let values = [];
-                        if (rawValue) {
-                            try {
-                                const parsed = JSON.parse(rawValue);
-                                if (Array.isArray(parsed)) {
-                                    parsed.forEach(function (tagName) {
-                                        if (tagName && String(tagName).trim() !== '') {
-                                            values.push({ name: String(tagName).trim() });
-                                        }
-                                    });
+                        const dtComponent = document.getElementById(field_id);
+                        if (dtComponent) {
+                            let tags = dtComponent.value || [];
+                            if (!Array.isArray(tags)) tags = [tags];
+
+                            let activeTags = [];
+                            let deletedTags = [];
+
+                            tags.forEach(tagName => {
+                                if (typeof tagName === 'string' && tagName.startsWith('-')) {
+                                    const cleanName = tagName.substring(1);
+                                    if (!deletedTags.some(tag => tag.name === cleanName)) {
+                                        deletedTags.push({ name: cleanName });
+                                    }
+                                } else {
+                                    if (!activeTags.some(tag => tag.name === tagName)) {
+                                        activeTags.push({ name: tagName });
+                                    }
                                 }
-                            } catch (e) {}
+                            });
+
+                            activeTags = activeTags.filter((v, i, a) => a.findIndex(t => (t.name === v.name)) === i);
+                            deletedTags = deletedTags.filter((v, i, a) => a.findIndex(t => (t.name === v.name)) === i);
+
+                            deletedTags = deletedTags.filter(d => !activeTags.some(a => a.name === d.name));
+
+                            payloadFields.dt.push({
+                                id: field_id, 
+                                dt_type: field_type, 
+                                template_type: field_template_type, 
+                                value: activeTags,
+                                deletions: deletedTags
+                            });
                         }
-                        if (values.length === 0) {
-                            let typeahead = window.Typeahead['.js-typeahead-' + field_id];
-                            if (typeahead) {
-                                payloadFields.dt.push({
-                                    id: field_id,
-                                    dt_type: field_type,
-                                    template_type: field_template_type,
-                                    value: typeahead.items,
-                                    deletions: field_meta.val() ? JSON.parse(field_meta.val()) : []
-                                });
-                                break;
-                            }
-                        }
-                        payloadFields.dt.push({
-                            id: field_id,
-                            dt_type: field_type,
-                            template_type: field_template_type,
-                            value: values
-                        });
                         break;
                     }
                     case 'location': {
-                        // Read location values directly from dt-location component
-                        const dtLocationComponent = jQuery(tr).find('dt-location[id="' + field_id + '"]').get(0);
+                        const dtLocationComponent = document.getElementById(field_id);
                         if (dtLocationComponent) {
-                            // Get value from component (stored as JSON string in value attribute)
-                            let locationValue = dtLocationComponent.getAttribute('value');
-                            if (!locationValue) {
-                                // Try accessing the component's value property directly
-                                locationValue = dtLocationComponent.value;
-                            }
+                            let locationValue = dtLocationComponent.value;
 
                             if (locationValue) {
                                 let locationData = [];
@@ -348,12 +342,50 @@ function ensureSharedFunctionsMethods() {
                         break;
                     }
                     case 'location_meta': {
+                        const dtLocationMetaComponent = document.getElementById(field_id);
+                        if (dtLocationMetaComponent) {
+                            const rawValues = dtLocationMetaComponent.value || [];
+                            let formattedValues = {};
+                            formattedValues[field_id] = {
+                                values: rawValues
+                            };
+
+                            let previousValues = (options.post && options.post[field_id]) ? options.post[field_id] : [];
+                            let deletions = previousValues.filter(prev => {
+                                return !rawValues.some(curr => curr.grid_meta_id === prev.grid_meta_id);
+                            }).map(prev => prev.grid_meta_id);
+
+                            payloadFields.dt.push({
+                                id: field_id,
+                                dt_type: field_type,
+                                template_type: field_template_type,
+                                value: formattedValues,
+                                deletions: deletions,
+                            });
+                        }
+                        break;
+                    }
+                    case 'link': {
+                        const dtComponent = document.getElementById(field_id);
+                        let rawValue = dtComponent.getAttribute('value');
+                        let values = [];
+                        if (rawValue) {
+                            try {
+                                const parsed = JSON.parse(rawValue);
+                                if (Array.isArray(parsed)) {
+                                    parsed.forEach(function (item) {
+                                        if (item && item.value && String(item.value).trim() !== '') {
+                                            values.push({ value: String(item.value).trim(), delete: item.delete, key: item.meta_id ? item.meta_id : item.tempKey, type: item.type });
+                                        }
+                                    });
+                                }
+                            } catch (e) {}
+                        }
                         payloadFields.dt.push({
                             id: field_id,
                             dt_type: field_type,
                             template_type: field_template_type,
-                            value: (window.selected_location_grid_meta !== undefined) ? window.selected_location_grid_meta : '',
-                            deletions: field_meta.val() ? JSON.parse(field_meta.val()) : []
+                            value: values,
                         });
                         break;
                     }
@@ -447,30 +479,12 @@ function ensureSharedFunctionsMethods() {
                     break;
                 }
                 case 'link': {
-                    const linkList = jQuery(tr).find('.link-list-' + field_id);
-                    const values = Array.isArray(post[field_id]) ? post[field_id] : [];
-
-                    // Clear previous input rows but keep section containers/templates intact
-                    linkList.find('.link-section .input-group').remove();
-
-                    // Populate inputs per existing values using templates
-                    values.forEach(function (entry) {
-                        const type = entry.type || 'default';
-                        const template = jQuery(`#link-template-${field_id}-${type}`).find('.input-group').first();
-                        const section = linkList.find(`.link-section--${type}`);
-                        if (template.length && section.length) {
-                            const group = template.clone(true);
-                            const input = group.find('input');
-                            input.val(entry.value || '');
-                            input.addClass('link-input');
-                            input.attr('data-field-key', field_id);
-                            input.attr('data-type', type);
-                            if (entry.meta_id !== undefined && entry.meta_id !== null) {
-                                input.attr('data-meta-id', parseInt(entry.meta_id));
-                            }
-                            section.append(group);
-                        }
-                    });
+                    const dtComponent = document.getElementById(field_id);
+                    const data = post[field_id];
+                    
+                    if (dtComponent) {
+                        dtComponent.setAttribute('value', JSON.stringify(data));
+                    }
 
                     // Ensure meta helper is cleared
                     field_meta.val('');
@@ -527,9 +541,9 @@ function ensureSharedFunctionsMethods() {
                     break;
                 }
                 case 'boolean': {
-                    const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
-                    if (dtComponent.length) {
-                        dtComponent.attr('value', !!post[field_id]);
+                    const dtComponent = document.getElementById(field_id);
+                    if (dtComponent) {
+                        dtComponent.setAttribute('value', !!post[field_id]);
                     } else {
                         jQuery(tr).find(selector).prop('checked', post[field_id]);
                     }
@@ -560,10 +574,10 @@ function ensureSharedFunctionsMethods() {
                     break;
                 }
                 case 'tags': {
-                    const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
-                    if (dtComponent.length) {
+                    const dtComponent = document.getElementById(field_id);
+                    if (dtComponent) {
                         const tags = Array.isArray(post[field_id]) ? post[field_id] : [];
-                        dtComponent.attr('value', JSON.stringify(tags));
+                        dtComponent.setAttribute('value', JSON.stringify(tags));
                         field_meta.val('');
                     } else {
                         jQuery(tr).find('span.typeahead__cancel-button').trigger('click');
@@ -582,52 +596,51 @@ function ensureSharedFunctionsMethods() {
                     }
                     break;
                 }
-                case 'location': {
-                    const dtComponent = jQuery(tr).find('[id="' + field_id + '"]');
-                    if (dtComponent.length) {
-                      const locations = Array.isArray(post[field_id]) ? post[field_id] : [];
-                      dtComponent.attr('value', JSON.stringify(locations));
-                      field_meta.val('');
-                    }
-                    break;
-                }
+                case 'location':
                 case 'location_meta': {
-                    jQuery(tr).find('#mapbox-search').val('');
-                    const deleteButtons = jQuery(tr).find('#location-grid-meta-results .mapbox-delete-button');
-                    if (deleteButtons.length) {
-                        deleteButtons.each(function(idx, button) {
-                            jQuery(button).parent().parent().remove();
-                        });
+                    const dtComponent = document.getElementById(field_id);                    
+                    if (dtComponent) {
+                        const locations = Array.isArray(post[field_id]) ? post[field_id] : [];
+                        dtComponent.setAttribute('value', JSON.stringify(locations));
+                        field_meta.val('');
+                    } else if (field_type === 'location_meta') {
+                        jQuery(tr).find('#mapbox-search').val('');
+                        const deleteButtons = jQuery(tr).find('#location-grid-meta-results .mapbox-delete-button');
+                        if (deleteButtons.length) {
+                            deleteButtons.each(function(idx, button) {
+                                jQuery(button).parent().parent().remove();
+                            });
+                        }
+                        let lgm_results = jQuery(tr).find('#location-grid-meta-results');
+                        if (post[field_id] !== undefined && post[field_id].length !== 0) {
+                            jQuery.each(post[field_id], function (i, v) {
+                                if (v.grid_meta_id) {
+                                    lgm_results.append('<div class="input-group">\
+                                        <input type="text" class="active-location input-group-field" id="location-' + window.lodash.escape(v.grid_meta_id) + '" dir="auto" value="' + window.lodash.escape(v.label) + '" readonly />\
+                                        <div class="input-group-button">\
+                                          <button type="button" class="button success delete-button-style open-mapping-grid-modal" title="' + window.lodash.escape(jsObject["mapbox"]["translations"]["open_modal"]) + '" data-id="' + window.lodash.escape(v.grid_meta_id) + '"><i class="fi-map"></i></button>\
+                                          <button type="button" class="button alert delete-button-style delete-button mapbox-delete-button" title="' + window.lodash.escape(jsObject["mapbox"]["translations"]["delete_location"]) + '" data-id="' + window.lodash.escape(v.grid_meta_id) + '">&times;</button>\
+                                        </div>\
+                                      </div>');
+                                } else {
+                                    lgm_results.append('<div class="input-group">\
+                                        <input type="text" class="dt-communication-channel input-group-field" id="' + window.lodash.escape(v.key) + '" value="' + window.lodash.escape(v.label) + '" dir="auto" data-field="contact_address" />\
+                                        <div class="input-group-button">\
+                                          <button type="button" class="button success delete-button-style open-mapping-address-modal"\
+                                              title="' + window.lodash.escape(jsObject["mapbox"]["translations"]["open_modal"]) + '"\
+                                              data-id="' + window.lodash.escape(v.key) + '"\
+                                              data-field="contact_address"\
+                                              data-key="' + window.lodash.escape(v.key) + '">\
+                                              <i class="fi-pencil"></i>\
+                                          </button>\
+                                          <button type="button" class="button alert input-height delete-button-style channel-delete-button delete-button" title="' + window.lodash.escape(jsObject["mapbox"]["translations"]["delete_location"]) + '" data-id="' + window.lodash.escape(v.key) + '" data-field="contact_address" data-key="' + window.lodash.escape(v.key) + '">&times;</button>\
+                                        </div>\
+                                      </div>');
+                                }
+                            });
+                        }
+                        field_meta.val('');
                     }
-                    let lgm_results = jQuery(tr).find('#location-grid-meta-results');
-                    if (post[field_id] !== undefined && post[field_id].length !== 0) {
-                        jQuery.each(post[field_id], function (i, v) {
-                            if (v.grid_meta_id) {
-                                lgm_results.append('<div class="input-group">\
-                                    <input type="text" class="active-location input-group-field" id="location-' + window.lodash.escape(v.grid_meta_id) + '" dir="auto" value="' + window.lodash.escape(v.label) + '" readonly />\
-                                    <div class="input-group-button">\
-                                      <button type="button" class="button success delete-button-style open-mapping-grid-modal" title="' + window.lodash.escape(jsObject["mapbox"]["translations"]["open_modal"]) + '" data-id="' + window.lodash.escape(v.grid_meta_id) + '"><i class="fi-map"></i></button>\
-                                      <button type="button" class="button alert delete-button-style delete-button mapbox-delete-button" title="' + window.lodash.escape(jsObject["mapbox"]["translations"]["delete_location"]) + '" data-id="' + window.lodash.escape(v.grid_meta_id) + '">&times;</button>\
-                                    </div>\
-                                  </div>');
-                            } else {
-                                lgm_results.append('<div class="input-group">\
-                                    <input type="text" class="dt-communication-channel input-group-field" id="' + window.lodash.escape(v.key) + '" value="' + window.lodash.escape(v.label) + '" dir="auto" data-field="contact_address" />\
-                                    <div class="input-group-button">\
-                                      <button type="button" class="button success delete-button-style open-mapping-address-modal"\
-                                          title="' + window.lodash.escape(jsObject["mapbox"]["translations"]["open_modal"]) + '"\
-                                          data-id="' + window.lodash.escape(v.key) + '"\
-                                          data-field="contact_address"\
-                                          data-key="' + window.lodash.escape(v.key) + '">\
-                                          <i class="fi-pencil"></i>\
-                                      </button>\
-                                      <button type="button" class="button alert input-height delete-button-style channel-delete-button delete-button" title="' + window.lodash.escape(jsObject["mapbox"]["translations"]["delete_location"]) + '" data-id="' + window.lodash.escape(v.key) + '" data-field="contact_address" data-key="' + window.lodash.escape(v.key) + '">&times;</button>\
-                                    </div>\
-                                  </div>');
-                            }
-                        });
-                    }
-                    field_meta.val('');
                     break;
                 }
                 default:

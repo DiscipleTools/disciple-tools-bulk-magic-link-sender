@@ -161,6 +161,17 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
                 ]
             ] ) ?>][0];
 
+            if (typeof jsObject !== 'undefined' && window.DtWebComponents && window.DtWebComponents.ComponentService) {
+                const service = new window.DtWebComponents.ComponentService(
+                    jsObject.post.post_type,
+                    jsObject.post.ID,
+                    jsObject.nonce,
+                    jsObject.root,
+                );
+                service.initialize();
+                window.componentService = service;
+            }
+
             const listItems = new Map(jsObject.items.posts.map((obj) => [obj.ID.toString(), obj]));
 
             // initialize the list of items
@@ -347,29 +358,15 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
                         'post_type' => $this->template['record_type']
                     ];
 
-                    if ( in_array( $field['type'], [
-                        'text',
-                        'textarea',
-                        'date',
-                        'boolean',
-                        'key_select',
-                        'multi_select',
-                        'number',
-                        //                        'link',
-                        'communication_channel',
-                        'connection',
-                        //                        'location',
-                        //                        'location_meta'
-                    ] ) ) {
-                        // Check if function exists
-                        if ( function_exists( 'render_field_for_display' ) ) {
-                            render_field_for_display( $field['id'], $post_field_settings, $empty_post, null, null, null, [] );
-                        } else {
-                            echo '<p>Error: Field rendering function not found</p>';
-                        }
+                    $options = [];
+                    if ( $post_field_settings[$field['id']]['type'] === 'tags' ) {
+                        $options['static_options'] = true;
+                    }
+
+                    if ( function_exists( 'render_field_for_display' ) ) {
+                        render_field_for_display( $field['id'], $post_field_settings, $empty_post, null, null, null, $options );
                     } else {
-                        // These haven't been implemented in the theme yet but are implemented in the MagicLinkHelper
-                        Disciple_Tools_Magic_Links_Helper::render_field_for_display( $field['id'], $post_field_settings, [] );
+                        echo '<p>Error: Field rendering function not found</p>';
                     }
                 } else {
                     // display custom field for this magic link
