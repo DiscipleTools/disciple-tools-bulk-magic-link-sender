@@ -192,6 +192,7 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
         $allowed_js[] = 'web-components';
         $allowed_js[] = 'wpApiShare';
 
+        $allowed_js[] = 'toastify-js';
         $allowed_js[] = Disciple_Tools_Bulk_Magic_Link_Sender_API::get_magic_link_utilities_script_handle();
 
         return $allowed_js;
@@ -202,6 +203,7 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
         $allowed_css[] = 'typeahead-jquery-css';
         $allowed_css[] = 'material-font-icons';
         $allowed_css[] = 'web-components-css';
+        $allowed_css[] = 'toastify-js-css';
 
         return $allowed_css;
     }
