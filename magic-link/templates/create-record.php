@@ -182,6 +182,7 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
         $allowed_js = [];
         $allowed_js[] = 'jquery';
         $allowed_js[] = 'mapbox-gl';
+        $allowed_js[] = 'jquery-cookie';
         $allowed_js[] = 'mapbox-cookie';
         $allowed_js[] = 'mapbox-search-widget';
         $allowed_js[] = 'google-search-widget';
