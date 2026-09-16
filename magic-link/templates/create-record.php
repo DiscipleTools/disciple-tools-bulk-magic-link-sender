@@ -181,6 +181,10 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
     public function dt_magic_url_base_allowed_js( $allowed_js ) {
         $allowed_js = [];
         $allowed_js[] = 'jquery';
+        $allowed_js[] = 'lodash';
+        $allowed_js[] = 'moment';
+        $allowed_js[] = 'datepicker';
+        $allowed_js[] = 'shared-functions';
         $allowed_js[] = 'mapbox-gl';
         $allowed_js[] = 'jquery-cookie';
         $allowed_js[] = 'mapbox-cookie';
