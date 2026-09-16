@@ -176,6 +176,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         $allowed_js[] = 'mapbox-search-widget';
         $allowed_js[] = 'jquery-typeahead';
         $allowed_js[] = 'dtwc-form-components';
+        $allowed_js[] = 'toastify-js';
         $allowed_js[] = Disciple_Tools_Bulk_Magic_Link_Sender_API::get_magic_link_utilities_script_handle();
 
         return $allowed_js;
@@ -188,6 +189,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         $allowed_css[] = 'jquery-typeahead-css';
         $allowed_css[] = 'material-font-icons-css';
         $allowed_css[] = 'dtwc-light-css';
+        $allowed_css[] = 'toastify-js-css';
 
         return $allowed_css;
     }

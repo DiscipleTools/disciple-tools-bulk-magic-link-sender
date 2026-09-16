@@ -1533,6 +1533,8 @@ Thanks!';
         $ml_utilities_file_path = get_template_directory() . $ml_utilities_path . $ml_utilities_file;
 
         if ( file_exists( $ml_utilities_file_path ) ){
+            wp_enqueue_style( 'toastify-js-css', 'https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.css', [], '1.12.0' );
+            wp_enqueue_script( 'toastify-js', 'https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.js', [ 'jquery' ], '1.12.0' );
             wp_enqueue_script(
                 self::get_magic_link_utilities_script_handle(),
                 $ml_utilities_file_uri,

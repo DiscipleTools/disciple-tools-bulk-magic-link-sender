@@ -166,12 +166,15 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
     }
 
     public function dt_magic_url_base_allowed_js( $allowed_js ) {
+        $allowed_js[] = 'toastify-js';
         $allowed_js[] = Disciple_Tools_Bulk_Magic_Link_Sender_API::get_magic_link_utilities_script_handle();
 
         return $this->layout->allowed_js( $allowed_js );
     }
 
     public function dt_magic_url_base_allowed_css( $allowed_css ) {
+        $allowed_css[] = 'toastify-js-css';
+
         return $this->layout->allowed_css( $allowed_css );
     }
 
