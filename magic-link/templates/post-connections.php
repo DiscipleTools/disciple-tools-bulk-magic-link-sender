@@ -338,7 +338,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
         }
         if ( !empty( $post ) && !is_wp_error( $post ) ){
             $response['success'] = true;
-            $response['post'] = DT_ML_Helper::localized_post_selected_field_settings( $post, DT_ML_Helper::localized_template_selected_field_settings( $this->template ), [ 'ID', 'post_type' ] );
+            $response['post'] = DT_ML_Helper::localized_post_selected_field_settings( $post, DT_ML_Helper::localized_template_selected_field_settings( $this->template, $this->record_post_type ), [ 'ID', 'post_type' ] );
             $response['comments'] = ( $post['ID'] > 0 ) ? DT_Posts::get_post_comments( $params['post_type'], $params['post_id'], false, 'all', [ 'number' => $params['comment_count'] ] ) : [];
         } else {
             $response['success'] = false;
@@ -489,7 +489,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
         return [
             'success' => true,
             'message' => '',
-            'post' => $updated_post,
+            'post' => DT_ML_Helper::localized_post_selected_field_settings( $updated_post, DT_ML_Helper::localized_template_selected_field_settings( $this->template, $this->record_post_type ), [ 'ID', 'post_type', 'name', 'post_title', 'last_modified', 'meta' ] ),
         ];
     }
 
@@ -514,7 +514,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
         return [
             'success' => true,
             'message' => '',
-            'post' => $post,
+            'post' => DT_ML_Helper::localized_post_selected_field_settings( $post, DT_ML_Helper::localized_template_selected_field_settings( $this->template, $this->record_post_type ), [ 'ID', 'post_type', 'name', 'post_title', 'last_modified', 'meta' ] ),
         ];
     }
 
@@ -543,7 +543,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
             ]
         ], false );
 
-        return $sorted_items;
+        return DT_ML_Helper::localized_list_selected_field_settings( $sorted_items, $this->template, $this->record_post_type );
     }
 
     private function get_query_fields( $post_id ) {

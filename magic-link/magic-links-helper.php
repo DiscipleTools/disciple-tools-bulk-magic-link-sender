@@ -31,8 +31,8 @@ class Disciple_Tools_Magic_Links_Helper
         }, $keys);
     }
 
-    public static function localized_template_selected_field_settings( $template ) {
-        $post_type_field_settings = DT_Posts::get_post_field_settings( $template['post_type'], false );
+    public static function localized_template_selected_field_settings( $template, $post_type = null ) {
+        $post_type_field_settings = DT_Posts::get_post_field_settings( $post_type ?? $template['post_type'], false );
         if ( !empty( $template['fields'] ) ) {
 
             $localized_selected_field_settings = [];
@@ -45,22 +45,32 @@ class Disciple_Tools_Magic_Links_Helper
             }
             return $localized_selected_field_settings;
         } else {
-            return $post_type_field_settings;
+            return [];
         }
     }
 
     public static function localized_post_selected_field_settings( $post, $localised_fields, $inc_post_fields ) {
-        if ( !empty( $localised_fields ) ) {
-            $localized_post = [];
-            foreach ( $post as $post_key => $post_value ) {
-                if ( array_key_exists( $post_key, $localised_fields ) || in_array( $post_key, $inc_post_fields ) ) {
-                    $localized_post[ $post_key ] = $post_value;
-                }
+        $localized_post = [];
+        foreach ( $post ?? [] as $post_key => $post_value ) {
+            if ( array_key_exists( $post_key, $localised_fields ) || in_array( $post_key, $inc_post_fields ) ) {
+                $localized_post[ $post_key ] = $post_value;
             }
-            return $localized_post;
-        } else {
-            return $post;
         }
+        return $localized_post;
+    }
+
+    /**
+     * Reduces each record of a list_posts() result to the template's fields plus what the list view shows.
+     */
+    public static function localized_list_selected_field_settings( $list, $template, $post_type ) {
+        if ( !is_array( $list ) || empty( $list['posts'] ) ) {
+            return $list;
+        }
+        $localised_fields = self::localized_template_selected_field_settings( $template, $post_type );
+        foreach ( $list['posts'] as &$list_post ) {
+            $list_post = self::localized_post_selected_field_settings( $list_post, $localised_fields, [ 'ID', 'post_type', 'name', 'post_title', 'last_modified', 'meta', 'permalink' ] );
+        }
+        return $list;
     }
 
     /**

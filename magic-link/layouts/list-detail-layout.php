@@ -122,6 +122,7 @@ class Disciple_Tools_Magic_Links_Layout_List_Detail {
     {
         $localized_template_field_settings = DT_ML_Helper::localized_template_selected_field_settings( $this->template );
         $localized_post_field_settings = DT_ML_Helper::localized_post_selected_field_settings( $this->post, $localized_template_field_settings, [ 'ID', 'post_type' ] );
+        $items = DT_ML_Helper::localized_list_selected_field_settings( $items, $this->template, $this->template['record_type'] ?? $this->template['post_type'] );
         $this->adjust_permalink_property( $items );
 
         // connection field links use this pid, so we can possibly link to the correct post

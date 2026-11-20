@@ -279,22 +279,18 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
             }
             return $localized_selected_field_settings;
         } else {
-            return $post_type_field_settings;
+            return [];
         }
     }
 
     private function localized_post_selected_field_settings( $post, $localised_fields, $inc_post_fields ) {
-        if ( !empty( $localised_fields ) ) {
-            $localized_post = [];
-            foreach ( $post as $post_key => $post_value ) {
-                if ( array_key_exists( $post_key, $localised_fields ) || in_array( $post_key, $inc_post_fields ) ) {
-                    $localized_post[ $post_key ] = $post_value;
-                }
+        $localized_post = [];
+        foreach ( $post ?? [] as $post_key => $post_value ) {
+            if ( array_key_exists( $post_key, $localised_fields ) || in_array( $post_key, $inc_post_fields ) ) {
+                $localized_post[ $post_key ] = $post_value;
             }
-            return $localized_post;
-        } else {
-            return $post;
         }
+        return $localized_post;
     }
 
     /**
