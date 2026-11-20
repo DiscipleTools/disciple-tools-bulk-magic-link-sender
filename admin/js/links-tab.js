@@ -1121,10 +1121,11 @@ jQuery(function ($) {
         }
 
         // Format val accordingly, based on determined content
+        let escaped_val = window.lodash.escape(val);
         if ((key === 'phone') || (key === 'contact_phone')) {
-          values.push(!is_phone_format_valid(val) ? '<span style="color:red">' + val + '</span>' : val);
+          values.push(!is_phone_format_valid(val) ? '<span style="color:red">' + escaped_val + '</span>' : escaped_val);
         } else if ((key === 'email') || (key === 'contact_email')) {
-          values.push(!is_email_format_valid(val) ? '<span style="color:red">' + val + '</span>' : val);
+          values.push(!is_email_format_valid(val) ? '<span style="color:red">' + escaped_val + '</span>' : escaped_val);
         }
       });
     }
