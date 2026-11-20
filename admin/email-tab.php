@@ -23,9 +23,15 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Email {
             'lodash'
         ], filemtime( dirname( __FILE__ ) . '/js/email-tab.js' ), true );
 
+        $email_obj = dt_email_sending_channel_get_config();
+        if ( is_array( $email_obj ) ) {
+            $email_obj['has_password'] = ! empty( $email_obj['password'] );
+            unset( $email_obj['password'] );
+        }
+
         wp_localize_script(
             'dt_magic_links_email_script', 'dt_magic_links', array(
-                'dt_magic_link_default_email_obj' => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_defaults_email ),
+                'dt_magic_link_default_email_obj' => ! empty( $email_obj ) ? json_encode( $email_obj ) : '',
                 'dt_default_email_subject'        => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_default_email_subject()
             )
         );
@@ -46,6 +52,14 @@ class Disciple_Tools_Bulk_Magic_Link_Sender_Tab_Email {
 
                 // Ensure we have something to work with
                 if ( ! empty( $updated_email_obj ) && isset( $updated_email_obj['enabled'] ) ) {
+
+                    // A blank password keeps the stored one, as long as it is still for the same server and user.
+                    $current_email_obj = dt_email_sending_channel_get_config();
+                    if ( empty( $updated_email_obj['password'] ) && is_array( $current_email_obj ) && ! empty( $current_email_obj['password'] ) && ( $updated_email_obj['server_addr'] ?? '' ) === ( $current_email_obj['server_addr'] ?? '' ) && ( $updated_email_obj['username'] ?? '' ) === ( $current_email_obj['username'] ?? '' ) ) {
+                        $updated_email_obj['password'] = $current_email_obj['password'];
+                    }
+                    unset( $updated_email_obj['has_password'] );
+
                     Disciple_Tools_Bulk_Magic_Link_Sender_API::update_option( Disciple_Tools_Bulk_Magic_Link_Sender_API::$option_dt_magic_links_defaults_email, json_encode( $updated_email_obj ) );
                 }
             }

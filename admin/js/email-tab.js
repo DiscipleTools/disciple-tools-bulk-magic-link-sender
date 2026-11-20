@@ -1,9 +1,12 @@
 jQuery(function ($) {
 
+  let email_obj_loaded = null;
+
   // Event Listeners
   $(document).ready(function () {
     let email_obj = window.dt_magic_links.dt_magic_link_default_email_obj;
-    handle_field_updates(email_obj ? JSON.parse(email_obj) : null);
+    email_obj_loaded = email_obj ? JSON.parse(email_obj) : null;
+    handle_field_updates(email_obj_loaded);
   });
 
   $(document).on('click', '.ml-email-docs', function (evt) {
@@ -39,7 +42,7 @@ jQuery(function ($) {
       $('#ml_email_main_col_config_encrypt').val(email_obj['encrypt_type']);
       $('#ml_email_main_col_config_auth_enabled').prop('checked', email_obj['auth_enabled']);
       $('#ml_email_main_col_config_server_usr').val(email_obj['username']);
-      $('#ml_email_main_col_config_server_pwd').val(email_obj['password']);
+      $('#ml_email_main_col_config_server_pwd').val('').attr('placeholder', email_obj['has_password'] ? '********' : '');
     } else {
       // Set default states
       $('#ml_email_main_col_config_enabled').prop('checked', true);
@@ -114,7 +117,7 @@ jQuery(function ($) {
           update_msg = 'Please specify a valid server address.';
         } else if (auth_enabled && !usr) {
           update_msg = 'Please specify a valid username.';
-        } else if (auth_enabled && !pwd) {
+        } else if (auth_enabled && !pwd && !(email_obj_loaded && email_obj_loaded['has_password'])) {
           update_msg = 'Please specify a valid password.';
         }
       }

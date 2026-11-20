@@ -110,7 +110,6 @@ function dt_email_sending_channel_send( $params ) {
     return false;
 }
 
-add_action( 'phpmailer_init', 'dt_email_sending_channel_send_smtp_email' );
 function dt_email_sending_channel_send_smtp_email( $phpmailer ) {
 
     // Configure accordingly based on default mail server usage state
@@ -167,7 +166,10 @@ class ML_Send_Email_Job extends Job{
      * Handle job logic.
      */
     public function handle(){
+        // The plugin's mail server settings apply to magic link emails only, not to other site mail.
+        add_action( 'phpmailer_init', 'dt_email_sending_channel_send_smtp_email' );
         wp_mail( $this->email_to, $this->email_subject, $this->email_body, $this->email_headers );
+        remove_action( 'phpmailer_init', 'dt_email_sending_channel_send_smtp_email' );
     }
 }
 
