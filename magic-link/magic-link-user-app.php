@@ -878,6 +878,22 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
         return $data;
     }
 
+    /**
+     * Whether a contact is in this app's list for the current user: assigned or sub-assigned to them.
+     */
+    private function is_listed_post( $post_id ): bool {
+        $posts = DT_Posts::list_posts( 'contacts', [
+            'limit'  => 1000,
+            'fields' => [
+                [
+                    'assigned_to' => [ 'me' ],
+                    'subassigned' => [ 'me' ]
+                ]
+            ]
+        ] );
+        return ! is_wp_error( $posts ) && in_array( (int) $post_id, array_map( 'intval', array_column( $posts['posts'] ?? [], 'ID' ) ), true );
+    }
+
     public function get_post( WP_REST_Request $request ) {
         $params = $request->get_params();
         if ( ! isset( $params['post_id'], $params['parts'], $params['action'], $params['comment_count'], $params['sys_type'] ) ) {
@@ -891,6 +907,10 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
         if ( ! is_user_logged_in() ){
             $link_user_id = DT_ML_Helper::verified_link_user_id( $request, $this->root );
             $this->update_user_logged_in_state( $link_user_id ? 'wp_user' : 'post', $link_user_id );
+        }
+
+        if ( $params['post_id'] > 0 && ! $this->is_listed_post( $params['post_id'] ) ) {
+            return [ 'success' => false ];
         }
 
         // Fetch corresponding contacts post record
@@ -974,7 +994,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
             }
 
             $updated_post = DT_Posts::create_post( 'contacts', $updates );
-        } else {
+        } else if ( $this->is_listed_post( $params['post_id'] ) ) {
             $updated_post = DT_Posts::update_post( 'contacts', $params['post_id'], $updates );
         }
         if ( empty( $updated_post ) || is_wp_error( $updated_post ) ) {

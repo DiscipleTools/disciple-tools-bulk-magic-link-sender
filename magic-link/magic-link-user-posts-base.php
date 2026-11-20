@@ -1441,24 +1441,8 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
             $original_user = wp_get_current_user();
             wp_set_current_user( $user_id );
 
-            $options = [
-                'limit'  => 1000,
-                'fields' => [
-                    [
-                        'assigned_to' => [ 'me' ]
-                    ],
-                ]
-            ];
-
-            // deprecated: prefer passing type as an arg
-            $options = apply_filters( 'dt_bulk_magic_link_sender_' . $this->type . '_posts_query', $options );
-            $options = apply_filters( 'dt_bulk_magic_link_sender_posts_query', $options, [
-                'type' => $this->type,
-                'params' => $params,
-            ] );
-
             // Fetch all assigned posts
-            $posts = DT_Posts::list_posts( $this->sub_post_type, $options );
+            $posts = DT_Posts::list_posts( $this->sub_post_type, $this->listed_posts_query_options( $params ) );
 
             $this->determine_language_locale( $params['parts'] );
 
@@ -1479,6 +1463,34 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
         }
 
         return $data;
+    }
+
+    /**
+     * The list query of this app for the current user; it also bounds which records /post and /update may touch.
+     */
+    private function listed_posts_query_options( $params ): array {
+        $options = [
+            'limit'  => 1000,
+            'fields' => [
+                [
+                    'assigned_to' => [ 'me' ]
+                ],
+            ]
+        ];
+
+        // deprecated: prefer passing type as an arg
+        $options = apply_filters( 'dt_bulk_magic_link_sender_' . $this->type . '_posts_query', $options );
+        $options = apply_filters( 'dt_bulk_magic_link_sender_posts_query', $options, [
+            'type' => $this->type,
+            'params' => $params,
+        ] );
+
+        return $options;
+    }
+
+    private function is_listed_post( $post_id, $params ): bool {
+        $posts = DT_Posts::list_posts( $this->sub_post_type, $this->listed_posts_query_options( $params ) );
+        return ! is_wp_error( $posts ) && in_array( (int) $post_id, array_map( 'intval', array_column( $posts['posts'] ?? [], 'ID' ) ), true );
     }
 
     public function get_post( WP_REST_Request $request ) {
@@ -1527,6 +1539,10 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                     }
                 }
             }
+        }
+
+        if ( $params['post_id'] > 0 && ! $this->is_listed_post( $params['post_id'], $params ) ) {
+            return [ 'success' => false ];
         }
 
         // Fetch corresponding groups post record
@@ -1721,9 +1737,9 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                 $updates['assigned_to'] = $params['parts']['post_id'];
             }
 
-            $updated_post = DT_Posts::create_post( $params['post_type'], $updates );
-        } else {
-            $updated_post = DT_Posts::update_post( $params['post_type'], $params['post_id'], $updates );
+            $updated_post = DT_Posts::create_post( $this->sub_post_type, $updates );
+        } else if ( $this->is_listed_post( $params['post_id'], $params ) ) {
+            $updated_post = DT_Posts::update_post( $this->sub_post_type, $params['post_id'], $updates );
         }
         if ( empty( $updated_post ) || is_wp_error( $updated_post ) ) {
             if ( is_wp_error( $updated_post ) ) {
