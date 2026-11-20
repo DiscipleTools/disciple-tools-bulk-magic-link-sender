@@ -1431,7 +1431,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
 
         // Sanitize and fetch user id
         $params  = dt_recursive_sanitize_array( $params );
-        $user_id = $params['parts']['post_id'];
+        $user_id = DT_ML_Helper::verified_link_user_id( $request, $this->root );
 
         // Fetch all assigned posts
         $data = [];
@@ -1492,7 +1492,8 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
 
         // Update logged-in user state if required accordingly, based on their sys_type
         if ( ! is_user_logged_in() ) {
-            $this->update_user_logged_in_state( $params['sys_type'], $params['parts']['post_id'] );
+            $link_user_id = DT_ML_Helper::verified_link_user_id( $request, $this->root );
+            $this->update_user_logged_in_state( $link_user_id ? 'wp_user' : 'post', $link_user_id );
         }
 
         $this->determine_language_locale( $params['parts'] );
@@ -1568,7 +1569,8 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
 
         // Update logged-in user state if required accordingly, based on their sys_type
         if ( ! is_user_logged_in() ) {
-            $this->update_user_logged_in_state( $params['sys_type'], $params['parts']['post_id'] );
+            $link_user_id = DT_ML_Helper::verified_link_user_id( $request, $this->root );
+            $this->update_user_logged_in_state( $link_user_id ? 'wp_user' : 'post', $link_user_id );
         }
 
         $updates = [];
@@ -1769,7 +1771,8 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
 
         // Update logged-in user state if required accordingly, based on their sys_type
         if ( ! is_user_logged_in() ) {
-            $this->update_user_logged_in_state( $params['sys_type'], $params['parts']['post_id'] );
+            $link_user_id = DT_ML_Helper::verified_link_user_id( $request, $this->root );
+            $this->update_user_logged_in_state( $link_user_id ? 'wp_user' : 'post', $link_user_id );
         }
 
         $this->determine_language_locale( $params['parts'] );

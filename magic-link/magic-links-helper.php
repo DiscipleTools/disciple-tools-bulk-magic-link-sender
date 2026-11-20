@@ -89,6 +89,17 @@ class Disciple_Tools_Magic_Links_Helper
         return 0;
     }
 
+    /**
+     * The WP user a magic link request's key resolved to; 0 when the key belongs to a post or does not verify.
+     */
+    public static function verified_link_user_id( WP_REST_Request $request, string $root ): int {
+        $parts = ( new DT_Magic_URL( $root ) )->verify_rest_endpoint_permissions_on_post( $request, true );
+        if ( empty( $parts ) || !is_array( $parts ) || ( $parts['post_type'] ?? '' ) !== 'user' ) {
+            return 0;
+        }
+        return (int) $parts['post_id'];
+    }
+
     public static function update_user_logged_in_state() {
         wp_set_current_user( 0 );
         $current_user = wp_get_current_user();
