@@ -245,7 +245,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                 'milestones'              => $fields['milestones']['default'] ?? [],
                 'overall_status'          => $fields['overall_status']['default'] ?? [],
                 'faith_status'            => $fields['faith_status']['default'] ?? [],
-                'link_obj_id'             => Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $this->fetch_incoming_link_param( 'id' ) ),
+                'link_obj_id'             => DT_ML_Helper::link_obj_for_page( Disciple_Tools_Bulk_Magic_Link_Sender_API::fetch_option_link_obj( $this->fetch_incoming_link_param( 'id' ) ) ),
                 'sys_type'                => $this->fetch_incoming_link_param( 'type' ),
                 'translations'            => [
                     'update_success' => __( 'Thank you for your successful submission. You may return to the form and re-submit if changes are needed.', 'disciple-tools-bulk-magic-link-sender' )

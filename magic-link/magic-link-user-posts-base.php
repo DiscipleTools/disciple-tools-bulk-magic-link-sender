@@ -316,7 +316,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                 'parts'          => $this->parts,
                 'lang'           => $this->fetch_incoming_link_param( 'lang' ),
                 'field_settings' => $this->localized_selected_field_settings( $this->sub_post_type, $link_obj ),
-                'link_obj_id'    => $link_obj,
+                'link_obj_id'    => DT_ML_Helper::link_obj_for_page( $link_obj ),
                 'sys_type'       => $sys_type,
                 'translations'   => [
                     'update_success' => __( 'Thank you for your successful submission. You may return to the form and re-submit if changes are needed.', 'disciple-tools-bulk-magic-link-sender' ),

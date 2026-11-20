@@ -60,6 +60,20 @@ class Disciple_Tools_Magic_Links_Helper
     }
 
     /**
+     * The parts of a link object a magic link page needs; recipients, schedule and message stay server-side.
+     */
+    public static function link_obj_for_page( $link_obj ) {
+        if ( empty( (array) $link_obj ) ) {
+            return (object) [];
+        }
+        return (object) [
+            'id'          => $link_obj->id ?? null,
+            'type_fields' => $link_obj->type_fields ?? [],
+            'type_config' => $link_obj->type_config ?? null,
+        ];
+    }
+
+    /**
      * How many comments a template link may read: the template's show_recent_comments setting (true means 2).
      */
     public static function template_comment_count( $template ): int {
