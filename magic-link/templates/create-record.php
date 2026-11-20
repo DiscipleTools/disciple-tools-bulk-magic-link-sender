@@ -104,7 +104,7 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
         /**
          * Test magic link parts are registered and have valid elements.
          */
-        if ( ! $this->check_parts_match( false ) ) {
+        if ( ! $this->check_parts_match() ) {
             return;
         }
 
@@ -301,6 +301,9 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
      * Writes javascript to the footer
      */
     public function footer_javascript() {
+        if ( ! $this->check_parts_match() ) {
+            return;
+        }
         ?>
         <script>
             let jsObject = [<?php echo json_encode( [
