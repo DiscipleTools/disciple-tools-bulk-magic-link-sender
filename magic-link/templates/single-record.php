@@ -1109,6 +1109,10 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
             $this->update_user_logged_in_state();
         }
 
+        if ( $params['post_type'] !== $this->post_type ){
+            return [ 'success' => false ];
+        }
+
         // Fetch corresponding post record
         $response = [];
         if ( $params['post_id'] > 0 ){
@@ -1119,8 +1123,8 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
             } else if ( in_array( (int) $params['parts']['post_id'], array_column( $post['subassigned'] ?? [], 'ID' ), true ) ){
                 $verified = true;
             } else {
-                $user_id = get_post_meta( $params['parts']['post_id'], 'corresponds_to_user', true );
-                if ( ( $post['assigned_to']['id'] ?? false ) === $user_id ){
+                $user_id = DT_ML_Helper::contact_user_id( $params['parts']['post_id'] );
+                if ( $user_id && (int) ( $post['assigned_to']['id'] ?? 0 ) === $user_id ){
                     $verified = true;
                 }
             }
@@ -1159,10 +1163,23 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
             $this->update_user_logged_in_state();
         }
 
+        if ( $params['post_type'] !== $this->post_type ){
+            return [
+                'id' => 0,
+                'success' => false,
+                'message' => 'Unable to update/create contact record details!'
+            ];
+        }
+
         $updates = [];
+        $editable_field_settings = DT_ML_Helper::template_editable_field_settings( $this->template, $this->post_type );
 
         // First, capture and package incoming DT field values
         foreach ( $params['fields']['dt'] ?? [] as $field ){
+            if ( !isset( $field['id'] ) || !is_string( $field['id'] ) || !isset( $editable_field_settings[ $field['id'] ] ) ){
+                continue;
+            }
+            $field['dt_type'] = $editable_field_settings[ $field['id'] ]['type'];
             switch ( $field['dt_type'] ) {
                 case 'number':
                 case 'textarea':
@@ -1317,6 +1334,14 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
 
         // Update specified post record
         if ( empty( $params['post_id'] ) ) {
+            if ( empty( $this->template['support_creating_new_items'] ) ) {
+                return [
+                    'id' => 0,
+                    'success' => false,
+                    'message' => 'Unable to update/create contact record details!'
+                ];
+            }
+
             // if ID is empty ("0", 0, or generally falsy), create a new post
             $updates['type'] = 'access';
 
@@ -1340,8 +1365,8 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
             } else if ( in_array( (int) $params['parts']['post_id'], array_column( $post['subassigned'] ?? [], 'ID' ), true ) ){
                 $verified = true;
             } else {
-                $user_id = get_post_meta( $params['parts']['post_id'], 'corresponds_to_user', true );
-                if ( ( $post['assigned_to']['id'] ?? false ) === $user_id ){
+                $user_id = DT_ML_Helper::contact_user_id( $params['parts']['post_id'] );
+                if ( $user_id && (int) ( $post['assigned_to']['id'] ?? 0 ) === $user_id ){
                     $verified = true;
                 }
             }

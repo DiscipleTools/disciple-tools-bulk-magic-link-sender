@@ -78,8 +78,9 @@ class Disciple_Tools_Magic_Links_Template_List_Sub_Assigned extends Disciple_Too
                         'subassigned' => [ $this->post['ID'] ]
                     ];
 
-                    if ( !empty( $this->post['corresponds_to_user'] ) ) {
-                        $query_fields['assigned_to'] = [ $this->post['corresponds_to_user'] ];
+                    $corresponds_to_user = DT_ML_Helper::contact_user_id( $this->post['ID'] );
+                    if ( !empty( $corresponds_to_user ) ) {
+                        $query_fields['assigned_to'] = [ $corresponds_to_user ];
                     }
 
                     // Fetch all assigned posts

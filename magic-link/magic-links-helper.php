@@ -63,6 +63,32 @@ class Disciple_Tools_Magic_Links_Helper
         }
     }
 
+    /**
+     * Field settings of the template's enabled, non-readonly dt fields: the only fields a link holder may write.
+     */
+    public static function template_editable_field_settings( $template, $post_type ): array {
+        $post_type_field_settings = DT_Posts::get_post_field_settings( $post_type, false );
+        $editable_field_settings = [];
+        foreach ( $template['fields'] ?? [] as $template_field ) {
+            if ( isset( $template_field['id'], $template_field['type'] ) && ( $template_field['type'] === 'dt' ) && !empty( $template_field['enabled'] ) && empty( $template_field['readonly'] ) && isset( $post_type_field_settings[ $template_field['id'] ] ) ) {
+                $editable_field_settings[ $template_field['id'] ] = $post_type_field_settings[ $template_field['id'] ];
+            }
+        }
+        return $editable_field_settings;
+    }
+
+    /**
+     * The user a contact belongs to, only when the user's corresponds_to_contact option points back at it,
+     * since the contact's corresponds_to_user meta is editable by anyone who can update the contact.
+     */
+    public static function contact_user_id( $contact_id ): int {
+        $user_id = (int) get_post_meta( (int) $contact_id, 'corresponds_to_user', true );
+        if ( $user_id && (int) get_user_option( 'corresponds_to_contact', $user_id ) === (int) $contact_id ) {
+            return $user_id;
+        }
+        return 0;
+    }
+
     public static function update_user_logged_in_state() {
         wp_set_current_user( 0 );
         $current_user = wp_get_current_user();

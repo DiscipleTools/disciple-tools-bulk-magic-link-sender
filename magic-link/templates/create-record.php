@@ -933,7 +933,7 @@ class Disciple_Tools_Magic_Links_Template_Create_Record extends DT_Magic_Url_Bas
         if ( !is_user_logged_in() ){
             $user_contact_id = $params['parts']['post_id'] ?? 0;
             if ( !empty( $user_contact_id ) ) {
-                $corresponds_to_user = get_post_meta( $user_contact_id, 'corresponds_to_user', true );
+                $corresponds_to_user = DT_ML_Helper::contact_user_id( $user_contact_id );
                 if ( !empty( $corresponds_to_user ) ) {
                     wp_set_current_user( (int) $corresponds_to_user );
                 } else {

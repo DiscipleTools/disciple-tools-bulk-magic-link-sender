@@ -350,9 +350,20 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
             DT_ML_Helper::update_user_logged_in_state();
         }
 
+        if ( $params['post_type'] !== $this->record_post_type ) {
+            return [
+                'success' => false,
+            ];
+        }
+
         $updates = [];
+        $editable_field_settings = DT_ML_Helper::template_editable_field_settings( $this->template, $this->record_post_type );
 
         foreach ( $params['fields']['dt'] ?? [] as $field ) {
+            if ( !isset( $field['id'] ) || !is_string( $field['id'] ) || !isset( $editable_field_settings[ $field['id'] ] ) ) {
+                continue;
+            }
+            $field['type'] = $editable_field_settings[ $field['id'] ]['type'];
             if ( $field['id'] === 'age' ) {
                 $field['value'] = str_replace( '&lt;', '<', $field['value'] );
                 $field['value'] = str_replace( '&gt;', '>', $field['value'] );
@@ -532,7 +543,7 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
                 if ( isset( $record_post_type_settings['fields'][$field_id] ) ) {
                     $field_type = $record_post_type_settings['fields'][$field_id]['type'];
                     if ( in_array( $field_type, [ 'user_select', 'multi_select_user' ] ) ) {
-                        $user_id = get_post_meta( $post_id, 'corresponds_to_user', true );
+                        $user_id = DT_ML_Helper::contact_user_id( $post_id );
                         if ( !empty( $user_id ) ) {
                             $query_fields[][$field_id] = [ (int) $user_id ];
                         }
