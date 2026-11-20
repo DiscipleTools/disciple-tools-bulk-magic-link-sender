@@ -1137,7 +1137,8 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
         if ( !empty( $post ) && !is_wp_error( $post ) ){
             $response['success'] = true;
             $response['post'] = $this->localized_post_selected_field_settings( $post, $this->localized_template_selected_field_settings( $this->template ), [ 'ID', 'post_type' ] );
-            $response['comments'] = ( $post['ID'] > 0 ) ? DT_Posts::get_post_comments( $params['post_type'], $params['post_id'], false, 'all', [ 'number' => $params['comment_count'] ] ) : [];
+            $comment_count = DT_ML_Helper::template_comment_count( $this->template );
+            $response['comments'] = ( $post['ID'] > 0 && $comment_count > 0 ) ? DT_Posts::get_post_comments( $params['post_type'], $params['post_id'], false, 'all', [ 'number' => $comment_count ] ) : [];
         } else {
             $response['success'] = false;
         }

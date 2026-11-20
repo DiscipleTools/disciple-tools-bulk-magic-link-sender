@@ -339,7 +339,8 @@ class Disciple_Tools_Magic_Links_Template_Post_Connections extends DT_Magic_Url_
         if ( !empty( $post ) && !is_wp_error( $post ) ){
             $response['success'] = true;
             $response['post'] = DT_ML_Helper::localized_post_selected_field_settings( $post, DT_ML_Helper::localized_template_selected_field_settings( $this->template, $this->record_post_type ), [ 'ID', 'post_type' ] );
-            $response['comments'] = ( $post['ID'] > 0 ) ? DT_Posts::get_post_comments( $params['post_type'], $params['post_id'], false, 'all', [ 'number' => $params['comment_count'] ] ) : [];
+            $comment_count = min( max( 0, intval( $params['comment_count'] ) ), max( 2, DT_ML_Helper::template_comment_count( $this->template ) ) );
+            $response['comments'] = ( $post['ID'] > 0 && $comment_count > 0 ) ? DT_Posts::get_post_comments( $params['post_type'], $params['post_id'], false, 'all', [ 'number' => $comment_count ] ) : [];
         } else {
             $response['success'] = false;
         }

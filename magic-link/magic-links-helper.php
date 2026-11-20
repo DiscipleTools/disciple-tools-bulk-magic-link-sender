@@ -60,6 +60,14 @@ class Disciple_Tools_Magic_Links_Helper
     }
 
     /**
+     * How many comments a template link may read: the template's show_recent_comments setting (true means 2).
+     */
+    public static function template_comment_count( $template ): int {
+        $setting = $template['show_recent_comments'] ?? false;
+        return is_bool( $setting ) ? ( $setting ? 2 : 0 ) : max( 0, intval( $setting ) );
+    }
+
+    /**
      * Reduces each record of a list_posts() result to the template's fields plus what the list view shows.
      */
     public static function localized_list_selected_field_settings( $list, $template, $post_type ) {
