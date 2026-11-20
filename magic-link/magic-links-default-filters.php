@@ -212,3 +212,22 @@ function dt_magic_link_global_name( $global_name ) {
 /**
  * GLOBAL NAME
  */
+
+/**
+ * CDN SUBRESOURCE INTEGRITY
+ */
+
+add_filter( 'script_loader_tag', 'dt_magic_links_add_cdn_integrity', 10, 3 );
+add_filter( 'style_loader_tag', 'dt_magic_links_add_cdn_integrity', 10, 3 );
+function dt_magic_links_add_cdn_integrity( $tag, $handle, $src ) {
+    $integrity = [
+        'https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.js' => 'sha384-HV48j9xMNfX80v1dhiML90VeD4a38xrehnBK+dNSSe8P4fija/zP36u52q7TpB6O',
+        'https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.css' => 'sha384-GSJP6bR4yv1SbLGhL+ntxb4LDi6RC5j8eM8OAh5lwPYdvj9cflIWJiFZdAFr2gyP',
+        'https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css' => 'sha384-HphS8cQyN+eYiJ5PMbzShG6qZdRtvHPVLPkYb8JwMkmNgaIxrFVDhQe3jIbq3EZ2',
+    ];
+    $url = strtok( (string) $src, '?' );
+    if ( isset( $integrity[ $url ] ) && strpos( $tag, ' integrity=' ) === false ) {
+        $tag = preg_replace( '#\s(?:src|href)=(["\'])' . preg_quote( $url, '#' ) . '#', ' integrity="' . esc_attr( $integrity[ $url ] ) . '" crossorigin="anonymous"$0', $tag, 1 );
+    }
+    return $tag;
+}
