@@ -900,6 +900,11 @@ Thanks!';
             return $default_response;
         }
 
+        // Expiration records live under "<meta_key>_expiration" and must never resolve as a link key themselves.
+        if ( substr( $meta_key, -strlen( '_expiration' ) ) === '_expiration' ) {
+            return false;
+        }
+
         $sys_type = ( $post_type === 'user' ) ? 'wp_user' : 'post';
         $id = (int) $post_id;
 
