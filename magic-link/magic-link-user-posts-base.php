@@ -477,7 +477,7 @@ abstract class Disciple_Tools_Magic_Links_Magic_User_Posts_Base extends DT_Magic
                 let name = jQuery('#post_name');
 
                 // Update group name
-                name.html(post_name);
+                name.text(post_name);
 
                 // Fetch requested group details
                 window.get_post(post_id);

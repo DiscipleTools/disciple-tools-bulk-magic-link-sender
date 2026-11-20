@@ -548,7 +548,7 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                 let contact_name = jQuery('#contact_name');
 
                 // Update contact name
-                contact_name.html(post_name);
+                contact_name.text(post_name);
 
                 // Fetch requested assigned details
                 window.get_assigned_post(post_type, post_id);
@@ -633,9 +633,9 @@ class Disciple_Tools_Magic_Links_Template_Single_Record extends DT_Magic_Url_Bas
                                  if (tbody.length) {
                                      const existing = tbody.find(`tr[data-assigned-id="${window.lodash.escape(post['ID'])}"]`);
                                      if (existing.length === 0) {
-                                     const nameForOnClick = String(post['name'] || '').replace(/'/g, "&apos;");
+                                     const nameForOnClick = window.lodash.escape(JSON.stringify(String(post['name'] || '')));
                                      const rowHtml = `
-                                         <tr data-assigned-id="${window.lodash.escape(post['ID'])}" onclick="get_assigned_details('${window.lodash.escape(post['post_type'])}','${window.lodash.escape(post['ID'])}','${nameForOnClick}')">
+                                         <tr data-assigned-id="${window.lodash.escape(post['ID'])}" onclick="get_assigned_details('${window.lodash.escape(post['post_type'])}','${window.lodash.escape(post['ID'])}',${nameForOnClick})">
                                              <td>${window.lodash.escape(post['name'] || '')}</td>
                                          </tr>
                                      `;

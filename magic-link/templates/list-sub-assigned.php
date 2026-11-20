@@ -116,7 +116,7 @@ class Disciple_Tools_Magic_Links_Template_List_Sub_Assigned extends Disciple_Too
                                     <?php
                                     foreach ( $assigned_posts['posts'] as $assigned ){
                                         ?>
-                                        <tr onclick="get_assigned_details('<?php echo esc_html( $assigned['post_type'] ); ?>','<?php echo esc_html( $assigned['ID'] ); ?>','<?php echo esc_html( str_replace( "'", '&apos;', $assigned['name'] ) ); ?>')">
+                                        <tr onclick="get_assigned_details('<?php echo esc_html( $assigned['post_type'] ); ?>','<?php echo esc_html( $assigned['ID'] ); ?>',<?php echo esc_attr( wp_json_encode( $assigned['name'], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP ) ); ?>)">
                                             <td><?php echo esc_html( $assigned['name'] ) ?></td>
                                         </tr>
                                         <?php

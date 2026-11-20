@@ -297,7 +297,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                 if (data['posts']) {
                     data['posts'].forEach(v => {
 
-                        let html = `<tr onclick="get_assigned_contact_details('${window.lodash.escape(v.id)}', '${window.lodash.escape(window.lodash.replace(v.name, "'", "&apos;"))}');">
+                        let html = `<tr onclick="get_assigned_contact_details('${window.lodash.escape(v.id)}', ${window.lodash.escape(JSON.stringify(String(v.name)))});">
                                 <td>${window.lodash.escape(v.name)}</td>
                             </tr>`;
 
@@ -521,7 +521,7 @@ class Disciple_Tools_Magic_Links_Magic_User_App extends DT_Magic_Url_Base {
                 let contact_name = jQuery('#contact_name');
 
                 // Update contact name
-                contact_name.html(post_name);
+                contact_name.text(post_name);
 
                 // Fetch requested contact details
                 window.get_contact(post_id);
